@@ -1,0 +1,501 @@
+---
+# OpenAPI 3.0 API Contract Template
+# Use this template to define REST API endpoints for BrokerHub
+
+openapi: 3.0.0
+info:
+  title: [Module Name] API
+  description: API for [brief description of what this API does]
+  version: 1.0.0
+  contact:
+    name: BrokerHub Development Team
+
+servers:
+  - url: https://api.brokerhub.local
+    description: Local development
+  - url: https://api-staging.brokerhub.com
+    description: Staging environment
+  - url: https://api.brokerhub.com
+    description: Production environment
+
+# Global security requirement (all endpoints require authentication)
+security:
+  - bearerAuth: []
+
+tags:
+  - name: [EntityName]
+    description: Operations related to [entity description]
+
+paths:
+  # LIST / SEARCH endpoint
+  /api/[entities]:
+    get:
+      summary: List/search [entities]
+      description: Retrieve a paginated list of [entities] with optional filtering and sorting
+      operationId: list[Entities]
+      tags:
+        - [EntityName]
+      parameters:
+        # Pagination
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+
+        # Sorting
+        - name: sortBy
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum: [name, createdAt, updatedAt]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+
+        # Filtering (add entity-specific filters)
+        - name: search
+          in: query
+          description: Search term (searches across name and other text fields)
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by status
+          required: false
+          schema:
+            type: string
+            enum: [Active, Inactive]
+
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/[Entity]Response'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # CREATE endpoint
+  /api/[entities]:
+    post:
+      summary: Create a new [entity]
+      description: Create a new [entity] with the provided data
+      operationId: create[Entity]
+      tags:
+        - [EntityName]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Create[Entity]Request'
+            example:
+              name: "Example Name"
+              field1: "value1"
+              field2: "value2"
+
+      responses:
+        '201':
+          description: [Entity] created successfully
+          headers:
+            Location:
+              description: URI of the created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/[Entity]Response'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Conflict - resource already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "DUPLICATE_RESOURCE"
+                message: "A [entity] with this identifier already exists"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # GET BY ID endpoint
+  /api/[entities]/{id}:
+    get:
+      summary: Get [entity] by ID
+      description: Retrieve detailed information about a specific [entity]
+      operationId: get[Entity]ById
+      tags:
+        - [EntityName]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the [entity]
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/[Entity]DetailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # UPDATE endpoint
+  /api/[entities]/{id}:
+    put:
+      summary: Update [entity]
+      description: Update an existing [entity] with new data
+      operationId: update[Entity]
+      tags:
+        - [EntityName]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the [entity]
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Update[Entity]Request'
+
+      responses:
+        '200':
+          description: [Entity] updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/[Entity]Response'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Conflict - version mismatch or constraint violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # DELETE endpoint
+  /api/[entities]/{id}:
+    delete:
+      summary: Delete [entity]
+      description: Soft delete an [entity] (sets deletedAt timestamp)
+      operationId: delete[Entity]
+      tags:
+        - [EntityName]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique identifier of the [entity]
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '204':
+          description: [Entity] deleted successfully (no content)
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Conflict - cannot delete due to dependencies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: "DELETE_CONFLICT"
+                message: "Cannot delete [entity] because it has associated [related entities]"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  # Security schemes
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak JWT token
+
+  # Request schemas
+  schemas:
+    Create[Entity]Request:
+      type: object
+      required:
+        - name
+        # Add other required fields
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Name of the [entity]
+        # Add other fields
+        field1:
+          type: string
+          description: Description of field1
+        field2:
+          type: integer
+          description: Description of field2
+
+    Update[Entity]Request:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        # Add other updatable fields
+        field1:
+          type: string
+        field2:
+          type: integer
+
+    # Response schemas
+    [Entity]Response:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        field1:
+          type: string
+        field2:
+          type: integer
+        status:
+          type: string
+          enum: [Active, Inactive]
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          format: uuid
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+          format: uuid
+
+    [Entity]DetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/[Entity]Response'
+        - type: object
+          properties:
+            # Add additional fields for detail view
+            relatedEntities:
+              type: array
+              items:
+                type: object
+            timelineEvents:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimelineEvent'
+
+    # Timeline event (for entities with audit trail)
+    TimelineEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          example: "[Entity]Created"
+        timestamp:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+        userName:
+          type: string
+        description:
+          type: string
+
+    # Pagination metadata
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 20
+        totalCount:
+          type: integer
+          example: 150
+        totalPages:
+          type: integer
+          example: 8
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPreviousPage:
+          type: boolean
+          example: false
+
+    # Standard error response
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid request data"
+        details:
+          type: array
+          description: Additional error details (e.g., field-level validation errors)
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name that caused the error
+              message:
+                type: string
+                description: Error message for this field
+        traceId:
+          type: string
+          description: Correlation ID for tracing this request
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+  # Reusable responses
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "VALIDATION_ERROR"
+            message: "Invalid request data"
+            details:
+              - field: "name"
+                message: "Name is required"
+
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "UNAUTHORIZED"
+            message: "Authentication required"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "FORBIDDEN"
+            message: "You don't have permission to perform this action"
+
+    NotFound:
+      description: Not found - resource doesn't exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "NOT_FOUND"
+            message: "The requested [entity] was not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: "INTERNAL_ERROR"
+            message: "An unexpected error occurred. Please try again later."

@@ -1,6 +1,6 @@
 # API Design Guide
 
-Focused guide for designing RESTful APIs for BrokerHub.
+Focused guide for designing RESTful APIs for Nebula.
 
 ## REST Principles
 

@@ -227,10 +227,10 @@ cp agents/templates/threat-model-template.md planning-mds/security/threat-model-
 
 ```bash
 # Read authentication implementation
-cat src/BrokerHub.Api/Controllers/AuthController.cs
+cat src/Nebula.Api/Controllers/AuthController.cs
 
 # Read authorization middleware
-cat src/BrokerHub.Api/Middleware/AuthorizationMiddleware.cs
+cat src/Nebula.Api/Middleware/AuthorizationMiddleware.cs
 ```
 
 #### Step 2: Run SAST Scan
@@ -250,11 +250,11 @@ cat planning-mds/security/scans/sast-results-$(date +%Y-%m-%d).json
 ./agents/security/scripts/scan-dependencies.sh
 
 # Backend
-cd src/BrokerHub.Api
+cd src/Nebula.Api
 dotnet list package --vulnerable
 
 # Frontend
-cd ../../brokerhub-ui
+cd ../../nebula-ui
 npm audit
 ```
 
@@ -480,7 +480,7 @@ catch (Exception ex)
 
 ```bash
 # SonarQube (if configured)
-dotnet sonarscanner begin /k:"BrokerHub"
+dotnet sonarscanner begin /k:"Nebula"
 dotnet build
 dotnet sonarscanner end
 

@@ -176,40 +176,40 @@ Your responsibility is to implement the technical architecture designed by the A
 
 ### Deliverables
 
-All code written to backend project directory (e.g., `src/BrokerHub.Api/`, `src/BrokerHub.Domain/`, etc.):
+All code written to backend project directory (e.g., `src/Nebula.Api/`, `src/Nebula.Domain/`, etc.):
 
 1. **Domain Layer Code**
-   - Location: `src/BrokerHub.Domain/Entities/`, `src/BrokerHub.Domain/ValueObjects/`
+   - Location: `src/Nebula.Domain/Entities/`, `src/Nebula.Domain/ValueObjects/`
    - Format: C# classes
    - Content: Entities, value objects, domain logic, validation
 
 2. **Application Layer Code**
-   - Location: `src/BrokerHub.Application/UseCases/`, `src/BrokerHub.Application/Interfaces/`
+   - Location: `src/Nebula.Application/UseCases/`, `src/Nebula.Application/Interfaces/`
    - Format: C# interfaces and classes
    - Content: Command/query interfaces, handlers, DTOs, repository interfaces
 
 3. **Infrastructure Layer Code**
-   - Location: `src/BrokerHub.Infrastructure/Persistence/`, `src/BrokerHub.Infrastructure/Repositories/`
+   - Location: `src/Nebula.Infrastructure/Persistence/`, `src/Nebula.Infrastructure/Repositories/`
    - Format: C# classes
    - Content: DbContext, entity configurations, repository implementations, migrations
 
 4. **API Layer Code**
-   - Location: `src/BrokerHub.Api/Controllers/`
+   - Location: `src/Nebula.Api/Controllers/`
    - Format: C# controllers
    - Content: Endpoints, request/response models, middleware
 
 5. **EF Core Migrations**
-   - Location: `src/BrokerHub.Infrastructure/Migrations/`
+   - Location: `src/Nebula.Infrastructure/Migrations/`
    - Format: EF Core migration files
    - Content: Schema changes with up/down methods
 
 6. **Unit Tests**
-   - Location: `tests/BrokerHub.Domain.Tests/`, `tests/BrokerHub.Application.Tests/`
+   - Location: `tests/Nebula.Domain.Tests/`, `tests/Nebula.Application.Tests/`
    - Format: xUnit/NUnit/MSTest test classes
    - Content: Domain logic tests, use case tests
 
 7. **Integration Tests**
-   - Location: `tests/BrokerHub.Api.IntegrationTests/`
+   - Location: `tests/Nebula.Api.IntegrationTests/`
    - Format: xUnit/NUnit/MSTest test classes
    - Content: API endpoint tests, authentication/authorization tests
 
@@ -364,9 +364,9 @@ Code Reviewer and Quality Engineer should NOT review until:
 ### Good Domain Entity
 
 ```csharp
-using BrokerHub.Domain.Common;
+using Nebula.Domain.Common;
 
-namespace BrokerHub.Domain.Entities;
+namespace Nebula.Domain.Entities;
 
 /// <summary>
 /// Represents an insurance broker or brokerage firm.
@@ -480,11 +480,11 @@ public enum BrokerStatus
 ### Good Application Use Case
 
 ```csharp
-using BrokerHub.Application.Interfaces;
-using BrokerHub.Domain.Entities;
-using BrokerHub.Domain.Events;
+using Nebula.Application.Interfaces;
+using Nebula.Domain.Entities;
+using Nebula.Domain.Events;
 
-namespace BrokerHub.Application.UseCases.Brokers;
+namespace Nebula.Application.UseCases.Brokers;
 
 /// <summary>
 /// Command to create a new broker.
@@ -575,11 +575,11 @@ public class CreateBrokerHandler
 ### Good API Controller
 
 ```csharp
-using BrokerHub.Application.UseCases.Brokers;
+using Nebula.Application.UseCases.Brokers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BrokerHub.Api.Controllers;
+namespace Nebula.Api.Controllers;
 
 /// <summary>
 /// Broker management endpoints.
@@ -714,11 +714,11 @@ public record CreateBrokerResponse
 ### Good EF Core Entity Configuration
 
 ```csharp
-using BrokerHub.Domain.Entities;
+using Nebula.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace BrokerHub.Infrastructure.Persistence.Configurations;
+namespace Nebula.Infrastructure.Persistence.Configurations;
 
 public class BrokerConfiguration : IEntityTypeConfiguration<Broker>
 {
@@ -788,14 +788,14 @@ Read INCEPTION.md:
 
 ```bash
 # If starting fresh, scaffold Clean Architecture structure
-dotnet new sln -n BrokerHub
-dotnet new classlib -n BrokerHub.Domain
-dotnet new classlib -n BrokerHub.Application
-dotnet new classlib -n BrokerHub.Infrastructure
-dotnet new webapi -n BrokerHub.Api
-dotnet new xunit -n BrokerHub.Domain.Tests
-dotnet new xunit -n BrokerHub.Application.Tests
-dotnet new xunit -n BrokerHub.Api.IntegrationTests
+dotnet new sln -n Nebula
+dotnet new classlib -n Nebula.Domain
+dotnet new classlib -n Nebula.Application
+dotnet new classlib -n Nebula.Infrastructure
+dotnet new webapi -n Nebula.Api
+dotnet new xunit -n Nebula.Domain.Tests
+dotnet new xunit -n Nebula.Application.Tests
+dotnet new xunit -n Nebula.Api.IntegrationTests
 
 # Add projects to solution
 dotnet sln add **/*.csproj
@@ -803,36 +803,36 @@ dotnet sln add **/*.csproj
 
 ### Step 3: Implement Domain Entity
 
-Create `src/BrokerHub.Domain/Entities/Broker.cs` (see example above)
+Create `src/Nebula.Domain/Entities/Broker.cs` (see example above)
 
 ### Step 4: Implement Application Use Case
 
 Create:
-- `src/BrokerHub.Application/UseCases/Brokers/CreateBrokerCommand.cs`
-- `src/BrokerHub.Application/UseCases/Brokers/CreateBrokerHandler.cs`
-- `src/BrokerHub.Application/Interfaces/IBrokerRepository.cs`
+- `src/Nebula.Application/UseCases/Brokers/CreateBrokerCommand.cs`
+- `src/Nebula.Application/UseCases/Brokers/CreateBrokerHandler.cs`
+- `src/Nebula.Application/Interfaces/IBrokerRepository.cs`
 
 ### Step 5: Implement Infrastructure
 
 Create:
-- `src/BrokerHub.Infrastructure/Persistence/Configurations/BrokerConfiguration.cs`
-- `src/BrokerHub.Infrastructure/Repositories/BrokerRepository.cs`
+- `src/Nebula.Infrastructure/Persistence/Configurations/BrokerConfiguration.cs`
+- `src/Nebula.Infrastructure/Repositories/BrokerRepository.cs`
 
 ### Step 6: Create Migration
 
 ```bash
-cd src/BrokerHub.Infrastructure
+cd src/Nebula.Infrastructure
 dotnet ef migrations add AddBrokerEntity
 dotnet ef database update
 ```
 
 ### Step 7: Implement API Controller
 
-Create `src/BrokerHub.Api/Controllers/BrokersController.cs` (see example above)
+Create `src/Nebula.Api/Controllers/BrokersController.cs` (see example above)
 
 ### Step 8: Write Unit Tests
 
-Create `tests/BrokerHub.Domain.Tests/BrokerTests.cs`:
+Create `tests/Nebula.Domain.Tests/BrokerTests.cs`:
 
 ```csharp
 public class BrokerTests
@@ -860,7 +860,7 @@ public class BrokerTests
 
 ### Step 9: Write Integration Tests
 
-Create `tests/BrokerHub.Api.IntegrationTests/BrokerEndpointsTests.cs`
+Create `tests/Nebula.Api.IntegrationTests/BrokerEndpointsTests.cs`
 
 ### Step 10: Validate Completeness
 

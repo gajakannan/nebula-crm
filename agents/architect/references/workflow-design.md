@@ -1,6 +1,6 @@
 # Workflow Design Guide
 
-Guide for designing state machine workflows for BrokerHub.
+Guide for designing state machine workflows for Nebula.
 
 ## State Machine Fundamentals
 

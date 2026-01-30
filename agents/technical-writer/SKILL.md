@@ -304,7 +304,7 @@ Documentation is complete when:
 ### Good README.md
 
 ```markdown
-# BrokerHub
+# Nebula
 
 Commercial P&C Insurance CRM for managing broker relationships, submissions, and renewals.
 
@@ -329,8 +329,8 @@ Commercial P&C Insurance CRM for managing broker relationships, submissions, and
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourorg/brokerhub.git
-   cd brokerhub
+   git clone https://github.com/yourorg/nebula.git
+   cd nebula
    ```
 
 2. Start all services:
@@ -345,7 +345,7 @@ Commercial P&C Insurance CRM for managing broker relationships, submissions, and
    - Keycloak: http://localhost:8080
 
 4. Log in with default credentials:
-   - Username: `admin@brokerhub.com`
+   - Username: `admin@nebula.com`
    - Password: `admin`
 
 ## Development
@@ -353,14 +353,14 @@ Commercial P&C Insurance CRM for managing broker relationships, submissions, and
 ### Backend Development
 
 ```bash
-cd src/BrokerHub.Api
+cd src/Nebula.Api
 dotnet run
 ```
 
 ### Frontend Development
 
 ```bash
-cd brokerhub-ui
+cd nebula-ui
 npm install
 npm run dev
 ```
@@ -372,7 +372,7 @@ npm run dev
 dotnet test
 
 # Frontend
-cd brokerhub-ui
+cd nebula-ui
 npm test
 ```
 
@@ -382,8 +382,8 @@ Configure via environment variables or `appsettings.json`:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `ConnectionStrings__DefaultConnection` | PostgreSQL connection string | `Host=localhost;Database=brokerhub...` | Yes |
-| `Keycloak__Authority` | Keycloak realm URL | `http://localhost:8080/realms/brokerhub` | Yes |
+| `ConnectionStrings__DefaultConnection` | PostgreSQL connection string | `Host=localhost;Database=nebula...` | Yes |
+| `Keycloak__Authority` | Keycloak realm URL | `http://localhost:8080/realms/nebula` | Yes |
 | `Casbin__PolicyPath` | Path to Casbin policies | `./policies/casbin_policy.csv` | Yes |
 
 See [Configuration Guide](docs/configuration.md) for full list.
@@ -394,7 +394,7 @@ See [Deployment Guide](docs/operations/deployment.md) for production deployment 
 
 ## Architecture
 
-BrokerHub follows Clean Architecture with distinct layers:
+Nebula follows Clean Architecture with distinct layers:
 
 ```
 ┌─────────────────────────────────────┐
@@ -420,9 +420,9 @@ Proprietary - Internal use only
 
 ## Support
 
-- Issues: [GitHub Issues](https://github.com/yourorg/brokerhub/issues)
+- Issues: [GitHub Issues](https://github.com/yourorg/nebula/issues)
 - Documentation: [Full Documentation](docs/README.md)
-- Email: support@brokerhub.com
+- Email: support@nebula.com
 ```
 
 ---
@@ -542,7 +542,7 @@ paths:
 
 ## Overview
 
-This runbook describes the procedure for deploying BrokerHub to the production environment.
+This runbook describes the procedure for deploying Nebula to the production environment.
 
 **Frequency:** As needed (typically 2-4 weeks)
 **Duration:** ~30 minutes
@@ -569,8 +569,8 @@ This runbook describes the procedure for deploying BrokerHub to the production e
 
 1. Verify staging deployment:
    ```bash
-   kubectl get pods -n brokerhub-staging
-   curl https://staging.brokerhub.example.com/health
+   kubectl get pods -n nebula-staging
+   curl https://staging.nebula.example.com/health
    ```
 
 2. Create database backup:
@@ -585,8 +585,8 @@ This runbook describes the procedure for deploying BrokerHub to the production e
 
 4. Put application in maintenance mode (optional):
    ```bash
-   kubectl scale deployment brokerhub-frontend -n brokerhub-prod --replicas=0
-   kubectl scale deployment brokerhub-backend -n brokerhub-prod --replicas=1
+   kubectl scale deployment nebula-frontend -n nebula-prod --replicas=0
+   kubectl scale deployment nebula-backend -n nebula-prod --replicas=1
    ```
 
 ## Deployment Steps
@@ -595,38 +595,38 @@ This runbook describes the procedure for deploying BrokerHub to the production e
 
 ```bash
 # Pull latest image
-docker pull ghcr.io/yourorg/brokerhub-backend:v1.3.0
+docker pull ghcr.io/yourorg/nebula-backend:v1.3.0
 
 # Update Kubernetes deployment
-kubectl set image deployment/brokerhub-backend \
-  brokerhub-backend=ghcr.io/yourorg/brokerhub-backend:v1.3.0 \
-  -n brokerhub-prod
+kubectl set image deployment/nebula-backend \
+  nebula-backend=ghcr.io/yourorg/nebula-backend:v1.3.0 \
+  -n nebula-prod
 
 # Watch rollout
-kubectl rollout status deployment/brokerhub-backend -n brokerhub-prod
+kubectl rollout status deployment/nebula-backend -n nebula-prod
 ```
 
 **Expected Output:**
 ```
-deployment "brokerhub-backend" successfully rolled out
+deployment "nebula-backend" successfully rolled out
 ```
 
 **Verify:** New pods are running
 ```bash
-kubectl get pods -n brokerhub-prod -l app=brokerhub-backend
+kubectl get pods -n nebula-prod -l app=nebula-backend
 ```
 
 ### Step 2: Run Database Migrations
 
 ```bash
 # Get backend pod name
-POD=$(kubectl get pod -n brokerhub-prod -l app=brokerhub-backend -o jsonpath="{.items[0].metadata.name}")
+POD=$(kubectl get pod -n nebula-prod -l app=nebula-backend -o jsonpath="{.items[0].metadata.name}")
 
 # Run migrations
-kubectl exec -n brokerhub-prod $POD -- dotnet ef database update
+kubectl exec -n nebula-prod $POD -- dotnet ef database update
 
 # Verify migrations applied
-kubectl exec -n brokerhub-prod $POD -- dotnet ef migrations list
+kubectl exec -n nebula-prod $POD -- dotnet ef migrations list
 ```
 
 **Expected Output:**
@@ -636,30 +636,30 @@ Last migration should be marked as Applied.
 
 ```bash
 # Pull latest image
-docker pull ghcr.io/yourorg/brokerhub-frontend:v1.3.0
+docker pull ghcr.io/yourorg/nebula-frontend:v1.3.0
 
 # Update deployment
-kubectl set image deployment/brokerhub-frontend \
-  brokerhub-frontend=ghcr.io/yourorg/brokerhub-frontend:v1.3.0 \
-  -n brokerhub-prod
+kubectl set image deployment/nebula-frontend \
+  nebula-frontend=ghcr.io/yourorg/nebula-frontend:v1.3.0 \
+  -n nebula-prod
 
 # Watch rollout
-kubectl rollout status deployment/brokerhub-frontend -n brokerhub-prod
+kubectl rollout status deployment/nebula-frontend -n nebula-prod
 ```
 
 ### Step 4: Smoke Tests
 
 ```bash
 # Health check
-curl https://brokerhub.example.com/health
+curl https://nebula.example.com/health
 # Expected: {"status":"Healthy"}
 
 # API version check
-curl https://brokerhub.example.com/api/version
+curl https://nebula.example.com/api/version
 # Expected: {"version":"1.3.0"}
 
 # Login test
-curl -X POST https://brokerhub.example.com/api/auth/login \
+curl -X POST https://nebula.example.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"testuser","password":"testpass"}'
 # Expected: JWT token in response
@@ -669,13 +669,13 @@ curl -X POST https://brokerhub.example.com/api/auth/login \
 
 ```bash
 # Scale backend to normal replicas
-kubectl scale deployment brokerhub-backend -n brokerhub-prod --replicas=3
+kubectl scale deployment nebula-backend -n nebula-prod --replicas=3
 
 # Scale frontend to normal replicas
-kubectl scale deployment brokerhub-frontend -n brokerhub-prod --replicas=2
+kubectl scale deployment nebula-frontend -n nebula-prod --replicas=2
 
 # Verify scaling
-kubectl get pods -n brokerhub-prod
+kubectl get pods -n nebula-prod
 ```
 
 ### Step 6: Monitor
@@ -684,7 +684,7 @@ Monitor for 15 minutes:
 
 ```bash
 # Watch logs
-kubectl logs -f deployment/brokerhub-backend -n brokerhub-prod
+kubectl logs -f deployment/nebula-backend -n nebula-prod
 
 # Check Application Insights for errors
 # (Open Azure Portal → Application Insights → Failures)
@@ -725,14 +725,14 @@ If issues are detected:
 
 ```bash
 # Rollback backend
-kubectl rollout undo deployment/brokerhub-backend -n brokerhub-prod
+kubectl rollout undo deployment/nebula-backend -n nebula-prod
 
 # Rollback frontend
-kubectl rollout undo deployment/brokerhub-frontend -n brokerhub-prod
+kubectl rollout undo deployment/nebula-frontend -n nebula-prod
 
 # Verify
-kubectl rollout status deployment/brokerhub-backend -n brokerhub-prod
-kubectl rollout status deployment/brokerhub-frontend -n brokerhub-prod
+kubectl rollout status deployment/nebula-backend -n nebula-prod
+kubectl rollout status deployment/nebula-frontend -n nebula-prod
 ```
 
 ### Database Rollback
@@ -744,7 +744,7 @@ If database migration causes issues:
 ./scripts/restore-production-database.sh [backup-timestamp]
 
 # Verify restore
-kubectl exec -n brokerhub-prod $POD -- dotnet ef migrations list
+kubectl exec -n nebula-prod $POD -- dotnet ef migrations list
 ```
 
 ## Troubleshooting
@@ -755,8 +755,8 @@ kubectl exec -n brokerhub-prod $POD -- dotnet ef migrations list
 
 **Check:**
 ```bash
-kubectl describe pod $POD_NAME -n brokerhub-prod
-kubectl logs $POD_NAME -n brokerhub-prod
+kubectl describe pod $POD_NAME -n nebula-prod
+kubectl logs $POD_NAME -n nebula-prod
 ```
 
 **Common Causes:**
@@ -770,7 +770,7 @@ kubectl logs $POD_NAME -n brokerhub-prod
 
 **Check:**
 ```bash
-kubectl logs deployment/brokerhub-backend -n brokerhub-prod --tail=100
+kubectl logs deployment/nebula-backend -n nebula-prod --tail=100
 ```
 
 **Action:** Roll back immediately if error rate > 5%

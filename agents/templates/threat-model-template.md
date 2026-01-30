@@ -1,7 +1,13 @@
-# Threat Model Template (STRIDE)
+---
+template: threat-model
+version: 1.0
+applies_to: security
+---
+
+# Threat Model: [Feature/Component]
 
 ## Scope
-- Feature/Component:
+- Feature:
 - Date:
 - Owner:
 

@@ -1,6 +1,6 @@
 # Architecture Examples
 
-Real-world examples from BrokerHub showing complete specifications.
+Real-world examples from Nebula showing complete specifications.
 
 ## Example 1: Broker Entity Specification
 

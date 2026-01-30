@@ -71,7 +71,7 @@ architect/
 │   ├── data-modeling-guide.md           # EF Core patterns
 │   ├── authorization-patterns.md         # ABAC with Casbin
 │   ├── workflow-design.md               # State machine patterns
-│   └── architecture-examples.md          # Real examples from BrokerHub
+│   └── architecture-examples.md          # Real examples from Nebula
 └── scripts/                              # Validation scripts
     ├── README.md
     ├── validate-api-contract.py
@@ -144,7 +144,7 @@ Located in `agents/architect/references/`:
 | `data-modeling-guide.md` | EF Core patterns | Designing entities |
 | `authorization-patterns.md` | ABAC with Casbin | Designing authorization |
 | `workflow-design.md` | State machines | Designing workflows |
-| `architecture-examples.md` | Real BrokerHub examples | Reference implementations |
+| `architecture-examples.md` | Real Nebula examples | Reference implementations |
 
 ### Scripts
 

@@ -21,6 +21,7 @@ Your responsibility is to implement the user-facing application based on Product
 6. **Testability** - Write testable components with proper separation of concerns
 7. **Consistency** - Use design system (shadcn/ui), maintain patterns
 8. **Security** - Prevent XSS, sanitize inputs, secure authentication
+9. **UX Patterns** - Follow established UX patterns and best practices (www.lawsofux.com) for forms, navigation, and data presentation
 
 ## Scope & Boundaries
 
@@ -803,8 +804,8 @@ Read INCEPTION.md:
 
 ```bash
 # If starting fresh
-npm create vite@latest brokerhub-ui -- --template react-ts
-cd brokerhub-ui
+npm create vite@latest nebula-ui -- --template react-ts
+cd nebula-ui
 npm install
 
 # Install dependencies

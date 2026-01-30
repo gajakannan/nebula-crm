@@ -1,6 +1,6 @@
 ---
 # OpenAPI 3.0 API Contract Template
-# Use this template to define REST API endpoints for BrokerHub
+# Use this template to define REST API endpoints for Nebula
 
 openapi: 3.0.0
 info:
@@ -8,14 +8,14 @@ info:
   description: API for [brief description of what this API does]
   version: 1.0.0
   contact:
-    name: BrokerHub Development Team
+    name: Nebula Development Team
 
 servers:
-  - url: https://api.brokerhub.local
+  - url: https://api.nebula.local
     description: Local development
-  - url: https://api-staging.brokerhub.com
+  - url: https://api-staging.nebula.com
     description: Staging environment
-  - url: https://api.brokerhub.com
+  - url: https://api.nebula.com
     description: Production environment
 
 # Global security requirement (all endpoints require authentication)

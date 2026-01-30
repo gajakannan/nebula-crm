@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This directory defines the **Builder Agent Roles** used to build BrokerHub using an agent-driven builder methodology. Each agent represents a specialized role with clear responsibilities, inputs, outputs, and quality standards.
+This directory defines the **Builder Agent Roles** used to build Nebula using an agent-driven builder methodology. Each agent represents a specialized role with clear responsibilities, inputs, outputs, and quality standards.
 
 ## Philosophy
 
@@ -43,7 +43,7 @@ Agent roles activate according to the three-phase development process defined in
 
 When you need an agent to perform work:
 
-1. **Read the agent specification** (`agents/{role-name}.md`)
+1. **Read the agent specification** (`agents/<role>/SKILL.md`)
 2. **Check prerequisites** — Ensure required inputs/artifacts are available
 3. **Provide clear context** — Reference the single source of truth (INCEPTION.md or derived specs)
 4. **Use templates** — Agents should use templates from `agents/templates/` for consistency
@@ -131,6 +131,21 @@ The `templates/` directory contains standard formats for common deliverables. Ag
 - `test-plan-template.md` — Test strategy and plan (Quality Engineer)
 - `runbook-template.md` — Operational runbook (Technical Writer)
 - `devlog-template.md` — Development blog post (Blogger)
+
+## Repo Layout
+
+```
+/
+├── experience/          # React frontend
+├── engine/              # C# / ASP.NET Core backend
+├── soma/                # Intelligence layer
+│   ├── models/          # local/finetuned/slm/quantized assets
+│   ├── app-agents/      # application-specific agents + prompts + tools
+│   └── mcp/             # MCP servers/endpoints + configs
+├── agents/              # builder agent specs (roles, templates, references)
+├── planning-mds/        # product artifacts: epics/stories/specs
+└── docs/                # shared documentation (optional)
+```
 
 ## Getting Started
 

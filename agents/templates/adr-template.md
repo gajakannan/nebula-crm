@@ -21,7 +21,7 @@ applies_to: architect
 [Describe the context and problem statement in 2-3 sentences. Use active voice and present tense.]
 
 **Example:**
-> BrokerHub needs a strategy for authorization that supports fine-grained access control based on user roles, resource ownership, and contextual attributes. The system must enforce authorization consistently across all API endpoints while remaining maintainable as business rules evolve.
+> Nebula needs a strategy for authorization that supports fine-grained access control based on user roles, resource ownership, and contextual attributes. The system must enforce authorization consistently across all API endpoints while remaining maintainable as business rules evolve.
 
 **Questions to answer:**
 - What is the architectural decision we need to make?

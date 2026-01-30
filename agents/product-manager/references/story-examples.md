@@ -1,6 +1,6 @@
 # User Story Examples
 
-Complete examples of well-written user stories for BrokerHub, following best practices.
+Complete examples of well-written user stories for Nebula, following best practices.
 
 ## Story S1: Create New Broker
 
@@ -20,7 +20,7 @@ Complete examples of well-written user stories for BrokerHub, following best pra
 
 ### Context & Background
 
-Currently, brokers are tracked in spreadsheets, making it difficult to manage relationships, track submissions, and maintain data quality. This story establishes the foundation for broker relationship management in BrokerHub.
+Currently, brokers are tracked in spreadsheets, making it difficult to manage relationships, track submissions, and maintain data quality. This story establishes the foundation for broker relationship management in Nebula.
 
 This is the first story in the Broker CRUD vertical slice. It depends on the Broker table being created (part of Phase 0 infrastructure), but has no other dependencies.
 

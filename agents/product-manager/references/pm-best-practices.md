@@ -1,6 +1,6 @@
 # Product Manager Best Practices
 
-Comprehensive guide for writing high-quality product requirements for BrokerHub.
+Comprehensive guide for writing high-quality product requirements for Nebula.
 
 ## Table of Contents
 
@@ -391,7 +391,7 @@ Use the "Five Whys" technique:
 - Prevents scope creep during development
 - Documents why certain features were excluded
 
-**Example Non-Goals for BrokerHub Phase 0:**
+**Example Non-Goals for Nebula Phase 0:**
 ```
 ### Non-Goals (Phase 0 MVP)
 

@@ -142,31 +142,31 @@ backend-developer/
 
 ```
 src/
-├── BrokerHub.Domain/              # Domain layer (entities, value objects)
+├── Nebula.Domain/              # Domain layer (entities, value objects)
 │   ├── Entities/
 │   ├── ValueObjects/
 │   ├── Events/
 │   └── Exceptions/
-├── BrokerHub.Application/         # Application layer (use cases)
+├── Nebula.Application/         # Application layer (use cases)
 │   ├── UseCases/
 │   ├── Interfaces/
 │   ├── DTOs/
 │   └── Validators/
-├── BrokerHub.Infrastructure/      # Infrastructure layer (EF Core, repos)
+├── Nebula.Infrastructure/      # Infrastructure layer (EF Core, repos)
 │   ├── Persistence/
 │   │   ├── Configurations/
 │   │   └── Migrations/
 │   ├── Repositories/
 │   └── Services/
-└── BrokerHub.Api/                 # API layer (controllers, middleware)
+└── Nebula.Api/                 # API layer (controllers, middleware)
     ├── Controllers/
     ├── Middleware/
     └── Models/
 
 tests/
-├── BrokerHub.Domain.Tests/
-├── BrokerHub.Application.Tests/
-└── BrokerHub.Api.IntegrationTests/
+├── Nebula.Domain.Tests/
+├── Nebula.Application.Tests/
+└── Nebula.Api.IntegrationTests/
 ```
 
 ---
@@ -246,7 +246,7 @@ Create:
 
 Generate migration:
 ```bash
-cd src/BrokerHub.Infrastructure
+cd src/Nebula.Infrastructure
 dotnet ef migrations add AddBrokerEntity
 dotnet ef database update
 ```
@@ -264,14 +264,14 @@ Create controller:
 Unit tests:
 ```bash
 # Domain tests
-cd tests/BrokerHub.Domain.Tests
+cd tests/Nebula.Domain.Tests
 dotnet test
 ```
 
 Integration tests:
 ```bash
 # API tests
-cd tests/BrokerHub.Api.IntegrationTests
+cd tests/Nebula.Api.IntegrationTests
 dotnet test
 ```
 
@@ -444,13 +444,13 @@ dotnet build
 dotnet test
 
 # Run with watch
-dotnet watch run --project src/BrokerHub.Api
+dotnet watch run --project src/Nebula.Api
 
 # Create migration
-dotnet ef migrations add MigrationName --project src/BrokerHub.Infrastructure
+dotnet ef migrations add MigrationName --project src/Nebula.Infrastructure
 
 # Update database
-dotnet ef database update --project src/BrokerHub.Infrastructure
+dotnet ef database update --project src/Nebula.Infrastructure
 
 # Restore packages
 dotnet restore

@@ -283,7 +283,7 @@ The Architect Agent should NOT begin Phase B until:
 
 ## Workflow Example
 
-**Scenario:** You're starting Phase A for BrokerHub
+**Scenario:** You're starting Phase A for Nebula
 
 1. **Read INCEPTION.md**
    - Review sections 0-2 (process, context, technology)

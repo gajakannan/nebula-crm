@@ -523,7 +523,7 @@ Reviewed authentication, authorization, input validation, and OWASP Top 10 for B
 #### M1: Missing rate limiting on broker creation endpoint
 **Severity:** Medium
 **Category:** A05 Security Misconfiguration / DoS
-**Location:** `src/BrokerHub.Api/Controllers/BrokersController.cs`
+**Location:** `src/Nebula.Api/Controllers/BrokersController.cs`
 **Description:** POST /api/brokers has no rate limiting. Attacker could create thousands of fake broker records.
 **Evidence:**
 ```csharp
@@ -550,7 +550,7 @@ public async Task<IActionResult> CreateBroker(...)
 #### M2: License number not validated for format
 **Severity:** Medium
 **Category:** A03 Injection (potential)
-**Location:** `src/BrokerHub.Domain/Entities/Broker.cs`
+**Location:** `src/Nebula.Domain/Entities/Broker.cs`
 **Description:** License number accepts any string. No format validation. Could allow injection attacks if used in dynamic queries.
 **Evidence:**
 ```csharp
@@ -647,7 +647,7 @@ if (!LicenseNumberRegex.IsMatch(licenseNumber))
 
 ## Context
 
-BrokerHub uses JWT tokens issued by Keycloak for authentication. The frontend (React SPA) needs to store these tokens to make authenticated API calls. We must choose a storage mechanism that balances security, usability, and implementation complexity.
+Nebula uses JWT tokens issued by Keycloak for authentication. The frontend (React SPA) needs to store these tokens to make authenticated API calls. We must choose a storage mechanism that balances security, usability, and implementation complexity.
 
 ---
 

@@ -378,7 +378,7 @@ We decided to store JWT tokens in httpOnly cookies with CSRF protection, rather 
 
 ## Context
 
-BrokerHub is a commercial insurance CRM that handles sensitive broker and policy information. Our users authenticate via Keycloak, which issues JWT tokens. We needed to decide how to store these tokens in our React frontend.
+Nebula is a commercial insurance CRM that handles sensitive broker and policy information. Our users authenticate via Keycloak, which issues JWT tokens. We needed to decide how to store these tokens in our React frontend.
 
 ## Options Considered
 

@@ -1,6 +1,6 @@
 # Architecture Best Practices
 
-Comprehensive guide for designing robust, maintainable architecture for BrokerHub and similar enterprise applications.
+Comprehensive guide for designing robust, maintainable architecture for Nebula and similar enterprise applications.
 
 ## Table of Contents
 
@@ -169,7 +169,7 @@ public class CreateBrokerUseCase
 ```csharp
 public class BrokerRepository : IBrokerRepository
 {
-    private readonly BrokerHubDbContext _context;
+    private readonly NebulaDbContext _context;
 
     public async Task<Broker> GetById(Guid id)
     {
@@ -398,7 +398,7 @@ services.AddScoped<IBrokerRepository, SqlBrokerRepository>();
 
 **Definition:** Explicit boundaries within which a domain model is defined.
 
-**BrokerHub Bounded Contexts:**
+**Nebula Bounded Contexts:**
 - **Broker Management Context:** Broker, Contact, BrokerHierarchy
 - **Submission Context:** Submission, Quote, Underwriting
 - **Renewal Context:** Renewal, RenewalTerms
@@ -559,7 +559,7 @@ services.AddScoped<GetBrokerQuery>();
 
 // Infrastructure
 services.AddScoped<IBrokerRepository, BrokerRepository>();
-services.AddDbContext<BrokerHubDbContext>(options =>
+services.AddDbContext<NebulaDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // External Services
@@ -590,7 +590,7 @@ services.AddScoped<ITimelineService, TimelineService>();
 **Header Versioning (Alternative):**
 ```
 GET /api/brokers
-Accept: application/vnd.brokerhub.v1+json
+Accept: application/vnd.nebula.v1+json
 ```
 
 ### Error Handling

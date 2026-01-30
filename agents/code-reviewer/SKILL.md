@@ -275,7 +275,7 @@ Code should NOT be approved until:
 ```markdown
 **Issue:** Long method with high complexity
 
-**Location:** `src/BrokerHub.Application/UseCases/Brokers/CreateBrokerHandler.cs:45-120`
+**Location:** `src/Nebula.Application/UseCases/Brokers/CreateBrokerHandler.cs:45-120`
 
 **Problem:** The `Handle` method is 75 lines long and does multiple things:
 1. Validates input
@@ -397,7 +397,7 @@ private async Task SendNotification(Broker broker)
 
 #### 1. Missing Authorization Check
 **Severity:** Critical
-**Location:** `src/BrokerHub.Api/Controllers/BrokersController.cs:67`
+**Location:** `src/Nebula.Api/Controllers/BrokersController.cs:67`
 
 ```csharp
 [HttpPut("{id}")]
@@ -429,7 +429,7 @@ public async Task<IActionResult> UpdateBroker(Guid id, UpdateBrokerRequest reque
 
 #### 2. No Tests for Update Use Case
 **Severity:** High
-**Location:** `tests/BrokerHub.Application.Tests/`
+**Location:** `tests/Nebula.Application.Tests/`
 
 No unit tests found for `UpdateBrokerHandler`.
 
@@ -464,7 +464,7 @@ public class UpdateBrokerHandlerTests
 
 #### 3. API Layer Directly Accessing DbContext
 **Severity:** High
-**Location:** `src/BrokerHub.Api/Controllers/BrokersController.cs:52`
+**Location:** `src/Nebula.Api/Controllers/BrokersController.cs:52`
 
 ```csharp
 // ❌ Controller directly accessing DbContext - violates Clean Architecture

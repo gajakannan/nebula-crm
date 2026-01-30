@@ -199,7 +199,7 @@ Your responsibility is to ensure the application can be built, tested, and deplo
    - Content: All services for local development (app, db, keycloak, etc.)
 
 2. **Dockerfiles**
-   - Location: Each service root (e.g., `src/BrokerHub.Api/Dockerfile`)
+   - Location: Each service root (e.g., `src/Nebula.Api/Dockerfile`)
    - Format: Dockerfile
    - Content: Optimized multi-stage Docker build
 
@@ -353,31 +353,31 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: brokerhub-postgres
+    container_name: nebula-postgres
     environment:
-      POSTGRES_USER: brokerhub
+      POSTGRES_USER: nebula
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: brokerhub
+      POSTGRES_DB: nebula
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U brokerhub"]
+      test: ["CMD-SHELL", "pg_isready -U nebula"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   keycloak:
     image: quay.io/keycloak/keycloak:23.0
-    container_name: brokerhub-keycloak
+    container_name: nebula-keycloak
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: brokerhub
+      KC_DB_USERNAME: nebula
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "8080:8080"
@@ -398,18 +398,18 @@ services:
   backend:
     build:
       context: .
-      dockerfile: src/BrokerHub.Api/Dockerfile
+      dockerfile: src/Nebula.Api/Dockerfile
       target: development
-    container_name: brokerhub-backend
+    container_name: nebula-backend
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: Host=postgres;Database=brokerhub;Username=brokerhub;Password=${POSTGRES_PASSWORD}
-      Keycloak__Authority: http://keycloak:8080/realms/brokerhub
-      Keycloak__Audience: brokerhub-api
+      ConnectionStrings__DefaultConnection: Host=postgres;Database=nebula;Username=nebula;Password=${POSTGRES_PASSWORD}
+      Keycloak__Authority: http://keycloak:8080/realms/nebula
+      Keycloak__Audience: nebula-api
     ports:
       - "5000:80"
     volumes:
-      - ./src/BrokerHub.Api:/app
+      - ./src/Nebula.Api:/app
       - /app/bin
       - /app/obj
     depends_on:
@@ -425,19 +425,19 @@ services:
 
   frontend:
     build:
-      context: ./brokerhub-ui
+      context: ./nebula-ui
       dockerfile: Dockerfile
       target: development
-    container_name: brokerhub-frontend
+    container_name: nebula-frontend
     environment:
       VITE_API_URL: http://localhost:5000
       VITE_KEYCLOAK_URL: http://localhost:8080
-      VITE_KEYCLOAK_REALM: brokerhub
-      VITE_KEYCLOAK_CLIENT_ID: brokerhub-ui
+      VITE_KEYCLOAK_REALM: nebula
+      VITE_KEYCLOAK_CLIENT_ID: nebula-ui
     ports:
       - "3000:3000"
     volumes:
-      - ./brokerhub-ui:/app
+      - ./nebula-ui:/app
       - /app/node_modules
     depends_on:
       - backend
@@ -458,21 +458,21 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /src
 
 # Copy csproj files and restore dependencies (layer caching)
-COPY ["src/BrokerHub.Api/BrokerHub.Api.csproj", "BrokerHub.Api/"]
-COPY ["src/BrokerHub.Application/BrokerHub.Application.csproj", "BrokerHub.Application/"]
-COPY ["src/BrokerHub.Domain/BrokerHub.Domain.csproj", "BrokerHub.Domain/"]
-COPY ["src/BrokerHub.Infrastructure/BrokerHub.Infrastructure.csproj", "BrokerHub.Infrastructure/"]
+COPY ["src/Nebula.Api/Nebula.Api.csproj", "Nebula.Api/"]
+COPY ["src/Nebula.Application/Nebula.Application.csproj", "Nebula.Application/"]
+COPY ["src/Nebula.Domain/Nebula.Domain.csproj", "Nebula.Domain/"]
+COPY ["src/Nebula.Infrastructure/Nebula.Infrastructure.csproj", "Nebula.Infrastructure/"]
 
-RUN dotnet restore "BrokerHub.Api/BrokerHub.Api.csproj"
+RUN dotnet restore "Nebula.Api/Nebula.Api.csproj"
 
 # Copy source code and build
 COPY src/ .
-WORKDIR "/src/BrokerHub.Api"
-RUN dotnet build "BrokerHub.Api.csproj" -c Release -o /app/build
+WORKDIR "/src/Nebula.Api"
+RUN dotnet build "Nebula.Api.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "BrokerHub.Api.csproj" -c Release -o /app/publish --no-restore
+RUN dotnet publish "Nebula.Api.csproj" -c Release -o /app/publish --no-restore
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
@@ -497,7 +497,7 @@ HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
 
 # Entry point
-ENTRYPOINT ["dotnet", "BrokerHub.Api.dll"]
+ENTRYPOINT ["dotnet", "Nebula.Api.dll"]
 
 # Development target (hot reload)
 FROM build AS development
@@ -505,7 +505,7 @@ WORKDIR /app
 COPY --from=build /src .
 RUN dotnet tool install --global dotnet-ef
 ENV PATH="${PATH}:/root/.dotnet/tools"
-CMD ["dotnet", "watch", "run", "--project", "BrokerHub.Api/BrokerHub.Api.csproj"]
+CMD ["dotnet", "watch", "run", "--project", "Nebula.Api/Nebula.Api.csproj"]
 ```
 
 ---
@@ -659,7 +659,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./src/BrokerHub.Api/Dockerfile
+          file: ./src/Nebula.Api/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -670,7 +670,7 @@ jobs:
     if: github.ref == 'refs/heads/develop'
     environment:
       name: development
-      url: https://dev.brokerhub.example.com
+      url: https://dev.nebula.example.com
 
     steps:
       - name: Deploy to Dev
@@ -684,7 +684,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment:
       name: staging
-      url: https://staging.brokerhub.example.com
+      url: https://staging.nebula.example.com
 
     steps:
       - name: Deploy to Staging
@@ -697,7 +697,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https://brokerhub.example.com
+      url: https://nebula.example.com
 
     steps:
       - name: Deploy to Production

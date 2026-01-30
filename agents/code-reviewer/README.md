@@ -107,7 +107,7 @@ code-reviewer/
 
 ### Step 3: Review Code Quality
 
-Use checklist from `references/code-review-checklist.md`:
+Use checklist from `references/code-review-checklist.md` (or `agents/templates/review-checklist.md`):
 
 **Readability:**
 - [ ] Clear variable and function names
@@ -397,11 +397,11 @@ npm run lint
 
 ```bash
 # Backend
-cd src/BrokerHub.Api
+cd src/Nebula.Api
 dotnet test
 
 # Frontend
-cd brokerhub-ui
+cd nebula-ui
 npm test
 ```
 

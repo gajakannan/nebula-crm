@@ -32,9 +32,13 @@ IMPORTANT RULES:
 ## 1) Product Context
 
 ### 1.1 What we’re building
-Name: BrokerHub
-Domain: Commercial Property & Casualty Insurance CRM (Surplus Lines / Non-Admitted market)
+
+Name: Nebula
+
+Domain: Commercial Property & Casualty Insurance CRM
+
 Purpose: Manage broker/MGA relationships, accounts, submissions, renewals, activities, reminders, and broker insights.
+
 
 ### 1.2 Target users
 

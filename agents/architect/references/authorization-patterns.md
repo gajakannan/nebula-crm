@@ -1,6 +1,6 @@
 # Authorization Patterns
 
-Guide for implementing ABAC with Casbin in BrokerHub.
+Guide for implementing ABAC with Casbin in Nebula.
 
 ## ABAC Components
 

@@ -17,10 +17,10 @@ Phase A work is documented in `planning-mds/INCEPTION.md` sections 3.1 through 3
 **Required Elements:**
 
 ✅ **Vision Statement**
-- Clear, concise statement of what BrokerHub achieves
+- Clear, concise statement of what Nebula achieves
 - Focuses on business outcome, not technical capabilities
 - 2-3 sentences maximum
-- Example: "BrokerHub enables surplus lines carriers to manage broker relationships, submissions, and renewals in a single platform, replacing spreadsheets and email-based workflows with structured data and automated reminders."
+- Example: "Nebula enables surplus lines carriers to manage broker relationships, submissions, and renewals in a single platform, replacing spreadsheets and email-based workflows with structured data and automated reminders."
 
 ✅ **Success Criteria**
 - 3-5 measurable outcomes that define success
@@ -67,7 +67,7 @@ For each persona, define:
 ✅ **Jobs-to-be-Done**
 - 3-5 jobs in format: "When [situation], I want to [action], so I can [outcome]"
 
-**Minimum Personas for BrokerHub MVP:**
+**Minimum Personas for Nebula MVP:**
 1. Distribution & Marketing Manager (Primary)
 2. Underwriter (Primary)
 3. Relationship Manager (Secondary)
@@ -102,7 +102,7 @@ For each epic:
 - In scope: High-level capabilities (3-5 bullet points)
 - Out of scope: Explicit exclusions with reasons
 
-**Minimum Epics for BrokerHub MVP:**
+**Minimum Epics for Nebula MVP:**
 1. E1: Broker & MGA Relationship Management
 2. E2: Account 360 & Activity Timeline
 3. E3: Submission Intake Workflow
@@ -184,7 +184,7 @@ For each screen:
 - Entry points (how users get here)
 - Exit points (where they go from here)
 
-**Minimum Screens for BrokerHub MVP:**
+**Minimum Screens for Nebula MVP:**
 1. Navigation Shell (top nav, side nav) ✅
 2. Broker List (searchable table) ✅
 3. Broker 360 (detail view with timeline) ✅

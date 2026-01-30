@@ -27,10 +27,10 @@ docker-compose exec backend dotnet ef database update
 
 ```bash
 # Backend Dockerfile
-touch src/BrokerHub.Api/Dockerfile
+touch src/Nebula.Api/Dockerfile
 
 # Frontend Dockerfile
-touch brokerhub-ui/Dockerfile
+touch nebula-ui/Dockerfile
 ```
 
 ### 3. Set Up CI/CD
@@ -100,12 +100,12 @@ All services for local development:
 
 ### Dockerfiles
 
-**Backend:** `src/BrokerHub.Api/Dockerfile`
+**Backend:** `src/Nebula.Api/Dockerfile`
 - Multi-stage build
 - Alpine base image
 - Non-root user
 
-**Frontend:** `brokerhub-ui/Dockerfile`
+**Frontend:** `nebula-ui/Dockerfile`
 - Build with Node
 - Serve with nginx
 - Non-root user
@@ -147,13 +147,13 @@ docker-compose exec backend dotnet ef database update
 
 ```bash
 # Build image
-docker build -t brokerhub-backend:latest -f src/BrokerHub.Api/Dockerfile .
+docker build -t nebula-backend:latest -f src/Nebula.Api/Dockerfile .
 
 # Run container
-docker run -p 5000:80 brokerhub-backend:latest
+docker run -p 5000:80 nebula-backend:latest
 
 # Push to registry
-docker push ghcr.io/username/brokerhub-backend:latest
+docker push ghcr.io/username/nebula-backend:latest
 ```
 
 ### Deployment
@@ -232,7 +232,7 @@ docker-compose ps postgres
 docker-compose exec backend env | grep ConnectionStrings
 
 # Test connection
-docker-compose exec postgres psql -U brokerhub -d brokerhub
+docker-compose exec postgres psql -U nebula -d nebula
 ```
 
 ### CI/CD Pipeline Failures

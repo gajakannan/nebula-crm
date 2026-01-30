@@ -22,13 +22,13 @@ This document provides a quick index of all agent roles. For detailed specificat
 **Scope:** Implement ASP.NET Core APIs, EF Core, domain logic, migrations
 **Phase:** Phase C (Implementation Mode)
 **Key Outputs:** C# code, EF migrations, REST APIs, domain services, repositories
-**Status:** SKILL.md, README.md created (references/ and scripts/ pending content)
+**Status:** SKILL.md, README.md, references/ (3 files) created; scripts optional
 
 ### [Frontend Developer](./frontend-developer/SKILL.md) ✅ **COMPLETE**
 **Scope:** Implement React/TypeScript UI, TanStack Query, forms
 **Phase:** Phase C (Implementation Mode)
 **Key Outputs:** React components, hooks, forms, routing, state management
-**Status:** SKILL.md, README.md created (references/ and scripts/ pending content)
+**Status:** SKILL.md, README.md created; references/scripts optional
 
 ---
 
@@ -38,19 +38,19 @@ This document provides a quick index of all agent roles. For detailed specificat
 **Scope:** Write unit/integration/E2E tests, define quality standards
 **Phase:** Phase C (Implementation Mode)
 **Key Outputs:** Test suites, test plans, quality metrics, coverage reports
-**Status:** SKILL.md, README.md created (references/ and scripts/ pending content)
+**Status:** SKILL.md, README.md, references/ (1 file) created; scripts optional
 
 ### [DevOps](./devops/SKILL.md) ✅ **COMPLETE**
 **Scope:** Manage Docker, docker-compose, deployment configs
 **Phase:** Phase C (Implementation Mode) + ongoing
 **Key Outputs:** Dockerfiles, docker-compose.yml, CI/CD configs, deployment scripts
-**Status:** SKILL.md, README.md created (references/ and scripts/ pending content)
+**Status:** SKILL.md, README.md, references/ (1 file) created; scripts optional
 
 ### [Security](./security/SKILL.md) ✅ **COMPLETE**
 **Scope:** Review auth/authz, security practices, auditability
 **Phase:** Phase B (design review) + Phase C (implementation review)
 **Key Outputs:** Security review reports, threat models, audit recommendations
-**Status:** SKILL.md, README.md created (references/ and scripts/ pending content)
+**Status:** SKILL.md, README.md, references/ (5 files) created; scripts optional
 
 ---
 
@@ -60,7 +60,7 @@ This document provides a quick index of all agent roles. For detailed specificat
 **Scope:** Review code quality, standards, test coverage
 **Phase:** Phase C (Implementation Mode) — per pull request
 **Key Outputs:** Code review comments, approval/rejection, improvement recommendations
-**Status:** SKILL.md, README.md created (references/ and scripts/ pending content)
+**Status:** SKILL.md, README.md, references/ (1 file) created; scripts optional
 
 ---
 
@@ -70,13 +70,13 @@ This document provides a quick index of all agent roles. For detailed specificat
 **Scope:** Create API docs, README, runbooks
 **Phase:** Phase C (Implementation Mode) + ongoing
 **Key Outputs:** API documentation, README.md, runbooks, developer guides
-**Status:** SKILL.md, README.md created (references/ and scripts/ pending content)
+**Status:** SKILL.md, README.md, references/ (1 file) created; scripts optional
 
 ### [Blogger](./blogger/SKILL.md) ✅ **COMPLETE**
 **Scope:** Publish dev logs, decisions, lessons learned
 **Phase:** All phases (continuous)
 **Key Outputs:** Blog posts, development logs, technical articles
-**Status:** SKILL.md, README.md created (references/ and scripts/ pending content)
+**Status:** SKILL.md, README.md, references/ (1 file) created; scripts optional
 
 ---
 
@@ -130,4 +130,4 @@ All builder agent specifications are now complete and ready to use!
 2. Read the specific agent specification file for your current task
 3. Use templates from `templates/` directory for consistent deliverables
 4. Follow quality gates and definition of done for each agent role
-5. **Ready to build!** All agents are available for BrokerHub development
+5. **Ready to build!** All agents are available for Nebula development

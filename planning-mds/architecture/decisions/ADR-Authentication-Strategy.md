@@ -28,7 +28,7 @@ Nebula requires a robust authentication solution that supports multiple user typ
 - **Compliance:** Insurance industry requires audit trails and secure identity management
 - **User Management:** Centralized user administration for internal staff
 - **Future Extensibility:** Need to support external users (MGA portals) in future phases
-- **Integration:** Must integrate seamlessly with ASP.NET Core 8 backend and React 18 frontend
+- **Integration:** Must integrate seamlessly with .NET 10 Minimal API backend and React 18 frontend
 - **Token Standards:** JWT tokens for stateless API authentication
 - **Maintainability:** Prefer managed IAM solution over building custom auth
 - **Multi-tenancy Ready:** Support for future multi-tenant scenarios
@@ -40,7 +40,7 @@ Nebula requires a robust authentication solution that supports multiple user typ
 1. **Keycloak (Open Source IAM)** - Self-hosted OIDC/OAuth 2.0 provider with realm management
 2. **Azure AD B2C** - Cloud-based identity service from Microsoft
 3. **Auth0** - Commercial SaaS identity platform
-4. **Custom JWT Auth** - Build authentication system from scratch using ASP.NET Core Identity
+4. **Custom JWT Auth** - Build authentication system from scratch using .NET 10 Identity
 
 ---
 
@@ -55,7 +55,7 @@ We will use Keycloak as our Identity and Access Management (IAM) provider implem
 - **Protocol:** OpenID Connect (OIDC) with OAuth 2.0 authorization code flow
 - **Tokens:** JWT access tokens and refresh tokens
 - **Frontend Integration:** React app redirects to Keycloak for login, receives tokens
-- **Backend Integration:** ASP.NET Core 8 validates JWT tokens on every API request
+- **Backend Integration:** .NET 10 Minimal APIs validate JWT tokens on every API request
 - **User Store:** Keycloak manages user credentials and profiles
 - **User Profiles:** Application maintains UserProfile entities linked to Keycloak subject (sub claim)
 
@@ -79,7 +79,7 @@ We will use Keycloak as our Identity and Access Management (IAM) provider implem
 - **Token-Based:** Stateless API authentication enables horizontal scaling
 - **Future-Proof:** Easy to add SSO, SAML, or external identity federation later
 - **Multi-Tenant Ready:** Keycloak realms can support future multi-tenancy needs
-- **Developer Experience:** Standard OIDC libraries available for React and ASP.NET Core
+- **Developer Experience:** Standard OIDC libraries available for React and .NET 10
 
 ### Negative:
 - **Infrastructure Complexity:** Adds another service to deploy and monitor (Keycloak + PostgreSQL)
@@ -100,7 +100,7 @@ We will use Keycloak as our Identity and Access Management (IAM) provider implem
    - Deploy Keycloak via Docker Compose with PostgreSQL backend
    - Create `nebula` realm for application
    - Configure OIDC client for React frontend (public client)
-   - Configure API audience for ASP.NET Core backend
+   - Configure API audience for .NET 10 Minimal API backend
 
 2. **Frontend Integration:**
    - Use `keycloak-js` library for React integration
@@ -108,11 +108,13 @@ We will use Keycloak as our Identity and Access Management (IAM) provider implem
    - Store tokens securely (see ADR-002: Auth Token Storage)
    - Auto-refresh tokens before expiration
 
-3. **Backend Integration:**
-   - Configure `Microsoft.AspNetCore.Authentication.JwtBearer`
+3. **Backend Integration (.NET 10 Minimal APIs):**
+   - Configure `Microsoft.AspNetCore.Authentication.JwtBearer` in Program.cs
    - Validate JWT signature using Keycloak's JWKS endpoint
-   - Extract user identity from `sub` claim
+   - Extract user identity from `sub` claim via endpoint filters or middleware
    - Create UserProfile on first authenticated request if not exists
+   - Use endpoint authorization with `.RequireAuthorization()` on route groups
+   - Apply endpoint filters for user profile synchronization
 
 4. **Audit Integration:**
    - Log Keycloak events to ActivityTimelineEvent table

@@ -83,9 +83,9 @@ These are locked unless explicitly changed later:
 
 - Frontend: React 18 + TypeScript + Vite + Tailwind + shadcn/ui
 - State: TanStack Query, React Hook Form, Zod
-- Backend: C# / ASP.NET Core 8 REST APIs
+- Backend: C# / .NET 10 Minimal APIs
 - Database: PostgreSQL (dev + prod)
-- ORM: EF Core 8
+- ORM: EF Core 10
 - AuthN: Keycloak (OIDC/JWT)
 - AuthZ: Casbin ABAC enforced server-side
 - Workflow engine: Temporal (included in Phase 0)

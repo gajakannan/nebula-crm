@@ -165,71 +165,14 @@ axios.interceptors.request.use((config) => {
 });
 ```
 
-### Backend (ASP.NET Core):
+### Backend (.NET 10 Minimal APIs):
 
 ```csharp
-// 1. Token Exchange Endpoint (after Keycloak login)
-[HttpPost("api/auth/token")]
-public async Task<IActionResult> SetTokenCookie([FromBody] TokenRequest request)
-{
-    // Validate tokens with Keycloak
-    var validation = await _keycloakService.ValidateTokens(request);
+// Program.cs - Service Configuration
+var builder = WebApplication.CreateBuilder(args);
 
-    // Set httpOnly refresh token cookie
-    Response.Cookies.Append("refresh_token", request.RefreshToken, new CookieOptions
-    {
-        HttpOnly = true,
-        Secure = true,
-        SameSite = SameSiteMode.Strict,
-        Expires = DateTimeOffset.UtcNow.AddDays(7),
-    });
-
-    return Ok(new { access_token = request.AccessToken });
-}
-
-// 2. Token Refresh Endpoint
-[HttpPost("api/auth/refresh")]
-public async Task<IActionResult> RefreshToken()
-{
-    // Read refresh token from httpOnly cookie
-    var refreshToken = Request.Cookies["refresh_token"];
-    if (string.IsNullOrEmpty(refreshToken))
-        return Unauthorized();
-
-    // Exchange with Keycloak for new tokens
-    var newTokens = await _keycloakService.RefreshTokens(refreshToken);
-
-    // Rotate refresh token (set new cookie)
-    Response.Cookies.Append("refresh_token", newTokens.RefreshToken, new CookieOptions
-    {
-        HttpOnly = true,
-        Secure = true,
-        SameSite = SameSiteMode.Strict,
-        Expires = DateTimeOffset.UtcNow.AddDays(7),
-    });
-
-    return Ok(new { access_token = newTokens.AccessToken });
-}
-
-// 3. Logout Endpoint
-[HttpPost("api/auth/logout")]
-public IActionResult Logout()
-{
-    // Delete refresh token cookie
-    Response.Cookies.Delete("refresh_token");
-
-    // Optionally revoke token with Keycloak
-    await _keycloakService.RevokeToken(Request.Cookies["refresh_token"]);
-
-    return Ok();
-}
-```
-
-### Security Configurations:
-
-**CORS (Backend):**
-```csharp
-services.AddCors(options => {
+// Add CORS for frontend
+builder.Services.AddCors(options => {
     options.AddPolicy("AllowFrontend", builder => {
         builder.WithOrigins("http://localhost:5173") // Vite dev server
                .AllowCredentials() // Required for cookies
@@ -237,6 +180,82 @@ services.AddCors(options => {
                .AllowAnyMethod();
     });
 });
+
+// Add Keycloak service
+builder.Services.AddScoped<IKeycloakService, KeycloakService>();
+
+var app = builder.Build();
+app.UseCors("AllowFrontend");
+
+// Auth Endpoints Group
+var authGroup = app.MapGroup("/api/auth");
+
+// 1. Token Exchange Endpoint (after Keycloak login)
+authGroup.MapPost("/token", async (
+    TokenRequest request,
+    IKeycloakService keycloakService,
+    HttpContext context) =>
+{
+    // Validate tokens with Keycloak
+    var validation = await keycloakService.ValidateTokens(request);
+
+    // Set httpOnly refresh token cookie
+    context.Response.Cookies.Append("refresh_token", request.RefreshToken, new CookieOptions
+    {
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Strict,
+        Expires = DateTimeOffset.UtcNow.AddDays(7),
+    });
+
+    return Results.Ok(new { access_token = request.AccessToken });
+});
+
+// 2. Token Refresh Endpoint
+authGroup.MapPost("/refresh", async (
+    IKeycloakService keycloakService,
+    HttpContext context) =>
+{
+    // Read refresh token from httpOnly cookie
+    var refreshToken = context.Request.Cookies["refresh_token"];
+    if (string.IsNullOrEmpty(refreshToken))
+        return Results.Unauthorized();
+
+    // Exchange with Keycloak for new tokens
+    var newTokens = await keycloakService.RefreshTokens(refreshToken);
+
+    // Rotate refresh token (set new cookie)
+    context.Response.Cookies.Append("refresh_token", newTokens.RefreshToken, new CookieOptions
+    {
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Strict,
+        Expires = DateTimeOffset.UtcNow.AddDays(7),
+    });
+
+    return Results.Ok(new { access_token = newTokens.AccessToken });
+});
+
+// 3. Logout Endpoint
+authGroup.MapPost("/logout", async (
+    IKeycloakService keycloakService,
+    HttpContext context) =>
+{
+    var refreshToken = context.Request.Cookies["refresh_token"];
+
+    // Delete refresh token cookie
+    context.Response.Cookies.Delete("refresh_token");
+
+    // Optionally revoke token with Keycloak
+    if (!string.IsNullOrEmpty(refreshToken))
+    {
+        await keycloakService.RevokeToken(refreshToken);
+    }
+
+    return Results.Ok();
+});
+
+app.Run();
 ```
 
 **Axios (Frontend):**

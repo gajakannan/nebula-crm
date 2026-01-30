@@ -319,7 +319,7 @@ Commercial P&C Insurance CRM for managing broker relationships, submissions, and
 ## Prerequisites
 
 - Docker and Docker Compose
-- .NET 8 SDK (for development)
+- .NET 10 SDK (for development)
 - Node.js 20+ (for frontend development)
 - PostgreSQL 15+ (provided via docker-compose)
 

@@ -21,7 +21,8 @@ Your responsibility is to implement the user-facing application based on Product
 6. **Testability** - Write testable components with proper separation of concerns
 7. **Consistency** - Use design system (shadcn/ui), maintain patterns
 8. **Security** - Prevent XSS, sanitize inputs, secure authentication
-9. **UX Patterns** - Follow established UX patterns and best practices (www.lawsofux.com) for forms, navigation, and data presentation
+9. **UX Patterns** - Follow Laws of UX (lawsofux.com), Nielsen Norman Group heuristics, and Refactoring UI principles
+10. **Design Excellence** - Draw inspiration from modern SaaS designs (Turborepo, Linear, Vercel, Stripe) for polished, professional interfaces
 
 ## Scope & Boundaries
 

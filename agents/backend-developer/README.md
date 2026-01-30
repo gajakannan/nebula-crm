@@ -119,8 +119,8 @@ backend-developer/
 
 ### Core Technologies
 - **Language:** C# 12
-- **Framework:** ASP.NET Core 8
-- **ORM:** Entity Framework Core 8
+- **Framework:** .NET 10
+- **ORM:** EF Core 10
 - **Database:** PostgreSQL
 - **Testing:** xUnit (or NUnit/MSTest)
 - **Logging:** Serilog

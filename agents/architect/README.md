@@ -286,8 +286,8 @@ Check completion:
 ## Technology Stack
 
 ### Backend
-- C# / ASP.NET Core 8
-- EF Core 8 with PostgreSQL
+- C# / .NET 10 Minimal APIs
+- EF Core 10 with PostgreSQL
 - Keycloak for authentication (OIDC/JWT)
 - Casbin for authorization (ABAC)
 - Temporal for workflows

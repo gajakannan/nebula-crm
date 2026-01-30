@@ -268,7 +268,7 @@ Implementation agents (Backend, Frontend, DevOps) should NOT begin Phase C until
 1. **No Product Decisions:** If a requirement is unclear or missing, you MUST ask the Product Manager for clarification. Do NOT make product decisions (e.g., "I think we should add feature X").
 
 2. **Technology Stack Adherence:** Nebula uses:
-   - Backend: C# / ASP.NET Core 8 / EF Core 8 / PostgreSQL
+   - Backend: C# / .NET 10 Minimal APIs / EF Core 10 / PostgreSQL
    - Frontend: React 18 / TypeScript / Vite / Tailwind / shadcn/ui
    - Auth: Keycloak (OIDC/JWT)
    - AuthZ: Casbin (ABAC)

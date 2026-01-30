@@ -40,14 +40,29 @@ Understand requirements before coding:
 ### 3. Load References
 
 ```bash
-# Frontend best practices
+# UX principles (Laws of UX, Nielsen Norman, Refactoring UI)
+cat agents/frontend-developer/references/ux-principles.md
+
+# Design inspiration (Turborepo, Linear, Vercel, Stripe, etc.)
+cat agents/frontend-developer/references/design-inspiration.md
+
+# React best practices
 cat agents/frontend-developer/references/react-best-practices.md
 
 # TypeScript patterns
 cat agents/frontend-developer/references/typescript-patterns.md
 
+# TanStack Query guide (API integration)
+cat agents/frontend-developer/references/tanstack-query-guide.md
+
+# Form handling guide (React Hook Form + Zod)
+cat agents/frontend-developer/references/form-handling-guide.md
+
 # Accessibility guide
 cat agents/frontend-developer/references/accessibility-guide.md
+
+# Testing guide (React Testing Library)
+cat agents/frontend-developer/references/testing-guide.md
 ```
 
 ### 4. Follow the Workflow
@@ -63,12 +78,14 @@ frontend-developer/
 ├── SKILL.md                          # Main agent specification
 ├── README.md                         # This file
 ├── references/                       # Best practices and patterns
-│   ├── react-best-practices.md
-│   ├── typescript-patterns.md
-│   ├── tanstack-query-guide.md
-│   ├── form-handling-guide.md
-│   ├── accessibility-guide.md
-│   └── testing-guide.md
+│   ├── ux-principles.md              # Laws of UX, Nielsen Norman, Refactoring UI
+│   ├── design-inspiration.md         # Turborepo, Linear, Vercel, Stripe, etc.
+│   ├── react-best-practices.md       # Component patterns and React guidelines
+│   ├── typescript-patterns.md        # TypeScript best practices
+│   ├── tanstack-query-guide.md       # TanStack Query patterns for API integration
+│   ├── form-handling-guide.md        # React Hook Form + Zod validation patterns
+│   ├── accessibility-guide.md        # WCAG 2.1 AA compliance guide
+│   └── testing-guide.md              # React Testing Library patterns
 └── scripts/                          # Development scripts
     ├── README.md
     ├── scaffold-component.py

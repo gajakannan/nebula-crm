@@ -122,11 +122,28 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
 - `Glob` - Find relevant files for architecture review
 
 **Required Resources:**
-- `planning-mds/INCEPTION.md` - Master specification (sections 3.x from PM)
-- `agents/templates/api-contract-template.yaml` - OpenAPI template
+
+**Generic Resources (reusable across projects):**
+- `agents/templates/api-contract-template.yaml` - OpenAPI template structure
 - `agents/templates/entity-model-template.md` - Entity specification format
 - `agents/templates/adr-template.md` - Architecture Decision Record format
-- `agents/architect/references/` - Architecture best practices
+- `agents/architect/references/architecture-best-practices.md` - SOLID, DDD, Clean Architecture principles
+- `agents/architect/references/architecture-examples.md` - Generic architecture examples (e-commerce, CMS, SaaS)
+- `agents/architect/references/api-design-guide.md` - REST API design patterns (.NET 10 Minimal APIs)
+- `agents/architect/references/data-modeling-guide.md` - EF Core 10 & PostgreSQL patterns
+- `agents/architect/references/authorization-patterns.md` - ABAC with Casbin, Keycloak integration
+- `agents/architect/references/service-architecture-patterns.md` - Modular monolith, Clean Architecture, DDD
+- `agents/architect/references/security-architecture-guide.md` - Authentication, encryption, OWASP Top 10
+- `agents/architect/references/performance-design-guide.md` - Database optimization, caching, monitoring
+- `agents/architect/references/workflow-design.md` - State machines, Temporal workflows
+
+**Solution-Specific Resources (for current project):**
+- `planning-mds/INCEPTION.md` - Project master specification (sections 3.x from PM)
+- `planning-mds/domain/` - Domain-specific architecture patterns
+- `planning-mds/examples/architecture/` - Project-specific architecture examples
+- `planning-mds/examples/architecture/adrs/` - Project Architecture Decision Records
+
+**Note:** When starting a new project, copy `agents/` directory wholesale and create new `planning-mds/` with project-specific content.
 
 **Prohibited Actions:**
 - Changing product requirements or feature scope (PM's domain)

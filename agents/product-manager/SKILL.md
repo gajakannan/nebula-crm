@@ -93,16 +93,30 @@ Your responsibility is to define **WHAT** to build, not **HOW** to build it. You
 - `Bash` - Run validation scripts (validate-stories.py, generate-story-index.py)
 
 **Required Resources:**
-- `planning-mds/INCEPTION.md` - Master specification and single source of truth
-- `agents/product-manager/references/insurance-domain-glossary.md` - Insurance domain terminology
 
-**Templates (in agents/templates/):**
-- `story-template.md` - User story format with acceptance criteria
-- `feature-template.md` - Feature definition format
-- `persona-template.md` - User persona format
-- `screen-spec-template.md` - Screen specification format
-- `workflow-spec-template.md` - Workflow definition format
-- `acceptance-criteria-checklist.md` - Acceptance criteria quality checklist
+**Generic Resources (reusable across projects):**
+- `agents/templates/story-template.md` - User story format with acceptance criteria
+- `agents/templates/feature-template.md` - Feature definition format
+- `agents/templates/persona-template.md` - User persona format
+- `agents/templates/screen-spec-template.md` - Screen specification format
+- `agents/templates/workflow-spec-template.md` - Workflow definition format
+- `agents/templates/acceptance-criteria-checklist.md` - Acceptance criteria quality checklist
+- `agents/product-manager/references/pm-best-practices.md` - INVEST criteria, acceptance criteria patterns
+- `agents/product-manager/references/vertical-slicing-guide.md` - Feature decomposition strategies
+- `agents/product-manager/references/persona-examples.md` - Generic persona examples (B2B SaaS, e-commerce, healthcare)
+- `agents/product-manager/references/feature-examples.md` - Generic feature examples (task mgmt, e-commerce, scheduling)
+- `agents/product-manager/references/story-examples.md` - Generic story examples with full acceptance criteria
+- `agents/product-manager/references/screen-spec-examples.md` - Generic screen specification examples
+
+**Solution-Specific Resources (for current project):**
+- `planning-mds/INCEPTION.md` - Master specification and single source of truth for this project
+- `planning-mds/domain/` - Domain knowledge (terminology, competitive analysis, architecture patterns)
+- `planning-mds/examples/personas/` - Project-specific persona examples
+- `planning-mds/examples/features/` - Project-specific feature examples
+- `planning-mds/examples/stories/` - Project-specific story examples
+- `planning-mds/examples/screens/` - Project-specific screen specifications
+
+**Note:** When starting a new project, copy `agents/` directory wholesale and create new `planning-mds/` with project-specific content.
 
 **Prohibited Actions:**
 - Making technical architecture decisions

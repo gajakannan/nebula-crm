@@ -1,6 +1,10 @@
 # Architecture Best Practices
 
-Comprehensive guide for designing robust, maintainable architecture for Nebula and similar enterprise applications.
+**Note:** This guide uses example entities (Broker, Submission, Order, etc.) in code samples for illustration purposes. Replace these with your domain-specific entities when applying to your project. See `planning-mds/examples/` for project-specific architecture examples.
+
+---
+
+Comprehensive guide for designing robust, maintainable architecture for enterprise applications.
 
 ## Table of Contents
 

@@ -1,319 +1,142 @@
 # Architecture Examples
 
-Real-world examples from Nebula showing complete architectural specifications. These examples demonstrate best practices for entity design, API contracts, workflows, authorization, and architectural decisions.
+Real-world architecture examples across different domains. Use these as templates when designing your specific solution.
 
 ---
 
-## Example 1: Complete Broker Module Specification
+## Example 1: E-commerce Order Management System
 
-This example shows a complete module specification including entity design, API contracts, authorization policies, and audit requirements.
+### Order Entity Specification
 
-### Broker Entity Specification
+**Table Name:** `Orders`
 
-**Table Name:** `Brokers`
-
-**Description:** Represents an insurance broker or brokerage firm that submits business to carriers.
+**Description:** Represents a customer order with line items.
 
 #### Fields
 
 | Field | Type | Constraints | Default | Description |
 |-------|------|-------------|---------|-------------|
 | Id | Guid | PK, NOT NULL | NewGuid() | Unique identifier |
-| Name | string(255) | NOT NULL, INDEX | - | Broker legal name (DBA or registered name) |
-| LicenseNumber | string(50) | NOT NULL, UNIQUE | - | State-issued broker license number |
-| State | string(2) | NOT NULL, FK → States | - | Licensed state (US state code: CA, NY, TX, etc.) |
-| TaxId | string(20) | NULL | - | Federal Tax ID (EIN) - encrypted at rest |
-| Email | string(255) | NULL | - | Primary contact email |
-| Phone | string(20) | NULL | - | Primary contact phone (format: +1-555-555-5555) |
-| Address | string(500) | NULL | - | Physical mailing address |
-| Website | string(255) | NULL | - | Broker website URL |
-| ParentBrokerId | Guid | NULL, FK → Brokers | - | For broker hierarchies (MGA → sub-broker) |
-| Status | string(20) | NOT NULL | 'Active' | Active, Inactive, Suspended |
-| InternalNotes | string(2000) | NULL | - | Internal-only notes (not visible to brokers) |
-| CreatedAt | DateTime | NOT NULL | UtcNow | UTC timestamp of creation |
-| CreatedBy | Guid | NOT NULL, FK → Users | - | User who created the record |
-| UpdatedAt | DateTime | NOT NULL | UtcNow | UTC timestamp of last update |
-| UpdatedBy | Guid | NOT NULL, FK → Users | - | User who last updated the record |
-| DeletedAt | DateTime | NULL | - | Soft delete timestamp (NULL = active) |
+| OrderNumber | string(50) | NOT NULL, UNIQUE | - | Human-readable order number (ORD-2026-001234) |
+| CustomerId | Guid | FK → Customers, NOT NULL | - | Customer who placed order |
+| Status | string(20) | NOT NULL | 'Pending' | Pending, Processing, Shipped, Delivered, Cancelled |
+| OrderDate | DateTime | NOT NULL | UtcNow | When order was placed |
+| TotalAmount | decimal(18,2) | NOT NULL | - | Order total (sum of line items) |
+| ShippingAddress | string(500) | NOT NULL | - | Delivery address |
+| PaymentMethod | string(50) | NOT NULL | - | CreditCard, PayPal, BankTransfer |
+| PaymentStatus | string(20) | NOT NULL | 'Pending' | Pending, Paid, Refunded |
+| CreatedAt | DateTime | NOT NULL | UtcNow | UTC timestamp |
+| CreatedBy | Guid | NOT NULL | - | System or user who created |
+| UpdatedAt | DateTime | NOT NULL | UtcNow | UTC timestamp |
+| UpdatedBy | Guid | NOT NULL | - | User who last updated |
 
 #### Relationships
 
-- **One-to-Many:** Broker → Contacts (one broker has many contact persons)
-  - Cascade: Soft delete (when broker soft-deleted, contacts also soft-deleted)
-- **One-to-Many:** Broker → Submissions (one broker submits many submissions)
-  - Cascade: Restrict (cannot delete broker with active submissions)
-- **One-to-Many:** Broker → Accounts (one broker manages many accounts/insureds)
-  - Cascade: Restrict (cannot delete broker with active accounts)
-- **Self-Referencing:** Broker → ParentBroker (for MGA/sub-broker hierarchies)
-  - Cascade: Set NULL (if parent deleted, child becomes top-level broker)
-- **Many-to-One:** Broker → States (reference data)
+- **One-to-Many:** Order → OrderItems (cascade delete)
+- **Many-to-One:** Order → Customer (restrict delete if orders exist)
 
 #### Indexes
 
-- `PK_Brokers_Id` (PRIMARY KEY, clustered)
-- `IX_Brokers_LicenseNumber` (UNIQUE, non-clustered)
-- `IX_Brokers_Name` (non-clustered, for search/filter)
-- `IX_Brokers_State` (non-clustered, for filtering by state)
-- `IX_Brokers_Status` (non-clustered, for filtering active/inactive)
-- `IX_Brokers_ParentBrokerId` (non-clustered, for hierarchy queries)
-- `IX_Brokers_DeletedAt` (partial index WHERE DeletedAt IS NULL, for active records)
+- `IX_Orders_OrderNumber` (UNIQUE)
+- `IX_Orders_CustomerId`
+- `IX_Orders_Status`
+- `IX_Orders_OrderDate`
 
 #### Audit Requirements
 
-All mutations (Create, Update, Soft Delete) must generate `ActivityTimelineEvent`:
+- All mutations create `ActivityTimelineEvent`
+- Events: OrderCreated, OrderStatusChanged, OrderCancelled
+- Timeline includes before/after state for updates
 
-- **BrokerCreated**: When new broker added
-- **BrokerUpdated**: When any field modified (include changed fields in payload)
-- **BrokerDeleted**: When soft-deleted (sets DeletedAt timestamp)
-- **BrokerRestored**: When un-deleted (clears DeletedAt)
+### Order Workflow State Machine
 
-Timeline events include:
+**States:**
+- Pending (initial) → Processing → Shipped → Delivered (terminal)
+- Pending → Cancelled (terminal)
+
+**Allowed Transitions:**
+
+| From | To | Prerequisites | Authorization |
+|------|----|---------------|---------------|
+| Pending | Processing | Payment confirmed | System, Admin |
+| Processing | Shipped | Items picked, label generated | WarehouseStaff, Admin |
+| Shipped | Delivered | Carrier confirms delivery | System |
+| Pending | Cancelled | No payment or customer request | Customer, Admin |
+| Processing | Cancelled | Customer request before shipment | Admin only |
+
+**Validation Rules:**
+
+**Processing → Shipped:**
+- All order items must be picked
+- Shipping label must be generated
+- Carrier tracking number must exist
+
+**Error Responses:**
+
 ```json
 {
-  "entityType": "Broker",
-  "entityId": "guid-here",
-  "eventType": "BrokerCreated",
-  "userId": "user-guid",
-  "timestamp": "2026-01-31T10:30:00Z",
-  "payload": {
-    "name": "Acme Insurance Brokers",
-    "licenseNumber": "CA-12345",
-    "state": "CA"
+  "code": "INVALID_TRANSITION",
+  "message": "Cannot ship order. Items not yet picked.",
+  "details": {
+    "currentStatus": "Processing",
+    "attemptedStatus": "Shipped",
+    "missingRequirements": ["Items not picked"]
   }
 }
 ```
 
-#### Seed Data Strategy
-
-- **No broker seed data** (all broker records are user-created)
-- **Reference data seeded**: `States` table populated with 50 US states + DC
-- **Test data**: Faker-generated brokers for development/testing environments only
-
----
-
-### Broker API Contracts
-
-Complete OpenAPI specification for all Broker CRUD operations.
+### Order API Contract
 
 ```yaml
 openapi: 3.0.0
-info:
-  title: Broker Management API
-  version: 1.0.0
-  description: API for managing insurance brokers and brokerage firms
-
-servers:
-  - url: https://api.nebula.example.com
-    description: Production API
-  - url: http://localhost:5000
-    description: Development API
-
-security:
-  - bearerAuth: []
-
 paths:
-  /api/brokers:
+  /api/orders:
     post:
-      summary: Create a new broker
-      description: Creates a new broker record. Requires CreateBroker permission.
-      operationId: createBroker
-      tags: [Brokers]
+      summary: Create a new order
+      operationId: createOrder
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [name, licenseNumber, state]
+              required: [customerId, items, shippingAddress]
               properties:
-                name:
-                  type: string
-                  maxLength: 255
-                  description: Legal name of the broker or brokerage firm
-                  example: "Acme Insurance Brokers"
-                licenseNumber:
-                  type: string
-                  maxLength: 50
-                  description: State-issued broker license number
-                  example: "CA-12345"
-                state:
-                  type: string
-                  pattern: "^[A-Z]{2}$"
-                  description: Two-letter US state code
-                  example: "CA"
-                taxId:
-                  type: string
-                  maxLength: 20
-                  nullable: true
-                  description: Federal Tax ID (EIN)
-                  example: "12-3456789"
-                email:
-                  type: string
-                  format: email
-                  maxLength: 255
-                  nullable: true
-                phone:
-                  type: string
-                  maxLength: 20
-                  nullable: true
-                address:
-                  type: string
-                  maxLength: 500
-                  nullable: true
-                website:
-                  type: string
-                  format: uri
-                  maxLength: 255
-                  nullable: true
-                parentBrokerId:
+                customerId:
                   type: string
                   format: uuid
-                  nullable: true
-                  description: Parent broker ID for sub-broker relationships
-                internalNotes:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      productId:
+                        type: string
+                        format: uuid
+                      quantity:
+                        type: integer
+                        minimum: 1
+                      price:
+                        type: number
+                        format: decimal
+                shippingAddress:
                   type: string
-                  maxLength: 2000
-                  nullable: true
-                  description: Internal-only notes (not visible to brokers)
+                paymentMethod:
+                  type: string
+                  enum: [CreditCard, PayPal, BankTransfer]
       responses:
         '201':
-          description: Broker created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerResponse'
+          description: Order created successfully
         '400':
           description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                validationError:
-                  value:
-                    code: "VALIDATION_ERROR"
-                    message: "Invalid request data"
-                    details:
-                      - field: "licenseNumber"
-                        message: "License number is required"
-        '403':
-          description: Forbidden - user lacks CreateBroker permission
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+        '402':
+          description: Payment required
         '409':
-          description: Conflict - duplicate license number
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                duplicateLicense:
-                  value:
-                    code: "DUPLICATE_LICENSE"
-                    message: "A broker with this license number already exists"
-                    details:
-                      - field: "licenseNumber"
-                        message: "License number CA-12345 is already in use"
+          description: Inventory conflict (out of stock)
 
-    get:
-      summary: List all brokers with pagination and filtering
-      description: Returns paginated list of brokers. Requires ReadBroker permission.
-      operationId: listBrokers
-      tags: [Brokers]
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: pageSize
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-        - name: status
-          in: query
-          schema:
-            type: string
-            enum: [Active, Inactive, Suspended]
-        - name: state
-          in: query
-          schema:
-            type: string
-            pattern: "^[A-Z]{2}$"
-        - name: search
-          in: query
-          description: Search by broker name or license number
-          schema:
-            type: string
-        - name: sort
-          in: query
-          description: Sort field and direction (e.g., name:asc, createdAt:desc)
-          schema:
-            type: string
-            default: "name:asc"
-      responses:
-        '200':
-          description: List of brokers
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/BrokerListItem'
-                  page:
-                    type: integer
-                    example: 1
-                  pageSize:
-                    type: integer
-                    example: 20
-                  totalCount:
-                    type: integer
-                    example: 156
-                  totalPages:
-                    type: integer
-                    example: 8
-
-  /api/brokers/{id}:
-    get:
-      summary: Get broker by ID
-      description: Returns detailed broker information. Requires ReadBroker permission.
-      operationId: getBroker
-      tags: [Brokers]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Broker details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerResponse'
-        '404':
-          description: Broker not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+  /api/orders/{id}/status:
     put:
-      summary: Update broker
-      description: Updates broker information. Requires UpdateBroker permission.
-      operationId: updateBroker
-      tags: [Brokers]
+      summary: Update order status
       parameters:
         - name: id
           in: path
@@ -326,734 +149,128 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BrokerUpdateRequest'
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [Processing, Shipped, Delivered, Cancelled]
+                trackingNumber:
+                  type: string
+                  description: Required when transitioning to Shipped
       responses:
         '200':
-          description: Broker updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerResponse'
-        '400':
-          description: Validation error
-        '403':
-          description: Forbidden
-        '404':
-          description: Broker not found
+          description: Status updated successfully
         '409':
-          description: Conflict (e.g., duplicate license number)
+          description: Invalid status transition
+```
 
-    delete:
-      summary: Soft delete broker
-      description: Soft deletes broker (sets DeletedAt timestamp). Requires DeleteBroker permission.
-      operationId: deleteBroker
-      tags: [Brokers]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Broker deleted successfully
-        '403':
-          description: Forbidden
-        '404':
-          description: Broker not found
-        '409':
-          description: Conflict - cannot delete broker with active submissions/accounts
+### Authorization Policies
 
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+**Casbin Policies:**
 
-  schemas:
-    BrokerResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        licenseNumber:
-          type: string
-        state:
-          type: string
-        email:
-          type: string
-          nullable: true
-        phone:
-          type: string
-          nullable: true
-        address:
-          type: string
-          nullable: true
-        website:
-          type: string
-          nullable: true
-        parentBrokerId:
-          type: string
-          format: uuid
-          nullable: true
-        status:
-          type: string
-          enum: [Active, Inactive, Suspended]
-        internalNotes:
-          type: string
-          nullable: true
-          description: Only visible to internal users (not brokers)
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
+```
+# Customers can create orders and view their own orders
+p, Customer, Order, Create, allow
+p, Customer, Order, Read, allow, sub.userId == res.customerId
 
-    BrokerListItem:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        licenseNumber:
-          type: string
-        state:
-          type: string
-        status:
-          type: string
-          enum: [Active, Inactive, Suspended]
+# WarehouseStaff can update order status (Processing → Shipped)
+p, WarehouseStaff, Order, Update, allow, res.status in ["Processing", "Shipped"]
 
-    BrokerUpdateRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          maxLength: 255
-        email:
-          type: string
-          format: email
-        phone:
-          type: string
-        address:
-          type: string
-        website:
-          type: string
-        status:
-          type: string
-          enum: [Active, Inactive, Suspended]
-        internalNotes:
-          type: string
-
-    ErrorResponse:
-      type: object
-      required: [code, message]
-      properties:
-        code:
-          type: string
-          description: Machine-readable error code
-        message:
-          type: string
-          description: Human-readable error message
-        details:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-              message:
-                type: string
+# Admins can do everything
+p, Admin, Order, *, allow
 ```
 
 ---
 
-### Broker Authorization Policies
+## Example 2: Content Management System - Article Workflow
 
-Casbin ABAC policies for Broker module.
+### Article Entity Specification
 
-```csv
-# Distribution users can create, read, update brokers
-p, Distribution, Broker, Create, allow
-p, Distribution, Broker, Read, allow
-p, Distribution, Broker, Update, allow
+**Table Name:** `Articles`
 
-# Distribution users can soft-delete brokers (but not hard delete)
-p, Distribution, Broker, Delete, allow
-
-# Underwriters can read brokers but not modify
-p, Underwriter, Broker, Read, allow
-
-# Admins can do everything with brokers
-p, Admin, Broker, *, allow
-
-# System administrators can restore soft-deleted brokers
-p, Admin, Broker, Restore, allow
-```
-
-**Authorization Enforcement:**
-- All API endpoints check Casbin policies before executing operations
-- Subject attributes extracted from JWT token (roles claim)
-- Resource type = "Broker"
-- Action = Create, Read, Update, Delete
-
----
-
-## Example 2: Complete Submission Workflow Specification
-
-This example shows a complete workflow with state machine, transitions, validation, authorization, and error handling.
-
-### Submission Entity
-
-**Table Name:** `Submissions`
-
-#### Key Fields
+**Fields:**
 
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
 | Id | Guid | PK | Unique identifier |
-| SubmissionNumber | string(50) | UNIQUE, NOT NULL | Human-readable ID (e.g., SUB-2026-001234) |
-| BrokerId | Guid | FK → Brokers, NOT NULL | Broker who submitted |
-| AccountId | Guid | FK → Accounts, NULL | Linked account/insured |
-| InsuredName | string(255) | NOT NULL | Name of insured entity |
-| CoverageType | string(50) | NOT NULL | GL, WC, Property, Auto, etc. |
-| ProgramId | Guid | FK → Programs, NULL | Insurance program |
-| EffectiveDate | Date | NOT NULL | Requested policy effective date |
-| ExpirationDate | Date | NOT NULL | Requested policy expiration date |
-| EstimatedPremium | decimal(18,2) | NULL | Broker's estimated premium |
-| Status | string(50) | NOT NULL | Current workflow status |
-| AssignedUnderwriterId | Guid | FK → Users, NULL | Underwriter assigned |
-| CreatedAt | DateTime | NOT NULL | Submission received timestamp |
-| CreatedBy | Guid | FK → Users, NOT NULL | User who created |
+| Title | string(255) | NOT NULL | Article title |
+| Slug | string(255) | UNIQUE, NOT NULL | URL-friendly slug |
+| Content | text | NULL | Article body (markdown) |
+| AuthorId | Guid | FK → Users | Author |
+| Status | string(20) | NOT NULL | Draft, InReview, Published, Archived |
+| PublishedAt | DateTime | NULL | When published |
+| CreatedAt | DateTime | NOT NULL | Creation timestamp |
 | UpdatedAt | DateTime | NOT NULL | Last update timestamp |
-| UpdatedBy | Guid | FK → Users, NOT NULL | User who last updated |
 
-### Submission Workflow State Machine
+### Article Workflow
 
 **States:**
-1. **Received** - Initial state when submission created
-2. **Triaging** - Distribution team reviewing for completeness
-3. **WaitingOnBroker** - Missing information, awaiting broker response
-4. **ReadyForUWReview** - Complete, ready for underwriter assignment
-5. **InReview** - Underwriter actively reviewing
-6. **Quoted** - Quote generated, awaiting broker acceptance
-7. **BindRequested** - Broker requested to bind policy
-8. **Bound** - Policy issued (terminal state)
-9. **Declined** - Submission declined by underwriter (terminal state)
-10. **Withdrawn** - Broker withdrew submission (terminal state)
+- Draft (initial) → InReview → Published (terminal)
+- Draft → Archived (terminal)
 
 **Allowed Transitions:**
 
-| From State | To State(s) | Prerequisites | Authorization |
-|------------|-------------|---------------|---------------|
-| Received | Triaging | None (automatic) | System |
-| Triaging | WaitingOnBroker | Missing info documented | Distribution, Admin |
-| Triaging | ReadyForUWReview | All required fields populated | Distribution, Admin |
-| Triaging | Declined | Decline reason | Distribution, Admin |
-| Triaging | Withdrawn | Withdrawal reason | Distribution, Admin |
-| WaitingOnBroker | ReadyForUWReview | Missing info received | Distribution, Admin |
-| WaitingOnBroker | Declined | Decline reason | Distribution, Admin |
-| WaitingOnBroker | Withdrawn | Withdrawal reason | Distribution, Admin |
-| ReadyForUWReview | InReview | Underwriter assigned | Underwriter, Admin |
-| ReadyForUWReview | WaitingOnBroker | Additional info needed | Underwriter, Admin |
-| ReadyForUWReview | Declined | Decline reason | Underwriter, Admin |
-| ReadyForUWReview | Withdrawn | Withdrawal reason | Distribution, Admin |
-| InReview | Quoted | Quote generated | Underwriter, Admin |
-| InReview | WaitingOnBroker | Additional info needed | Underwriter, Admin |
-| InReview | Declined | Decline reason | Underwriter, Admin |
-| InReview | Withdrawn | Withdrawal reason | Distribution, Admin |
-| Quoted | BindRequested | Broker acceptance + payment info | Distribution, Admin |
-| Quoted | Declined | Insured declined quote | Distribution, Admin |
-| Quoted | Withdrawn | Withdrawal reason | Distribution, Admin |
-| BindRequested | Bound | Payment confirmed, policy issued | Underwriter, Admin |
-| BindRequested | Declined | Decline reason (rare) | Underwriter, Admin |
-
-**Terminal States (No transitions allowed):**
-- Bound
-- Declined
-- Withdrawn
-
-### Transition Validation Rules
-
-#### Triaging → ReadyForUWReview
-
-**Required Fields:**
-- InsuredName (not empty)
-- CoverageType (valid enum value)
-- ProgramId (must exist in Programs table)
-- BrokerId (must exist and be Active status)
-- EffectiveDate (must be future date)
-- ExpirationDate (must be after EffectiveDate)
-
-**Business Rules:**
-- Effective date cannot be more than 90 days in the past
-- Expiration date must be 1 year from effective date (typical policy term)
-- Program must be active and accepting new submissions
-
-**Authorization:**
-- User must have "TransitionSubmission" permission
-- User role must be Distribution or Admin
-
-**Side Effects:**
-- WorkflowTransition event created (immutable)
-- ActivityTimelineEvent logged (SubmissionReadyForReview)
-- Email notification sent to underwriting team
-- Submission appears in underwriter queue
-
-**Error Response (Missing Fields):**
-```json
-{
-  "code": "MISSING_REQUIRED_FIELDS",
-  "message": "Cannot transition to ReadyForUWReview. Missing required fields.",
-  "details": [
-    {
-      "field": "program",
-      "message": "Program must be selected"
-    },
-    {
-      "field": "coverageType",
-      "message": "Coverage type is required"
-    }
-  ]
-}
-```
-
-**Error Response (Invalid Transition):**
-```json
-{
-  "code": "INVALID_TRANSITION",
-  "message": "Cannot transition from Bound to ReadyForUWReview",
-  "details": {
-    "currentStatus": "Bound",
-    "attemptedStatus": "ReadyForUWReview",
-    "allowedStatuses": []
-  }
-}
-```
-
-### Submission API Workflow Endpoint
-
-```yaml
-/api/submissions/{id}/transition:
-  post:
-    summary: Transition submission to new status
-    operationId: transitionSubmission
-    tags: [Submissions]
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required: [toStatus]
-            properties:
-              toStatus:
-                type: string
-                enum: [Triaging, WaitingOnBroker, ReadyForUWReview, InReview, Quoted, BindRequested, Bound, Declined, Withdrawn]
-              reason:
-                type: string
-                description: Required for Declined/Withdrawn transitions
-              assignedUnderwriterId:
-                type: string
-                format: uuid
-                description: Required for ReadyForUWReview → InReview
-    responses:
-      '200':
-        description: Transition successful
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                id:
-                  type: string
-                  format: uuid
-                status:
-                  type: string
-                transitionedAt:
-                  type: string
-                  format: date-time
-      '400':
-        description: Missing required fields or invalid transition
-      '403':
-        description: User lacks TransitionSubmission permission
-      '409':
-        description: Invalid state transition
-```
-
-### Submission Authorization Policies
-
-```csv
-# Distribution users can create and transition submissions (Triaging → ReadyForUWReview)
-p, Distribution, Submission, Create, allow
-p, Distribution, Submission, Read, allow
-p, Distribution, Submission, Update, allow
-p, Distribution, Submission, Transition, allow, res.status in ["Received", "Triaging", "WaitingOnBroker"]
-
-# Underwriters can read all submissions
-p, Underwriter, Submission, Read, allow
-
-# Underwriters can update submissions assigned to them
-p, Underwriter, Submission, Update, allow, sub.userId == res.assignedUnderwriter
-
-# Underwriters can transition assigned submissions (ReadyForUWReview → InReview → Quoted → Bound)
-p, Underwriter, Submission, Transition, allow, sub.userId == res.assignedUnderwriter && res.status in ["ReadyForUWReview", "InReview", "Quoted", "BindRequested"]
-
-# Admins can do everything
-p, Admin, Submission, *, allow
-```
+| From | To | Prerequisites |
+|------|----|---------------|
+| Draft | InReview | Title and content populated |
+| InReview | Draft | Editor requests changes |
+| InReview | Published | Editor approval |
+| Published | Archived | Author or editor archives |
 
 ---
 
-## Example 3: Account 360 View Specification
+## Example 3: SaaS Subscription Management
 
-This example shows how to design a 360-degree view with optimized queries and relationship loading.
+### Subscription Entity
 
-### Account Entity Design
+**Table Name:** `Subscriptions`
 
-**Table Name:** `Accounts`
+**Fields:**
 
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
-| Id | Guid | PK | Account identifier |
-| AccountNumber | string(50) | UNIQUE, NOT NULL | Human-readable account number |
-| Name | string(255) | NOT NULL | Insured company/person name |
-| BrokerId | Guid | FK → Brokers, NOT NULL | Managing broker |
-| Industry | string(100) | NULL | Industry classification |
-| Status | string(20) | NOT NULL | Active, Inactive, Suspended |
-| CreatedAt | DateTime | NOT NULL | Account created timestamp |
+| Id | Guid | PK | Subscription ID |
+| CustomerId | Guid | FK → Customers | Customer |
+| PlanId | Guid | FK → Plans | Subscription plan (Starter, Pro, Enterprise) |
+| Status | string(20) | NOT NULL | Active, Suspended, Cancelled, Expired |
+| BillingCycle | string(20) | NOT NULL | Monthly, Yearly |
+| StartDate | DateTime | NOT NULL | Subscription start |
+| EndDate | DateTime | NULL | Subscription end (null = ongoing) |
+| NextBillingDate | DateTime | NOT NULL | Next charge date |
+| MRR | decimal(18,2) | NOT NULL | Monthly Recurring Revenue |
 
-**Related Entities:**
-- AccountContacts (one-to-many)
-- Policies (one-to-many)
-- Submissions (one-to-many)
-- Renewals (one-to-many)
-- ActivityTimelineEvents (one-to-many)
+### Subscription Workflow
 
-### Account 360 API Endpoint
+**States:**
+- Active → Suspended (payment failed) → Active (payment recovered)
+- Active → Cancelled → Expired (terminal)
 
-```yaml
-/api/accounts/{id}/360:
-  get:
-    summary: Get complete account 360 view
-    description: Returns account with all related entities in a single optimized query
-    operationId: getAccount360
-    tags: [Accounts]
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: include
-        in: query
-        description: Comma-separated list of relationships to include
-        schema:
-          type: string
-          default: "contacts,policies,submissions,timeline"
-    responses:
-      '200':
-        description: Account 360 view
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                account:
-                  $ref: '#/components/schemas/AccountDetail'
-                contacts:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Contact'
-                policies:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/PolicySummary'
-                submissions:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SubmissionSummary'
-                timeline:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/TimelineEvent'
-                metrics:
-                  type: object
-                  properties:
-                    totalPremiumYTD:
-                      type: number
-                      format: decimal
-                    activePoliciesCount:
-                      type: integer
-                    openSubmissionsCount:
-                      type: integer
-                    upcomingRenewalsCount:
-                      type: integer
-```
-
-### Query Optimization for 360 View
-
-**EF Core Implementation (C#):**
-
-```csharp
-// BAD: N+1 query problem
-var account = await context.Accounts.FindAsync(accountId);
-var contacts = await context.Contacts.Where(c => c.AccountId == accountId).ToListAsync();
-var policies = await context.Policies.Where(p => p.AccountId == accountId).ToListAsync();
-// ... multiple separate queries
-
-// GOOD: Single optimized query with eager loading
-var account360 = await context.Accounts
-    .Where(a => a.Id == accountId)
-    .Include(a => a.Contacts.Where(c => c.DeletedAt == null))
-    .Include(a => a.Policies.Where(p => p.Status == "Active"))
-    .Include(a => a.Submissions.Where(s => s.Status != "Bound" && s.Status != "Declined"))
-    .Select(a => new Account360Response
-    {
-        Account = new AccountDetail
-        {
-            Id = a.Id,
-            Name = a.Name,
-            AccountNumber = a.AccountNumber,
-            // ... map only needed fields, avoid loading entire entity
-        },
-        Contacts = a.Contacts.Select(c => new ContactSummary
-        {
-            Id = c.Id,
-            Name = c.FullName,
-            Email = c.Email,
-            Phone = c.Phone
-        }).ToList(),
-        Policies = a.Policies.Select(p => new PolicySummary
-        {
-            Id = p.Id,
-            PolicyNumber = p.PolicyNumber,
-            CoverageType = p.CoverageType,
-            Premium = p.Premium,
-            EffectiveDate = p.EffectiveDate,
-            ExpirationDate = p.ExpirationDate
-        }).ToList(),
-        // ... project only needed fields
-    })
-    .AsSplitQuery() // Use split queries for multiple collections to avoid cartesian explosion
-    .FirstOrDefaultAsync();
-```
-
-**Performance Considerations:**
-- Use `.Select()` projection to load only needed fields (not entire entities)
-- Use `.AsSplitQuery()` when including multiple collections to avoid cartesian explosion
-- Filter related entities in `.Include()` to reduce payload size
-- Use indexed columns in `.Where()` clauses
-- Consider caching reference data (coverage types, states)
-
-### Authorization for 360 View
-
-**Casbin Policies:**
-
-```csv
-# Distribution users can view full 360 for all accounts
-p, Distribution, Account, Read360, allow
-
-# Underwriters can view 360 only for accounts with active submissions assigned to them
-p, Underwriter, Account, Read360, allow, exists(sub.assignedSubmissions, s.accountId == res.id)
-
-# Brokers can view 360 only for their own accounts (external portal)
-p, Broker, Account, Read360, allow, res.brokerId == sub.brokerId
-
-# Admins can view all
-p, Admin, Account, Read360, allow
-```
-
-**Field-Level Security:**
-- Internal notes: Visible only to Distribution, Underwriter, Admin (not Broker)
-- Premium amounts: Visible to all
-- Tax ID: Visible only to Admin
+**Business Rules:**
+- Cannot cancel if in trial period (trial cancels automatically)
+- Cannot downgrade mid-cycle (takes effect next billing date)
+- Suspend after 3 failed payment attempts
+- Expire 30 days after cancellation (grace period)
 
 ---
 
-## Example 4: Architecture Decision Records (ADRs)
+## How to Use These Examples
 
-Complete ADR examples showing architectural decision documentation.
-
-### ADR-001: Modular Monolith vs Microservices
-
-**Status:** Accepted
-
-**Context:**
-
-We need to decide on the service architecture for Nebula. The primary options are:
-1. **Microservices**: Separate deployable services for Broker, Account, Submission, Renewal modules
-2. **Modular Monolith**: Single deployable with logical module boundaries
-
-**Factors to consider:**
-- Team size: 3-5 developers initially
-- Expected scale: 50-500 concurrent users in first year
-- Deployment complexity: Limited DevOps resources initially
-- Transaction boundaries: Many operations span multiple entities (e.g., create submission → update broker → log timeline)
-- Development velocity: Need to ship MVP quickly
-
-**Decision:**
-
-We will implement a **Modular Monolith** architecture for Phase 0 and Phase 1.
-
-**Rationale:**
-
-Pros of Modular Monolith:
-- **Simpler deployment**: Single Docker container, easier CI/CD
-- **Easier transactions**: ACID transactions across modules (Broker + Submission in same DB transaction)
-- **Faster development**: No network calls between modules, easier debugging
-- **Lower operational complexity**: One database, one deployment, simpler monitoring
-- **Team size appropriate**: Small team benefits from shared codebase
-
-Cons of Modular Monolith:
-- **Scaling limitations**: Must scale entire application (but not a concern at 50-500 users)
-- **Technology coupling**: All modules use same tech stack (.NET) (acceptable given expertise)
-
-Cons of Microservices (which we're avoiding):
-- **Operational overhead**: Multiple deployments, service discovery, distributed tracing
-- **Transaction complexity**: Distributed transactions, saga patterns, eventual consistency
-- **Development overhead**: API versioning, inter-service communication, testing complexity
-- **Team overhead**: Requires more DevOps expertise and tooling
-
-**Consequences:**
-
-- All modules (Broker, Account, Submission, Renewal, Timeline, Identity) deployed as one .NET application
-- Logical module boundaries enforced via folder structure and namespaces
-- Shared database (PostgreSQL) with tables organized by module
-- Future migration path: If scaling requires, can extract modules to microservices (design interfaces as if they were separate services)
-- Clear interfaces between modules to enable future decomposition
-
-**Review Date:** 2027-01-31 (after 1 year of production usage)
+1. Select a domain relevant to your solution (or create your own)
+2. Follow the structure (Entity → Workflow → API → Authorization)
+3. Adapt field names and relationships to your domain
+4. Keep patterns consistent across all entities in your system
+5. Reference these examples when designing new modules
 
 ---
 
-### ADR-002: EF Core as ORM
+## For Project-Specific Architecture
 
-**Status:** Accepted
-
-**Context:**
-
-We need an Object-Relational Mapping (ORM) tool for the .NET backend. Options considered:
-1. **Entity Framework Core 10**: Microsoft's official ORM
-2. **Dapper**: Lightweight micro-ORM (SQL-first)
-3. **NHibernate**: Mature ORM alternative
-
-**Decision:**
-
-Use **Entity Framework Core 10** as the primary ORM.
-
-**Rationale:**
-
-Pros of EF Core:
-- **Code-first migrations**: Easy schema evolution and version control
-- **LINQ support**: Strongly-typed queries, compile-time safety
-- **Change tracking**: Automatic audit field updates (UpdatedAt, UpdatedBy)
-- **Navigation properties**: Easy relationship traversal
-- **Microsoft support**: Official support, regular updates, .NET 10 compatibility
-- **Ecosystem**: Good tooling, documentation, community
-
-Cons of EF Core:
-- **Performance overhead**: Slightly slower than Dapper for read-heavy scenarios
-- **Learning curve**: Complex for advanced scenarios (owned entities, TPH, query filters)
-
-Why not Dapper:
-- More boilerplate code for CRUD operations
-- No change tracking (manual UpdatedAt, UpdatedBy management)
-- No migration support (would need FluentMigrator or manual SQL scripts)
-- Better for read-heavy, report-style queries (which we can use alongside EF Core)
-
-Why not NHibernate:
-- Less active development compared to EF Core
-- Smaller community and fewer resources
-- Configuration complexity (XML or fluent API)
-
-**Consequences:**
-
-- All entity classes inherit from `BaseEntity` (Id, timestamps, audit fields)
-- Migrations managed via `dotnet ef migrations` commands
-- Use `.AsNoTracking()` for read-only queries (performance optimization)
-- Use Dapper for complex reporting queries where EF Core is suboptimal
-- Global query filters for soft delete (WHERE DeletedAt IS NULL)
-
-**Performance Mitigation:**
-- Use projections (`.Select()`) to load only needed fields
-- Use `.AsSplitQuery()` for multiple included collections
-- Use `.AsNoTracking()` for read-only operations
-- Consider read replicas for heavy reporting
-
----
-
-### ADR-003: Casbin for ABAC Authorization
-
-**Status:** Accepted
-
-**Context:**
-
-We need fine-grained authorization that supports:
-- Role-based access (Admin, Distribution, Underwriter)
-- Resource-based access (user can update submissions assigned to them)
-- Attribute-based access (user can view accounts in their region)
-
-Options:
-1. **Casbin (ABAC)**: Policy-based authorization framework
-2. **Custom RBAC**: Hand-rolled role checks in code
-3. **Azure AD / Keycloak built-in**: RBAC via JWT claims
-
-**Decision:**
-
-Use **Casbin with ABAC model** for authorization.
-
-**Rationale:**
-
-Pros of Casbin:
-- **Policy-based**: Policies external to code, can be updated without deployment
-- **ABAC support**: Can check resource attributes (submission.assignedUnderwriter == user.id)
-- **Auditable**: All policies defined in CSV or database, easy to review
-- **Testable**: Policies can be unit-tested independently
-- **Flexible**: Supports RBAC, ABAC, and hybrid models
-
-Why not custom RBAC:
-- Hard-coded role checks scattered in code (`if (user.Role == "Admin")`)
-- Hard to audit all authorization logic
-- Difficult to add fine-grained rules (attribute-based)
-
-Why not Keycloak-only:
-- Keycloak provides authentication and basic RBAC via roles
-- Cannot check resource attributes (e.g., "assigned underwriter") in Keycloak
-- Would need custom code anyway for fine-grained checks
-
-**Consequences:**
-
-- Casbin policies stored in database (NebulaDbContext)
-- Middleware enforces authorization on every API request
-- Subject attributes extracted from JWT (roles, userId, region)
-- Resource attributes extracted from entity (status, assignedUnderwriter, brokerId)
-- Policy format: `p, {role}, {resource}, {action}, {effect}, {condition}`
-- Example: `p, Underwriter, Submission, Update, allow, sub.userId == res.assignedUnderwriter`
-
-**Integration:**
-- Keycloak for authentication (OIDC/JWT)
-- Casbin for authorization (ABAC policies)
-- UserProfile table maps Keycloak user to Nebula attributes (region, roles)
+See your project's `planning-mds/examples/architecture/` directory for architecture examples specific to your solution.
 
 ---
 
 ## Version History
 
-**Version 2.0** - 2026-01-31 - Expanded with complete Broker, Submission, Account 360, and ADR examples (600 lines)
-**Version 1.0** - 2026-01-26 - Initial architecture examples (135 lines)
+**Version 2.0** - 2026-02-01 - Generic examples (separated from solution-specific content)
+**Version 1.0** - Initial version

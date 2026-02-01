@@ -21,26 +21,31 @@ This document tracks the completion status of all builder agent roles for the Ne
 
 ### Phase A - Product Definition
 
-#### 1. 🚧 Product Manager
-- **Status:** IN PROGRESS
+#### 1. ✅ Product Manager
+- **Status:** COMPLETE - Generic/Solution Separation Complete
 - **Artifacts:**
-  - SKILL.md ✅
+  - SKILL.md ✅ (updated with generic/solution resource separation)
   - README.md ✅
-  - references/ (9 files) ✅
-    - pm-best-practices.md
-    - crm-competitive-analysis.md
-    - inception-requirements.md
-    - vertical-slicing-guide.md
-    - insurance-domain-glossary.md
-    - story-examples.md
-    - feature-examples.md ⭐ *renamed from epic-examples.md, updated to Feature terminology*
-    - persona-examples.md
-    - screen-spec-examples.md
-  - scripts/ (2 files) ⚠️
+  - references/ (6 generic files) ✅
+    - pm-best-practices.md (generic)
+    - vertical-slicing-guide.md (generic)
+    - inception-requirements.md (generic)
+    - persona-examples.md ⭐ *rewritten with generic examples (B2B SaaS, e-commerce, healthcare)*
+    - feature-examples.md ⭐ *rewritten with generic examples (task mgmt, e-commerce, scheduling)*
+    - story-examples.md ⭐ *rewritten with generic examples*
+    - screen-spec-examples.md ⭐ *rewritten with generic examples*
+  - scripts/ (2 files) ✅
     - validate-stories.py
     - generate-story-index.py
-- **Pending:** Script validation, workflow testing
-- **Notes:** Most comprehensive reference set; competitive analysis provides CRM baseline
+- **Solution-Specific Content Moved to planning-mds/:**
+  - insurance-domain-glossary.md → planning-mds/domain/insurance-glossary.md
+  - crm-competitive-analysis.md → planning-mds/domain/crm-competitive-analysis.md
+  - Nebula persona examples → planning-mds/examples/personas/nebula-personas.md
+  - Nebula feature examples → planning-mds/examples/features/nebula-features.md
+  - Nebula story examples → planning-mds/examples/stories/nebula-stories.md
+  - Nebula screen specs → planning-mds/examples/screens/nebula-screens.md
+- **Completed:** 2026-02-01 - Generic agent role complete, ready for reuse in other projects
+- **Notes:** Agent is now 100% generic and reusable. All project-specific content in planning-mds/
 
 #### 2. ✅ Architect
 - **Status:** COMPLETE (90-95%)

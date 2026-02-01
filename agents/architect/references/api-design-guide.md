@@ -1,6 +1,10 @@
 # API Design Guide
 
-Comprehensive guide for designing RESTful APIs using .NET 10 Minimal APIs for the Nebula insurance CRM. This guide covers REST principles, request/response patterns, pagination, filtering, versioning, security, and OpenAPI documentation.
+**Note:** This guide uses example entities (Broker, Product, Order, etc.) for illustration purposes. Replace these with your domain-specific entities when applying to your project. See `planning-mds/examples/` for project-specific architecture examples.
+
+---
+
+Comprehensive guide for designing RESTful APIs using .NET 10 Minimal APIs. This guide covers REST principles, request/response patterns, pagination, filtering, versioning, security, and OpenAPI documentation.
 
 ---
 

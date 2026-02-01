@@ -1,8 +1,10 @@
-# Agent-Driven Builder Framework
+# Generic Agent Roles - Agent-Driven Builder Framework
 
 ## Purpose
 
-This directory defines the **Builder Agent Roles** used to build Nebula using an agent-driven builder methodology. Each agent represents a specialized role with clear responsibilities, inputs, outputs, and quality standards.
+This directory contains **generic, reusable** agent role definitions for building software using an agent-driven builder methodology. Each agent represents a specialized role with clear responsibilities, inputs, outputs, and quality standards.
+
+**✅ 100% Generic** - All content in this directory is domain-agnostic and can be applied to any software project (insurance, healthcare, e-commerce, B2B SaaS, etc.).
 
 ## Philosophy
 
@@ -155,9 +157,59 @@ The `templates/` directory contains standard formats for common deliverables. Ag
 4. Use the appropriate template for deliverables
 5. Follow the handoff rules and quality gates
 
+## Reusing Agents for New Projects
+
+### How to Use for a New Project
+
+**Step 1: Copy agents/ Directory**
+```bash
+cp -r current-project/agents new-project/agents
+```
+Result: You now have all agent roles, best practices, and templates ready to use.
+
+**Step 2: Create Solution-Specific planning-mds/**
+```bash
+mkdir -p new-project/planning-mds/{domain,examples,features,stories,architecture}
+```
+
+**Step 3: Create Domain Knowledge**
+- Create `planning-mds/domain/[domain]-glossary.md` - Define domain-specific terminology
+- Create `planning-mds/domain/[domain]-competitive-analysis.md` - Analyze competitive landscape
+- Create `planning-mds/domain/[domain]-architecture-patterns.md` - Document domain-specific patterns
+
+**Step 4: Create Solution-Specific Examples**
+- Create personas, features, stories, and architecture examples in `planning-mds/examples/`
+
+**Step 5: Create INCEPTION.md**
+- Reference domain knowledge and examples specific to your new project
+
+**Step 6: Start Building**
+- All generic best practices, templates, and patterns are ready to use from `agents/`
+
+### What's Generic (in agents/) vs Solution-Specific (in planning-mds/)
+
+**agents/ = Generic and Reusable**
+- Agent role definitions
+- Generic best practices (SOLID, DDD, INVEST, etc.)
+- Generic examples from multiple domains
+- Generic templates
+
+**planning-mds/ = Solution-Specific**
+- Project domain knowledge and terminology
+- Project-specific personas, features, stories, architecture
+- Actual project requirements
+
+**See:** `../planning-mds/BOUNDARY-POLICY.md` for detailed rules on what belongs where.
+
+---
+
 ## Questions or Issues
 
 If agent role boundaries are unclear or handoffs are blocked:
 - Raise the issue explicitly
 - Reference the specific agent roles involved
 - Propose a resolution or request clarification
+
+**Version History:**
+- **v2.0** - 2026-02-01 - Separated generic agents from solution-specific content
+- **v1.0** - 2026-01-26 - Initial agent-driven builder framework

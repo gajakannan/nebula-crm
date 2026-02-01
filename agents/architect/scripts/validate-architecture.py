@@ -20,6 +20,8 @@ class ArchitectureValidator:
         self.content = ""
         self.errors = []
         self.warnings = []
+        self.entities = []
+        self.workflows = []
 
     def load_inception(self) -> bool:
         """Load INCEPTION.md content."""
@@ -30,10 +32,59 @@ class ArchitectureValidator:
             self.errors.append(f"Failed to read file: {e}")
             return False
 
+    def extract_entities_from_inception(self) -> List[str]:
+        """
+        Extract core entities from section 1.3 of INCEPTION.md.
+
+        Expected format:
+        ### 1.3 Core entities (baseline)
+        - Entity1 (optional description)
+        - Entity2
+        ...
+        """
+        section = self.get_section_content("1.3")
+        entities = []
+
+        for line in section.split('\n'):
+            line = line.strip()
+            # Match lines like "- Entity" or "* Entity" or "- Entity (description)"
+            match = re.match(r'^[-*]\s+([A-Z][A-Za-z0-9]+)', line)
+            if match:
+                entity = match.group(1)
+                entities.append(entity)
+
+        return entities
+
+    def extract_workflows_from_inception(self) -> List[str]:
+        """
+        Extract workflow names from section 1.4 of INCEPTION.md.
+
+        Expected format:
+        ### 1.4 Critical workflows (baseline)
+        WorkflowName: State1 → State2 → ...
+        AnotherWorkflow: State1 → State2 → ...
+        """
+        section = self.get_section_content("1.4")
+        workflows = []
+
+        for line in section.split('\n'):
+            line = line.strip()
+            # Match lines like "WorkflowName: State1 → State2 → ..."
+            match = re.match(r'^([A-Z][A-Za-z]+):\s+', line)
+            if match:
+                workflow = match.group(1)
+                workflows.append(workflow)
+
+        return workflows
+
     def validate(self) -> Tuple[bool, List[str], List[str]]:
         """Validate architecture completeness."""
         if not self.load_inception():
             return False, self.errors, self.warnings
+
+        # Extract entities and workflows from INCEPTION.md (section 1.3 and 1.4)
+        self.entities = self.extract_entities_from_inception()
+        self.workflows = self.extract_workflows_from_inception()
 
         # Check Phase B sections (4.x)
         self.check_service_boundaries()
@@ -68,11 +119,12 @@ class ArchitectureValidator:
         if "TODO" in section:
             self.errors.append("Section 4.2 (Data Model) contains TODOs")
 
-        # Check for key entity definitions
-        key_entities = ["Broker", "Submission", "Renewal"]
+        # Check for key entity definitions (extracted from section 1.3)
+        # Only check first few entities to avoid too many warnings
+        key_entities = self.entities[:5] if len(self.entities) > 5 else self.entities
         for entity in key_entities:
             if entity not in section:
-                self.warnings.append(f"Data Model doesn't mention '{entity}' entity")
+                self.warnings.append(f"Data Model doesn't mention '{entity}' entity (from section 1.3)")
 
         # Check for audit fields mention
         if "CreatedAt" not in section and "created_at" not in section.lower():
@@ -89,11 +141,10 @@ class ArchitectureValidator:
         if "TODO" in section:
             self.errors.append("Section 4.3 (Workflow Rules) contains TODOs")
 
-        # Check for workflow definitions
-        workflows = ["Submission", "Renewal"]
-        for workflow in workflows:
+        # Check for workflow definitions (extracted from section 1.4)
+        for workflow in self.workflows:
             if workflow not in section:
-                self.warnings.append(f"Workflow Rules don't mention '{workflow}' workflow")
+                self.warnings.append(f"Workflow Rules don't mention '{workflow}' workflow (from section 1.4)")
 
         # Check for transition mention
         if "transition" not in section.lower():
@@ -174,8 +225,9 @@ class ArchitectureValidator:
         api_contracts = self.get_section_content("4.5")
 
         # Simple heuristic: check if major entities appear in both
-        entities = ["Broker", "Submission", "Renewal"]
-        for entity in entities:
+        # Check first few entities to avoid too many warnings
+        entities_to_check = self.entities[:5] if len(self.entities) > 5 else self.entities
+        for entity in entities_to_check:
             if entity in data_model and entity not in api_contracts:
                 self.warnings.append(f"Entity '{entity}' in Data Model but not in API Contracts")
 
@@ -199,28 +251,36 @@ def main():
     validator = ArchitectureValidator(file_path)
     is_valid, errors, warnings = validator.validate()
 
+    # Print extracted context
+    if validator.entities:
+        print(f"\n[Entities] Extracted from section 1.3: {', '.join(validator.entities[:5])}")
+        if len(validator.entities) > 5:
+            print(f"           (and {len(validator.entities) - 5} more...)")
+    if validator.workflows:
+        print(f"[Workflows] Extracted from section 1.4: {', '.join(validator.workflows)}")
+
     # Print errors
     if errors:
-        print("\n❌ ERRORS (Must Fix):")
+        print("\n[ERROR] Must Fix:")
         for i, error in enumerate(errors, 1):
             print(f"  {i}. {error}")
 
     # Print warnings
     if warnings:
-        print("\n⚠️  WARNINGS (Should Fix):")
+        print("\n[WARNING] Should Fix:")
         for i, warning in enumerate(warnings, 1):
             print(f"  {i}. {warning}")
 
     # Print summary
     print("\n" + "=" * 60)
     if is_valid and not warnings:
-        print("✅ Architecture validation PASSED - No issues found!")
+        print("[PASS] Architecture validation PASSED - No issues found!")
         sys.exit(0)
     elif is_valid:
-        print(f"⚠️  Architecture validation PASSED with {len(warnings)} warning(s)")
+        print(f"[PASS] Architecture validation PASSED with {len(warnings)} warning(s)")
         sys.exit(0)
     else:
-        print(f"❌ Architecture validation FAILED with {len(errors)} error(s) and {len(warnings)} warning(s)")
+        print(f"[FAIL] Architecture validation FAILED with {len(errors)} error(s) and {len(warnings)} warning(s)")
         sys.exit(1)
 
 if __name__ == "__main__":

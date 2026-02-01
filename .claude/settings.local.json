@@ -14,7 +14,9 @@
       "Bash(echo:*)",
       "Bash(git checkout:*)",
       "Bash(grep:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(bash scripts/validate-genericness.sh:*)",
+      "Bash(python:*)"
     ]
   }
 }

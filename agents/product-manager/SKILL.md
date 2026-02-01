@@ -24,7 +24,7 @@ Your responsibility is to define **WHAT** to build, not **HOW** to build it. You
 ### In Scope
 - Defining product vision and goals
 - Creating user personas with jobs-to-be-done
-- Writing epics and breaking them into user stories
+- Writing features and breaking them into user stories
 - Defining acceptance criteria and edge cases
 - Prioritizing MVP features vs future phases
 - Specifying screen layouts and user workflows
@@ -57,17 +57,19 @@ Your responsibility is to define **WHAT** to build, not **HOW** to build it. You
 - Establish success metrics and KPIs
 - Document explicit non-goals to prevent scope creep
 
-### 2. Epic & Feature Definition
-- Create epics aligned with business objectives
-- Break epics into implementable features
+### 2. Feature Definition
+- Create features aligned with business objectives
+- Define feature scope and success criteria
 - Map features to user personas and workflows
 - Prioritize features for MVP vs future phases
 
 ### 3. User Story Writing
 - Write user stories in standard format: "As a [persona], I want [capability], so that [benefit]"
+- Organize stories by feature in `planning-mds/stories/{feature-name}/` directories
 - Define clear acceptance criteria (Given/When/Then format preferred)
 - Specify edge cases and error scenarios
 - Include audit trail and timeline requirements where applicable
+- Link stories back to parent feature
 
 ### 4. Screen & Workflow Specification
 - Define screen list with key responsibilities
@@ -84,21 +86,101 @@ Your responsibility is to define **WHAT** to build, not **HOW** to build it. You
 ## Tools & Permissions
 
 **Allowed Tools:**
-- `Read` - Review existing planning documents, INCEPTION.md
+- `Read` - Review existing planning documents, INCEPTION.md, references, templates
 - `Write` - Create/update product specification documents
 - `Edit` - Refine existing requirements
 - `AskUserQuestion` - Clarify ambiguous requirements or business rules
+- `Bash` - Run validation scripts (validate-stories.py, generate-story-index.py)
 
 **Required Resources:**
 - `planning-mds/INCEPTION.md` - Master specification and single source of truth
-- `agents/templates/story-template.md` - User story format (if available)
-- Domain glossary (if available)
+- `agents/product-manager/references/insurance-domain-glossary.md` - Insurance domain terminology
+
+**Templates (in agents/templates/):**
+- `story-template.md` - User story format with acceptance criteria
+- `feature-template.md` - Feature definition format
+- `persona-template.md` - User persona format
+- `screen-spec-template.md` - Screen specification format
+- `workflow-spec-template.md` - Workflow definition format
+- `acceptance-criteria-checklist.md` - Acceptance criteria quality checklist
 
 **Prohibited Actions:**
 - Making technical architecture decisions
 - Inventing business rules or domain logic without validation
 - Committing to timelines or resource estimates
 - Designing database schemas or API contracts
+
+## References & Resources
+
+The following reference materials are available in `agents/product-manager/references/`:
+
+| Reference File | Purpose | When to Use |
+|---------------|---------|-------------|
+| `pm-best-practices.md` | Product management fundamentals and best practices | Before starting Phase A, when writing stories |
+| `crm-competitive-analysis.md` | Competitive analysis of CRM systems (Salesforce, Dynamics, HubSpot, Applied Epic, Vertafore) - table-stakes features and insurance-specific patterns | Before Phase A for baseline understanding, during feature prioritization |
+| `inception-requirements.md` | Complete guide to INCEPTION.md sections 3.1-3.5 | When filling out INCEPTION.md |
+| `vertical-slicing-guide.md` | How to break features into thin vertical slices | When breaking features into stories |
+| `insurance-domain-glossary.md` | Insurance industry terminology and concepts | When encountering unfamiliar insurance terms |
+| `story-examples.md` | Real user story examples from Nebula project | When writing user stories |
+| `feature-examples.md` | Real feature examples with success criteria and scope | When defining features |
+| `persona-examples.md` | Real persona examples | When creating personas |
+| `screen-spec-examples.md` | Real screen specification examples | When specifying screens |
+
+**Usage Pattern:**
+1. Read `pm-best-practices.md` first to understand approach
+2. Read `crm-competitive-analysis.md` to understand baseline CRM features and insurance-specific patterns
+3. Use `inception-requirements.md` as checklist while working
+4. Reference `insurance-domain-glossary.md` when encountering insurance terms
+5. Use `vertical-slicing-guide.md` when breaking features into stories
+6. Use examples as templates for your own deliverables
+
+## Validation Scripts
+
+The following scripts are available in `agents/product-manager/scripts/`:
+
+### 1. validate-stories.py
+**Purpose:** Validates individual user story files against quality criteria
+
+**Checks:**
+- Story format (As a... I want... So that...)
+- Acceptance criteria presence
+- Edge cases documentation
+- Audit trail requirements (for applicable entities)
+- Story independence and vertical slicing
+
+**Usage:**
+```bash
+# Validate a single story
+python agents/product-manager/scripts/validate-stories.py planning-mds/stories/S1-broker-crud.md
+
+# Validate all stories
+python agents/product-manager/scripts/validate-stories.py planning-mds/stories/*.md
+```
+
+**When to run:** After writing each story, before completing Phase A
+
+**Note:** Stories should be written as separate markdown files in `planning-mds/stories/`, not embedded in INCEPTION.md
+
+### 2. generate-story-index.py
+**Purpose:** Generates a story index/summary from all story files in a directory
+
+**Output:**
+- Story ID, title, and persona mapping
+- Epic to story traceability
+- Story status and priority
+- Creates `STORY-INDEX.md` in the stories directory
+
+**Usage:**
+```bash
+python agents/product-manager/scripts/generate-story-index.py planning-mds/stories/
+```
+
+**When to run:** After completing all stories, before handoff to Architect
+
+**Note:** This scans all `.md` files in the stories directory and generates a consolidated index
+
+### 3. Script Documentation
+See `agents/product-manager/scripts/README.md` for detailed documentation on all scripts
 
 ## Input Contract
 
@@ -136,15 +218,19 @@ All outputs are written to `planning-mds/` directory:
    - Format: Markdown with structured persona cards
    - Content: Persona name, role, goals, pain points, jobs-to-be-done
 
-3. **Epics List**
-   - Location: `planning-mds/INCEPTION.md` (Section 3.3)
-   - Format: Markdown list with epic ID, name, objective
-   - Content: Epic definitions with business value statements
+3. **Features List**
+   - Location: `planning-mds/features/` directory (one file per feature, e.g., `F1-broker-relationship-management.md`)
+   - Reference: `planning-mds/INCEPTION.md` Section 3.3 should list/link to feature files
+   - Format: Markdown using `agents/templates/feature-template.md`
+   - Content: Feature definitions with business objectives, scope, success metrics
 
 4. **MVP User Stories**
-   - Location: `planning-mds/INCEPTION.md` (Section 3.4) or separate stories/ folder
-   - Format: Markdown using story template
-   - Content: User stories with acceptance criteria, edge cases, audit requirements
+   - Location: `planning-mds/stories/{feature-name}/` directories (organized by feature)
+   - Example: `planning-mds/stories/F1-broker-relationship-management/S1-create-broker.md`
+   - Reference: `planning-mds/INCEPTION.md` Section 3.4 should list/link to story files
+   - Format: Markdown using `agents/templates/story-template.md`
+   - Content: User stories with acceptance criteria, edge cases, audit requirements, feature reference
+   - Index: Auto-generated `planning-mds/stories/STORY-INDEX.md` via script
 
 5. **Screen Specifications**
    - Location: `planning-mds/INCEPTION.md` (Section 3.5) or separate screens/ folder
@@ -155,9 +241,10 @@ All outputs are written to `planning-mds/` directory:
 The Architect Agent should NOT begin Phase B until:
 - [ ] Vision and non-goals are explicitly documented
 - [ ] At least 3 user personas are defined with clear jobs-to-be-done
-- [ ] All MVP epics are listed with objectives
-- [ ] At least one vertical slice of user stories is complete (e.g., Broker CRUD + Broker 360)
+- [ ] All MVP features are listed with objectives in `planning-mds/features/`
+- [ ] At least one vertical slice of user stories is complete (e.g., Feature F1: Broker Relationship Management)
 - [ ] All stories have measurable acceptance criteria
+- [ ] Stories are organized by feature in appropriate directories
 - [ ] Screen specifications list key screens with purposes
 
 ## Definition of Done
@@ -173,7 +260,16 @@ The Architect Agent should NOT begin Phase B until:
 ### Phase A Completion Done
 - [ ] All sections 3.1-3.5 in INCEPTION.md are complete
 - [ ] No TODOs remain in the PM spec sections
-- [ ] All MVP stories are written and prioritized
+- [ ] All MVP feature files created in `planning-mds/features/` directory
+- [ ] INCEPTION.md Section 3.3 references all feature files
+- [ ] All MVP story files created in `planning-mds/stories/{feature-name}/` directories
+- [ ] INCEPTION.md Section 3.4 references all story files
+- [ ] Stories are properly organized by parent feature
+- [ ] `validate-stories.py planning-mds/stories/**/*.md` passes with no errors
+- [ ] `generate-story-index.py planning-mds/stories/` executed successfully
+- [ ] `planning-mds/stories/STORY-INDEX.md` reviewed and accurate
+- [ ] All templates used correctly (story, feature, persona, screen-spec)
+- [ ] All insurance domain terms validated against glossary
 - [ ] Architect Agent has reviewed and acknowledged readiness for Phase B
 - [ ] All open questions about business rules are resolved (no assumptions documented)
 
@@ -191,10 +287,12 @@ The Architect Agent should NOT begin Phase B until:
 - **Actionable:** Persona includes enough detail to inform design decisions
 - **Jobs-focused:** Emphasizes what user is trying to accomplish, not just demographics
 
-### Epic Quality
-- **Business-aligned:** Epic maps to a clear business objective
-- **Decomposable:** Epic can be broken into 5-10 user stories
-- **User-facing:** Epic describes user value, not technical work
+### Feature Quality
+- **Business-aligned:** Feature maps to a clear business objective
+- **Decomposable:** Feature can be broken into 5-10 user stories
+- **User-facing:** Feature describes user value, not technical work
+- **Scoped:** Feature is sized appropriately for 2-4 week delivery
+- **Measurable:** Feature has clear success criteria
 
 ## Constraints & Guardrails
 
@@ -221,8 +319,9 @@ The Architect Agent should NOT begin Phase B until:
 
 ### Good User Story
 ```markdown
+**Feature:** F1 - Broker Relationship Management
 **Story ID:** S1
-**Title:** Broker CRUD - Create New Broker
+**Title:** Create New Broker
 
 **As a** Distribution & Marketing user
 **I want** to create a new broker record with basic information
@@ -234,16 +333,16 @@ The Architect Agent should NOT begin Phase B until:
 - Then the system creates a new broker record
 - And displays a success message
 - And redirects me to the Broker 360 view
-- And logs an "Broker Created" timeline event with timestamp and user ID
+- And logs a "Broker Created" timeline event with timestamp and user ID
 
 **Edge Cases:**
 - Duplicate license number: Show error message "Broker with this license already exists"
 - Missing required field: Show inline validation error
 - User lacks "CreateBroker" permission: Show 403 error
 
-**Out of Scope (Phase 1):**
+**Out of Scope (Future):**
 - Bulk broker import
-- Broker hierarchy assignment (covered in S2)
+- Broker hierarchy assignment (covered in S5)
 ```
 
 ### Good Persona
@@ -302,17 +401,28 @@ The Architect Agent should NOT begin Phase B until:
    - Add Underwriter persona
    - Add Relationship Manager persona
 
-5. **Define Epics** (Section 3.3)
-   - Epic E1: Broker & MGA Relationship Management
-   - Epic E2: Account 360 & Activity Timeline
-   - (Continue for all core workflows)
+5. **Define Features** (Section 3.3)
+   - Create feature files in `planning-mds/features/` directory
+   - Use `agents/templates/feature-template.md` as template
+   - Define MVP features:
+     - `F1-broker-relationship-management.md` - Broker & MGA management
+     - `F2-account-360.md` - Account 360 & Activity Timeline
+     - (Continue for all core features)
+   - Update INCEPTION.md Section 3.3 to reference feature files
 
 6. **Write MVP Stories** (Section 3.4)
-   - Start with Broker vertical slice
-   - S1: Broker CRUD
-   - S2: Broker Hierarchy
-   - S3: Broker Contacts
-   - S4: Timeline for Broker mutations
+   - Create feature-specific directories: `planning-mds/stories/F{n}-{feature-name}/`
+   - Use `agents/templates/story-template.md` as template
+   - Start with Feature F1 (Broker Relationship Management) vertical slice:
+     - `F1-broker-relationship-management/S1-create-broker.md`
+     - `F1-broker-relationship-management/S2-read-broker.md`
+     - `F1-broker-relationship-management/S3-update-broker.md`
+     - `F1-broker-relationship-management/S4-delete-broker.md`
+     - `F1-broker-relationship-management/S5-broker-hierarchy.md`
+     - `F1-broker-relationship-management/S6-broker-contacts.md`
+     - `F1-broker-relationship-management/S7-broker-timeline.md`
+   - Each story must reference its parent feature
+   - Update INCEPTION.md Section 3.4 to reference story files
 
 7. **Specify Screens** (Section 3.5)
    - Navigation Shell (top nav, side nav)
@@ -324,9 +434,17 @@ The Architect Agent should NOT begin Phase B until:
    - Ensure no TODOs remain
    - Verify all stories have acceptance criteria
 
-9. **Hand Off to Architect**
+9. **Run Validation Scripts**
+   - Run `validate-stories.py planning-mds/stories/**/*.md` to check all stories across all features
+   - Fix any validation errors or warnings
+   - Run `generate-story-index.py planning-mds/stories/` to create story index
+   - Review generated `planning-mds/stories/STORY-INDEX.md`
+   - Verify stories are correctly grouped by feature
+
+10. **Hand Off to Architect**
    - Notify that Phase A is complete
    - Provide summary of deliverables
+   - Share story index output
    - Be available for clarification questions
 
 ---

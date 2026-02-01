@@ -118,25 +118,32 @@ AI: Help me fill these out with strong structure, but do not invent underwriting
 - Persona 3: Relationship Manager — TODO
 - Persona 4: Program Manager — TODO
 
-### 3.3 Epics
+### 3.3 Features
 
-Provide a list of epics with objectives.
+**Note:** Features are written as separate markdown files in `planning-mds/features/` directory using the feature template (`agents/templates/epic-template.md`). Each feature includes: business objective, scope, success metrics, and links to related stories.
 
-- Epic E1: Broker & MGA Relationship Management — TODO
-- Epic E2: Account 360 & Activity Timeline — TODO
-- Epic E3: Submission Intake Workflow — TODO
-- Epic E4: Renewal Pipeline — TODO
-- Epic E5: Task Center + Reminders — TODO
-- Epic E6: Broker Insights — TODO
+**MVP Features:**
+- [F1: Broker & MGA Relationship Management](features/F1-broker-relationship-management.md) — TODO
+- [F2: Account 360 & Activity Timeline](features/F2-account-360.md) — TODO
+- [F3: Submission Intake Workflow](features/F3-submission-intake.md) — TODO
+- [F4: Renewal Pipeline](features/F4-renewal-pipeline.md) — TODO
+- [F5: Task Center + Reminders](features/F5-task-center.md) — TODO
+- [F6: Broker Insights](features/F6-broker-insights.md) — TODO
 
 ### 3.4 MVP Features and Stories (vertical-slice friendly)
 
-For each story include: description, acceptance criteria, roles, and audit/timeline requirements.
+**Note:** User stories are written as separate markdown files organized by feature in `planning-mds/stories/{feature-name}/` directories using the story template (`agents/templates/story-template.md`). Each story includes: description, acceptance criteria, edge cases, roles, and audit/timeline requirements.
 
-- MVP Story S1: Broker CRUD + Broker 360 — TODO
-- MVP Story S2: Broker Hierarchy — TODO
-- MVP Story S3: Broker Contacts — TODO
-- MVP Story S4: Timeline for Broker mutations — TODO
+**MVP Stories (Feature F1: Broker Relationship Management):**
+- [S1: Create Broker](stories/F1-broker-relationship-management/S1-create-broker.md) — TODO
+- [S2: Read Broker (Broker 360 View)](stories/F1-broker-relationship-management/S2-read-broker.md) — TODO
+- [S3: Update Broker](stories/F1-broker-relationship-management/S3-update-broker.md) — TODO
+- [S4: Delete Broker](stories/F1-broker-relationship-management/S4-delete-broker.md) — TODO
+- [S5: Manage Broker Hierarchy](stories/F1-broker-relationship-management/S5-broker-hierarchy.md) — TODO
+- [S6: Manage Broker Contacts](stories/F1-broker-relationship-management/S6-broker-contacts.md) — TODO
+- [S7: View Broker Activity Timeline](stories/F1-broker-relationship-management/S7-broker-timeline.md) — TODO
+
+**Story Index:** See `planning-mds/stories/STORY-INDEX.md` for auto-generated summary of all stories.
 
 (We will expand later to Account/Submission/Renewal after proving the approach.)
 

@@ -33,8 +33,8 @@ cat agents/templates/story-template.md
 # Persona template
 cat agents/templates/persona-template.md
 
-# Epic template
-cat agents/templates/epic-template.md
+# Feature template
+cat agents/templates/feature-template.md
 
 # Screen specification template
 cat agents/templates/screen-spec-template.md
@@ -91,9 +91,9 @@ product-manager/
 - Define jobs-to-be-done
 - Map pain points and motivations
 
-### 3. Epic & Feature Definition (Section 3.3)
-- Create epics aligned with business objectives
-- Break epics into features
+### 3. Feature Definition (Section 3.3)
+- Create features aligned with business objectives
+- Define feature scope and success criteria
 - Prioritize for MVP vs future phases
 
 ### 4. User Story Writing (Section 3.4)
@@ -118,7 +118,7 @@ Located in `agents/templates/`:
 |----------|---------|-------------|
 | `story-template.md` | User story format | Writing every user story |
 | `persona-template.md` | Persona structure | Creating user personas |
-| `epic-template.md` | Epic definition | Defining high-level features |
+| `feature-template.md` | Feature definition | Defining features |
 | `screen-spec-template.md` | Screen specification | Specifying UI screens |
 | `acceptance-criteria-checklist.md` | AC quality check | Validating acceptance criteria |
 
@@ -177,28 +177,31 @@ Write to `planning-mds/INCEPTION.md` Section 3.2:
 - Use `agents/templates/persona-template.md`
 - Focus on jobs-to-be-done and pain points
 
-### Step 5: Define Epics
+### Step 5: Define Features
 
-Write to `planning-mds/INCEPTION.md` Section 3.3:
-- List all epics with objectives
-- Use `agents/templates/epic-template.md`
+Write feature files to `planning-mds/features/`:
+- Create feature files (e.g., `F1-broker-relationship-management.md`)
+- Use `agents/templates/feature-template.md` as template
+- Update `planning-mds/INCEPTION.md` Section 3.3 to reference feature files
 - Prioritize MVP vs Phase 1
 
 ### Step 6: Write MVP Stories
 
-Write to `planning-mds/INCEPTION.md` Section 3.4:
-- Start with one vertical slice (Broker CRUD)
+Write story files to `planning-mds/stories/{feature-name}/`:
+- Create feature directories (e.g., `stories/F1-broker-relationship-management/`)
 - Use `agents/templates/story-template.md`
 - Follow vertical slicing guide
 - Include audit trail and permission requirements
+- Update `planning-mds/INCEPTION.md` Section 3.4 to reference story files
 
-**Minimum MVP Stories:**
+**Minimum MVP Stories (Feature F1: Broker Relationship Management):**
 - S1: Create broker
-- S2: View broker list
-- S3: View broker 360
-- S4: Update broker
-- S5: Delete broker
-- S6: View broker timeline
+- S2: Read broker (Broker 360 view)
+- S3: Update broker
+- S4: Delete broker
+- S5: Manage broker hierarchy
+- S6: Manage broker contacts
+- S7: View broker timeline
 
 ### Step 7: Specify Screens
 
@@ -217,10 +220,8 @@ Write to `planning-mds/INCEPTION.md` Section 3.5:
 
 Run validation:
 ```bash
-# Validate stories
-for story in planning-mds/stories/*.md; do
-    python agents/product-manager/scripts/validate-stories.py "$story"
-done
+# Validate all stories across all features
+python agents/product-manager/scripts/validate-stories.py planning-mds/stories/**/*.md
 
 # Generate index
 python agents/product-manager/scripts/generate-story-index.py planning-mds/stories/
@@ -267,11 +268,13 @@ Check completion:
 - ✅ Specific pain points with impact
 - ✅ Actionable (informs design decisions)
 
-### Epic Quality
+### Feature Quality
 
 - ✅ Business-aligned (clear business objective)
 - ✅ Decomposable (breaks into 5-10 stories)
 - ✅ User-facing (describes user value)
+- ✅ Scoped appropriately (2-4 week delivery)
+- ✅ Measurable (clear success criteria)
 
 ---
 
@@ -320,8 +323,8 @@ Check completion:
 ### Coverage Metrics
 
 - Personas defined: Target ≥ 3
-- Epics defined: Target ≥ 5
-- MVP stories written: Target ≥ 20
+- Features defined: Target ≥ 5
+- MVP stories written: Target ≥ 20 (across all features)
 - Screens specified: Target ≥ 5
 
 ### Completeness Metrics

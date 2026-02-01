@@ -11,7 +11,7 @@ Use this template for all user stories to ensure consistency and completeness.
 ## Story Header
 
 **Story ID:** [Unique identifier, e.g., S1, S2, US-001]
-**Epic:** [Epic ID this story belongs to, e.g., E1]
+**Feature:** [Feature ID this story belongs to, e.g., F1]
 **Title:** [Short descriptive title, e.g., "Broker CRUD - Create New Broker"]
 **Priority:** [Critical | High | Medium | Low]
 **Phase:** [MVP | Phase 1 | Phase 2 | Future]

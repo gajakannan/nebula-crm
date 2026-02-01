@@ -52,7 +52,7 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
 
 **Trigger:**
 - Product Manager has completed Phase A deliverables
-- Technical design is needed for a new feature or epic
+- Technical design is needed for a new feature
 - Architectural decision needs to be made or documented
 - API contract needs to be defined
 - Data model needs to be designed
@@ -142,8 +142,8 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
 ### Required Context
 - Vision and non-goals (Section 3.1)
 - Personas (Section 3.2)
-- Epics with business objectives (Section 3.3)
-- MVP user stories with acceptance criteria (Section 3.4)
+- Features with business objectives (Section 3.3, in `planning-mds/features/`)
+- MVP user stories with acceptance criteria (Section 3.4, in `planning-mds/stories/{feature-name}/`)
 - Screen specifications (Section 3.5)
 - Domain glossary (if available)
 

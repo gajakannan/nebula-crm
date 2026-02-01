@@ -61,7 +61,7 @@ Generates an index/table of contents for all user stories.
 
 **Purpose:**
 - Create navigable index of stories
-- Group stories by epic
+- Group stories by feature
 - Summarize by phase and priority
 - Auto-link to story files
 
@@ -110,7 +110,7 @@ Creates `planning-mds/stories/STORY-INDEX.md` with content like:
 **Extracted Metadata:**
 - Story ID (from `**Story ID:**` or filename)
 - Title (from `**Title:**` or first heading)
-- Epic (from `**Epic:**`)
+- Feature (from `**Feature:**`)
 - Priority (from `**Priority:**`)
 - Phase (from `**Phase:**`)
 - Persona (from `**As a**` statement)

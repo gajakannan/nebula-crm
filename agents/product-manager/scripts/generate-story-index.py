@@ -3,7 +3,7 @@
 Story Index Generator
 
 Generates an index/table of contents for all user stories in a directory.
-Extracts story ID, title, priority, phase, and epic from each story file.
+Extracts story ID, title, priority, phase, and feature from each story file.
 
 Usage:
     python generate-story-index.py <stories-directory>
@@ -25,7 +25,7 @@ class StoryMetadata:
     file_path: Path
     story_id: Optional[str] = None
     title: Optional[str] = None
-    epic: Optional[str] = None
+    feature: Optional[str] = None
     priority: Optional[str] = None
     phase: Optional[str] = None
     persona: Optional[str] = None
@@ -62,10 +62,10 @@ class StoryIndexGenerator:
                 if heading_match:
                     metadata.title = heading_match.group(1).strip()
 
-            # Extract Epic
-            epic_match = re.search(r"\*\*Epic:\*\*\s*([^\n]+)", content)
-            if epic_match:
-                metadata.epic = epic_match.group(1).strip()
+            # Extract Feature
+            feature_match = re.search(r"\*\*Feature:\*\*\s*([^\n]+)", content)
+            if feature_match:
+                metadata.feature = feature_match.group(1).strip()
 
             # Extract Priority
             priority_match = re.search(r"\*\*Priority:\*\*\s*([^\n]+)", content)
@@ -93,8 +93,8 @@ class StoryIndexGenerator:
             print(f"Error: Directory not found: {self.stories_dir}")
             sys.exit(1)
 
-        # Find all .md files
-        story_files = list(self.stories_dir.glob("*.md"))
+        # Find all .md files recursively in feature subdirectories
+        story_files = list(self.stories_dir.glob("**/*.md"))
 
         # Exclude index file itself
         story_files = [f for f in story_files if f.name.upper() != "STORY-INDEX.MD"]
@@ -123,23 +123,23 @@ class StoryIndexGenerator:
         lines.append("---")
         lines.append("")
 
-        # Group by Epic
-        epics: Dict[str, List[StoryMetadata]] = {}
-        no_epic: List[StoryMetadata] = []
+        # Group by Feature
+        features: Dict[str, List[StoryMetadata]] = {}
+        no_feature: List[StoryMetadata] = []
 
         for story in self.stories:
-            if story.epic:
-                if story.epic not in epics:
-                    epics[story.epic] = []
-                epics[story.epic].append(story)
+            if story.feature:
+                if story.feature not in features:
+                    features[story.feature] = []
+                features[story.feature].append(story)
             else:
-                no_epic.append(story)
+                no_feature.append(story)
 
-        # Generate table for each epic
-        for epic_name in sorted(epics.keys()):
-            stories = epics[epic_name]
+        # Generate table for each feature
+        for feature_name in sorted(features.keys()):
+            stories = features[feature_name]
 
-            lines.append(f"## {epic_name}")
+            lines.append(f"## {feature_name}")
             lines.append("")
             lines.append("| Story ID | Title | Priority | Phase | Persona |")
             lines.append("|----------|-------|----------|-------|---------|")
@@ -151,8 +151,9 @@ class StoryIndexGenerator:
                 phase = story.phase or "-"
                 persona = story.persona or "-"
 
-                # Create link to story file
-                file_link = f"[{story_id}](./{story.file_path.name})"
+                # Create link to story file with relative path
+                rel_path = story.file_path.relative_to(self.stories_dir)
+                file_link = f"[{story_id}](./{rel_path})"
 
                 lines.append(f"| {file_link} | {title} | {priority} | {phase} | {persona} |")
 
@@ -160,21 +161,23 @@ class StoryIndexGenerator:
             lines.append("---")
             lines.append("")
 
-        # Stories without epic
-        if no_epic:
+        # Stories without feature
+        if no_feature:
             lines.append("## Uncategorized Stories")
             lines.append("")
             lines.append("| Story ID | Title | Priority | Phase | Persona |")
             lines.append("|----------|-------|----------|-------|---------|")
 
-            for story in sorted(no_epic, key=lambda s: s.story_id or ""):
+            for story in sorted(no_feature, key=lambda s: s.story_id or ""):
                 story_id = story.story_id or "?"
                 title = story.title or "Untitled"
                 priority = story.priority or "-"
                 phase = story.phase or "-"
                 persona = story.persona or "-"
 
-                file_link = f"[{story_id}](./{story.file_path.name})"
+                # Create link with relative path
+                rel_path = story.file_path.relative_to(self.stories_dir)
+                file_link = f"[{story_id}](./{rel_path})"
 
                 lines.append(f"| {file_link} | {title} | {priority} | {phase} | {persona} |")
 

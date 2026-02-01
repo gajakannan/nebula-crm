@@ -120,7 +120,7 @@ AI: Help me fill these out with strong structure, but do not invent underwriting
 
 ### 3.3 Features
 
-**Note:** Features are written as separate markdown files in `planning-mds/features/` directory using the feature template (`agents/templates/epic-template.md`). Each feature includes: business objective, scope, success metrics, and links to related stories.
+**Note:** Features are written as separate markdown files in `planning-mds/features/` directory using the feature template (`agents/templates/feature-template.md`). Each feature includes: business objective, scope, success metrics, and links to related stories.
 
 **MVP Features:**
 - [F1: Broker & MGA Relationship Management](features/F1-broker-relationship-management.md) — TODO
@@ -143,7 +143,7 @@ AI: Help me fill these out with strong structure, but do not invent underwriting
 - [S6: Manage Broker Contacts](stories/F1-broker-relationship-management/S6-broker-contacts.md) — TODO
 - [S7: View Broker Activity Timeline](stories/F1-broker-relationship-management/S7-broker-timeline.md) — TODO
 
-**Story Index:** See `planning-mds/stories/STORY-INDEX.md` for auto-generated summary of all stories.
+**Story Index:** See `planning-mds/stories/STORY-INDEX.md` for auto-generated summary of all stories (if generated).
 
 (We will expand later to Account/Submission/Renewal after proving the approach.)
 

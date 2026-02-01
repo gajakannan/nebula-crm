@@ -130,4 +130,4 @@ All builder agent specifications are now complete and ready to use!
 2. Read the specific agent specification file for your current task
 3. Use templates from `templates/` directory for consistent deliverables
 4. Follow quality gates and definition of done for each agent role
-5. **Ready to build!** All agents are available for Nebula development
+5. **Ready to build!** All agents are available for project development

@@ -6,7 +6,7 @@ Validates OpenAPI specifications for completeness and consistency.
 
 Usage:
     python validate-api-contract.py <path-to-openapi-yaml>
-    python validate-api-contract.py planning-mds/api/broker-api.yaml
+    python validate-api-contract.py planning-mds/api/example-api.yaml
 """
 
 import sys
@@ -180,7 +180,7 @@ class ApiContractValidator:
 def main():
     if len(sys.argv) < 2:
         print("Usage: python validate-api-contract.py <openapi-yaml-file>")
-        print("Example: python validate-api-contract.py planning-mds/api/broker-api.yaml")
+        print("Example: python validate-api-contract.py planning-mds/api/example-api.yaml")
         sys.exit(1)
 
     file_path = sys.argv[1]

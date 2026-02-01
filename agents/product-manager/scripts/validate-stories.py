@@ -149,7 +149,7 @@ class StoryValidator:
 def main():
     if len(sys.argv) < 2:
         print("Usage: python validate-stories.py <story-file-path>")
-        print("Example: python validate-stories.py planning-mds/stories/S1-create-broker.md")
+        print("Example: python validate-stories.py planning-mds/stories/S1-example.md")
         sys.exit(1)
 
     file_path = sys.argv[1]

@@ -47,7 +47,7 @@ class StoryIndexGenerator:
             if story_id_match:
                 metadata.story_id = story_id_match.group(1).strip()
             else:
-                # Try to extract from filename (e.g., S1-create-broker.md)
+                # Try to extract from filename (e.g., S1-example.md)
                 filename_match = re.match(r"(S\d+|US-\d+)", file_path.stem)
                 if filename_match:
                     metadata.story_id = filename_match.group(1)

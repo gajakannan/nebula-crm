@@ -1,14 +1,13 @@
-# Test Case Mapping Guide
+# Test Case Mapping
 
-Map each acceptance criterion to one or more tests.
+Generic guidance for mapping requirements to tests.
 
-## Mapping Rules
-- Each acceptance criterion must map to at least one test
-- Happy path → E2E or integration test
-- Error paths → API or integration test
-- UI behavior → component test
+## Mapping Steps
 
-## Example
-**AC:** "Duplicate license number shows error"
-- API test: POST /brokers duplicate → 409
-- UI test: error message displayed
+1) Identify user story or requirement
+2) Map to test cases (unit, integration, E2E)
+3) Ensure coverage of happy path + edge cases
+
+---
+
+See `planning-mds/examples/` for project-specific mappings.

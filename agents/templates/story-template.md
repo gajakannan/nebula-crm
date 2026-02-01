@@ -1,161 +1,110 @@
 ---
 template: user-story
-version: 1.0
+version: 1.1
 applies_to: product-manager
 ---
 
 # User Story Template
 
-Use this template for all user stories to ensure consistency and completeness.
+Use this template for all user stories to ensure consistency and completeness. Keep it domain-neutral; project-specific examples live in `planning-mds/examples/`.
 
 ## Story Header
 
-**Story ID:** [Unique identifier, e.g., S1, S2, US-001]
-**Feature:** [Feature ID this story belongs to, e.g., F1]
-**Title:** [Short descriptive title, e.g., "Broker CRUD - Create New Broker"]
+**Story ID:** [S1, S2, ...]
+**Epic/Feature:** [E1 or F1]
+**Title:** [Short descriptive title]
 **Priority:** [Critical | High | Medium | Low]
 **Phase:** [MVP | Phase 1 | Phase 2 | Future]
 
 ## User Story
 
-**As a** [specific persona - be precise, not just "user"]
-**I want** [capability or feature]
-**So that** [business value or benefit - the "why"]
+**As a** [specific persona]
+**I want** [capability]
+**So that** [business value]
 
 ## Context & Background
 
-[Optional: Provide additional context about why this story exists, business drivers, or related stories]
+[Why this story exists and what it unlocks]
 
 ## Acceptance Criteria
 
-Use Given/When/Then format or checklist format. Be specific and testable.
+Use Given/When/Then or a checklist. Be specific and testable.
 
 **Happy Path:**
-- **Given** [initial context or precondition]
-- **When** [action or event]
+- **Given** [context]
+- **When** [action]
 - **Then** [expected outcome]
-- **And** [additional expected outcome]
 
-**Alternative Flows:**
-- **Given** [different context]
-- **When** [different action]
-- **Then** [different outcome]
+**Alternative Flows / Edge Cases:**
+- [Scenario] → [Expected behavior]
 
-**Checklist Format Alternative:**
-- [ ] Criterion 1 - specific, testable condition
-- [ ] Criterion 2 - specific, testable condition
-- [ ] Criterion 3 - specific, testable condition
-
-## Edge Cases & Error Scenarios
-
-Document non-happy-path scenarios:
-
-**Validation Errors:**
-- [Scenario]: [Expected behavior]
-- Example: Missing required field → Show inline error "Field X is required"
-
-**Business Rule Violations:**
-- [Scenario]: [Expected behavior]
-- Example: Duplicate license number → Show error "Broker with this license already exists"
-
-**Permission Errors:**
-- [Scenario]: [Expected behavior]
-- Example: User lacks CreateBroker permission → Show 403 Forbidden error
-
-**System Errors:**
-- [Scenario]: [Expected behavior]
-- Example: Database unavailable → Show "System temporarily unavailable, please try again"
-
-## Audit & Timeline Requirements
-
-For stories involving data mutations (create, update, delete, status changes):
-
-- [ ] Create immutable timeline event with: timestamp, user ID, action type, entity ID
-- [ ] Log all field changes (old value → new value) if applicable
-- [ ] Ensure timeline events are visible in [Entity] 360 view
-- [ ] Include audit context: IP address, user agent (if security-relevant)
+**Checklist (if simpler):**
+- [ ] [Specific, testable condition]
+- [ ] [Specific, testable condition]
 
 ## Data Requirements
 
-List key data fields (non-technical, business perspective):
-
 **Required Fields:**
-- [Field name]: [Purpose/description]
+- [Field]: [Purpose]
 
 **Optional Fields:**
-- [Field name]: [Purpose/description]
+- [Field]: [Purpose]
 
-**Calculated/Derived Fields:**
-- [Field name]: [How it's derived]
+**Validation Rules:**
+- [Rule]
 
 ## Role-Based Visibility
 
-Specify who can see/do what:
-
 **Roles that can [action]:**
-- [Role 1]: [Specific permissions]
-- [Role 2]: [Specific permissions]
+- [Role] — [Permission]
 
 **Data Visibility:**
 - InternalOnly content: [What's internal]
-- BrokerVisible content: [What brokers can see - if applicable]
+- ExternalVisible content: [What external users can see]
+
+## Non-Functional Expectations (If Applicable)
+
+- Performance: [e.g., page loads < 2s]
+- Security: [e.g., authorized users only]
+- Reliability: [e.g., error handling expectations]
 
 ## Dependencies
 
-**Depends On (Blockers):**
-- [Story ID]: [Why this is needed first]
+**Depends On:**
+- [Story ID] — [Reason]
 
 **Related Stories:**
-- [Story ID]: [Relationship description]
+- [Story ID] — [Relationship]
 
-## Out of Scope (Explicit Non-Goals)
+## Out of Scope
 
-Document what this story does NOT include to prevent scope creep:
+- [Explicit non-goal]
+- [Deferred capability]
 
-- [Feature/capability]: Deferred to [Phase/Story]
-- [Feature/capability]: Not needed for MVP
-- [Feature/capability]: Explicitly excluded from requirements
+## UI/UX Notes (Optional)
 
-## UI/UX Notes
-
-[Optional: Screen mockups, wireframes, or detailed UI specifications]
-
-**Screen(s):**
-- [Screen name]: [Key UI elements or interactions]
-
-**User Workflow:**
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
-
-## Technical Constraints (PM Awareness)
-
-[Optional: Any known technical constraints that PM is aware of - NOT technical design]
-
-Example: "Must integrate with existing Keycloak authentication"
+- Screens involved: [Screen name(s)]
+- Key interactions: [Summary]
 
 ## Questions & Assumptions
 
 **Open Questions:**
-- [ ] [Question that needs stakeholder input]
+- [ ] [Question requiring stakeholder input]
 
 **Assumptions (to be validated):**
-- [Assumption made in this story that may need confirmation]
+- [Assumption]
 
 ## Definition of Done
 
-- [ ] All acceptance criteria are met
-- [ ] Edge cases and error scenarios are handled
-- [ ] Audit/timeline events are logged (if applicable)
-- [ ] Role-based permissions are enforced
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Code review approved
+- [ ] Acceptance criteria met
+- [ ] Edge cases handled
+- [ ] Permissions enforced
+- [ ] Audit/timeline logged (if applicable)
+- [ ] Tests pass
 - [ ] Documentation updated (if needed)
-- [ ] Deployed to [environment]
 
 ---
 
-## Example Usage
+## Example Library
 
-See `product-manager/references/story-examples.md` for complete examples of well-written stories.
+See `planning-mds/examples/stories/` for project-specific story examples.

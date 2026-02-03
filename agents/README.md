@@ -8,7 +8,7 @@ This directory contains **generic, reusable** agent role definitions for buildin
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    Nebula Agent-Driven Builder Framework                    │
+│                     Agent-Driven Builder Framework                         │
 │                    Plan → Spec → Design → Build → Ship                      │
 └─────────────────────────────────────────────────────────────────────────────┘
 

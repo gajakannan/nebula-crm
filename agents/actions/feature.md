@@ -396,15 +396,15 @@ Before running feature action:
 5. **Valuable:** Delivers user value on its own
 
 ### Good Feature Examples
-- ✅ "View broker list with pagination"
-- ✅ "Create new submission with required fields"
+- ✅ "View customer list with pagination"
+- ✅ "Create new order with required fields"
 - ✅ "Search accounts by name"
 - ✅ "View activity timeline for an account"
 
 ### Bad Feature Examples (Too Large - Break Down!)
-- ❌ "Build entire broker management module"
-- ❌ "Implement full submission workflow"
-- ❌ "Complete renewal process"
+- ❌ "Build entire customer management module"
+- ❌ "Implement full order processing workflow"
+- ❌ "Complete onboarding process"
 
 ### Not Vertical Slices
 - ❌ "Create all database tables" (not vertical)
@@ -415,30 +415,30 @@ Before running feature action:
 
 ## Example Usage
 
-### Scenario 1: Broker List Feature
+### Scenario 1: Customer List Feature
 ```
-User: "Run the feature action for broker list with pagination"
+User: "Run the feature action for customer list with pagination"
 
 Claude: [Reads feature.md]
-Claude: "I'll implement the broker list feature as a vertical slice..."
+Claude: "I'll implement the customer list feature as a vertical slice..."
 
 [Step 1: Parallel implementation]
   Backend Developer:
-    - GET /api/brokers endpoint with pagination
-    - BrokerService.ListAsync method
+    - GET /api/customers endpoint with pagination
+    - CustomerService.ListAsync method
     - Unit tests for service
     - Integration tests for endpoint
 
   Frontend Developer:
-    - BrokerList component
-    - TanStack Query hook for fetching brokers
+    - CustomerList component
+    - TanStack Query hook for fetching customers
     - Pagination controls
     - Component tests
 
   Quality Engineer:
-    - E2E test: View broker list
+    - E2E test: View customer list
     - E2E test: Navigate pages
-    - Test plan for broker list
+    - Test plan for customer list
 
 [Step 2: Self-review - all pass]
 
@@ -455,12 +455,12 @@ Claude: "Feature review complete. Do you approve? (approve/fix issues/reject)"
 
 User: "approve"
 
-Claude: "Feature complete! Broker list with pagination ready to merge."
+Claude: "Feature complete! Customer list with pagination ready to merge."
 ```
 
 ### Scenario 2: Iteration After Rejection
 ```
-User: "Run the feature action for broker search"
+User: "Run the feature action for customer search"
 
 [Steps 1-3 execute]
 

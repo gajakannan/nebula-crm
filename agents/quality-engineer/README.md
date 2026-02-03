@@ -129,7 +129,8 @@ cat planning-mds/architecture/TESTING-STACK-SUMMARY.md
 - `planning-mds/architecture/TESTING-STACK-SUMMARY.md` - Tool reference
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Section 7 (Testing Patterns)
 
-### Generic (to be created)
-- `agents/quality-engineer/references/test-pyramid-guide.md`
-- `agents/quality-engineer/references/test-automation-patterns.md`
-- `agents/quality-engineer/references/ci-cd-integration.md`
+### Generic
+- `agents/quality-engineer/references/testing-best-practices.md`
+- `agents/quality-engineer/references/e2e-testing-guide.md`
+- `agents/quality-engineer/references/performance-testing-guide.md`
+- `agents/quality-engineer/references/test-case-mapping.md`

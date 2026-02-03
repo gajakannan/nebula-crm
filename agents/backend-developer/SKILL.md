@@ -154,23 +154,23 @@ Your responsibility is to implement the **service layer** (engine/) based on req
 ```
 engine/
 ├── src/
-│   ├── Nebula.Domain/              # Domain layer
+│   ├── MyApp.Domain/              # Domain layer
 │   │   ├── Entities/               # Domain entities
-│   │   │   ├── Broker.cs
+│   │   │   ├── Customer.cs
 │   │   │   ├── Account.cs
-│   │   │   └── Submission.cs
+│   │   │   └── Order.cs
 │   │   ├── ValueObjects/           # Value objects
 │   │   ├── Enums/                  # Domain enums
 │   │   └── Exceptions/             # Domain exceptions
-│   ├── Nebula.Application/         # Application layer
+│   ├── MyApp.Application/         # Application layer
 │   │   ├── Commands/               # Commands (writes)
 │   │   ├── Queries/                # Queries (reads)
 │   │   ├── DTOs/                   # Data transfer objects
 │   │   ├── Interfaces/             # Repository interfaces
 │   │   └── Services/               # Application services
-│   ├── Nebula.Infrastructure/      # Infrastructure layer
+│   ├── MyApp.Infrastructure/      # Infrastructure layer
 │   │   ├── Persistence/
-│   │   │   ├── NebulaDbContext.cs
+│   │   │   ├── AppDbContext.cs
 │   │   │   ├── Configurations/     # EF Core entity configs
 │   │   │   ├── Repositories/       # Repository implementations
 │   │   │   └── Migrations/         # EF Core migrations
@@ -178,9 +178,9 @@ engine/
 │   │   │   ├── TimelineService.cs  # Audit/timeline
 │   │   │   └── AuthorizationService.cs
 │   │   └── External/               # External integrations
-│   └── Nebula.Api/                 # API layer
+│   └── MyApp.Api/                 # API layer
 │       ├── Endpoints/              # API endpoint groups
-│       │   ├── BrokerEndpoints.cs
+│       │   ├── CustomerEndpoints.cs
 │       │   ├── AccountEndpoints.cs
 │       │   └── SubmissionEndpoints.cs
 │       ├── Filters/                # Filters/middleware
@@ -188,11 +188,11 @@ engine/
 │       ├── Program.cs
 │       └── appsettings.json
 ├── tests/
-│   ├── Nebula.Domain.Tests/
-│   ├── Nebula.Application.Tests/
-│   ├── Nebula.Infrastructure.Tests/
-│   └── Nebula.Api.Tests/
-└── Nebula.sln
+│   ├── MyApp.Domain.Tests/
+│   ├── MyApp.Application.Tests/
+│   ├── MyApp.Infrastructure.Tests/
+│   └── MyApp.Api.Tests/
+└── MyApp.sln
 ```
 
 ## Input Contract
@@ -227,10 +227,10 @@ engine/
 ### Deliverables
 
 **Code:**
-- Domain entities in `src/Nebula.Domain/`
-- Application services in `src/Nebula.Application/`
-- Infrastructure (repositories, DbContext) in `src/Nebula.Infrastructure/`
-- API endpoints in `src/Nebula.Api/`
+- Domain entities in `src/MyApp.Domain/`
+- Application services in `src/MyApp.Application/`
+- Infrastructure (repositories, DbContext) in `src/MyApp.Infrastructure/`
+- API endpoints in `src/MyApp.Api/`
 
 **Database:**
 - EF Core migrations
@@ -328,15 +328,15 @@ engine/
 ```csharp
 using System;
 
-namespace Nebula.Domain.Entities;
+namespace MyApp.Domain.Entities;
 
-public class Broker
+public class Customer
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
-    public BrokerStatus Status { get; set; }
+    public CustomerStatus Status { get; set; }
 
     // Audit fields (required on all entities)
     public DateTime CreatedAt { get; set; }
@@ -353,13 +353,13 @@ public class Broker
     public void Activate()
     {
         if (IsDeleted)
-            throw new InvalidOperationException("Cannot activate deleted broker");
+            throw new InvalidOperationException("Cannot activate deleted customer");
 
-        Status = BrokerStatus.Active;
+        Status = CustomerStatus.Active;
     }
 }
 
-public enum BrokerStatus
+public enum CustomerStatus
 {
     Active,
     Inactive
@@ -372,23 +372,23 @@ using NJsonSchema;
 using NJsonSchema.Validation;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Nebula.Api.Endpoints;
+namespace MyApp.Api.Endpoints;
 
-public static class BrokerEndpoints
+public static class CustomerEndpoints
 {
     // Load schema from shared location
-    private static readonly JsonSchema BrokerSchema =
-        JsonSchema.FromFileAsync("../../planning-mds/schemas/broker.schema.json").Result;
+    private static readonly JsonSchema CustomerSchema =
+        JsonSchema.FromFileAsync("../../planning-mds/schemas/customer.schema.json").Result;
 
-    public static void MapBrokerEndpoints(this WebApplication app)
+    public static void MapCustomerEndpoints(this WebApplication app)
     {
-        app.MapPost("/api/brokers", CreateBroker)
+        app.MapPost("/api/customers", CreateCustomer)
             .RequireAuthorization();
     }
 
-    private static async Task<IResult> CreateBroker(
-        CreateBrokerDto dto,
-        IBrokerService brokerService,
+    private static async Task<IResult> CreateCustomer(
+        CreateCustomerDto dto,
+        ICustomerService customerService,
         IAuthorizationService authz,
         HttpContext context)
     {
@@ -396,7 +396,7 @@ public static class BrokerEndpoints
         var validator = new JsonSchemaValidator();
         var validationResult = validator.Validate(
             System.Text.Json.JsonSerializer.Serialize(dto),
-            BrokerSchema);
+            CustomerSchema);
 
         if (validationResult.Count > 0)
         {
@@ -410,19 +410,19 @@ public static class BrokerEndpoints
         }
 
         // 2. Authorize
-        if (!await authz.CanCreate(context.User, "broker"))
+        if (!await authz.CanCreate(context.User, "customer"))
         {
             return Results.Problem(
                 statusCode: 403,
                 title: "Forbidden",
-                detail: "You do not have permission to create brokers");
+                detail: "You do not have permission to create customers");
         }
 
-        // 3. Create broker
-        var broker = await brokerService.CreateAsync(dto);
+        // 3. Create customer
+        var customer = await customerService.CreateAsync(dto);
 
         // 4. Return 201 Created
-        return Results.Created($"/api/brokers/{broker.Id}", broker);
+        return Results.Created($"/api/customers/{customer.Id}", customer);
     }
 }
 ```
@@ -472,8 +472,8 @@ public class ValidateJsonSchemaAttribute : ActionFilterAttribute
 
 // Usage
 [HttpPost]
-[ValidateJsonSchema("schemas/broker.schema.json")]
-public async Task<IActionResult> CreateBroker(CreateBrokerDto dto)
+[ValidateJsonSchema("schemas/customer.schema.json")]
+public async Task<IActionResult> CreateCustomer(CreateCustomerDto dto)
 {
     // Validation already done by attribute
     // ...
@@ -484,15 +484,15 @@ public async Task<IActionResult> CreateBroker(CreateBrokerDto dto)
 ```csharp
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Nebula.Domain.Entities;
+using MyApp.Domain.Entities;
 
-namespace Nebula.Infrastructure.Persistence.Configurations;
+namespace MyApp.Infrastructure.Persistence.Configurations;
 
-public class BrokerConfiguration : IEntityTypeConfiguration<Broker>
+public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 {
-    public void Configure(EntityTypeBuilder<Broker> builder)
+    public void Configure(EntityTypeBuilder<Customer> builder)
     {
-        builder.ToTable("Brokers");
+        builder.ToTable("Customers");
 
         builder.HasKey(b => b.Id);
 
@@ -537,62 +537,62 @@ public class BrokerConfiguration : IEntityTypeConfiguration<Broker>
 ### Repository Pattern
 ```csharp
 // Application layer - Interface
-namespace Nebula.Application.Interfaces;
+namespace MyApp.Application.Interfaces;
 
-public interface IBrokerRepository
+public interface ICustomerRepository
 {
-    Task<Broker?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    Task<IEnumerable<Broker>> ListAsync(CancellationToken ct = default);
-    Task<Broker> AddAsync(Broker broker, CancellationToken ct = default);
-    Task UpdateAsync(Broker broker, CancellationToken ct = default);
+    Task<Customer?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<IEnumerable<Customer>> ListAsync(CancellationToken ct = default);
+    Task<Customer> AddAsync(Customer customer, CancellationToken ct = default);
+    Task UpdateAsync(Customer customer, CancellationToken ct = default);
     Task DeleteAsync(Guid id, CancellationToken ct = default);
 }
 
 // Infrastructure layer - Implementation
-namespace Nebula.Infrastructure.Persistence.Repositories;
+namespace MyApp.Infrastructure.Persistence.Repositories;
 
-public class BrokerRepository : IBrokerRepository
+public class CustomerRepository : ICustomerRepository
 {
-    private readonly NebulaDbContext _context;
+    private readonly AppDbContext _context;
 
-    public BrokerRepository(NebulaDbContext context)
+    public CustomerRepository(AppDbContext context)
     {
         _context = context;
     }
 
-    public async Task<Broker?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<Customer?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        return await _context.Brokers
+        return await _context.Customers
             .FirstOrDefaultAsync(b => b.Id == id, ct);
     }
 
-    public async Task<IEnumerable<Broker>> ListAsync(CancellationToken ct = default)
+    public async Task<IEnumerable<Customer>> ListAsync(CancellationToken ct = default)
     {
-        return await _context.Brokers
+        return await _context.Customers
             .OrderBy(b => b.Name)
             .ToListAsync(ct);
     }
 
-    public async Task<Broker> AddAsync(Broker broker, CancellationToken ct = default)
+    public async Task<Customer> AddAsync(Customer customer, CancellationToken ct = default)
     {
-        _context.Brokers.Add(broker);
+        _context.Customers.Add(customer);
         await _context.SaveChangesAsync(ct);
-        return broker;
+        return customer;
     }
 
-    public async Task UpdateAsync(Broker broker, CancellationToken ct = default)
+    public async Task UpdateAsync(Customer customer, CancellationToken ct = default)
     {
-        _context.Brokers.Update(broker);
+        _context.Customers.Update(customer);
         await _context.SaveChangesAsync(ct);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        var broker = await GetByIdAsync(id, ct);
-        if (broker != null)
+        var customer = await GetByIdAsync(id, ct);
+        if (customer != null)
         {
-            broker.IsDeleted = true;
-            broker.DeletedAt = DateTime.UtcNow;
+            customer.IsDeleted = true;
+            customer.DeletedAt = DateTime.UtcNow;
             // DeletedBy set by SaveChanges interceptor
             await _context.SaveChangesAsync(ct);
         }
@@ -605,7 +605,7 @@ public class BrokerRepository : IBrokerRepository
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace Nebula.Infrastructure.Persistence;
+namespace MyApp.Infrastructure.Persistence;
 
 public class AuditInterceptor : SaveChangesInterceptor
 {
@@ -669,14 +669,14 @@ public class AuditInterceptor : SaveChangesInterceptor
 
 ### Timeline Service (Create Audit Events)
 ```csharp
-namespace Nebula.Infrastructure.Services;
+namespace MyApp.Infrastructure.Services;
 
 public class TimelineService : ITimelineService
 {
-    private readonly NebulaDbContext _context;
+    private readonly AppDbContext _context;
     private readonly ICurrentUserService _currentUser;
 
-    public TimelineService(NebulaDbContext context, ICurrentUserService currentUser)
+    public TimelineService(AppDbContext context, ICurrentUserService currentUser)
     {
         _context = context;
         _currentUser = currentUser;
@@ -710,26 +710,26 @@ public class TimelineService : ITimelineService
 }
 
 // Usage in service
-public async Task<Broker> UpdateBrokerAsync(Guid id, UpdateBrokerDto dto)
+public async Task<Customer> UpdateCustomerAsync(Guid id, UpdateCustomerDto dto)
 {
-    var broker = await _repository.GetByIdAsync(id);
-    if (broker == null)
-        throw new NotFoundException("Broker not found");
+    var customer = await _repository.GetByIdAsync(id);
+    if (customer == null)
+        throw new NotFoundException("Customer not found");
 
-    broker.Name = dto.Name;
-    broker.Email = dto.Email;
+    customer.Name = dto.Name;
+    customer.Email = dto.Email;
 
-    await _repository.UpdateAsync(broker);
+    await _repository.UpdateAsync(customer);
 
     // Create timeline event (required!)
     await _timelineService.CreateEventAsync(
-        entityType: "Broker",
+        entityType: "Customer",
         entityId: id,
-        eventType: "BrokerUpdated",
-        description: $"Broker {broker.Name} updated",
+        eventType: "CustomerUpdated",
+        description: $"Customer {customer.Name} updated",
         metadata: new { Changes = dto });
 
-    return broker;
+    return customer;
 }
 ```
 
@@ -738,7 +738,7 @@ public async Task<Broker> UpdateBrokerAsync(Guid id, UpdateBrokerDto dto)
 using Casbin;
 using Casbin.AspNetCore.Authorization;
 
-namespace Nebula.Infrastructure.Services;
+namespace MyApp.Infrastructure.Services;
 
 public class AuthorizationService : IAuthorizationService
 {
@@ -777,42 +777,42 @@ public class AuthorizationService : IAuthorizationService
 }
 
 // Casbin policy file (conf/policy.csv)
-// p, admin, broker, create
-// p, admin, broker, read
-// p, admin, broker, update
-// p, admin, broker, delete
-// p, user, broker, read
+// p, admin, customer, create
+// p, admin, customer, read
+// p, admin, customer, update
+// p, admin, customer, delete
+// p, user, customer, read
 ```
 
 ## Common Patterns
 
 ### CRUD Service Pattern
 ```csharp
-public class BrokerService : IBrokerService
+public class CustomerService : ICustomerService
 {
-    private readonly IBrokerRepository _repository;
+    private readonly ICustomerRepository _repository;
     private readonly ITimelineService _timeline;
     private readonly IAuthorizationService _authz;
 
-    public async Task<Broker> CreateAsync(CreateBrokerDto dto)
+    public async Task<Customer> CreateAsync(CreateCustomerDto dto)
     {
-        var broker = new Broker
+        var customer = new Customer
         {
             Id = Guid.NewGuid(),
             Name = dto.Name,
             Email = dto.Email,
             Phone = dto.Phone,
-            Status = BrokerStatus.Active
+            Status = CustomerStatus.Active
             // Audit fields set by interceptor
         };
 
-        await _repository.AddAsync(broker);
+        await _repository.AddAsync(customer);
 
         await _timeline.CreateEventAsync(
-            "Broker", broker.Id, "BrokerCreated",
-            $"Broker {broker.Name} created");
+            "Customer", customer.Id, "CustomerCreated",
+            $"Customer {customer.Name} created");
 
-        return broker;
+        return customer;
     }
 }
 ```
@@ -884,13 +884,13 @@ app.UseExceptionHandler(exceptionHandlerApp =>
 ### SQL Injection Prevention
 ```csharp
 // GOOD - EF Core uses parameterized queries
-var broker = await _context.Brokers
+var customer = await _context.Customers
     .Where(b => b.Email == email)
     .FirstOrDefaultAsync();
 
 // BAD - Never use raw SQL with string interpolation
-// var broker = await _context.Brokers
-//     .FromSqlRaw($"SELECT * FROM Brokers WHERE Email = '{email}'")
+// var customer = await _context.Customers
+//     .FromSqlRaw($"SELECT * FROM Customers WHERE Email = '{email}'")
 //     .FirstOrDefaultAsync();
 ```
 
@@ -901,29 +901,29 @@ var broker = await _context.Brokers
 using Xunit;
 using FluentAssertions;
 
-public class BrokerTests
+public class CustomerTests
 {
     [Fact]
     public void Activate_ShouldSetStatusToActive()
     {
         // Arrange
-        var broker = new Broker { Status = BrokerStatus.Inactive };
+        var customer = new Customer { Status = CustomerStatus.Inactive };
 
         // Act
-        broker.Activate();
+        customer.Activate();
 
         // Assert
-        broker.Status.Should().Be(BrokerStatus.Active);
+        customer.Status.Should().Be(CustomerStatus.Active);
     }
 
     [Fact]
     public void Activate_WhenDeleted_ShouldThrowException()
     {
         // Arrange
-        var broker = new Broker { IsDeleted = true };
+        var customer = new Customer { IsDeleted = true };
 
         // Act & Assert
-        broker.Invoking(b => b.Activate())
+        customer.Invoking(b => b.Activate())
             .Should().Throw<InvalidOperationException>();
     }
 }
@@ -935,49 +935,49 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 using FluentAssertions;
 
-public class BrokerEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+public class CustomerEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
 
-    public BrokerEndpointTests(WebApplicationFactory<Program> factory)
+    public CustomerEndpointTests(WebApplicationFactory<Program> factory)
     {
         _client = factory.CreateClient();
     }
 
     [Fact]
-    public async Task CreateBroker_WithValidData_ReturnsCreated()
+    public async Task CreateCustomer_WithValidData_ReturnsCreated()
     {
         // Arrange
-        var dto = new CreateBrokerDto
+        var dto = new CreateCustomerDto
         {
-            Name = "Test Broker",
+            Name = "Test Customer",
             Email = "test@example.com",
             Phone = "1234567890"
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/brokers", dto);
+        var response = await _client.PostAsJsonAsync("/api/customers", dto);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var broker = await response.Content.ReadFromJsonAsync<Broker>();
-        broker.Should().NotBeNull();
-        broker!.Name.Should().Be("Test Broker");
+        var customer = await response.Content.ReadFromJsonAsync<Customer>();
+        customer.Should().NotBeNull();
+        customer!.Name.Should().Be("Test Customer");
     }
 
     [Fact]
-    public async Task CreateBroker_WithInvalidEmail_ReturnsBadRequest()
+    public async Task CreateCustomer_WithInvalidEmail_ReturnsBadRequest()
     {
         // Arrange
-        var dto = new CreateBrokerDto
+        var dto = new CreateCustomerDto
         {
-            Name = "Test Broker",
+            Name = "Test Customer",
             Email = "invalid-email",
             Phone = "1234567890"
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/brokers", dto);
+        var response = await _client.PostAsJsonAsync("/api/customers", dto);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -987,10 +987,12 @@ public class BrokerEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 
 ## References
 
-Generic backend best practices (to be created):
+Generic backend best practices:
 - `agents/backend-developer/references/clean-architecture-guide.md`
 - `agents/backend-developer/references/dotnet-best-practices.md`
 - `agents/backend-developer/references/ef-core-patterns.md`
+
+Planned (not yet created):
 - `agents/backend-developer/references/json-schema-validation.md`
 - `agents/backend-developer/references/casbin-authorization.md`
 

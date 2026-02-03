@@ -13,12 +13,14 @@ This glossary ensures consistent use of insurance terms in product requirements 
 ## Core Entities
 
 ### Account
+**Type:** Entity
 **Definition:** A business entity (insured) seeking or holding insurance coverage
 **Also Known As:** Insured, Policyholder (when bound), Prospect (when shopping)
 **Example:** "ABC Manufacturing Company is an account seeking general liability coverage"
 **In Nebula:** Central entity linking submissions, renewals, and broker relationships
 
 ### Broker
+**Type:** Entity
 **Definition:** Licensed insurance intermediary who represents insureds and places business with carriers
 **Types:**
 - **Retail Broker:** Works directly with insureds
@@ -27,22 +29,37 @@ This glossary ensures consistent use of insurance terms in product requirements 
 **In Nebula:** Primary relationship management entity
 
 ### MGA (Managing General Agent)
+**Type:** Entity
 **Definition:** Insurance intermediary with underwriting authority delegated by carriers
 **Responsibilities:** Can quote, bind, and issue policies on behalf of carriers
 **Example:** "Coastal MGA Program specializes in coastal property risks"
 **In Nebula:** Partners with brokers to place specialty business
 
 ### Program
+**Type:** Entity
 **Definition:** A specialized insurance product designed for a specific industry or risk type
 **Managed By:** MGAs or program managers
 **Example:** "Restaurant Liability Program" or "Cyber Insurance Program"
 **In Nebula:** Associates with MGAs and defines available coverages
+
+### Contact
+**Type:** Entity
+**Definition:** A person associated with a broker, MGA, or account (e.g., primary contact, underwriting contact)
+**Example:** "Jane Smith is the primary contact at Jones Insurance Brokers"
+**In Nebula:** Linked to Broker and Account entities; appears on 360 views
+
+### Document
+**Type:** Entity
+**Definition:** A versioned file or attachment associated with a submission, account, or broker (e.g., applications, loss runs, quotes)
+**Example:** "Loss run document uploaded for ABC Corp submission"
+**In Nebula:** Versioned entity — each upload creates a new version; linked to submissions and accounts
 
 ---
 
 ## Insurance Process Terms
 
 ### Submission
+**Type:** Entity
 **Definition:** A request for insurance coverage presented to a carrier or MGA
 **Contains:** Application, exposure information, loss history
 **Outcome:** Quoted, Declined, or Withdrawn
@@ -71,6 +88,7 @@ This glossary ensures consistent use of insurance terms in product requirements 
 **In Nebula:** Not managed in Phase 0 (focus is pre-bind workflows)
 
 ### Renewal
+**Type:** Entity
 **Definition:** The process of continuing insurance coverage for another term
 **Timing:** Typically starts 90-120 days before expiration
 **Outcome:** Renewed (bound), Lost (to competitor), or Lapsed (not renewed)
@@ -312,14 +330,26 @@ This glossary ensures consistent use of insurance terms in product requirements 
 ## Nebula-Specific Terms
 
 ### Activity Timeline Event
+**Type:** Entity
 **Definition:** Immutable audit log entry recording a system action or status change
 **Contains:** Timestamp, user, action type, entity, details
 **In Nebula:** Core auditability requirement
 
 ### Workflow Transition
+**Type:** Entity
 **Definition:** Immutable log of status change for submission or renewal
 **Contains:** From status, to status, timestamp, user, reason
 **In Nebula:** Append-only table for workflow history
+
+### UserProfile
+**Type:** Entity
+**Definition:** Internal user profile record driven by the Keycloak identity subject; stores application-level user attributes beyond what Keycloak provides
+**In Nebula:** Created on first login; maps 1:1 to Keycloak subject ID
+
+### UserPreference
+**Type:** Entity
+**Definition:** Separate table storing per-user UI and workflow preferences (e.g., default filters, notification settings)
+**In Nebula:** Linked to UserProfile; stored independently to allow flexible schema evolution
 
 ### Broker 360
 **Definition:** Comprehensive view of broker relationship including contacts, submissions, renewals, timeline
@@ -328,6 +358,25 @@ This glossary ensures consistent use of insurance terms in product requirements 
 ### Task Center
 **Definition:** Centralized list of reminders, follow-ups, and pending actions
 **In Nebula:** Planned for MVP or Phase 1
+
+---
+
+## Genericness-Blocked Terms
+
+The following terms are specific to the Nebula insurance CRM domain and must not appear in `agents/` (generic, reusable content). Parsed by `scripts/validate-genericness.py` to enforce the boundary policy defined in `BOUNDARY-POLICY.md`.
+
+- Nebula
+- Broker
+- MGA
+- Underwriter
+- Underwriting
+- Premium
+- Claim
+- Insured
+- Submission
+- Renewal
+
+**Intentionally excluded:** "Policy" — collides with generic usage in authorization (Casbin policy, ABAC policy), web security (Content Security Policy), and other contexts. Catch insurance-policy references via code review instead.
 
 ---
 

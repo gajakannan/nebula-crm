@@ -3,10 +3,12 @@
 Architecture Validation Script
 
 Validates architecture specifications in INCEPTION.md for completeness.
+Pulls the entity list from the domain glossary.
 
 Usage:
-    python validate-architecture.py <path-to-inception-md>
+    python validate-architecture.py <path-to-inception-md> [glossary-file]
     python validate-architecture.py planning-mds/INCEPTION.md
+    python validate-architecture.py planning-mds/INCEPTION.md planning-mds/domain/insurance-glossary.md
 """
 
 import sys
@@ -15,8 +17,9 @@ from pathlib import Path
 from typing import List, Dict, Tuple
 
 class ArchitectureValidator:
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, glossary_path: str):
         self.file_path = Path(file_path)
+        self.glossary_path = Path(glossary_path)
         self.content = ""
         self.errors = []
         self.warnings = []
@@ -32,26 +35,47 @@ class ArchitectureValidator:
             self.errors.append(f"Failed to read file: {e}")
             return False
 
-    def extract_entities_from_inception(self) -> List[str]:
+    def extract_entities_from_glossary(self) -> List[str]:
         """
-        Extract core entities from section 1.3 of INCEPTION.md.
+        Extract entity names from the domain glossary.
 
-        Expected format:
-        ### 1.3 Core entities (baseline)
-        - Entity1 (optional description)
-        - Entity2
-        ...
+        Looks for entries marked with **Type:** Entity and extracts
+        the ### heading, converting to PascalCase (removing spaces).
+        Parenthetical content in headings is stripped first.
+
+        Example glossary entry:
+        ### Activity Timeline Event
+        **Type:** Entity
+        **Definition:** ...
+
+        Yields: ActivityTimelineEvent
         """
-        section = self.get_section_content("1.3")
+        try:
+            glossary_content = self.glossary_path.read_text(encoding='utf-8')
+        except Exception as e:
+            self.warnings.append(f"Could not read glossary at '{self.glossary_path}': {e}")
+            return []
+
         entities = []
+        current_heading = None
 
-        for line in section.split('\n'):
-            line = line.strip()
-            # Match lines like "- Entity" or "* Entity" or "- Entity (description)"
-            match = re.match(r'^[-*]\s+([A-Z][A-Za-z0-9]+)', line)
-            if match:
-                entity = match.group(1)
-                entities.append(entity)
+        for line in glossary_content.split('\n'):
+            # Track ### headings
+            heading_match = re.match(r'^###\s+(.+)$', line.strip())
+            if heading_match:
+                current_heading = heading_match.group(1).strip()
+                continue
+
+            # Check for **Type:** Entity marker under the current heading
+            if current_heading and re.match(r'^\*\*Type:\*\*\s*Entity', line.strip()):
+                # Strip parenthetical content (e.g., "CEO (Chief Executive Officer)" -> "CEO")
+                clean = re.sub(r'\s*\(.*?\)', '', current_heading).strip()
+                words = clean.split()
+                # Single word: preserve as-is (handles acronyms like CEO, already-PascalCase like UserProfile)
+                # Multi-word: join into PascalCase (e.g., "Activity Timeline Event" -> ActivityTimelineEvent)
+                pascal_name = words[0] if len(words) == 1 else ''.join(w.capitalize() for w in words)
+                entities.append(pascal_name)
+                current_heading = None  # Reset; don't match the same heading again
 
         return entities
 
@@ -82,8 +106,8 @@ class ArchitectureValidator:
         if not self.load_inception():
             return False, self.errors, self.warnings
 
-        # Extract entities and workflows from INCEPTION.md (section 1.3 and 1.4)
-        self.entities = self.extract_entities_from_inception()
+        # Extract entities from glossary, workflows from INCEPTION.md section 1.4
+        self.entities = self.extract_entities_from_glossary()
         self.workflows = self.extract_workflows_from_inception()
 
         # Check Phase B sections (4.x)
@@ -124,7 +148,7 @@ class ArchitectureValidator:
         key_entities = self.entities[:5] if len(self.entities) > 5 else self.entities
         for entity in key_entities:
             if entity not in section:
-                self.warnings.append(f"Data Model doesn't mention '{entity}' entity (from section 1.3)")
+                self.warnings.append(f"Data Model doesn't mention '{entity}' entity (from glossary)")
 
         # Check for audit fields mention
         if "CreatedAt" not in section and "created_at" not in section.lower():
@@ -248,21 +272,23 @@ class ArchitectureValidator:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python validate-architecture.py <inception-md-file>")
-        print("Example: python validate-architecture.py planning-mds/INCEPTION.md")
+        print("Usage: python validate-architecture.py <inception-md-file> [glossary-file]")
+        print("Example: python validate-architecture.py planning-mds/INCEPTION.md planning-mds/domain/insurance-glossary.md")
         sys.exit(1)
 
     file_path = sys.argv[1]
+    glossary_path = sys.argv[2] if len(sys.argv) > 2 else "planning-mds/domain/insurance-glossary.md"
 
     print(f"Validating architecture specification: {file_path}")
+    print(f"Using glossary: {glossary_path}")
     print("-" * 60)
 
-    validator = ArchitectureValidator(file_path)
+    validator = ArchitectureValidator(file_path, glossary_path)
     is_valid, errors, warnings = validator.validate()
 
     # Print extracted context
     if validator.entities:
-        print(f"\n[Entities] Extracted from section 1.3: {', '.join(validator.entities[:5])}")
+        print(f"\n[Entities] Extracted from glossary: {', '.join(validator.entities[:5])}")
         if len(validator.entities) > 5:
             print(f"           (and {len(validator.entities) - 5} more...)")
     if validator.workflows:

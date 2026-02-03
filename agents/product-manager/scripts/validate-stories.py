@@ -12,8 +12,16 @@ Usage:
 """
 
 import sys
+import io
 import re
 from pathlib import Path
+
+# Windows cp1252 stdout can't encode emojis used in report output.
+# Reconfigure to utf-8 unconditionally — safe on all platforms.
+if hasattr(sys.stdout, 'buffer'):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+if hasattr(sys.stderr, 'buffer'):
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 from typing import List, Dict, Tuple, Iterable
 
 class StoryValidator:
@@ -130,7 +138,7 @@ class StoryValidator:
             "Phase",
         ]
         for field in required_fields:
-            if not re.search(rf"\\*\\*{re.escape(field)}:\\*\\*", self.content):
+            if not re.search(rf"\*\*{re.escape(field)}:\*\*", self.content):
                 self.errors.append(f"Missing story header field: {field}")
 
     def check_context_background(self):
@@ -192,12 +200,12 @@ class StoryValidator:
 
     def get_section_content(self, section_name: str) -> str:
         """Return the content of a markdown section by name (## or ###)."""
-        pattern = re.compile(rf"^##+\\s+{re.escape(section_name)}\\s*$", re.IGNORECASE | re.MULTILINE)
+        pattern = re.compile(rf"^##+\s+{re.escape(section_name)}\s*$", re.IGNORECASE | re.MULTILINE)
         match = pattern.search(self.content)
         if not match:
             return ""
         start = match.end()
-        next_heading = re.search(r"^##+\\s+", self.content[start:], re.MULTILINE)
+        next_heading = re.search(r"^##+\s+", self.content[start:], re.MULTILINE)
         end = start + next_heading.start() if next_heading else len(self.content)
         return self.content[start:end].strip()
 

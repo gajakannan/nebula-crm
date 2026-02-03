@@ -75,16 +75,16 @@ planning-mds/
 
 ## Example Usage
 
-### Scenario 1: New Insurance CRM
+### Scenario 1: B2B SaaS Platform
 ```
-User: "Initialize a new insurance CRM project called Nebula"
+User: "Initialize a new B2B SaaS project called TeamSync"
 
 Init Action:
   ↓
 Product Manager prompts:
-  - Domain: "Commercial Property & Casualty Insurance"
-  - Users: "Distribution managers, underwriters, broker relationship managers"
-  - Core entities: "Account, Broker, Submission, Renewal, Policy"
+  - Domain: "Team collaboration and project management"
+  - Users: "Project managers, team leads, administrators"
+  - Core entities: "Project, Task, Team, Member, Activity"
   ↓
 Creates planning-mds/ with populated INCEPTION.md
 ```

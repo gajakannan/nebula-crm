@@ -137,29 +137,29 @@ Quality Engineer
 
 ### Scenario 1: Test Single Feature
 ```
-User: "Write tests for the broker management feature"
+User: "Write tests for the customer management feature"
 
 Test Action:
   ↓
 Quality Engineer:
-  - Reads broker user stories
-  - Creates test plan for broker feature
+  - Reads customer user stories
+  - Creates test plan for customer feature
 
   Unit Tests:
-    - BrokerService.CreateBroker
-    - BrokerService.SearchBrokers
-    - BrokerValidator tests
+    - CustomerService.CreateCustomer
+    - CustomerService.SearchCustomers
+    - CustomerValidator tests
 
   Integration Tests:
-    - POST /api/brokers (create)
-    - GET /api/brokers (list)
-    - GET /api/brokers/:id (detail)
-    - PUT /api/brokers/:id (update)
+    - POST /api/customers (create)
+    - GET /api/customers (list)
+    - GET /api/customers/:id (detail)
+    - PUT /api/customers/:id (update)
 
   E2E Tests:
-    - Create new broker flow
-    - Search and filter brokers flow
-    - Update broker information flow
+    - Create new customer flow
+    - Search and filter customers flow
+    - Update customer information flow
 
   Results:
     - 45 tests written

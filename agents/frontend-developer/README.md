@@ -57,11 +57,15 @@ cat planning-mds/architecture/SOLUTION-PATTERNS.md
 ## References
 
 ### Generic References (in agents/frontend-developer/references/)
-- `react-patterns.md` - React component patterns and best practices
-- `typescript-guidelines.md` - TypeScript typing and conventions
-- `accessibility-checklist.md` - WCAG compliance checklist
-- `performance-optimization.md` - Performance optimization techniques
-- `testing-strategies.md` - Frontend testing approaches
+- `react-best-practices.md` - React component patterns and best practices
+- `typescript-patterns.md` - TypeScript typing and conventions
+- `accessibility-guide.md` - WCAG compliance guide
+- `ux-principles.md` - UX design principles
+- `form-handling-guide.md` - Form handling patterns
+- `json-schema-forms-guide.md` - JSON Schema form validation guide
+- `tanstack-query-guide.md` - TanStack Query patterns
+- `testing-guide.md` - Frontend testing approaches
+- `design-inspiration.md` - Design inspiration and references
 
 ### Solution-Specific References
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Frontend patterns section
@@ -78,13 +82,13 @@ cat planning-mds/architecture/SOLUTION-PATTERNS.md
 
 ```bash
 # Scaffold a new component (TODO: implement)
-python3 agents/frontend-developer/scripts/scaffold-component.py BrokerCard \
+python3 agents/frontend-developer/scripts/scaffold-component.py CustomerCard \
   --type shared \
   --with-tests
 
 # Scaffold a new page (TODO: implement)
-python3 agents/frontend-developer/scripts/scaffold-page.py BrokerDetails \
-  --route /brokers/:id \
+python3 agents/frontend-developer/scripts/scaffold-page.py CustomerDetails \
+  --route /customers/:id \
   --with-tests
 
 # Run tests
@@ -136,21 +140,21 @@ components/
 │   ├── input.tsx
 │   └── ...
 ├── forms/                 # Form components
-│   ├── BrokerForm.tsx
+│   ├── CustomerForm.tsx
 │   └── AccountForm.tsx
 ├── layouts/               # Layout components
 │   ├── AppLayout.tsx
 │   └── DashboardLayout.tsx
 └── shared/                # Shared business components
-    ├── BrokerCard.tsx
+    ├── CustomerCard.tsx
     └── ActivityTimeline.tsx
 ```
 
 ### Naming Conventions
-- **Components:** PascalCase (`BrokerForm.tsx`)
+- **Components:** PascalCase (`CustomerForm.tsx`)
 - **Hooks:** camelCase with `use` prefix (`useAuth.ts`)
 - **Utilities:** camelCase (`formatDate.ts`)
-- **Types:** PascalCase (`Broker`, `BrokerFormData`)
+- **Types:** PascalCase (`Customer`, `CustomerFormData`)
 - **Constants:** UPPER_SNAKE_CASE (`MAX_FILE_SIZE`)
 
 ### Import Order
@@ -164,10 +168,10 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
 // 3. Types
-import type { Broker } from '@/types/broker';
+import type { Customer } from '@/types/customer';
 
 // 4. Relative imports
-import { formatBrokerName } from './utils';
+import { formatCustomerName } from './utils';
 ```
 
 ### TypeScript Guidelines

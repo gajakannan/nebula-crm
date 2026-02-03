@@ -88,7 +88,7 @@ Ready for Build
 
    ### Vague Acceptance Criteria
 
-   **Story:** "Broker search should be fast"
+   **Story:** "Customer search should be fast"
    **Issue:** "Fast" is not measurable
    **Questions:**
    - How fast is "fast"? (< 200ms? < 1s? < 5s?)
@@ -115,9 +115,9 @@ Ready for Build
 
    ### Missing Edge Cases
 
-   **Feature:** "Broker list with pagination"
+   **Feature:** "Customer list with pagination"
    **Questions:**
-   - What happens with empty list (no brokers)?
+   - What happens with empty list (no customers)?
    - Default page size? (10? 20? 50?)
    - Max page size?
    - What happens on last page with < full page?
@@ -519,16 +519,16 @@ Before running plan action:
 
 ### Scenario 1: Plan New Feature
 ```
-User: "Run the plan action for broker management"
+User: "Run the plan action for customer management"
 
 Claude: [Reads plan.md]
 Claude: "I'll execute Step 1: Product Manager for Phase A..."
 
-[Product Manager executes - defines personas, stories, screens for broker management]
+[Product Manager executes - defines personas, stories, screens for customer management]
 
 Claude: "Phase A complete. Outputs:
-  - 2 personas (Distribution Manager, Broker Relationship Manager)
-  - 5 features (Broker CRUD, Search, Activity Timeline)
+  - 2 personas (Distribution Manager, Customer Relationship Manager)
+  - 5 features (Customer CRUD, Search, Activity Timeline)
   - 15 user stories with acceptance criteria
   - 4 screens (List, Detail, Create/Edit, Search)
 
@@ -541,9 +541,9 @@ Claude: "Proceeding to Step 3: Architect for Phase B..."
 [Architect executes - designs data model, API, authorization, workflows]
 
 Claude: "Phase B complete. Outputs:
-  - Data model: Broker entity with relationships
+  - Data model: Customer entity with relationships
   - API: 7 endpoints defined
-  - Authorization: ABAC policies for broker operations
+  - Authorization: ABAC policies for customer operations
   - Patterns followed: All SOLUTION-PATTERNS.md patterns applied
 
 Do you approve Phase B? (approve/reject/request changes)"
@@ -555,7 +555,7 @@ Claude: "Plan action complete! Ready for build action."
 
 ### Scenario 2: Iteration on Phase A
 ```
-User: "Run the plan action for submission workflow"
+User: "Run the plan action for order processing workflow"
 
 [Phase A executes]
 
@@ -565,15 +565,15 @@ User: "reject - the personas don't match our actual users"
 
 Claude: "What feedback do you have? What should be changed?"
 
-User: "Add a persona for MGA Program Managers, they're a key user"
+User: "Add a persona for Enterprise Account Managers, they're a key user"
 
 Claude: "Understood. Iterating on Phase A with your feedback..."
 
 [Product Manager updates personas]
 
 Claude: "Phase A updated. New outputs:
-  - 3 personas (added MGA Program Manager)
-  - Stories updated to reflect MGA user needs
+  - 3 personas (added Enterprise Account Manager)
+  - Stories updated to reflect enterprise account needs
 
 Do you approve Phase A now? (approve/reject/request changes)"
 

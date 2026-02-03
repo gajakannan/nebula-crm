@@ -143,9 +143,9 @@ JSON Schema serves as the **single source of truth** for validation rules, share
 
 ```
 planning-mds/schemas/
-├── broker.schema.json          # Shared validation schema
+├── customer.schema.json          # Shared validation schema
 ├── account.schema.json
-└── submission.schema.json
+└── order.schema.json
          ↓
     ┌────┴────────────┐
     ↓                 ↓
@@ -186,8 +186,8 @@ or RJSF          Validator
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://nebula-crm.com/schemas/broker.json",
-  "title": "Broker",
+  "$id": "https://your-app.com/schemas/customer.json",
+  "title": "Customer",
   "type": "object",
   "properties": {
     "name": {
@@ -219,26 +219,26 @@ or RJSF          Validator
 ### Integration with OpenAPI
 
 ```yaml
-# planning-mds/api/brokers.yaml
+# planning-mds/api/customers.yaml
 openapi: 3.0.0
 info:
-  title: Broker API
+  title: Customer API
   version: 1.0.0
 paths:
-  /api/brokers:
+  /api/customers:
     post:
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '../schemas/broker.schema.json'
+              $ref: '../schemas/customer.schema.json'
       responses:
         '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: '../schemas/broker.schema.json'
+                $ref: '../schemas/customer.schema.json'
         '400':
           description: Validation Error
           content:
@@ -263,15 +263,15 @@ paths:
 **Frontend:**
 ```bash
 # Generate TypeScript types from JSON Schema
-npx json-schema-to-typescript schemas/broker.schema.json > types/broker.ts
+npx json-schema-to-typescript schemas/customer.schema.json > types/customer.ts
 ```
 
 **Backend:**
 ```csharp
 // NJsonSchema can generate C# classes from schemas
-var schema = await JsonSchema.FromFileAsync("schemas/broker.schema.json");
+var schema = await JsonSchema.FromFileAsync("schemas/customer.schema.json");
 var generator = new CSharpGenerator(schema);
-var code = generator.GenerateFile("Broker");
+var code = generator.GenerateFile("Customer");
 ```
 
 ### Benefits

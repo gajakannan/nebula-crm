@@ -501,7 +501,7 @@ Before running review action:
 
 ### Scenario 1: Clean Review with Approval
 ```
-User: "Run the review action on the broker feature"
+User: "Run the review action on the customer feature"
 
 [Step 1: Parallel reviews]
 Code Reviewer:
@@ -530,7 +530,7 @@ Claude: "Review approved! Code ready to merge."
 
 ### Scenario 2: Critical Security Issue
 ```
-User: "Run the review action on submission workflow"
+User: "Run the review action on order processing workflow"
 
 [Step 1: Parallel reviews]
 Code Reviewer:
@@ -547,8 +547,8 @@ Claude: "Review complete.
   Code: APPROVED WITH RECOMMENDATIONS
   Security: FAIL (1 critical vulnerability)
 
-  CRITICAL: SQL injection in broker search endpoint
-  Location: BrokerController.cs:45
+  CRITICAL: SQL injection in customer search endpoint
+  Location: CustomerController.cs:45
   Must fix before deployment!
 
   What action? (approve/fix critical/reject)"

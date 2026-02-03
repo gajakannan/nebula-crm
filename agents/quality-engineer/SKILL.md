@@ -197,16 +197,16 @@ Your responsibility is to implement the **quality assurance layer** - tests that
 experience/
 ├── src/
 │   ├── components/
-│   │   └── BrokerCard.tsx
+│   │   └── CustomerCard.tsx
 │   └── pages/
-│       └── BrokerList.tsx
+│       └── CustomerList.tsx
 └── tests/
     ├── unit/
-    │   └── BrokerCard.test.tsx
+    │   └── CustomerCard.test.tsx
     ├── integration/
-    │   └── BrokerList.test.tsx
+    │   └── CustomerList.test.tsx
     └── e2e/
-        └── broker-flows.spec.ts
+        └── customer-flows.spec.ts
 ```
 
 **Coverage Target:** ≥80% for business logic components
@@ -215,20 +215,20 @@ experience/
 ```typescript
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { BrokerCard } from './BrokerCard';
+import { CustomerCard } from './CustomerCard';
 
-describe('BrokerCard', () => {
-  it('displays broker name and status', () => {
-    const broker = { id: '1', name: 'Test Broker', status: 'Active' };
-    render(<BrokerCard broker={broker} />);
+describe('CustomerCard', () => {
+  it('displays customer name and status', () => {
+    const customer = { id: '1', name: 'Test Customer', status: 'Active' };
+    render(<CustomerCard customer={customer} />);
 
-    expect(screen.getByText('Test Broker')).toBeInTheDocument();
+    expect(screen.getByText('Test Customer')).toBeInTheDocument();
     expect(screen.getByText('Active')).toBeInTheDocument();
   });
 
-  it('shows inactive badge for inactive brokers', () => {
-    const broker = { id: '1', name: 'Test', status: 'Inactive' };
-    render(<BrokerCard broker={broker} />);
+  it('shows inactive badge for inactive customers', () => {
+    const customer = { id: '1', name: 'Test', status: 'Inactive' };
+    render(<CustomerCard customer={customer} />);
 
     expect(screen.getByText('Inactive')).toHaveClass('badge-inactive');
   });
@@ -239,14 +239,14 @@ describe('BrokerCard', () => {
 ```typescript
 import { test, expect } from '@playwright/test';
 
-test('create broker flow', async ({ page }) => {
-  await page.goto('/brokers');
+test('create customer flow', async ({ page }) => {
+  await page.goto('/customers');
 
   // Click Create button
-  await page.getByRole('button', { name: 'Create Broker' }).click();
+  await page.getByRole('button', { name: 'Create Customer' }).click();
 
   // Fill form
-  await page.getByLabel('Broker Name').fill('E2E Test Broker');
+  await page.getByLabel('Customer Name').fill('E2E Test Customer');
   await page.getByLabel('Email').fill('e2e@example.com');
   await page.getByLabel('Phone').fill('1234567890');
 
@@ -254,8 +254,8 @@ test('create broker flow', async ({ page }) => {
   await page.getByRole('button', { name: 'Save' }).click();
 
   // Verify
-  await expect(page.getByText('Broker created successfully')).toBeVisible();
-  await expect(page.getByText('E2E Test Broker')).toBeVisible();
+  await expect(page.getByText('Customer created successfully')).toBeVisible();
+  await expect(page.getByText('E2E Test Customer')).toBeVisible();
 });
 ```
 
@@ -264,8 +264,8 @@ test('create broker flow', async ({ page }) => {
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test('broker form has no accessibility violations', async ({ page }) => {
-  await page.goto('/brokers/new');
+test('customer form has no accessibility violations', async ({ page }) => {
+  await page.goto('/customers/new');
 
   const results = await new AxeBuilder({ page }).analyze();
 
@@ -279,16 +279,16 @@ test('broker form has no accessibility violations', async ({ page }) => {
 ```
 engine/
 ├── src/
-│   └── Nebula.Domain/
+│   └── MyApp.Domain/
 │       └── Entities/
-│           └── Broker.cs
+│           └── Customer.cs
 ├── tests/
-    ├── Nebula.Domain.Tests/
-    │   └── BrokerTests.cs
-    ├── Nebula.Application.Tests/
-    │   └── BrokerServiceTests.cs
-    └── Nebula.Api.Tests/
-        └── BrokerEndpointTests.cs
+    ├── MyApp.Domain.Tests/
+    │   └── CustomerTests.cs
+    ├── MyApp.Application.Tests/
+    │   └── CustomerServiceTests.cs
+    └── MyApp.Api.Tests/
+        └── CustomerEndpointTests.cs
 ```
 
 **Coverage Target:** ≥80% for domain and application logic
@@ -298,19 +298,19 @@ engine/
 using Xunit;
 using FluentAssertions;
 
-public class BrokerTests
+public class CustomerTests
 {
     [Fact]
     public void Activate_ShouldSetStatusToActive()
     {
         // Arrange
-        var broker = new Broker { Status = BrokerStatus.Inactive };
+        var customer = new Customer { Status = CustomerStatus.Inactive };
 
         // Act
-        broker.Activate();
+        customer.Activate();
 
         // Assert
-        broker.Status.Should().Be(BrokerStatus.Active);
+        customer.Status.Should().Be(CustomerStatus.Active);
     }
 
     [Theory]
@@ -319,10 +319,10 @@ public class BrokerTests
     public void SetName_WithEmptyName_ShouldThrowException(string name)
     {
         // Arrange
-        var broker = new Broker();
+        var customer = new Customer();
 
         // Act
-        var act = () => broker.SetName(name);
+        var act = () => customer.SetName(name);
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -337,11 +337,11 @@ using Testcontainers.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-public class BrokerRepositoryTests : IAsyncLifetime
+public class CustomerRepositoryTests : IAsyncLifetime
 {
     private PostgreSqlContainer _postgres;
-    private NebulaDbContext _context;
-    private BrokerRepository _repository;
+    private AppDbContext _context;
+    private CustomerRepository _repository;
 
     public async Task InitializeAsync()
     {
@@ -352,33 +352,33 @@ public class BrokerRepositoryTests : IAsyncLifetime
         await _postgres.StartAsync();
 
         // Create DbContext
-        var options = new DbContextOptionsBuilder<NebulaDbContext>()
+        var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(_postgres.GetConnectionString())
             .Options;
-        _context = new NebulaDbContext(options);
+        _context = new AppDbContext(options);
         await _context.Database.MigrateAsync();
 
-        _repository = new BrokerRepository(_context);
+        _repository = new CustomerRepository(_context);
     }
 
     [Fact]
-    public async Task AddAsync_ShouldPersistBroker()
+    public async Task AddAsync_ShouldPersistCustomer()
     {
         // Arrange
-        var broker = new Broker
+        var customer = new Customer
         {
             Id = Guid.NewGuid(),
-            Name = "Test Broker",
+            Name = "Test Customer",
             Email = "test@example.com"
         };
 
         // Act
-        await _repository.AddAsync(broker);
+        await _repository.AddAsync(customer);
 
         // Assert
-        var saved = await _repository.GetByIdAsync(broker.Id);
+        var saved = await _repository.GetByIdAsync(customer.Id);
         saved.Should().NotBeNull();
-        saved!.Name.Should().Be("Test Broker");
+        saved!.Name.Should().Be("Test Customer");
     }
 
     public async Task DisposeAsync()
@@ -408,7 +408,7 @@ export const options = {
 };
 
 export default function () {
-  const res = http.get('http://localhost:5000/api/brokers');
+  const res = http.get('http://localhost:5000/api/customers');
 
   check(res, {
     'status is 200': (r) => r.status === 200,
@@ -424,12 +424,12 @@ export default function () {
 **Test Structure:**
 ```
 neuron/
-├── crm_agents/
-│   └── underwriter.py
+├── domain_agents/
+│   └── processor.py
 └── tests/
-    ├── test_underwriter_unit.py
-    ├── test_underwriter_integration.py
-    └── test_underwriter_evaluation.py
+    ├── test_processor_unit.py
+    ├── test_processor_integration.py
+    └── test_processor_evaluation.py
 ```
 
 **Coverage Target:** ≥80% for agent logic
@@ -440,21 +440,21 @@ from unittest.mock import Mock, patch
 import pytest
 
 @patch('neuron.models.claude.ClaudeClient.generate')
-def test_underwriter_analyzes_submission(mock_generate):
+def test_processor_classifies_record(mock_generate):
     # Mock LLM response
     mock_generate.return_value = {
-        "content": "Risk Level: Medium\nPremium: $5,000\nReasoning: Standard risk"
+        "content": "Priority: Medium\nScore: 75\nReasoning: Standard criteria met"
     }
 
     # Test agent
-    agent = UnderwriterAgent()
-    result = agent.analyze_submission({
-        "business_type": "Restaurant",
-        "revenue": 500000
+    agent = ProcessorAgent()
+    result = agent.analyze_record({
+        "category": "Standard",
+        "value": 50000
     })
 
-    assert result["risk_level"] == "Medium"
-    assert result["premium"] == 5000
+    assert result["priority"] == "Medium"
+    assert result["score"] == 75
     mock_generate.assert_called_once()
 ```
 
@@ -466,33 +466,33 @@ import pytest
 def golden_dataset():
     return [
         {
-            "input": {"business_type": "Restaurant", "revenue": 500000},
-            "expected_risk": "Medium",
-            "expected_premium_range": (4000, 6000)
+            "input": {"category": "Standard", "value": 50000},
+            "expected_priority": "Medium",
+            "expected_score_range": (60, 80)
         },
         {
-            "input": {"business_type": "Nightclub", "revenue": 1000000},
-            "expected_risk": "High",
-            "expected_premium_range": (8000, 12000)
+            "input": {"category": "Priority", "value": 100000},
+            "expected_priority": "High",
+            "expected_score_range": (80, 100)
         },
     ]
 
-def test_underwriter_accuracy(golden_dataset):
-    agent = UnderwriterAgent(use_mock=True)
+def test_processor_accuracy(golden_dataset):
+    agent = ProcessorAgent(use_mock=True)
     correct = 0
 
     for case in golden_dataset:
-        result = agent.analyze_submission(case["input"])
+        result = agent.analyze_record(case["input"])
 
-        if result["risk_level"] == case["expected_risk"]:
+        if result["priority"] == case["expected_priority"]:
             correct += 1
 
-        premium_in_range = (
-            case["expected_premium_range"][0]
-            <= result["premium"]
-            <= case["expected_premium_range"][1]
+        score_in_range = (
+            case["expected_score_range"][0]
+            <= result["score"]
+            <= case["expected_score_range"][1]
         )
-        assert premium_in_range, f"Premium {result['premium']} out of range"
+        assert score_in_range, f"Score {result['score']} out of range"
 
     accuracy = correct / len(golden_dataset)
     assert accuracy >= 0.85, f"Accuracy {accuracy} below threshold"
@@ -638,14 +638,14 @@ def test_underwriter_accuracy(golden_dataset):
 ### Test Naming Convention
 ```typescript
 // Good: Descriptive test names
-describe('BrokerService', () => {
-  it('creates broker with valid data', () => {});
+describe('CustomerService', () => {
+  it('creates customer with valid data', () => {});
   it('throws error when email is invalid', () => {});
-  it('activates inactive broker', () => {});
+  it('activates inactive customer', () => {});
 });
 
 // Bad: Non-descriptive names
-describe('BrokerService', () => {
+describe('CustomerService', () => {
   it('test1', () => {});
   it('works', () => {});
 });
@@ -657,22 +657,22 @@ describe('BrokerService', () => {
 public void TestMethod()
 {
     // Arrange - Set up test data and dependencies
-    var broker = new Broker { Name = "Test" };
-    var service = new BrokerService();
+    var customer = new Customer { Name = "Test" };
+    var service = new CustomerService();
 
     // Act - Execute the method under test
-    var result = service.Activate(broker);
+    var result = service.Activate(customer);
 
     // Assert - Verify the outcome
     result.Should().BeTrue();
-    broker.Status.Should().Be(BrokerStatus.Active);
+    customer.Status.Should().Be(CustomerStatus.Active);
 }
 ```
 
 ### Test Isolation
 ```typescript
 // Good: Each test is independent
-describe('BrokerList', () => {
+describe('CustomerList', () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
@@ -697,8 +697,8 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 
 const server = setupServer(
-  http.get('/api/brokers', () => {
-    return HttpResponse.json([{ id: '1', name: 'Mock Broker' }]);
+  http.get('/api/customers', () => {
+    return HttpResponse.json([{ id: '1', name: 'Mock Customer' }]);
   })
 );
 
@@ -710,25 +710,25 @@ afterAll(() => server.close());
 ### Test Data Builders
 ```csharp
 // Good: Test data builder for reusable fixtures
-public class BrokerBuilder
+public class CustomerBuilder
 {
-    private string _name = "Default Broker";
+    private string _name = "Default Customer";
     private string _email = "default@example.com";
-    private BrokerStatus _status = BrokerStatus.Active;
+    private CustomerStatus _status = CustomerStatus.Active;
 
-    public BrokerBuilder WithName(string name)
+    public CustomerBuilder WithName(string name)
     {
         _name = name;
         return this;
     }
 
-    public BrokerBuilder WithEmail(string email)
+    public CustomerBuilder WithEmail(string email)
     {
         _email = email;
         return this;
     }
 
-    public Broker Build() => new Broker
+    public Customer Build() => new Customer
     {
         Id = Guid.NewGuid(),
         Name = _name,
@@ -738,8 +738,8 @@ public class BrokerBuilder
 }
 
 // Usage
-var broker = new BrokerBuilder()
-    .WithName("Test Broker")
+var customer = new CustomerBuilder()
+    .WithName("Test Customer")
     .WithEmail("test@example.com")
     .Build();
 ```
@@ -815,15 +815,15 @@ jobs:
 it('shows error message when API fails', async () => {
   // Mock API error
   server.use(
-    http.get('/api/brokers', () => {
+    http.get('/api/customers', () => {
       return new HttpResponse(null, { status: 500 });
     })
   );
 
-  render(<BrokerList />);
+  render(<CustomerList />);
 
   await waitFor(() => {
-    expect(screen.getByText('Failed to load brokers')).toBeInTheDocument();
+    expect(screen.getByText('Failed to load customers')).toBeInTheDocument();
   });
 });
 ```
@@ -831,18 +831,18 @@ it('shows error message when API fails', async () => {
 ### Testing Async Operations
 ```csharp
 [Fact]
-public async Task GetBrokerAsync_ShouldReturnBroker()
+public async Task GetCustomerAsync_ShouldReturnCustomer()
 {
     // Arrange
-    var broker = new Broker { Id = Guid.NewGuid() };
-    await _repository.AddAsync(broker);
+    var customer = new Customer { Id = Guid.NewGuid() };
+    await _repository.AddAsync(customer);
 
     // Act
-    var result = await _repository.GetByIdAsync(broker.Id);
+    var result = await _repository.GetByIdAsync(customer.Id);
 
     // Assert
     result.Should().NotBeNull();
-    result!.Id.Should().Be(broker.Id);
+    result!.Id.Should().Be(customer.Id);
 }
 ```
 
@@ -863,10 +863,10 @@ public void ValidateEmail_ShouldReturnExpectedResult(string email, bool expected
 ## References
 
 Generic quality engineering best practices:
-- `agents/quality-engineer/references/test-pyramid-guide.md`
-- `agents/quality-engineer/references/test-automation-patterns.md`
-- `agents/quality-engineer/references/ci-cd-integration.md`
+- `agents/quality-engineer/references/testing-best-practices.md`
+- `agents/quality-engineer/references/e2e-testing-guide.md`
 - `agents/quality-engineer/references/performance-testing-guide.md`
+- `agents/quality-engineer/references/test-case-mapping.md`
 
 Solution-specific references:
 - `planning-mds/architecture/TESTING-STRATEGY.md` - Comprehensive testing strategy

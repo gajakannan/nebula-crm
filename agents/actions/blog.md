@@ -109,18 +109,18 @@ Types of posts:
 
 ### Scenario 1: Feature DevLog
 ```
-User: "Write a devlog about building the broker management feature"
+User: "Write a devlog about building the customer management feature"
 
 Blog Action:
   ↓
 Blogger:
-  - Reviews broker feature implementation
+  - Reviews customer feature implementation
   - Examines user stories and architecture
   - Gathers code examples
 
   Post Structure:
-    - Title: "Building Broker Management: Clean Architecture in Practice"
-    - Introduction: Challenge of managing broker relationships
+    - Title: "Building Customer Management: Clean Architecture in Practice"
+    - Introduction: Challenge of managing customer relationships
     - Feature Overview: What we built
     - Architecture Decisions: Why we chose certain patterns
     - Implementation Highlights: Code examples
@@ -129,7 +129,7 @@ Blogger:
     - Conclusion: Key takeaways
 
   Output:
-    - blog/2026/02-broker-management-feature.md
+    - blog/2026/02-customer-management-feature.md
     - 1,200 words
     - 5 code examples
     - 2 diagrams

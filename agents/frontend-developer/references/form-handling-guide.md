@@ -1,6 +1,6 @@
 # Form Handling Guide
 
-Generic guidance for form state, validation, and submission.
+Generic guidance for form state, validation, and form submission handling.
 
 ## Best Practices
 

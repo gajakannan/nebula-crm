@@ -158,20 +158,20 @@ Technical Writer
 
 ### Scenario 1: API Documentation
 ```
-User: "Document the broker management API"
+User: "Document the customer management API"
 
 Document Action:
   ↓
 Technical Writer:
-  - Reviews broker API endpoints
+  - Reviews customer API endpoints
   - Generates OpenAPI spec
 
   Endpoints Documented:
-    - POST /api/brokers
-    - GET /api/brokers
-    - GET /api/brokers/:id
-    - PUT /api/brokers/:id
-    - DELETE /api/brokers/:id
+    - POST /api/customers
+    - GET /api/customers
+    - GET /api/customers/:id
+    - PUT /api/customers/:id
+    - DELETE /api/customers/:id
 
   For Each Endpoint:
     - Description
@@ -182,7 +182,7 @@ Technical Writer:
     - Error codes
 
   Output:
-    - docs/api/brokers.md
+    - docs/api/customers.md
     - openapi.yaml (updated)
 ```
 

@@ -12,7 +12,7 @@ This framework is reusable across stacks. The agent roles and templates stay the
 
 ## What Works Unchanged (Any Tech Stack)
 
-- All 10 agent `SKILL.md` files
+- All 11 agent `SKILL.md` files
 - All templates in `agents/templates/`
 - Product Manager, Architect, QA, Security, Code Reviewer roles
 - Generic references (clean architecture, testing best practices, UX, accessibility, etc.)

@@ -105,8 +105,8 @@ Architect (architecture validation) + Product Manager (requirements validation)
    - ❌ "System should be fast" → ✅ "API responses < 200ms p95"
    - ❌ "Users can upload files" → ✅ "Users can upload PDF/PNG (max 10MB)"
    - ❌ "Secure authentication" → ✅ "JWT tokens, HTTPS only, session timeout 30min"
-   - ❌ "Easy to use interface" → ✅ "3-click maximum to create broker"
-   - ❌ "Dashboard is intuitive" → ✅ "Dashboard shows: revenue chart, top 5 brokers, recent submissions"
+   - ❌ "Easy to use interface" → ✅ "3-click maximum to create customer"
+   - ❌ "Dashboard is intuitive" → ✅ "Dashboard shows: revenue chart, top 5 customers, recent submissions"
 
 6. **Validate screen specs are complete**
    - [ ] Each screen has: purpose, layout, key elements

@@ -199,7 +199,7 @@ experience/
 │   │   └── shared/          # Shared business components
 │   ├── pages/               # Route-level page components
 │   ├── features/            # Feature-specific modules
-│   │   ├── brokers/
+│   │   ├── customers/
 │   │   ├── accounts/
 │   │   ├── submissions/
 │   │   └── renewals/
@@ -355,15 +355,15 @@ experience/
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { brokerApi } from '@/lib/api/brokers';
-import type { Broker } from '@/types/broker';
+import { customerApi } from '@/lib/api/customers';
+import type { Customer } from '@/types/customer';
 
-interface BrokerFormProps {
-  brokerId?: string;
-  onSuccess?: (broker: Broker) => void;
+interface CustomerFormProps {
+  customerId?: string;
+  onSuccess?: (customer: Customer) => void;
 }
 
-export function BrokerForm({ brokerId, onSuccess }: BrokerFormProps) {
+export function CustomerForm({ customerId, onSuccess }: CustomerFormProps) {
   // Implementation
 }
 ```
@@ -377,14 +377,14 @@ import addErrors from 'ajv-errors';
 import type { JSONSchemaType } from 'ajv';
 
 // Define JSON Schema (can be shared with backend)
-interface BrokerFormData {
+interface CustomerFormData {
   name: string;
   email: string;
   phone: string;
   status: 'Active' | 'Inactive';
 }
 
-const brokerSchema: JSONSchemaType<BrokerFormData> = {
+const customerSchema: JSONSchemaType<CustomerFormData> = {
   type: 'object',
   properties: {
     name: {
@@ -419,25 +419,25 @@ const brokerSchema: JSONSchemaType<BrokerFormData> = {
 const ajv = new Ajv({ allErrors: true });
 addErrors(ajv);
 
-function BrokerForm() {
+function CustomerForm() {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<BrokerFormData>({
-    resolver: ajvResolver(brokerSchema, {
+  } = useForm<CustomerFormData>({
+    resolver: ajvResolver(customerSchema, {
       formats: { email: true }, // Enable format validation
     }),
   });
 
-  const onSubmit = async (data: BrokerFormData) => {
-    await createBroker(data);
+  const onSubmit = async (data: CustomerFormData) => {
+    await createCustomer(data);
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div>
-        <label htmlFor="name">Broker Name</label>
+        <label htmlFor="name">Customer Name</label>
         <input {...register('name')} id="name" />
         {errors.name && <p className="text-red-500">{errors.name.message}</p>}
       </div>
@@ -452,7 +452,7 @@ function BrokerForm() {
         {errors.phone && <p className="text-red-500">{errors.phone.message}</p>}
       </div>
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Saving...' : 'Save Broker'}
+        {isSubmitting ? 'Saving...' : 'Save Customer'}
       </Button>
     </form>
   );
@@ -461,13 +461,13 @@ function BrokerForm() {
 
 **Alternative: Load schema from shared location**
 ```tsx
-// schemas/broker.schema.json (shared with backend)
-import brokerSchema from '@/schemas/broker.schema.json';
+// schemas/customer.schema.json (shared with backend)
+import customerSchema from '@/schemas/customer.schema.json';
 import { ajvResolver } from '@hookform/resolvers/ajv';
 
-function BrokerForm() {
+function CustomerForm() {
   const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: ajvResolver(brokerSchema),
+    resolver: ajvResolver(customerSchema),
   });
   // ... rest of implementation
 }
@@ -483,7 +483,7 @@ import { RJSFSchema, UiSchema } from '@rjsf/utils';
 const schema: RJSFSchema = {
   type: 'object',
   properties: {
-    name: { type: 'string', title: 'Broker Name' },
+    name: { type: 'string', title: 'Customer Name' },
     email: { type: 'string', format: 'email', title: 'Email' },
     phone: { type: 'string', pattern: '^\\d{10}$', title: 'Phone' },
     status: {
@@ -502,10 +502,10 @@ const uiSchema: UiSchema = {
   status: { 'ui:widget': 'radio' },
 };
 
-function DynamicBrokerForm() {
+function DynamicCustomerForm() {
   const handleSubmit = ({ formData }: any) => {
     // formData is already validated against schema
-    createBroker(formData);
+    createCustomer(formData);
   };
 
   return (
@@ -545,7 +545,7 @@ const widgets: RegistryWidgetsType = {
   // Add more custom widgets for Select, Checkbox, etc.
 };
 
-function BrokerFormWithCustomWidgets() {
+function CustomerFormWithCustomWidgets() {
   return (
     <Form
       schema={schema}
@@ -553,7 +553,7 @@ function BrokerFormWithCustomWidgets() {
       widgets={widgets}
       onSubmit={handleSubmit}
     >
-      <Button type="submit">Save Broker</Button>
+      <Button type="submit">Save Customer</Button>
     </Form>
   );
 }
@@ -576,24 +576,24 @@ function BrokerFormWithCustomWidgets() {
 ### API Integration with TanStack Query
 ```tsx
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { brokerApi } from '@/lib/api/brokers';
+import { customerApi } from '@/lib/api/customers';
 
-function BrokerList() {
+function CustomerList() {
   const queryClient = useQueryClient();
 
-  // Fetch brokers
-  const { data: brokers, isLoading, error } = useQuery({
-    queryKey: ['brokers'],
-    queryFn: brokerApi.getAll,
+  // Fetch customers
+  const { data: customers, isLoading, error } = useQuery({
+    queryKey: ['customers'],
+    queryFn: customerApi.getAll,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Create broker mutation
+  // Create customer mutation
   const createMutation = useMutation({
-    mutationFn: brokerApi.create,
+    mutationFn: customerApi.create,
     onSuccess: () => {
       // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: ['brokers'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
     },
   });
 
@@ -602,8 +602,8 @@ function BrokerList() {
 
   return (
     <div>
-      {brokers?.map(broker => (
-        <div key={broker.id}>{broker.name}</div>
+      {customers?.map(customer => (
+        <div key={customer.id}>{customer.name}</div>
       ))}
     </div>
   );
@@ -669,7 +669,7 @@ const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      { path: '/brokers', element: <BrokerList /> },
+      { path: '/customers', element: <CustomerList /> },
       { path: '/accounts', element: <AccountList /> },
     ],
   },
@@ -703,16 +703,16 @@ export function useAuth() {
 }
 
 // Usage
-function BrokerActions({ brokerId }: { brokerId: string }) {
+function CustomerActions({ customerId }: { customerId: string }) {
   const { hasPermission } = useAuth();
 
   return (
     <div>
-      {hasPermission('broker', 'update') && (
-        <Button onClick={() => editBroker(brokerId)}>Edit</Button>
+      {hasPermission('customer', 'update') && (
+        <Button onClick={() => editCustomer(customerId)}>Edit</Button>
       )}
-      {hasPermission('broker', 'delete') && (
-        <Button variant="destructive" onClick={() => deleteBroker(brokerId)}>
+      {hasPermission('customer', 'delete') && (
+        <Button variant="destructive" onClick={() => deleteCustomer(customerId)}>
           Delete
         </Button>
       )}
@@ -725,20 +725,20 @@ function BrokerActions({ brokerId }: { brokerId: string }) {
 
 ### List with Search and Filters
 ```tsx
-function BrokerList() {
+function CustomerList() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('all');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['brokers', { search, status }],
-    queryFn: () => brokerApi.getAll({ search, status }),
+    queryKey: ['customers', { search, status }],
+    queryFn: () => customerApi.getAll({ search, status }),
   });
 
   return (
     <div>
       <input
         type="search"
-        placeholder="Search brokers..."
+        placeholder="Search customers..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
@@ -747,7 +747,7 @@ function BrokerList() {
         <option value="active">Active</option>
         <option value="inactive">Inactive</option>
       </select>
-      {isLoading ? <Spinner /> : <BrokerTable brokers={data} />}
+      {isLoading ? <Spinner /> : <CustomerTable customers={data} />}
     </div>
   );
 }
@@ -756,28 +756,28 @@ function BrokerList() {
 ### Optimistic Updates
 ```tsx
 const deleteMutation = useMutation({
-  mutationFn: brokerApi.delete,
-  onMutate: async (brokerId) => {
+  mutationFn: customerApi.delete,
+  onMutate: async (customerId) => {
     // Cancel outgoing refetches
-    await queryClient.cancelQueries({ queryKey: ['brokers'] });
+    await queryClient.cancelQueries({ queryKey: ['customers'] });
 
     // Snapshot previous value
-    const previousBrokers = queryClient.getQueryData(['brokers']);
+    const previousCustomers = queryClient.getQueryData(['customers']);
 
-    // Optimistically remove broker
-    queryClient.setQueryData(['brokers'], (old: Broker[]) =>
-      old.filter(b => b.id !== brokerId)
+    // Optimistically remove customer
+    queryClient.setQueryData(['customers'], (old: Customer[]) =>
+      old.filter(b => b.id !== customerId)
     );
 
-    return { previousBrokers };
+    return { previousCustomers };
   },
-  onError: (err, brokerId, context) => {
+  onError: (err, customerId, context) => {
     // Rollback on error
-    queryClient.setQueryData(['brokers'], context?.previousBrokers);
+    queryClient.setQueryData(['customers'], context?.previousCustomers);
   },
   onSettled: () => {
     // Refetch after success or error
-    queryClient.invalidateQueries({ queryKey: ['brokers'] });
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
   },
 });
 ```
@@ -786,22 +786,22 @@ const deleteMutation = useMutation({
 ```tsx
 import { useInfiniteQuery } from '@tanstack/react-query';
 
-function BrokerInfiniteList() {
+function CustomerInfiniteList() {
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['brokers', 'infinite'],
-    queryFn: ({ pageParam = 1 }) => brokerApi.getPage(pageParam),
+    queryKey: ['customers', 'infinite'],
+    queryFn: ({ pageParam = 1 }) => customerApi.getPage(pageParam),
     getNextPageParam: (lastPage) => lastPage.nextPage,
   });
 
   return (
     <div>
       {data?.pages.map((page) =>
-        page.items.map((broker) => <BrokerCard key={broker.id} broker={broker} />)
+        page.items.map((customer) => <CustomerCard key={customer.id} customer={customer} />)
       )}
       {hasNextPage && (
         <Button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
@@ -851,7 +851,7 @@ sessionStorage.setItem('token', token);
 
 // Include token in requests
 const token = sessionStorage.getItem('token');
-fetch('/api/brokers', {
+fetch('/api/customers', {
   headers: {
     'Authorization': `Bearer ${token}`,
   },
@@ -865,7 +865,7 @@ fetch('/api/brokers', {
 
 ```tsx
 // GOOD - Hide UI but backend still validates
-{hasPermission('broker', 'delete') && (
+{hasPermission('customer', 'delete') && (
   <Button onClick={handleDelete}>Delete</Button>
 )}
 
@@ -884,12 +884,12 @@ fetch('/api/brokers', {
 import { lazy, Suspense } from 'react';
 
 // Lazy load heavy components
-const BrokerDetails = lazy(() => import('@/features/brokers/BrokerDetails'));
+const CustomerDetails = lazy(() => import('@/features/customers/CustomerDetails'));
 
 function App() {
   return (
     <Suspense fallback={<Spinner />}>
-      <BrokerDetails brokerId="123" />
+      <CustomerDetails customerId="123" />
     </Suspense>
   );
 }
@@ -899,29 +899,29 @@ function App() {
 ```tsx
 import { useMemo, useCallback } from 'react';
 
-function BrokerList({ brokers }: { brokers: Broker[] }) {
+function CustomerList({ customers }: { customers: Customer[] }) {
   // Memoize expensive computation
-  const sortedBrokers = useMemo(
-    () => brokers.sort((a, b) => a.name.localeCompare(b.name)),
-    [brokers]
+  const sortedCustomers = useMemo(
+    () => customers.sort((a, b) => a.name.localeCompare(b.name)),
+    [customers]
   );
 
   // Memoize callback to prevent child re-renders
-  const handleBrokerClick = useCallback((id: string) => {
-    navigate(`/brokers/${id}`);
+  const handleCustomerClick = useCallback((id: string) => {
+    navigate(`/customers/${id}`);
   }, [navigate]);
 
   return (
     <div>
-      {sortedBrokers.map(broker => (
-        <BrokerCard key={broker.id} broker={broker} onClick={handleBrokerClick} />
+      {sortedCustomers.map(customer => (
+        <CustomerCard key={customer.id} customer={customer} onClick={handleCustomerClick} />
       ))}
     </div>
   );
 }
 
 // Memoize component to prevent re-renders
-const BrokerCard = React.memo(({ broker, onClick }: BrokerCardProps) => {
+const CustomerCard = React.memo(({ customer, onClick }: CustomerCardProps) => {
   // Component implementation
 });
 ```
@@ -929,14 +929,14 @@ const BrokerCard = React.memo(({ broker, onClick }: BrokerCardProps) => {
 ### Image Optimization
 ```tsx
 // Lazy load images
-<img src={broker.logoUrl} alt={broker.name} loading="lazy" />
+<img src={customer.logoUrl} alt={customer.name} loading="lazy" />
 
 // Responsive images
 <img
-  src={broker.logo.url}
-  srcSet={`${broker.logo.small} 400w, ${broker.logo.large} 800w`}
+  src={customer.logo.url}
+  srcSet={`${customer.logo.small} 400w, ${customer.logo.large} 800w`}
   sizes="(max-width: 600px) 400px, 800px"
-  alt={broker.name}
+  alt={customer.name}
 />
 ```
 
@@ -956,18 +956,18 @@ npx vite-bundle-visualizer
 ```tsx
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { BrokerCard } from './BrokerCard';
+import { CustomerCard } from './CustomerCard';
 
-describe('BrokerCard', () => {
-  it('renders broker name', () => {
-    const broker = { id: '1', name: 'Test Broker', status: 'Active' };
-    render(<BrokerCard broker={broker} />);
-    expect(screen.getByText('Test Broker')).toBeInTheDocument();
+describe('CustomerCard', () => {
+  it('renders customer name', () => {
+    const customer = { id: '1', name: 'Test Customer', status: 'Active' };
+    render(<CustomerCard customer={customer} />);
+    expect(screen.getByText('Test Customer')).toBeInTheDocument();
   });
 
   it('shows active status badge', () => {
-    const broker = { id: '1', name: 'Test Broker', status: 'Active' };
-    render(<BrokerCard broker={broker} />);
+    const customer = { id: '1', name: 'Test Customer', status: 'Active' };
+    render(<CustomerCard customer={customer} />);
     expect(screen.getByText('Active')).toHaveClass('badge-success');
   });
 });
@@ -978,26 +978,26 @@ describe('BrokerCard', () => {
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrokerForm } from './BrokerForm';
+import { CustomerForm } from './CustomerForm';
 import { server } from '@/mocks/server'; // MSW mock server
 
-describe('BrokerForm', () => {
-  it('creates broker on submit', async () => {
+describe('CustomerForm', () => {
+  it('creates customer on submit', async () => {
     const user = userEvent.setup();
     const queryClient = new QueryClient();
 
     render(
       <QueryClientProvider client={queryClient}>
-        <BrokerForm />
+        <CustomerForm />
       </QueryClientProvider>
     );
 
-    await user.type(screen.getByLabelText('Broker Name'), 'Test Broker');
+    await user.type(screen.getByLabelText('Customer Name'), 'Test Customer');
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.click(screen.getByRole('button', { name: /save/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Broker created successfully')).toBeInTheDocument();
+      expect(screen.getByText('Customer created successfully')).toBeInTheDocument();
     });
   });
 });
@@ -1008,9 +1008,9 @@ describe('BrokerForm', () => {
 import { axe, toHaveNoViolations } from 'jest-axe';
 expect.extend(toHaveNoViolations);
 
-describe('BrokerForm accessibility', () => {
+describe('CustomerForm accessibility', () => {
   it('has no accessibility violations', async () => {
-    const { container } = render(<BrokerForm />);
+    const { container } = render(<CustomerForm />);
     const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
@@ -1019,12 +1019,16 @@ describe('BrokerForm accessibility', () => {
 
 ## References
 
-Generic frontend best practices (to be created):
-- `agents/frontend-developer/references/react-patterns.md`
-- `agents/frontend-developer/references/typescript-guidelines.md`
-- `agents/frontend-developer/references/accessibility-checklist.md`
-- `agents/frontend-developer/references/performance-optimization.md`
-- `agents/frontend-developer/references/testing-strategies.md`
+Generic frontend best practices:
+- `agents/frontend-developer/references/react-best-practices.md`
+- `agents/frontend-developer/references/typescript-patterns.md`
+- `agents/frontend-developer/references/accessibility-guide.md`
+- `agents/frontend-developer/references/ux-principles.md`
+- `agents/frontend-developer/references/form-handling-guide.md`
+- `agents/frontend-developer/references/json-schema-forms-guide.md`
+- `agents/frontend-developer/references/tanstack-query-guide.md`
+- `agents/frontend-developer/references/testing-guide.md`
+- `agents/frontend-developer/references/design-inspiration.md`
 
 Solution-specific references:
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` (Frontend section)

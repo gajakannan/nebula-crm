@@ -124,7 +124,7 @@ Your responsibility is to build the **intelligence layer** (neuron/) that powers
 ```
 neuron/
 ├── mcp/              # MCP servers
-├── crm-agents/       # CRM-specific agents
+├── domain_agents/    # Domain agent implementations
 ├── models/           # Model integrations
 ├── workflows/        # Agentic workflows
 ├── prompts/          # Prompt templates
@@ -244,25 +244,25 @@ neuron/
 ```python
 # Good: Clear, structured prompt
 system_prompt = """
-You are an underwriting assistant for insurance submissions.
+You are a data processing assistant for customer records.
 
-Your task: Analyze the submission and suggest pricing.
+Your task: Analyze the record and generate a classification report.
 
 Input format:
-- Business type: {business_type}
-- Revenue: {revenue}
-- Location: {location}
-- Claims history: {claims}
+- Category: {category}
+- Value: {value}
+- Region: {region}
+- History: {history}
 
 Output format:
-- Risk level: Low/Medium/High
-- Suggested premium: $X,XXX
+- Priority: Low/Medium/High
+- Recommended action: Brief description
 - Reasoning: 2-3 sentences
 
 Rules:
-- Be conservative with high-risk businesses
-- Consider location-specific risks
-- Factor in claims history heavily
+- Flag high-value items for immediate review
+- Consider region-specific factors
+- Weight recent history heavily
 """
 ```
 
@@ -310,9 +310,9 @@ def track_usage(prompt_tokens: int, completion_tokens: int, model: str):
 
 ### Simple Agent (Single Prompt)
 ```python
-async def analyze_submission(submission: dict) -> dict:
-    """Analyze insurance submission with LLM."""
-    prompt = format_submission_prompt(submission)
+async def analyze_record(record: dict) -> dict:
+    """Analyze a data record with LLM."""
+    prompt = format_record_prompt(record)
     response = await llm.generate(prompt)
     return parse_response(response)
 ```
@@ -335,16 +335,16 @@ async def process_with_tools(query: str, tools: list):
 
 ### Multi-Agent Collaboration
 ```python
-async def underwriting_workflow(submission: dict):
-    """Multi-agent underwriting workflow."""
-    # Agent 1: Risk assessment
-    risk = await risk_agent.assess(submission)
+async def processing_workflow(record: dict):
+    """Multi-agent data processing workflow."""
+    # Agent 1: Validation
+    validation = await validation_agent.check(record)
 
-    # Agent 2: Pricing
-    price = await pricing_agent.calculate(submission, risk)
+    # Agent 2: Enrichment
+    enriched = await enrichment_agent.process(record, validation)
 
     # Agent 3: Decision
-    decision = await decision_agent.decide(submission, risk, price)
+    decision = await decision_agent.approve(record, enriched)
 
     return decision
 ```
@@ -377,7 +377,7 @@ Generic AI engineering best practices (to be created):
 
 ## Example Agent Implementation
 
-See `neuron/crm-agents/underwriter/` for a complete example of:
+`neuron/domain_agents/` is the target location for agent implementations. Populate with:
 - Agent definition
 - Prompt templates
 - Tool implementations

@@ -21,7 +21,7 @@
 
 2. **Creates clarification questions:**
    ```
-   Story: "Broker search should be fast"
+   Story: "Customer search should be fast"
    Question: How fast? (< 200ms? < 1s? < 5s?)
 
    Story: "Users can upload documents"
@@ -89,10 +89,10 @@ Examples of issues to flag:
 ✅ "JWT tokens, HTTPS only, session timeout 30min"
 
 ❌ "Easy to use interface"
-✅ "3-click maximum to create broker"
+✅ "3-click maximum to create customer"
 
 ❌ "Dashboard is intuitive"
-✅ "Dashboard shows: revenue chart, top 5 brokers, recent submissions"
+✅ "Dashboard shows: revenue chart, top 5 customers, recent submissions"
 ```
 
 ### Architect Validation - Enhanced
@@ -234,7 +234,7 @@ Implementation Validation:
 
 ### Before Clarification:
 
-**Story:** "Broker search should be fast and intuitive"
+**Story:** "Customer search should be fast and intuitive"
 
 **Acceptance Criteria:**
 - System should return results quickly
@@ -243,13 +243,13 @@ Implementation Validation:
 
 ### After Clarification:
 
-**Story:** "Broker search must return results within performance targets and support common search patterns"
+**Story:** "Customer search must return results within performance targets and support common search patterns"
 
 **Acceptance Criteria:**
 - API response < 200ms p95 for searches with < 1000 results
 - Search supports: name (partial match), state (exact), status (exact)
-- Empty search returns all brokers (paginated, 20 per page)
-- No results shows: "No brokers found. Try different search terms."
+- Empty search returns all customers (paginated, 20 per page)
+- No results shows: "No customers found. Try different search terms."
 - Invalid search shows: "Invalid search. Name must be 2+ characters."
 - Pagination: default 20/page, max 100/page
 - Sorting: by name (asc/desc), by created date (asc/desc)

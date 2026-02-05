@@ -1,6 +1,9 @@
 # API Design Guide
 
-**Note:** This guide uses example entities (Broker, Product, Order, etc.) for illustration purposes. Replace these with your domain-specific entities when applying to your project. See `planning-mds/examples/` for project-specific architecture examples.
+> **Examples in this guide use `customers` and `orders` as illustrative entities.
+> These are not prescriptive — substitute your own domain entities when applying
+> these patterns. See `BOUNDARY-POLICY.md` → "Standard Example Entities" for
+> the full convention and field mapping.
 
 ---
 
@@ -13,60 +16,60 @@ Comprehensive guide for designing RESTful APIs using .NET 10 Minimal APIs. This 
 ### 1.1 Resource Naming Conventions
 
 **Use Nouns, Not Verbs:**
-- ✅ Good: `GET /api/brokers`, `POST /api/submissions`
-- ❌ Bad: `GET /api/getBrokers`, `POST /api/createSubmission`
+- ✅ Good: `GET /api/customers`, `POST /api/orders`
+- ❌ Bad: `GET /api/getCustomers`, `POST /api/createOrder`
 
 **Use Plural Nouns:**
-- ✅ Good: `/api/brokers`, `/api/submissions`
-- ❌ Bad: `/api/broker`, `/api/submission`
+- ✅ Good: `/api/customers`, `/api/orders`
+- ❌ Bad: `/api/customer`, `/api/order`
 
 **Hierarchical Resource URLs:**
-- ✅ Good: `/api/brokers/{id}/contacts` (contacts belong to broker)
-- ✅ Good: `/api/accounts/{id}/submissions` (submissions for account)
-- ❌ Bad: `/api/broker-contacts?brokerId={id}` (flat structure)
+- ✅ Good: `/api/customers/{id}/orders` (orders belong to customer)
+- ✅ Good: `/api/orders/{id}/items` (items belong to order)
+- ❌ Bad: `/api/customer-orders?customerId={id}` (flat structure)
 
 **Lowercase with Hyphens (for multi-word resources):**
-- ✅ Good: `/api/workflow-transitions`, `/api/timeline-events`
-- ❌ Bad: `/api/WorkflowTransitions`, `/api/timeline_events`
+- ✅ Good: `/api/order-items`, `/api/timeline-events`
+- ❌ Bad: `/api/OrderItems`, `/api/timeline_events`
 
 **Avoid Deep Nesting (max 2 levels):**
-- ✅ Good: `/api/brokers/{id}/contacts/{contactId}`
-- ❌ Bad: `/api/brokers/{id}/accounts/{accountId}/submissions/{submissionId}/documents/{docId}`
-- Better: `/api/submissions/{submissionId}/documents/{docId}`
+- ✅ Good: `/api/customers/{id}/orders/{orderId}`
+- ❌ Bad: `/api/customers/{id}/orders/{orderId}/items/{itemId}/details/{detailId}`
+- Better: `/api/orders/{orderId}/items/{itemId}`
 
 ---
 
 ### 1.2 HTTP Methods (Verbs)
 
 **GET - Retrieve Resources:**
-- `GET /api/brokers` - List all brokers (with pagination)
-- `GET /api/brokers/{id}` - Get single broker by ID
-- `GET /api/brokers/{id}/submissions` - Get broker's submissions
+- `GET /api/customers` - List all customers (with pagination)
+- `GET /api/customers/{id}` - Get single customer by ID
+- `GET /api/customers/{id}/orders` - Get customer's orders
 - Idempotent: Multiple identical requests have same effect
 - No side effects (no data mutations)
 - Cacheable
 
 **POST - Create New Resource:**
-- `POST /api/brokers` - Create new broker
-- `POST /api/submissions/{id}/transition` - Perform action (state change)
+- `POST /api/customers` - Create new customer
+- `POST /api/orders/{id}/transition` - Perform action (state change)
 - Non-idempotent: Multiple requests create multiple resources
 - Returns `201 Created` with `Location` header pointing to new resource
 - Response body includes created resource
 
 **PUT - Replace Entire Resource:**
-- `PUT /api/brokers/{id}` - Replace entire broker (all fields required)
+- `PUT /api/customers/{id}` - Replace entire customer (all fields required)
 - Idempotent: Multiple identical requests have same effect
 - Returns `200 OK` with updated resource or `204 No Content`
 - Rarely used in practice (PATCH preferred)
 
 **PATCH - Partial Update:**
-- `PATCH /api/brokers/{id}` - Update specific fields
+- `PATCH /api/customers/{id}` - Update specific fields
 - Idempotent (if designed correctly)
 - Returns `200 OK` with updated resource
 - Preferred over PUT for updates
 
 **DELETE - Remove Resource:**
-- `DELETE /api/brokers/{id}` - Soft delete broker
+- `DELETE /api/customers/{id}` - Soft delete customer
 - Idempotent: Deleting already-deleted resource returns `204`
 - Returns `204 No Content` (no response body)
 - Consider soft delete (set DeletedAt timestamp) vs hard delete
@@ -86,7 +89,7 @@ Comprehensive guide for designing RESTful APIs using .NET 10 Minimal APIs. This 
 - **401 Unauthorized**: Missing or invalid authentication token
 - **403 Forbidden**: User authenticated but lacks permission
 - **404 Not Found**: Resource doesn't exist
-- **409 Conflict**: Business rule violation (e.g., duplicate license number, invalid state transition)
+- **409 Conflict**: Business rule violation (e.g., duplicate order number, invalid state transition)
 - **422 Unprocessable Entity**: Request syntactically valid but semantically invalid
 
 **Server Error Codes:**
@@ -107,11 +110,11 @@ Comprehensive guide for designing RESTful APIs using .NET 10 Minimal APIs. This 
 
 **Idempotency Keys for POST:**
 ```http
-POST /api/submissions
+POST /api/orders
 Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
 Content-Type: application/json
 
-{ "brokerId": "...", "insuredName": "Acme Corp" }
+{ "customerId": "...", "name": "Acme Inc" }
 ```
 
 Server stores idempotency key; duplicate requests with same key return original response (don't create duplicate).
@@ -126,17 +129,17 @@ Server stores idempotency key; duplicate requests with same key return original 
 ```json
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
-  "name": "Acme Insurance",
+  "name": "Acme Inc",
   "status": "Active",
   "_links": {
-    "self": { "href": "/api/brokers/123e4567-e89b-12d3-a456-426614174000" },
-    "contacts": { "href": "/api/brokers/123e4567-e89b-12d3-a456-426614174000/contacts" },
-    "submissions": { "href": "/api/brokers/123e4567-e89b-12d3-a456-426614174000/submissions" }
+    "self": { "href": "/api/customers/123e4567-e89b-12d3-a456-426614174000" },
+    "orders": { "href": "/api/customers/123e4567-e89b-12d3-a456-426614174000/orders" },
+    "addresses": { "href": "/api/customers/123e4567-e89b-12d3-a456-426614174000/addresses" }
   }
 }
 ```
 
-**Recommendation for Nebula MVP:** Keep HATEOAS minimal (use for pagination links only). Full HATEOAS adds complexity without clear benefit for internal API.
+**General guidance:** For internal APIs, full HATEOAS adds complexity without clear benefit. Consider limiting it to pagination links only unless clients are highly decoupled and need self-describing responses.
 
 ---
 
@@ -147,7 +150,7 @@ Server stores idempotency key; duplicate requests with same key return original 
 **Use Data Transfer Objects (DTOs) for Requests:**
 
 ```csharp
-public record CreateBrokerRequest
+public record CreateCustomerRequest
 {
     [Required]
     [MaxLength(255)]
@@ -155,11 +158,7 @@ public record CreateBrokerRequest
 
     [Required]
     [MaxLength(50)]
-    public string LicenseNumber { get; init; }
-
-    [Required]
-    [RegularExpression(@"^[A-Z]{2}$")]
-    public string State { get; init; }
+    public string Region { get; init; }
 
     [EmailAddress]
     public string? Email { get; init; }
@@ -169,21 +168,21 @@ public record CreateBrokerRequest
 }
 
 // Minimal API endpoint
-app.MapPost("/api/brokers", async (
-    CreateBrokerRequest request,
-    IBrokerService brokerService,
-    IValidator<CreateBrokerRequest> validator) =>
+app.MapPost("/api/customers", async (
+    CreateCustomerRequest request,
+    ICustomerService customerService,
+    IValidator<CreateCustomerRequest> validator) =>
 {
     var validationResult = await validator.ValidateAsync(request);
     if (!validationResult.IsValid)
         return Results.ValidationProblem(validationResult.ToDictionary());
 
-    var broker = await brokerService.CreateAsync(request);
-    return Results.Created($"/api/brokers/{broker.Id}", broker);
+    var customer = await customerService.CreateAsync(request);
+    return Results.Created($"/api/customers/{customer.Id}", customer);
 })
-.WithName("CreateBroker")
-.WithTags("Brokers")
-.Produces<BrokerResponse>(201)
+.WithName("CreateCustomer")
+.WithTags("Customers")
+.Produces<CustomerResponse>(201)
 .ProducesProblem(400)
 .ProducesProblem(403)
 .ProducesProblem(409);
@@ -201,12 +200,11 @@ app.MapPost("/api/brokers", async (
 **Separate Request and Response DTOs:**
 
 ```csharp
-public record BrokerResponse
+public record CustomerResponse
 {
     public Guid Id { get; init; }
     public string Name { get; init; }
-    public string LicenseNumber { get; init; }
-    public string State { get; init; }
+    public string Region { get; init; }
     public string? Email { get; init; }
     public string? Phone { get; init; }
     public string Status { get; init; }
@@ -221,11 +219,11 @@ public record BrokerResponse
 **Map Entities to DTOs (never expose entities directly):**
 
 ```csharp
-var broker = await context.Brokers.FindAsync(id);
-var response = new BrokerResponse
+var customer = await context.Customers.FindAsync(id);
+var response = new CustomerResponse
 {
-    Id = broker.Id,
-    Name = broker.Name,
+    Id = customer.Id,
+    Name = customer.Name,
     // ... map fields
 };
 ```
@@ -271,7 +269,7 @@ public record ErrorDetail
   "message": "Invalid request data",
   "details": [
     { "field": "name", "message": "Name is required" },
-    { "field": "licenseNumber", "message": "License number must be unique" }
+    { "field": "email", "message": "Email address must be unique" }
   ],
   "traceId": "0HN1234567890ABCDEF"
 }
@@ -280,10 +278,10 @@ public record ErrorDetail
 **Business Rule Violation (409):**
 ```json
 {
-  "code": "DUPLICATE_LICENSE",
-  "message": "A broker with this license number already exists",
+  "code": "DUPLICATE_ORDER_NUMBER",
+  "message": "An order with this order number already exists",
   "details": [
-    { "field": "licenseNumber", "message": "License number CA-12345 is already in use" }
+    { "field": "orderNumber", "message": "Order number ORD-12345 is already in use" }
   ],
   "traceId": "0HN1234567890ABCDEF"
 }
@@ -293,7 +291,7 @@ public record ErrorDetail
 ```json
 {
   "code": "INSUFFICIENT_PERMISSIONS",
-  "message": "User lacks CreateBroker permission",
+  "message": "User lacks CreateCustomer permission",
   "traceId": "0HN1234567890ABCDEF"
 }
 ```
@@ -304,21 +302,21 @@ public record ErrorDetail
 
 **Simple Response (No Envelope):**
 ```json
-GET /api/brokers/123
+GET /api/customers/123
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
-  "name": "Acme Insurance",
+  "name": "Acme Inc",
   "status": "Active"
 }
 ```
 
 **List Response (With Pagination Metadata):**
 ```json
-GET /api/brokers?page=1&pageSize=20
+GET /api/customers?page=1&pageSize=20
 {
   "data": [
-    { "id": "...", "name": "Acme Insurance" },
-    { "id": "...", "name": "Best Brokers" }
+    { "id": "...", "name": "Acme Inc" },
+    { "id": "...", "name": "Global Corp" }
   ],
   "page": 1,
   "pageSize": 20,
@@ -341,15 +339,15 @@ GET /api/brokers?page=1&pageSize=20
 
 **Request:**
 ```http
-GET /api/brokers?page=2&pageSize=20
+GET /api/customers?page=2&pageSize=20
 ```
 
 **Response:**
 ```json
 {
   "data": [
-    { "id": "...", "name": "Broker 21" },
-    { "id": "...", "name": "Broker 22" }
+    { "id": "...", "name": "Customer 21" },
+    { "id": "...", "name": "Customer 22" }
   ],
   "page": 2,
   "pageSize": 20,
@@ -360,22 +358,22 @@ GET /api/brokers?page=2&pageSize=20
 
 **Implementation:**
 ```csharp
-app.MapGet("/api/brokers", async (
+app.MapGet("/api/customers", async (
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 20,
     ApplicationDbContext context) =>
 {
     if (pageSize > 100) pageSize = 100;
 
-    var query = context.Brokers.AsQueryable();
+    var query = context.Customers.AsQueryable();
 
     var totalCount = await query.CountAsync();
 
     var data = await query
-        .OrderBy(b => b.Name)
+        .OrderBy(c => c.Name)
         .Skip((page - 1) * pageSize)
         .Take(pageSize)
-        .Select(b => new BrokerListItem { Id = b.Id, Name = b.Name })
+        .Select(c => new CustomerListItem { Id = c.Id, Name = c.Name })
         .ToListAsync();
 
     return Results.Ok(new
@@ -404,7 +402,7 @@ app.MapGet("/api/brokers", async (
 
 **Request:**
 ```http
-GET /api/brokers?limit=20&cursor=eyJuYW1lIjoiQWNtZSIsImlkIjoiMTIzIn0=
+GET /api/customers?limit=20&cursor=eyJuYW1lIjoiQWNtZSIsImlkIjoiMTIzIn0=
 ```
 
 **Response:**
@@ -420,17 +418,17 @@ GET /api/brokers?limit=20&cursor=eyJuYW1lIjoiQWNtZSIsImlkIjoiMTIzIn0=
 ```csharp
 var (name, id) = DecodeCursor(cursor); // Base64 decode
 
-var brokers = await context.Brokers
-    .Where(b => b.Name.CompareTo(name) > 0 || (b.Name == name && b.Id.CompareTo(id) > 0))
-    .OrderBy(b => b.Name)
-    .ThenBy(b => b.Id)
+var customers = await context.Customers
+    .Where(c => c.Name.CompareTo(name) > 0 || (c.Name == name && c.Id.CompareTo(id) > 0))
+    .OrderBy(c => c.Name)
+    .ThenBy(c => c.Id)
     .Take(limit + 1)
     .ToListAsync();
 
-var hasMore = brokers.Count > limit;
-if (hasMore) brokers.RemoveAt(brokers.Count - 1);
+var hasMore = customers.Count > limit;
+if (hasMore) customers.RemoveAt(customers.Count - 1);
 
-var nextCursor = hasMore ? EncodeCursor(brokers.Last().Name, brokers.Last().Id) : null;
+var nextCursor = hasMore ? EncodeCursor(customers.Last().Name, customers.Last().Id) : null;
 ```
 
 **Pros:** Fast for large datasets, consistent results
@@ -449,11 +447,11 @@ var nextCursor = hasMore ? EncodeCursor(brokers.Last().Name, brokers.Last().Id) 
   "totalCount": 156,
   "totalPages": 8,
   "_links": {
-    "first": { "href": "/api/brokers?page=1&pageSize=20" },
-    "prev": { "href": "/api/brokers?page=1&pageSize=20" },
-    "self": { "href": "/api/brokers?page=2&pageSize=20" },
-    "next": { "href": "/api/brokers?page=3&pageSize=20" },
-    "last": { "href": "/api/brokers?page=8&pageSize=20" }
+    "first": { "href": "/api/customers?page=1&pageSize=20" },
+    "prev": { "href": "/api/customers?page=1&pageSize=20" },
+    "self": { "href": "/api/customers?page=2&pageSize=20" },
+    "next": { "href": "/api/customers?page=3&pageSize=20" },
+    "last": { "href": "/api/customers?page=8&pageSize=20" }
   }
 }
 ```
@@ -466,38 +464,38 @@ var nextCursor = hasMore ? EncodeCursor(brokers.Last().Name, brokers.Last().Id) 
 
 **Simple Filters:**
 ```http
-GET /api/brokers?status=Active&state=CA
+GET /api/customers?status=Active&region=West
 ```
 
 **Search (across multiple fields):**
 ```http
-GET /api/brokers?search=acme
+GET /api/customers?search=acme
 ```
 
 **Filter Operators:**
 ```http
-GET /api/submissions?premium[gte]=100000&effectiveDate[lte]=2026-12-31
+GET /api/orders?amount[gte]=500&orderDate[lte]=2026-12-31
 ```
 
 **Implementation:**
 ```csharp
-app.MapGet("/api/brokers", async (
+app.MapGet("/api/customers", async (
     [FromQuery] string? status,
-    [FromQuery] string? state,
+    [FromQuery] string? region,
     [FromQuery] string? search,
     ApplicationDbContext context) =>
 {
-    var query = context.Brokers.AsQueryable();
+    var query = context.Customers.AsQueryable();
 
     if (!string.IsNullOrEmpty(status))
-        query = query.Where(b => b.Status == status);
+        query = query.Where(c => c.Status == status);
 
-    if (!string.IsNullOrEmpty(state))
-        query = query.Where(b => b.State == state);
+    if (!string.IsNullOrEmpty(region))
+        query = query.Where(c => c.Region == region);
 
     if (!string.IsNullOrEmpty(search))
-        query = query.Where(b => EF.Functions.ILike(b.Name, $"%{search}%") ||
-                                 EF.Functions.ILike(b.LicenseNumber, $"%{search}%"));
+        query = query.Where(c => EF.Functions.ILike(c.Name, $"%{search}%") ||
+                                 EF.Functions.ILike(c.Email, $"%{search}%"));
 
     return Results.Ok(await query.ToListAsync());
 });
@@ -509,7 +507,7 @@ app.MapGet("/api/brokers", async (
 
 **Query Parameter:**
 ```http
-GET /api/brokers?sort=name:asc,createdAt:desc
+GET /api/customers?sort=name:asc,createdAt:desc
 ```
 
 **Implementation:**
@@ -554,8 +552,8 @@ public static IQueryable<T> ApplySorting<T>(this IQueryable<T> query, string? so
 
 **PostgreSQL Full-Text Search:**
 ```csharp
-var brokers = await context.Brokers
-    .Where(b => EF.Functions.ToTsVector("english", b.Name + " " + b.LicenseNumber)
+var customers = await context.Customers
+    .Where(c => EF.Functions.ToTsVector("english", c.Name + " " + c.Email)
         .Matches(EF.Functions.ToTsQuery("english", searchTerm)))
     .ToListAsync();
 ```
@@ -564,12 +562,12 @@ var brokers = await context.Brokers
 
 ## 5. Versioning Strategies
 
-### 5.1 URI Versioning (Recommended for Nebula)
+### 5.1 URI Versioning (Recommended)
 
 **Include Version in URL Path:**
 ```http
-GET /api/v1/brokers
-GET /api/v2/brokers
+GET /api/v1/customers
+GET /api/v2/customers
 ```
 
 **Pros:** Simple, explicit, easy to route
@@ -578,10 +576,10 @@ GET /api/v2/brokers
 **Implementation:**
 ```csharp
 var v1 = app.MapGroup("/api/v1").WithTags("V1");
-v1.MapGet("/brokers", GetBrokersV1);
+v1.MapGet("/customers", GetCustomersV1);
 
 var v2 = app.MapGroup("/api/v2").WithTags("V2");
-v2.MapGet("/brokers", GetBrokersV2);
+v2.MapGet("/customers", GetCustomersV2);
 ```
 
 ---
@@ -590,7 +588,7 @@ v2.MapGet("/brokers", GetBrokersV2);
 
 **Version in Custom Header:**
 ```http
-GET /api/brokers
+GET /api/customers
 API-Version: 2
 ```
 
@@ -603,7 +601,7 @@ API-Version: 2
 
 **Version as Query Param:**
 ```http
-GET /api/brokers?version=2
+GET /api/customers?version=2
 ```
 
 **Pros:** Easy to test
@@ -618,7 +616,7 @@ GET /api/brokers?version=2
 HTTP/1.1 200 OK
 Sunset: Sat, 31 Dec 2026 23:59:59 GMT
 Deprecation: true
-Link: <https://api.nebula.com/api/v2/brokers>; rel="successor-version"
+Link: <https://api.example.com/api/v2/customers>; rel="successor-version"
 ```
 
 **Recommendation:** Support previous version for 12 months after new version released.
@@ -627,11 +625,11 @@ Link: <https://api.nebula.com/api/v2/brokers>; rel="successor-version"
 
 ## 6. API Security
 
-### 6.1 Authentication (JWT from Keycloak)
+### 6.1 Authentication (JWT via OIDC Provider)
 
 **Require Bearer Token on All Endpoints:**
 ```csharp
-app.MapGet("/api/brokers", async () => { ... })
+app.MapGet("/api/customers", async () => { ... })
     .RequireAuthorization();
 ```
 
@@ -640,8 +638,8 @@ app.MapGet("/api/brokers", async () => { ... })
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "https://keycloak.example.com/realms/nebula";
-        options.Audience = "nebula-api";
+        options.Authority = "https://auth.example.com/realms/{your-realm}";
+        options.Audience = "{your-app-id}";
         options.RequireHttpsMetadata = true;
     });
 ```
@@ -684,7 +682,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("https://app.nebula.com")
+        policy.WithOrigins("https://app.example.com")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -738,13 +736,13 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Nebula Insurance CRM API",
+        Title = "Your App API",
         Version = "v1",
-        Description = "API for managing brokers, accounts, submissions, and renewals",
+        Description = "API for managing customers, orders, and products",
         Contact = new OpenApiContact
         {
-            Name = "Nebula Support",
-            Email = "support@nebula.example.com"
+            Name = "Your Team",
+            Email = "support@example.com"
         }
     });
 
@@ -785,7 +783,7 @@ app.UseSwaggerUI();
 ```yaml
 components:
   schemas:
-    BrokerResponse:
+    CustomerResponse:
       type: object
       properties:
         id:
@@ -817,14 +815,14 @@ components:
 
 **Add Examples to Endpoints:**
 ```csharp
-app.MapPost("/api/brokers", async (CreateBrokerRequest request) => { ... })
+app.MapPost("/api/customers", async (CreateCustomerRequest request) => { ... })
     .WithOpenApi(operation =>
     {
-        operation.Summary = "Create a new broker";
-        operation.Description = "Creates a new insurance broker or brokerage firm. Requires CreateBroker permission.";
+        operation.Summary = "Create a new customer";
+        operation.Description = "Creates a new customer record. Requires CreateCustomer permission.";
         return operation;
     })
-    .Produces<BrokerResponse>(201)
+    .Produces<CustomerResponse>(201)
     .ProducesProblem(400)
     .ProducesProblem(403);
 ```
@@ -837,13 +835,13 @@ app.MapPost("/api/brokers", async (CreateBrokerRequest request) => { ... })
 ```bash
 # Generate TypeScript client for React frontend
 openapi-generator-cli generate \
-  -i https://api.nebula.com/swagger/v1/swagger.json \
+  -i https://api.example.com/swagger/v1/swagger.json \
   -g typescript-fetch \
   -o clients/typescript
 
 # Generate C# client for integration tests
 openapi-generator-cli generate \
-  -i https://api.nebula.com/swagger/v1/swagger.json \
+  -i https://api.example.com/swagger/v1/swagger.json \
   -g csharp-netcore \
   -o clients/csharp
 ```
@@ -852,5 +850,6 @@ openapi-generator-cli generate \
 
 ## Version History
 
+**Version 3.0** - 2026-02-03 - Replaced all solution-specific entities with standard generic set (customers/orders). Removed Nebula-specific recommendations. See `BOUNDARY-POLICY.md` → "Standard Example Entities" for the convention.
 **Version 2.0** - 2026-01-31 - Comprehensive API design guide with .NET 10 Minimal APIs (400 lines)
 **Version 1.0** - 2026-01-26 - Initial API design guide (64 lines)

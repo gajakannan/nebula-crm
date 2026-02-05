@@ -78,6 +78,57 @@ This policy defines the boundary between generic, reusable agent roles (`agents/
 
 ---
 
+## Standard Example Entities
+
+All reference files in `agents/` that include code or API examples must use the same set of example entities. This prevents two problems: inconsistency across files (one guide uses `User/Post`, another uses `Customer/Order`), and accidental re-introduction of solution-specific entities during edits.
+
+### The Standard Set
+
+| Entity | Role in examples | Replaces (in Nebula) |
+|--------|-----------------|----------------------|
+| `customers` | Primary entity — CRUD, search, filtering | `brokers` |
+| `orders` | Child entity — nested resources, status workflows | `submissions` |
+
+### Why These Two
+
+- **Universal** — customers and orders exist in retail, SaaS, healthcare, insurance, manufacturing. They don't imply any single domain.
+- **Structurally rich** — together they cover every pattern a reference file needs to demonstrate:
+  - Basic CRUD and search (`customers`)
+  - Nested/hierarchical resources (`/customers/{id}/orders`)
+  - Status lifecycle and state transitions (`orders`: Pending → Processing → Shipped → Delivered → Cancelled)
+  - Unique constraint violations (`OrderNumber` must be unique)
+  - Numeric and date range filtering (`amount`, `orderDate`)
+  - Permission names (`CreateOrder`, `ViewCustomer`)
+- **Two entities, not ten** — keeps examples readable. If a pattern genuinely needs a third entity, use `products` as a line item within an order.
+
+### Field Mapping
+
+When rewriting examples, use this mapping for common field types:
+
+| Field type | Use | Example |
+|------------|-----|---------|
+| Name / primary text | `name` | `"Acme Inc"` |
+| Unique identifier (business key) | `orderNumber` | `"ORD-12345"` |
+| Status (enumerated) | `status` | `Active`, `Pending`, `Shipped` |
+| Email | `email` | `"contact@acme.example.com"` |
+| Numeric (for range filters) | `amount` | `500.00` |
+| Date (for range filters) | `orderDate` | `"2026-06-15"` |
+| Region / category | `region` | `"West"` |
+| Error codes | `DUPLICATE_ORDER_NUMBER` | — |
+
+### Header Note
+
+Every reference file that uses examples must include this note at the top, immediately after the `# Title`:
+
+```markdown
+> **Examples in this guide use `customers` and `orders` as illustrative entities.
+> These are not prescriptive — substitute your own domain entities when applying
+> these patterns. See `BOUNDARY-POLICY.md` → "Standard Example Entities" for
+> the full convention and field mapping.
+```
+
+---
+
 ## Enforcement
 
 ### Pre-Commit Checks
@@ -93,7 +144,7 @@ grep -r "YourProjectName\|YourDomainEntity" agents/ --include="*.md"
 
 When reviewing PRs that modify `agents/`:
 - [ ] No project-specific terminology in agent files
-- [ ] Examples are generic and span multiple domains
+- [ ] Examples use the standard entity set (`customers` / `orders`) — see "Standard Example Entities" above
 - [ ] No hard-coded business rules or domain logic
 - [ ] All project-specific content belongs in `planning-mds/`
 
@@ -156,4 +207,5 @@ When reviewing PRs that modify `planning-mds/`:
 
 ## Version History
 
+**Version 1.1** - 2026-02-03 - Added Standard Example Entities section (customers/orders convention, field mapping, header note template)
 **Version 1.0** - 2026-02-01 - Initial boundary policy

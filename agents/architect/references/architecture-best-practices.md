@@ -1,6 +1,9 @@
 # Architecture Best Practices
 
-**Note:** This guide uses example entities (Broker, Submission, Order, etc.) in code samples for illustration purposes. Replace these with your domain-specific entities when applying to your project. See `planning-mds/examples/` for project-specific architecture examples.
+> **Examples in this guide use `customers` and `orders` as illustrative entities.
+> These are not prescriptive — substitute your own domain entities when applying
+> these patterns. See `BOUNDARY-POLICY.md` → "Standard Example Entities" for
+> the full convention and field mapping.
 
 ---
 
@@ -61,9 +64,9 @@ Comprehensive guide for designing robust, maintainable architecture for enterpri
 ### Domain Layer (Core)
 
 **Contains:**
-- Entities (Broker, Submission, Renewal)
+- Entities (Customer, Order, Product)
 - Value Objects (Money, Address, EmailAddress)
-- Domain Events (BrokerCreated, SubmissionBound)
+- Domain Events (CustomerCreated, OrderPlaced)
 - Domain Services (complex business logic that doesn't belong to a single entity)
 - Repository Interfaces (but NOT implementations)
 
@@ -75,40 +78,40 @@ Comprehensive guide for designing robust, maintainable architecture for enterpri
 
 **Example Entity:**
 ```csharp
-public class Broker
+public class Customer
 {
     public Guid Id { get; private set; }
     public string Name { get; private set; }
-    public string LicenseNumber { get; private set; }
-    public BrokerStatus Status { get; private set; }
+    public string Email { get; private set; }
+    public CustomerStatus Status { get; private set; }
 
     // Domain logic
     public void Activate()
     {
-        if (Status == BrokerStatus.Suspended)
-            throw new DomainException("Cannot activate a suspended broker");
+        if (Status == CustomerStatus.Suspended)
+            throw new DomainException("Cannot activate a suspended customer");
 
-        Status = BrokerStatus.Active;
-        AddDomainEvent(new BrokerActivated(Id));
+        Status = CustomerStatus.Active;
+        AddDomainEvent(new CustomerActivated(Id));
     }
 
     // Factory method
-    public static Broker Create(string name, string licenseNumber)
+    public static Customer Create(string name, string email)
     {
         // Validation
         if (string.IsNullOrEmpty(name))
             throw new ArgumentException("Name is required");
 
-        var broker = new Broker
+        var customer = new Customer
         {
             Id = Guid.NewGuid(),
             Name = name,
-            LicenseNumber = licenseNumber,
-            Status = BrokerStatus.Active
+            Email = email,
+            Status = CustomerStatus.Active
         };
 
-        broker.AddDomainEvent(new BrokerCreated(broker.Id, broker.Name));
-        return broker;
+        customer.AddDomainEvent(new CustomerCreated(customer.Id, customer.Name));
+        return customer;
     }
 }
 ```
@@ -116,7 +119,7 @@ public class Broker
 ### Application Layer
 
 **Contains:**
-- Use Cases / Application Services (CreateBrokerUseCase, GetBrokerQuery)
+- Use Cases / Application Services (CreateCustomerUseCase, GetCustomerQuery)
 - Commands and Queries (CQRS pattern)
 - DTOs / Request/Response Models
 - Application Interfaces (IEmailService, INotificationService)
@@ -130,32 +133,32 @@ public class Broker
 
 **Example Use Case:**
 ```csharp
-public class CreateBrokerUseCase
+public class CreateCustomerUseCase
 {
-    private readonly IBrokerRepository _repository;
+    private readonly ICustomerRepository _repository;
     private readonly IAuthorizationService _authz;
     private readonly ITimelineService _timeline;
 
-    public async Task<BrokerDto> Execute(CreateBrokerCommand command, User user)
+    public async Task<CustomerDto> Execute(CreateCustomerCommand command, User user)
     {
         // Authorization check
-        await _authz.CheckPermission(user, "CreateBroker");
+        await _authz.CheckPermission(user, "CreateCustomer");
 
         // Create domain entity
-        var broker = Broker.Create(
+        var customer = Customer.Create(
             command.Name,
-            command.LicenseNumber
+            command.Email
         );
 
         // Persist
-        await _repository.Add(broker);
+        await _repository.Add(customer);
         await _repository.SaveChanges();
 
         // Timeline event
-        await _timeline.LogEvent(new BrokerCreatedEvent(broker.Id, user.Id));
+        await _timeline.LogEvent(new CustomerCreatedEvent(customer.Id, user.Id));
 
         // Return DTO
-        return MapToDto(broker);
+        return MapToDto(customer);
     }
 }
 ```
@@ -171,20 +174,20 @@ public class CreateBrokerUseCase
 
 **Example Repository:**
 ```csharp
-public class BrokerRepository : IBrokerRepository
+public class CustomerRepository : ICustomerRepository
 {
-    private readonly NebulaDbContext _context;
+    private readonly AppDbContext _context;
 
-    public async Task<Broker> GetById(Guid id)
+    public async Task<Customer> GetById(Guid id)
     {
-        return await _context.Brokers
-            .Include(b => b.Contacts)
-            .FirstOrDefaultAsync(b => b.Id == id);
+        return await _context.Customers
+            .Include(c => c.Orders)
+            .FirstOrDefaultAsync(c => c.Id == id);
     }
 
-    public async Task Add(Broker broker)
+    public async Task Add(Customer customer)
     {
-        await _context.Brokers.AddAsync(broker);
+        await _context.Customers.AddAsync(customer);
     }
 
     public async Task SaveChanges()
@@ -206,19 +209,19 @@ public class BrokerRepository : IBrokerRepository
 **Example Controller:**
 ```csharp
 [ApiController]
-[Route("api/brokers")]
+[Route("api/customers")]
 [Authorize]
-public class BrokersController : ControllerBase
+public class CustomersController : ControllerBase
 {
-    private readonly CreateBrokerUseCase _createBroker;
+    private readonly CreateCustomerUseCase _createCustomer;
 
     [HttpPost]
-    [ProducesResponseType(typeof(BrokerResponse), 201)]
+    [ProducesResponseType(typeof(CustomerResponse), 201)]
     [ProducesResponseType(typeof(ErrorResponse), 400)]
-    public async Task<IActionResult> Create([FromBody] CreateBrokerRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateCustomerRequest request)
     {
         var command = MapToCommand(request);
-        var result = await _createBroker.Execute(command, User);
+        var result = await _createCustomer.Execute(command, User);
 
         return CreatedAtAction(
             nameof(GetById),
@@ -239,9 +242,9 @@ public class BrokersController : ControllerBase
 
 **Bad Example:**
 ```csharp
-public class BrokerService
+public class CustomerService
 {
-    public void CreateBroker() { /* creates broker */ }
+    public void CreateCustomer() { /* creates customer */ }
     public void SendEmail() { /* sends email */ }
     public void LogActivity() { /* logs to database */ }
     public void ValidateData() { /* validates */ }
@@ -251,14 +254,14 @@ public class BrokerService
 
 **Good Example:**
 ```csharp
-public class BrokerService
+public class CustomerService
 {
-    private readonly IBrokerRepository _repository;
+    private readonly ICustomerRepository _repository;
     private readonly IEmailService _email;
     private readonly ITimelineService _timeline;
-    private readonly IValidator<Broker> _validator;
+    private readonly IValidator<Customer> _validator;
 
-    public void CreateBroker()
+    public void CreateCustomer()
     {
         // Orchestrates, delegates to specialized services
     }
@@ -271,22 +274,22 @@ public class BrokerService
 
 **Use Strategy Pattern for Varying Behavior:**
 ```csharp
-public interface IQuoteCalculator
+public interface IShippingCalculator
 {
-    decimal Calculate(Submission submission);
+    decimal Calculate(Order order);
 }
 
-public class RestaurantQuoteCalculator : IQuoteCalculator
+public class StandardShippingCalculator : IShippingCalculator
 {
-    public decimal Calculate(Submission submission) { /* restaurant logic */ }
+    public decimal Calculate(Order order) { /* standard shipping logic */ }
 }
 
-public class RetailQuoteCalculator : IQuoteCalculator
+public class ExpressShippingCalculator : IShippingCalculator
 {
-    public decimal Calculate(Submission submission) { /* retail logic */ }
+    public decimal Calculate(Order order) { /* express shipping logic */ }
 }
 
-// Add new calculators without modifying existing code
+// Add new shipping strategies without modifying existing code
 ```
 
 ### Liskov Substitution Principle (LSP)
@@ -327,37 +330,37 @@ public class Square : IShape { }
 
 **Bad Example:**
 ```csharp
-public interface IBrokerRepository
+public interface ICustomerRepository
 {
-    Task<Broker> GetById(Guid id);
-    Task Add(Broker broker);
-    Task Update(Broker broker);
+    Task<Customer> GetById(Guid id);
+    Task Add(Customer customer);
+    Task Update(Customer customer);
     Task Delete(Guid id);
-    Task<List<Broker>> Search(string term);
-    Task<BrokerStatistics> GetStatistics(Guid id);
-    Task<List<Submission>> GetSubmissions(Guid id);
+    Task<List<Customer>> Search(string term);
+    Task<CustomerStatistics> GetStatistics(Guid id);
+    Task<List<Order>> GetOrders(Guid id);
 }
 // Too many responsibilities!
 ```
 
 **Good Example:**
 ```csharp
-public interface IBrokerRepository
+public interface ICustomerRepository
 {
-    Task<Broker> GetById(Guid id);
-    Task Add(Broker broker);
+    Task<Customer> GetById(Guid id);
+    Task Add(Customer customer);
     Task SaveChanges();
 }
 
-public interface IBrokerQueryService
+public interface ICustomerQueryService
 {
-    Task<List<Broker>> Search(string term);
-    Task<BrokerStatistics> GetStatistics(Guid id);
+    Task<List<Customer>> Search(string term);
+    Task<CustomerStatistics> GetStatistics(Guid id);
 }
 
-public interface IBrokerSubmissionsService
+public interface ICustomerOrdersService
 {
-    Task<List<Submission>> GetSubmissions(Guid id);
+    Task<List<Order>> GetOrders(Guid id);
 }
 ```
 
@@ -367,31 +370,31 @@ public interface IBrokerSubmissionsService
 
 **Bad Example:**
 ```csharp
-public class BrokerService
+public class CustomerService
 {
-    private SqlBrokerRepository _repository; // Concrete dependency!
+    private SqlCustomerRepository _repository; // Concrete dependency!
 
-    public BrokerService()
+    public CustomerService()
     {
-        _repository = new SqlBrokerRepository(); // Tightly coupled!
+        _repository = new SqlCustomerRepository(); // Tightly coupled!
     }
 }
 ```
 
 **Good Example:**
 ```csharp
-public class BrokerService
+public class CustomerService
 {
-    private readonly IBrokerRepository _repository; // Abstract dependency
+    private readonly ICustomerRepository _repository; // Abstract dependency
 
-    public BrokerService(IBrokerRepository repository) // Injected
+    public CustomerService(ICustomerRepository repository) // Injected
     {
         _repository = repository;
     }
 }
 
 // Configured in Startup.cs:
-services.AddScoped<IBrokerRepository, SqlBrokerRepository>();
+services.AddScoped<ICustomerRepository, SqlCustomerRepository>();
 ```
 
 ---
@@ -402,10 +405,10 @@ services.AddScoped<IBrokerRepository, SqlBrokerRepository>();
 
 **Definition:** Explicit boundaries within which a domain model is defined.
 
-**Nebula Bounded Contexts:**
-- **Broker Management Context:** Broker, Contact, BrokerHierarchy
-- **Submission Context:** Submission, Quote, Underwriting
-- **Renewal Context:** Renewal, RenewalTerms
+**Example Bounded Contexts:**
+- **Customer Management Context:** Customer, Address, ContactInfo
+- **Order Processing Context:** Order, OrderItem, Payment
+- **Inventory Context:** Product, Stock, Warehouse
 - **Identity Context:** User, Role, Permission
 
 **Context Mapping:**
@@ -418,28 +421,28 @@ services.AddScoped<IBrokerRepository, SqlBrokerRepository>();
 **Definition:** Cluster of domain objects treated as a single unit.
 
 **Rules:**
-- One entity is the Aggregate Root (e.g., Broker)
+- One entity is the Aggregate Root (e.g., Order)
 - External objects can only reference the root
 - Aggregates are transactional boundaries
 
 **Example:**
 ```csharp
-public class Broker // Aggregate Root
+public class Order // Aggregate Root
 {
-    private readonly List<Contact> _contacts; // Part of aggregate
-    public IReadOnlyList<Contact> Contacts => _contacts.AsReadOnly();
+    private readonly List<OrderItem> _items; // Part of aggregate
+    public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
 
-    public void AddContact(Contact contact)
+    public void AddItem(OrderItem item)
     {
         // Business rule enforced at aggregate level
-        if (_contacts.Count >= 10)
-            throw new DomainException("Cannot exceed 10 contacts per broker");
+        if (_items.Count >= 50)
+            throw new DomainException("Cannot exceed 50 items per order");
 
-        _contacts.Add(contact);
+        _items.Add(item);
     }
 }
 
-// Contact is only accessible through Broker
+// OrderItem is only accessible through Order
 ```
 
 ### Value Objects
@@ -489,22 +492,22 @@ public class Money : ValueObject
 
 **Example:**
 ```csharp
-public class BrokerCreated : DomainEvent
+public class CustomerCreated : DomainEvent
 {
-    public Guid BrokerId { get; }
-    public string BrokerName { get; }
+    public Guid CustomerId { get; }
+    public string CustomerName { get; }
     public DateTime OccurredAt { get; }
 
-    public BrokerCreated(Guid brokerId, string brokerName)
+    public CustomerCreated(Guid customerId, string customerName)
     {
-        BrokerId = brokerId;
-        BrokerName = brokerName;
+        CustomerId = customerId;
+        CustomerName = customerName;
         OccurredAt = DateTime.UtcNow;
     }
 }
 
 // Entity raises events
-public class Broker
+public class Customer
 {
     private List<DomainEvent> _domainEvents = new();
     public IReadOnlyList<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
@@ -555,15 +558,15 @@ Infrastructure Layer
 **Configure in Program.cs / Startup.cs:**
 ```csharp
 // Domain Services
-services.AddScoped<IBrokerDomainService, BrokerDomainService>();
+services.AddScoped<ICustomerDomainService, CustomerDomainService>();
 
 // Application Services
-services.AddScoped<CreateBrokerUseCase>();
-services.AddScoped<GetBrokerQuery>();
+services.AddScoped<CreateCustomerUseCase>();
+services.AddScoped<GetCustomerQuery>();
 
 // Infrastructure
-services.AddScoped<IBrokerRepository, BrokerRepository>();
-services.AddDbContext<NebulaDbContext>(options =>
+services.AddScoped<ICustomerRepository, CustomerRepository>();
+services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 // External Services
@@ -577,24 +580,24 @@ services.AddScoped<ITimelineService, TimelineService>();
 
 ### RESTful Conventions
 
-- Use nouns for resources (`/api/brokers`, not `/api/getBrokers`)
+- Use nouns for resources (`/api/customers`, not `/api/getCustomers`)
 - Use HTTP verbs correctly (GET, POST, PUT, DELETE)
 - Return appropriate status codes (200, 201, 400, 404, 500)
-- Use plural nouns (`/brokers`, not `/broker`)
-- Use hierarchical URLs for relationships (`/brokers/{id}/contacts`)
+- Use plural nouns (`/customers`, not `/customer`)
+- Use hierarchical URLs for relationships (`/customers/{id}/orders`)
 
 ### Versioning
 
 **URL Versioning (Recommended):**
 ```
-/api/v1/brokers
-/api/v2/brokers
+/api/v1/customers
+/api/v2/customers
 ```
 
 **Header Versioning (Alternative):**
 ```
-GET /api/brokers
-Accept: application/vnd.nebula.v1+json
+GET /api/customers
+Accept: application/vnd.yourapp.v1+json
 ```
 
 ### Error Handling
@@ -665,7 +668,7 @@ See `agents/architect/references/data-modeling-guide.md` for comprehensive data 
 
 **Multiple layers of security:**
 1. **Network:** HTTPS, firewall
-2. **Authentication:** Keycloak (OIDC/JWT)
+2. **Authentication:** OIDC Provider (JWT)
 3. **Authorization:** Casbin (ABAC)
 4. **Application:** Input validation, SQL injection prevention
 5. **Data:** Encryption at rest, TDE
@@ -712,30 +715,30 @@ See `agents/architect/references/authorization-patterns.md` for comprehensive au
 **Avoid N+1 Queries:**
 ```csharp
 // Bad: N+1
-var brokers = await _context.Brokers.ToListAsync();
-foreach (var broker in brokers)
+var customers = await _context.Customers.ToListAsync();
+foreach (var customer in customers)
 {
-    var contacts = await _context.Contacts.Where(c => c.BrokerId == broker.Id).ToListAsync();
+    var orders = await _context.Orders.Where(o => o.CustomerId == customer.Id).ToListAsync();
 }
 
 // Good: Eager loading
-var brokers = await _context.Brokers
-    .Include(b => b.Contacts)
+var customers = await _context.Customers
+    .Include(c => c.Orders)
     .ToListAsync();
 ```
 
 **Use Projections:**
 ```csharp
 // Bad: Load entire entity
-var brokers = await _context.Brokers.ToListAsync();
+var customers = await _context.Customers.ToListAsync();
 
 // Good: Project to DTO
-var brokers = await _context.Brokers
-    .Select(b => new BrokerListDto
+var customers = await _context.Customers
+    .Select(c => new CustomerListDto
     {
-        Id = b.Id,
-        Name = b.Name,
-        Status = b.Status
+        Id = c.Id,
+        Name = c.Name,
+        Status = c.Status
     })
     .ToListAsync();
 ```
@@ -748,9 +751,9 @@ var brokers = await _context.Brokers
 3. **CDN:** Static assets
 
 **What to Cache:**
-- Reference data (states, programs)
-- Infrequently changing data (broker details)
-- Expensive calculations (broker statistics)
+- Reference data (regions, categories)
+- Infrequently changing data (customer details)
+- Expensive calculations (customer statistics)
 
 **What NOT to Cache:**
 - Sensitive data
@@ -761,9 +764,9 @@ var brokers = await _context.Brokers
 
 **Always paginate list endpoints:**
 ```csharp
-public async Task<PagedResult<BrokerDto>> GetBrokers(int page, int pageSize)
+public async Task<PagedResult<CustomerDto>> GetCustomers(int page, int pageSize)
 {
-    var query = _context.Brokers.AsQueryable();
+    var query = _context.Customers.AsQueryable();
 
     var totalCount = await query.CountAsync();
     var items = await query
@@ -771,7 +774,7 @@ public async Task<PagedResult<BrokerDto>> GetBrokers(int page, int pageSize)
         .Take(pageSize)
         .ToListAsync();
 
-    return new PagedResult<BrokerDto>
+    return new PagedResult<CustomerDto>
     {
         Items = items,
         Page = page,
@@ -799,8 +802,8 @@ public async Task<PagedResult<BrokerDto>> GetBrokers(int page, int pageSize)
 
 ```csharp
 _logger.LogInformation(
-    "Broker {BrokerId} created by user {UserId}",
-    brokerId,
+    "Customer {CustomerId} created by user {UserId}",
+    customerId,
     userId
 );
 
@@ -808,8 +811,8 @@ _logger.LogInformation(
 // {
 //   "timestamp": "2024-01-15T10:30:00Z",
 //   "level": "Information",
-//   "message": "Broker 123... created by user 456...",
-//   "brokerId": "123e4567-e89b-12d3-a456-426614174000",
+//   "message": "Customer 123... created by user 456...",
+//   "customerId": "123e4567-e89b-12d3-a456-426614174000",
 //   "userId": "987e6543-e21b-43a1-b789-123456789abc"
 // }
 ```
@@ -844,11 +847,11 @@ public class CorrelationIdMiddleware
 
 **Anti-Pattern:** One class does everything
 ```csharp
-public class BrokerManager
+public class CustomerManager
 {
-    public void CreateBroker() { }
-    public void UpdateBroker() { }
-    public void DeleteBroker() { }
+    public void CreateCustomer() { }
+    public void UpdateCustomer() { }
+    public void DeleteCustomer() { }
     public void SendEmail() { }
     public void GenerateReport() { }
     public void CalculateStatistics() { }
@@ -862,7 +865,7 @@ public class BrokerManager
 
 **Anti-Pattern:** Entities with no behavior, all logic in services
 ```csharp
-public class Broker
+public class Customer
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
@@ -870,25 +873,25 @@ public class Broker
     // Just properties, no behavior
 }
 
-public class BrokerService
+public class CustomerService
 {
-    public void ActivateBroker(Broker broker)
+    public void ActivateCustomer(Customer customer)
     {
-        broker.Status = "Active"; // Logic outside entity
+        customer.Status = "Active"; // Logic outside entity
     }
 }
 ```
 
 **Solution:** Move behavior into entities
 ```csharp
-public class Broker
+public class Customer
 {
     public void Activate()
     {
-        if (Status == BrokerStatus.Suspended)
-            throw new DomainException("Cannot activate suspended broker");
+        if (Status == CustomerStatus.Suspended)
+            throw new DomainException("Cannot activate suspended customer");
 
-        Status = BrokerStatus.Active;
+        Status = CustomerStatus.Active;
     }
 }
 ```
@@ -897,17 +900,17 @@ public class Broker
 
 **Anti-Pattern:** Implementation details leak through interfaces
 ```csharp
-public interface IBrokerRepository
+public interface ICustomerRepository
 {
-    Task<IQueryable<Broker>> GetQueryable(); // Leaks EF Core IQueryable!
+    Task<IQueryable<Customer>> GetQueryable(); // Leaks EF Core IQueryable!
 }
 ```
 
 **Solution:** Hide implementation details
 ```csharp
-public interface IBrokerRepository
+public interface ICustomerRepository
 {
-    Task<List<Broker>> Search(BrokerSearchCriteria criteria);
+    Task<List<Customer>> Search(CustomerSearchCriteria criteria);
 }
 ```
 
@@ -915,7 +918,7 @@ public interface IBrokerRepository
 
 **Anti-Pattern:**
 ```csharp
-if (broker.Status == "Active") // Magic string
+if (customer.Status == "Active") // Magic string
 {
     // ...
 }
@@ -923,14 +926,14 @@ if (broker.Status == "Active") // Magic string
 
 **Solution:** Use enums or constants
 ```csharp
-public enum BrokerStatus
+public enum CustomerStatus
 {
     Active,
     Inactive,
     Suspended
 }
 
-if (broker.Status == BrokerStatus.Active)
+if (customer.Status == CustomerStatus.Active)
 {
     // ...
 }
@@ -950,4 +953,5 @@ if (broker.Status == BrokerStatus.Active)
 
 ## Version History
 
+**Version 2.0** - 2026-02-03 - Replaced all solution-specific entities with standard generic set (customers/orders). Replaced Nebula bounded contexts with generic examples. See `BOUNDARY-POLICY.md` → "Standard Example Entities" for the convention.
 **Version 1.0** - 2026-01-26 - Initial architecture best practices guide

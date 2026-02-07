@@ -17,24 +17,24 @@ Phase A work is documented in `planning-mds/INCEPTION.md` sections 3.1 through 3
 **Required Elements:**
 
 ✅ **Vision Statement**
-- Clear, concise statement of what Nebula achieves
+- Clear, concise statement of what your product achieves
 - Focuses on business outcome, not technical capabilities
 - 2-3 sentences maximum
-- Example: "Nebula enables surplus lines carriers to manage broker relationships, submissions, and renewals in a single platform, replacing spreadsheets and email-based workflows with structured data and automated reminders."
+- Example: "Our platform helps operations teams manage customers and orders in one place, replacing spreadsheets and email workflows with structured data and automated reminders."
 
 ✅ **Success Criteria**
 - 3-5 measurable outcomes that define success
 - Examples:
-  - Reduce submission processing time by 50%
-  - Increase quote-to-bind ratio from 40% to 60%
-  - Eliminate lost submissions (100% tracked in system)
-  - Improve broker satisfaction score from 3.5 to 4.5/5
+  - Reduce order processing time by 50%
+  - Increase order completion rate from 70% to 90%
+  - Eliminate lost orders (100% tracked in system)
+  - Improve customer satisfaction score from 3.5 to 4.5/5
 
 ✅ **Explicit Non-Goals**
 - List of 5-10 things explicitly excluded from scope
 - Each with brief reason (deferred to Phase 1, not needed, etc.)
 - Examples:
-  - ❌ External broker/MGA portal (Phase 1)
+  - ❌ External customer self-service portal (Phase 1)
   - ❌ Document versioning (Phase 1)
   - ❌ Advanced analytics dashboards (Future)
   - ❌ Mobile app (Future)
@@ -48,7 +48,7 @@ Phase A work is documented in `planning-mds/INCEPTION.md` sections 3.1 through 3
 For each persona, define:
 
 ✅ **Persona Header**
-- Name (e.g., "Sarah - Distribution Manager")
+- Name (e.g., "Sarah - Sales Operations Manager")
 - Role/Title
 - Priority (Primary | Secondary | Future)
 
@@ -67,10 +67,10 @@ For each persona, define:
 ✅ **Jobs-to-be-Done**
 - 3-5 jobs in format: "When [situation], I want to [action], so I can [outcome]"
 
-**Minimum Personas for Nebula MVP:**
-1. Distribution & Marketing Manager (Primary)
-2. Underwriter (Primary)
-3. Relationship Manager (Secondary)
+**Minimum Personas for Generic MVP:**
+1. Sales Operations Manager (Primary)
+2. Order Operations Specialist (Primary)
+3. Customer Success Manager (Secondary)
 
 **Optional Personas:**
 4. Program Manager
@@ -102,11 +102,11 @@ For each epic:
 - In scope: High-level capabilities (3-5 bullet points)
 - Out of scope: Explicit exclusions with reasons
 
-**Minimum Epics for Nebula MVP:**
-1. E1: Broker & MGA Relationship Management
-2. E2: Account 360 & Activity Timeline
-3. E3: Submission Intake Workflow
-4. E4: Renewal Pipeline
+**Minimum Epics for Generic MVP:**
+1. E1: Customer Relationship Management
+2. E2: Customer 360 & Activity Timeline
+3. E3: Order Intake Workflow
+4. E4: Order Follow-up Pipeline
 5. E5: Task Center + Reminders (optional MVP)
 
 ---
@@ -117,13 +117,13 @@ For each epic:
 
 For MVP, define at least one complete vertical slice with all CRUD operations.
 
-**Minimum Requirement: Broker Vertical Slice**
-- S1: Create broker with basic information ✅
-- S2: View broker list with search/filtering ✅
-- S3: View broker 360 detail screen ✅
-- S4: Update broker information ✅
-- S5: Delete broker (soft delete) ✅
-- S6: View broker timeline events ✅
+**Minimum Requirement: Customer Vertical Slice**
+- S1: Create customer with basic information ✅
+- S2: View customer list with search/filtering ✅
+- S3: View customer 360 detail screen ✅
+- S4: Update customer information ✅
+- S5: Delete customer (soft delete) ✅
+- S6: View customer timeline events ✅
 
 **Each Story Must Include:**
 
@@ -184,11 +184,11 @@ For each screen:
 - Entry points (how users get here)
 - Exit points (where they go from here)
 
-**Minimum Screens for Nebula MVP:**
+**Minimum Screens for Generic MVP:**
 1. Navigation Shell (top nav, side nav) ✅
-2. Broker List (searchable table) ✅
-3. Broker 360 (detail view with timeline) ✅
-4. Create/Edit Broker Form ✅
+2. Customer List (searchable table) ✅
+3. Customer 360 (detail view with timeline) ✅
+4. Create/Edit Customer Form ✅
 5. Dashboard (optional MVP)
 
 ---
@@ -274,12 +274,12 @@ Before handing off to Architect (Phase B), verify:
    - Confirm MVP vs Phase 1 prioritization
 
 4. **Story Deep Dive** (20 min)
-   - Walk through the complete vertical slice (Broker CRUD)
+   - Walk through the complete vertical slice (Customer CRUD)
    - Highlight audit trail and permission requirements
    - Clarify any complex acceptance criteria
 
 5. **Screen Specifications** (10 min)
-   - Review key screens (Broker List, Broker 360)
+   - Review key screens (Customer List, Customer 360)
    - Discuss navigation and user workflows
 
 6. **Q&A** (15 min)
@@ -291,7 +291,7 @@ Before handing off to Architect (Phase B), verify:
 Provide Architect with:
 - ✅ `planning-mds/INCEPTION.md` (sections 3.1-3.5 complete)
 - ✅ Link to all templates used (story, persona, epic, screen)
-- ✅ Domain glossary (`agents/product-manager/references/insurance-domain-glossary.md`)
+- ✅ Domain glossary (`planning-mds/domain/<domain>-glossary.md`)
 - ✅ Contact info for follow-up questions
 
 ---

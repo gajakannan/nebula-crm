@@ -1,6 +1,13 @@
 # Data Modeling Guide
 
-Comprehensive guide for designing database schemas with Entity Framework Core 10, PostgreSQL, and Clean Architecture principles for the Nebula insurance CRM.
+> **Examples in this guide use `customers` and `orders` as illustrative entities.
+> These are not prescriptive — substitute your own domain entities when applying
+> these patterns. See `BOUNDARY-POLICY.md` → "Standard Example Entities" for
+> the full convention and field mapping.
+
+---
+
+Comprehensive guide for designing database schemas with Entity Framework Core 10, PostgreSQL, and Clean Architecture principles.
 
 ---
 
@@ -52,43 +59,43 @@ Soft delete marks records as deleted without removing them from the database, pr
 
 ```csharp
 // Entity with soft delete
-public class Broker : BaseEntity
+public class Customer : BaseEntity
 {
     public string Name { get; set; }
-    public string LicenseNumber { get; set; }
+    public string TaxId { get; set; }
     // ... other fields
 }
 
 // EF Core configuration
-public class BrokerConfiguration : IEntityTypeConfiguration<Broker>
+public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 {
-    public void Configure(EntityTypeBuilder<Broker> builder)
+    public void Configure(EntityTypeBuilder<Customer> builder)
     {
         // Global query filter - automatically excludes soft-deleted records
-        builder.HasQueryFilter(b => b.DeletedAt == null);
+        builder.HasQueryFilter(c => c.DeletedAt == null);
 
         // Partial index for active records only (PostgreSQL)
-        builder.HasIndex(b => b.DeletedAt)
+        builder.HasIndex(c => c.DeletedAt)
             .HasFilter("DeletedAt IS NULL")
-            .HasDatabaseName("IX_Brokers_ActiveOnly");
+            .HasDatabaseName("IX_Customers_ActiveOnly");
     }
 }
 
 // Repository pattern
-public class BrokerRepository
+public class CustomerRepository
 {
     private readonly ApplicationDbContext _context;
 
-    // Get active brokers (soft-deleted automatically excluded)
-    public async Task<List<Broker>> GetAllAsync()
+    // Get active customers (soft-deleted automatically excluded)
+    public async Task<List<Customer>> GetAllAsync()
     {
-        return await _context.Brokers.ToListAsync();
+        return await _context.Customers.ToListAsync();
     }
 
-    // Include soft-deleted brokers (bypass global filter)
-    public async Task<List<Broker>> GetAllIncludingDeletedAsync()
+    // Include soft-deleted customers (bypass global filter)
+    public async Task<List<Customer>> GetAllIncludingDeletedAsync()
     {
-        return await _context.Brokers
+        return await _context.Customers
             .IgnoreQueryFilters()
             .ToListAsync();
     }
@@ -96,18 +103,18 @@ public class BrokerRepository
     // Soft delete
     public async Task DeleteAsync(Guid id)
     {
-        var broker = await _context.Brokers.FindAsync(id);
-        broker.SoftDelete();
+        var customer = await _context.Customers.FindAsync(id);
+        customer.SoftDelete();
         await _context.SaveChangesAsync();
     }
 
     // Restore soft-deleted
     public async Task RestoreAsync(Guid id)
     {
-        var broker = await _context.Brokers
+        var customer = await _context.Customers
             .IgnoreQueryFilters()
-            .FirstAsync(b => b.Id == id);
-        broker.Restore();
+            .FirstAsync(c => c.Id == id);
+        customer.Restore();
         await _context.SaveChangesAsync();
     }
 }
@@ -115,7 +122,7 @@ public class BrokerRepository
 
 **Considerations:**
 - Soft-deleted records still count against database size
-- Unique constraints must account for soft-deleted records (e.g., license number can be reused after soft delete)
+- Unique constraints must account for soft-deleted records (e.g., tax ID can be reused after soft delete)
 - Consider hard delete after retention period (e.g., 7 years)
 
 ---
@@ -216,65 +223,63 @@ public class Address
 }
 
 // Entity using value object
-public class Broker : BaseEntity
+public class Customer : BaseEntity
 {
     public string Name { get; set; }
-    public Address PhysicalAddress { get; set; } // Owned entity
-    public Address MailingAddress { get; set; }
+    public Address BillingAddress { get; set; } // Owned entity
+    public Address ShippingAddress { get; set; }
 }
 
 // EF Core configuration
-public class BrokerConfiguration : IEntityTypeConfiguration<Broker>
+public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 {
-    public void Configure(EntityTypeBuilder<Broker> builder)
+    public void Configure(EntityTypeBuilder<Customer> builder)
     {
-        builder.OwnsOne(b => b.PhysicalAddress, address =>
+        builder.OwnsOne(c => c.BillingAddress, address =>
         {
-            address.Property(a => a.Street).HasColumnName("PhysicalStreet");
-            address.Property(a => a.City).HasColumnName("PhysicalCity");
-            address.Property(a => a.State).HasColumnName("PhysicalState");
-            address.Property(a => a.ZipCode).HasColumnName("PhysicalZipCode");
+            address.Property(a => a.Street).HasColumnName("BillingStreet");
+            address.Property(a => a.City).HasColumnName("BillingCity");
+            address.Property(a => a.State).HasColumnName("BillingState");
+            address.Property(a => a.ZipCode).HasColumnName("BillingZipCode");
         });
 
-        builder.OwnsOne(b => b.MailingAddress, address =>
+        builder.OwnsOne(c => c.ShippingAddress, address =>
         {
-            address.Property(a => a.Street).HasColumnName("MailingStreet");
-            address.Property(a => a.City).HasColumnName("MailingCity");
-            address.Property(a => a.State).HasColumnName("MailingState");
-            address.Property(a => a.ZipCode).HasColumnName("MailingZipCode");
+            address.Property(a => a.Street).HasColumnName("ShippingStreet");
+            address.Property(a => a.City).HasColumnName("ShippingCity");
+            address.Property(a => a.State).HasColumnName("ShippingState");
+            address.Property(a => a.ZipCode).HasColumnName("ShippingZipCode");
         });
     }
 }
 ```
 
-**Result:** All address fields stored in Brokers table (not separate table), value object enforces immutability and consistency.
+**Result:** All address fields stored in Customers table (not separate table), value object enforces immutability and consistency.
 
 ---
 
 ### 1.5 Enumerations (String vs Int)
 
-**String Enums (Recommended for Insurance CRM):**
+**String Enums (Recommended):**
 
 ```csharp
-public class SubmissionStatus
+public class OrderStatus
 {
-    public const string Received = nameof(Received);
-    public const string Triaging = nameof(Triaging);
-    public const string ReadyForUWReview = nameof(ReadyForUWReview);
-    public const string InReview = nameof(InReview);
-    public const string Quoted = nameof(Quoted);
-    public const string Bound = nameof(Bound);
-    public const string Declined = nameof(Declined);
-    public const string Withdrawn = nameof(Withdrawn);
+    public const string Pending = nameof(Pending);
+    public const string Processing = nameof(Processing);
+    public const string Shipped = nameof(Shipped);
+    public const string Delivered = nameof(Delivered);
+    public const string Cancelled = nameof(Cancelled);
+    public const string Returned = nameof(Returned);
 }
 
-public class Submission : BaseEntity
+public class Order : BaseEntity
 {
-    public string Status { get; set; } = SubmissionStatus.Received;
+    public string Status { get; set; } = OrderStatus.Pending;
 }
 
 // EF Core configuration
-builder.Property(s => s.Status)
+builder.Property(o => o.Status)
     .IsRequired()
     .HasMaxLength(50);
 ```
@@ -282,26 +287,24 @@ builder.Property(s => s.Status)
 **Int Enums with Value Converter:**
 
 ```csharp
-public enum SubmissionStatusEnum
+public enum OrderStatusEnum
 {
-    Received = 1,
-    Triaging = 2,
-    ReadyForUWReview = 3,
-    InReview = 4,
-    Quoted = 5,
-    Bound = 6,
-    Declined = 7,
-    Withdrawn = 8
+    Pending = 1,
+    Processing = 2,
+    Shipped = 3,
+    Delivered = 4,
+    Cancelled = 5,
+    Returned = 6
 }
 
 // EF Core configuration - store as string in database
-builder.Property(s => s.Status)
+builder.Property(o => o.Status)
     .HasConversion<string>()
     .IsRequired()
     .HasMaxLength(50);
 ```
 
-**Recommendation:** Use string enums for insurance CRM (self-documenting in database, easier to query, no magic numbers).
+**Recommendation:** Use string enums (self-documenting in database, easier to query, no magic numbers).
 
 ---
 
@@ -309,45 +312,45 @@ builder.Property(s => s.Status)
 
 ### 2.1 One-to-Many Relationships
 
-**Example: Broker → Contacts**
+**Example: Customer → Addresses**
 
 ```csharp
-public class Broker : BaseEntity
+public class Customer : BaseEntity
 {
     public string Name { get; set; }
 
-    // Navigation property (one broker has many contacts)
-    public ICollection<Contact> Contacts { get; set; } = new List<Contact>();
+    // Navigation property (one customer has many addresses)
+    public ICollection<AddressEntity> Addresses { get; set; } = new List<AddressEntity>();
 }
 
-public class Contact : BaseEntity
+public class AddressEntity : BaseEntity
 {
-    public string FullName { get; set; }
-    public string Email { get; set; }
+    public string Street { get; set; }
+    public string City { get; set; }
 
     // Foreign key
-    public Guid BrokerId { get; set; }
+    public Guid CustomerId { get; set; }
 
-    // Navigation property (many contacts belong to one broker)
-    public Broker Broker { get; set; }
+    // Navigation property (many addresses belong to one customer)
+    public Customer Customer { get; set; }
 }
 
 // EF Core configuration
-public class ContactConfiguration : IEntityTypeConfiguration<Contact>
+public class AddressEntityConfiguration : IEntityTypeConfiguration<AddressEntity>
 {
-    public void Configure(EntityTypeBuilder<Contact> builder)
+    public void Configure(EntityTypeBuilder<AddressEntity> builder)
     {
-        builder.HasOne(c => c.Broker)
-            .WithMany(b => b.Contacts)
-            .HasForeignKey(c => c.BrokerId)
-            .OnDelete(DeleteBehavior.Cascade); // When broker deleted, delete contacts
+        builder.HasOne(a => a.Customer)
+            .WithMany(c => c.Addresses)
+            .HasForeignKey(a => a.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade); // When customer deleted, delete addresses
     }
 }
 ```
 
 **Cascade Behaviors:**
 - `Cascade`: Delete children when parent deleted (use for owned relationships)
-- `Restrict`: Prevent parent delete if children exist (use for critical relationships like Broker → Submissions)
+- `Restrict`: Prevent parent delete if children exist (use for critical relationships like Customer → Orders)
 - `SetNull`: Set FK to null when parent deleted (use for optional relationships)
 
 ---
@@ -356,50 +359,50 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
 
 **Modern Approach (EF Core 5+):** Use explicit join entity for metadata.
 
-**Example: Broker → Programs (many brokers can sell many programs)**
+**Example: Product → Categories (many products in many categories)**
 
 ```csharp
-public class Broker : BaseEntity
+public class Product : BaseEntity
 {
     public string Name { get; set; }
-    public ICollection<BrokerProgram> BrokerPrograms { get; set; } = new List<BrokerProgram>();
+    public ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
 }
 
-public class Program : BaseEntity
+public class Category : BaseEntity
 {
     public string Name { get; set; }
-    public ICollection<BrokerProgram> BrokerPrograms { get; set; } = new List<BrokerProgram>();
+    public ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
 }
 
 // Explicit join entity with metadata
-public class BrokerProgram : BaseEntity
+public class ProductCategory : BaseEntity
 {
-    public Guid BrokerId { get; set; }
-    public Broker Broker { get; set; }
+    public Guid ProductId { get; set; }
+    public Product Product { get; set; }
 
-    public Guid ProgramId { get; set; }
-    public Program Program { get; set; }
+    public Guid CategoryId { get; set; }
+    public Category Category { get; set; }
 
     // Additional metadata
-    public decimal CommissionRate { get; set; }
+    public int DisplayOrder { get; set; }
+    public bool IsPrimary { get; set; } // Is this the primary category?
     public DateTime AssignedAt { get; set; }
-    public bool IsActive { get; set; }
 }
 
 // EF Core configuration
-public class BrokerProgramConfiguration : IEntityTypeConfiguration<BrokerProgram>
+public class ProductCategoryConfiguration : IEntityTypeConfiguration<ProductCategory>
 {
-    public void Configure(EntityTypeBuilder<BrokerProgram> builder)
+    public void Configure(EntityTypeBuilder<ProductCategory> builder)
     {
-        builder.HasKey(bp => new { bp.BrokerId, bp.ProgramId }); // Composite key
+        builder.HasKey(pc => new { pc.ProductId, pc.CategoryId }); // Composite key
 
-        builder.HasOne(bp => bp.Broker)
-            .WithMany(b => b.BrokerPrograms)
-            .HasForeignKey(bp => bp.BrokerId);
+        builder.HasOne(pc => pc.Product)
+            .WithMany(p => p.ProductCategories)
+            .HasForeignKey(pc => pc.ProductId);
 
-        builder.HasOne(bp => bp.Program)
-            .WithMany(p => p.BrokerPrograms)
-            .HasForeignKey(bp => bp.ProgramId);
+        builder.HasOne(pc => pc.Category)
+            .WithMany(c => c.ProductCategories)
+            .HasForeignKey(pc => pc.CategoryId);
     }
 }
 ```
@@ -408,29 +411,29 @@ public class BrokerProgramConfiguration : IEntityTypeConfiguration<BrokerProgram
 
 ### 2.3 Self-Referencing Relationships
 
-**Example: Broker Hierarchy (MGA → Sub-Broker)**
+**Example: Organization Hierarchy (Parent → Subsidiaries)**
 
 ```csharp
-public class Broker : BaseEntity
+public class Organization : BaseEntity
 {
     public string Name { get; set; }
 
     // Self-referencing foreign key
-    public Guid? ParentBrokerId { get; set; }
+    public Guid? ParentOrganizationId { get; set; }
 
     // Navigation properties
-    public Broker? ParentBroker { get; set; }
-    public ICollection<Broker> SubBrokers { get; set; } = new List<Broker>();
+    public Organization? ParentOrganization { get; set; }
+    public ICollection<Organization> Subsidiaries { get; set; } = new List<Organization>();
 }
 
 // EF Core configuration
-public class BrokerConfiguration : IEntityTypeConfiguration<Broker>
+public class OrganizationConfiguration : IEntityTypeConfiguration<Organization>
 {
-    public void Configure(EntityTypeBuilder<Broker> builder)
+    public void Configure(EntityTypeBuilder<Organization> builder)
     {
-        builder.HasOne(b => b.ParentBroker)
-            .WithMany(b => b.SubBrokers)
-            .HasForeignKey(b => b.ParentBrokerId)
+        builder.HasOne(o => o.ParentOrganization)
+            .WithMany(o => o.Subsidiaries)
+            .HasForeignKey(o => o.ParentOrganizationId)
             .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete of entire tree
     }
 }
@@ -443,11 +446,11 @@ public class BrokerConfiguration : IEntityTypeConfiguration<Broker>
 **Required Relationship (FK cannot be null):**
 
 ```csharp
-public class Submission : BaseEntity
+public class Order : BaseEntity
 {
-    // Required: Every submission must have a broker
-    public Guid BrokerId { get; set; }
-    public Broker Broker { get; set; }
+    // Required: Every order must have a customer
+    public Guid CustomerId { get; set; }
+    public Customer Customer { get; set; }
 }
 
 // EF Core knows it's required (non-nullable Guid)
@@ -456,11 +459,11 @@ public class Submission : BaseEntity
 **Optional Relationship (FK can be null):**
 
 ```csharp
-public class Submission : BaseEntity
+public class Order : BaseEntity
 {
-    // Optional: Submission may not have assigned underwriter yet
-    public Guid? AssignedUnderwriterId { get; set; }
-    public User? AssignedUnderwriter { get; set; }
+    // Optional: Order may not have assigned processor yet
+    public Guid? AssignedProcessorId { get; set; }
+    public User? AssignedProcessor { get; set; }
 }
 
 // EF Core knows it's optional (nullable Guid?)
@@ -473,15 +476,15 @@ public class Submission : BaseEntity
 **Two-Way Navigation (Recommended for most cases):**
 
 ```csharp
-public class Broker : BaseEntity
+public class Customer : BaseEntity
 {
-    public ICollection<Submission> Submissions { get; set; }
+    public ICollection<Order> Orders { get; set; }
 }
 
-public class Submission : BaseEntity
+public class Order : BaseEntity
 {
-    public Guid BrokerId { get; set; }
-    public Broker Broker { get; set; } // Allows submission.Broker.Name
+    public Guid CustomerId { get; set; }
+    public Customer Customer { get; set; } // Allows order.Customer.Name
 }
 ```
 
@@ -505,50 +508,50 @@ public class ActivityTimelineEvent : BaseEntity
 
 ```bash
 # Navigate to Infrastructure project
-cd src/Nebula.Infrastructure
+cd src/YourApp.Infrastructure
 
 # Add migration
-dotnet ef migrations add AddBrokerEntity --startup-project ../Nebula.API
+dotnet ef migrations add AddCustomerEntity --startup-project ../YourApp.API
 
 # Review generated migration in Migrations/ folder
 # Verify Up() and Down() methods
 
 # Apply migration to database
-dotnet ef database update --startup-project ../Nebula.API
+dotnet ef database update --startup-project ../YourApp.API
 ```
 
 **Generated Migration Example:**
 
 ```csharp
-public partial class AddBrokerEntity : Migration
+public partial class AddCustomerEntity : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.CreateTable(
-            name: "Brokers",
+            name: "Customers",
             columns: table => new
             {
                 Id = table.Column<Guid>(nullable: false),
                 Name = table.Column<string>(maxLength: 255, nullable: false),
-                LicenseNumber = table.Column<string>(maxLength: 50, nullable: false),
+                TaxId = table.Column<string>(maxLength: 50, nullable: false),
                 CreatedAt = table.Column<DateTime>(nullable: false),
                 // ... other columns
             },
             constraints: table =>
             {
-                table.PrimaryKey("PK_Brokers", x => x.Id);
+                table.PrimaryKey("PK_Customers", x => x.Id);
             });
 
         migrationBuilder.CreateIndex(
-            name: "IX_Brokers_LicenseNumber",
-            table: "Brokers",
-            column: "LicenseNumber",
+            name: "IX_Customers_TaxId",
+            table: "Customers",
+            column: "TaxId",
             unique: true);
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
     {
-        migrationBuilder.DropTable("Brokers");
+        migrationBuilder.DropTable("Customers");
     }
 }
 ```
@@ -560,15 +563,15 @@ public partial class AddBrokerEntity : Migration
 **Deterministic Seeding (Production Reference Data):**
 
 ```csharp
-public class SeedDataConfiguration : IEntityTypeConfiguration<State>
+public class SeedDataConfiguration : IEntityTypeConfiguration<Region>
 {
-    public void Configure(EntityTypeBuilder<State> builder)
+    public void Configure(EntityTypeBuilder<Region> builder)
     {
-        // Seed all 50 US states with deterministic GUIDs
+        // Seed reference data with deterministic GUIDs
         builder.HasData(
-            new State { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Code = "AL", Name = "Alabama" },
-            new State { Id = Guid.Parse("00000000-0000-0000-0000-000000000002"), Code = "AK", Name = "Alaska" },
-            // ... all 50 states
+            new Region { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Code = "NA", Name = "North America" },
+            new Region { Id = Guid.Parse("00000000-0000-0000-0000-000000000002"), Code = "EU", Name = "Europe" },
+            // ... other regions
         );
     }
 }
@@ -582,16 +585,16 @@ public static class DatabaseSeeder
     public static async Task SeedDevelopmentDataAsync(ApplicationDbContext context)
     {
         // Seed only if no data exists
-        if (await context.Brokers.AnyAsync())
+        if (await context.Customers.AnyAsync())
             return;
 
-        var brokers = new[]
+        var customers = new[]
         {
-            new Broker { Id = Guid.NewGuid(), Name = "Acme Insurance", LicenseNumber = "CA-12345" },
-            new Broker { Id = Guid.NewGuid(), Name = "Best Brokers", LicenseNumber = "NY-67890" }
+            new Customer { Id = Guid.NewGuid(), Name = "Acme Corp", TaxId = "12-3456789" },
+            new Customer { Id = Guid.NewGuid(), Name = "Global Inc", TaxId = "98-7654321" }
         };
 
-        await context.Brokers.AddRangeAsync(brokers);
+        await context.Customers.AddRangeAsync(customers);
         await context.SaveChangesAsync();
     }
 }
@@ -613,18 +616,18 @@ protected override void Up(MigrationBuilder migrationBuilder)
     // 1. Add column (nullable initially)
     migrationBuilder.AddColumn<string>(
         name: "Status",
-        table: "Brokers",
+        table: "Customers",
         maxLength: 20,
         nullable: true);
 
     // 2. Set default value for existing rows (data migration)
     migrationBuilder.Sql(
-        "UPDATE Brokers SET Status = 'Active' WHERE Status IS NULL");
+        "UPDATE Customers SET Status = 'Active' WHERE Status IS NULL");
 
     // 3. Make column required
     migrationBuilder.AlterColumn<string>(
         name: "Status",
-        table: "Brokers",
+        table: "Customers",
         maxLength: 20,
         nullable: false);
 }
@@ -639,17 +642,17 @@ protected override void Up(MigrationBuilder migrationBuilder)
 ```csharp
 // Step 1: Add new column
 migrationBuilder.AddColumn<string>(
-    name: "BrokerName",
-    table: "Brokers");
+    name: "CustomerName",
+    table: "Customers");
 
 // Step 2: Copy data from old column
 migrationBuilder.Sql(
-    "UPDATE Brokers SET BrokerName = Name");
+    "UPDATE Customers SET CustomerName = Name");
 
 // Step 3: Drop old column (in next migration, after app updated)
 migrationBuilder.DropColumn(
     name: "Name",
-    table: "Brokers");
+    table: "Customers");
 ```
 
 ---
@@ -672,11 +675,11 @@ migrationBuilder.DropColumn(
 **Problem: N+1 Queries**
 
 ```csharp
-// BAD: N+1 queries (1 for brokers + N for each broker's contacts)
-var brokers = await context.Brokers.ToListAsync(); // 1 query
-foreach (var broker in brokers)
+// BAD: N+1 queries (1 for customers + N for each customer's orders)
+var customers = await context.Customers.ToListAsync(); // 1 query
+foreach (var customer in customers)
 {
-    var contacts = await context.Contacts.Where(c => c.BrokerId == broker.Id).ToListAsync(); // N queries
+    var orders = await context.Orders.Where(o => o.CustomerId == customer.Id).ToListAsync(); // N queries
 }
 ```
 
@@ -684,16 +687,16 @@ foreach (var broker in brokers)
 
 ```csharp
 // GOOD: Single query with JOIN
-var brokers = await context.Brokers
-    .Include(b => b.Contacts)
+var customers = await context.Customers
+    .Include(c => c.Orders)
     .ToListAsync();
 
 // Multiple levels
-var submissions = await context.Submissions
-    .Include(s => s.Broker)
-        .ThenInclude(b => b.ParentBroker)
-    .Include(s => s.Account)
-        .ThenInclude(a => a.Policies)
+var orders = await context.Orders
+    .Include(o => o.Customer)
+        .ThenInclude(c => c.ParentOrganization)
+    .Include(o => o.Items)
+        .ThenInclude(i => i.Product)
     .ToListAsync();
 ```
 
@@ -704,21 +707,21 @@ var submissions = await context.Submissions
 **Problem: Loading Entire Entities**
 
 ```csharp
-// BAD: Loads all 20 fields of Broker entity
-var brokers = await context.Brokers.ToListAsync();
-return brokers.Select(b => new BrokerListItem { Id = b.Id, Name = b.Name });
+// BAD: Loads all 20 fields of Customer entity
+var customers = await context.Customers.ToListAsync();
+return customers.Select(c => new CustomerListItem { Id = c.Id, Name = c.Name });
 ```
 
 **Solution: Project to DTO**
 
 ```csharp
 // GOOD: SQL only selects Id, Name columns
-var brokers = await context.Brokers
-    .Select(b => new BrokerListItem
+var customers = await context.Customers
+    .Select(c => new CustomerListItem
     {
-        Id = b.Id,
-        Name = b.Name,
-        LicenseNumber = b.LicenseNumber
+        Id = c.Id,
+        Name = c.Name,
+        TaxId = c.TaxId
     })
     .ToListAsync();
 ```
@@ -730,21 +733,21 @@ var brokers = await context.Brokers
 **Offset Pagination:**
 
 ```csharp
-public async Task<PagedResult<Broker>> GetBrokersAsync(int page, int pageSize)
+public async Task<PagedResult<Customer>> GetCustomersAsync(int page, int pageSize)
 {
-    var query = context.Brokers.AsQueryable();
+    var query = context.Customers.AsQueryable();
 
     var totalCount = await query.CountAsync();
 
-    var brokers = await query
-        .OrderBy(b => b.Name)
+    var customers = await query
+        .OrderBy(c => c.Name)
         .Skip((page - 1) * pageSize)
         .Take(pageSize)
         .ToListAsync();
 
-    return new PagedResult<Broker>
+    return new PagedResult<Customer>
     {
-        Data = brokers,
+        Data = customers,
         Page = page,
         PageSize = pageSize,
         TotalCount = totalCount,
@@ -757,9 +760,9 @@ public async Task<PagedResult<Broker>> GetBrokersAsync(int page, int pageSize)
 
 ```csharp
 // More efficient than OFFSET for large datasets
-var brokers = await context.Brokers
-    .Where(b => b.Name.CompareTo(lastSeenName) > 0)
-    .OrderBy(b => b.Name)
+var customers = await context.Customers
+    .Where(c => c.Name.CompareTo(lastSeenName) > 0)
+    .OrderBy(c => c.Name)
     .Take(pageSize)
     .ToListAsync();
 ```
@@ -772,18 +775,18 @@ var brokers = await context.Brokers
 
 ```csharp
 // GOOD: Status is indexed
-var activeBrokers = await context.Brokers
-    .Where(b => b.Status == "Active")
+var activeCustomers = await context.Customers
+    .Where(c => c.Status == "Active")
     .ToListAsync();
 
 // AVOID: String operations prevent index usage
-var brokers = await context.Brokers
-    .Where(b => b.Name.ToLower().Contains("acme")) // Can't use index
+var customers = await context.Customers
+    .Where(c => c.Name.ToLower().Contains("acme")) // Can't use index
     .ToListAsync();
 
 // BETTER: Use case-insensitive collation in database
-var brokers = await context.Brokers
-    .Where(b => EF.Functions.ILike(b.Name, "%acme%")) // Uses index with PostgreSQL ILIKE
+var customers = await context.Customers
+    .Where(c => EF.Functions.ILike(c.Name, "%acme%")) // Uses index with PostgreSQL ILIKE
     .ToListAsync();
 ```
 
@@ -795,9 +798,9 @@ var brokers = await context.Brokers
 
 ```csharp
 // Explicit loading (load related data separately)
-var broker = await context.Brokers.FindAsync(brokerId);
-await context.Entry(broker)
-    .Collection(b => b.Contacts)
+var customer = await context.Customers.FindAsync(customerId);
+await context.Entry(customer)
+    .Collection(c => c.Orders)
     .LoadAsync();
 ```
 
@@ -837,15 +840,15 @@ var users = await context.UserProfiles
 ```csharp
 // Migration: Add full-text search column
 migrationBuilder.Sql(@"
-    ALTER TABLE Brokers ADD COLUMN SearchVector tsvector
-    GENERATED ALWAYS AS (to_tsvector('english', coalesce(Name, '') || ' ' || coalesce(LicenseNumber, ''))) STORED;
+    ALTER TABLE Customers ADD COLUMN SearchVector tsvector
+    GENERATED ALWAYS AS (to_tsvector('english', coalesce(Name, '') || ' ' || coalesce(TaxId, ''))) STORED;
 
-    CREATE INDEX IX_Brokers_SearchVector ON Brokers USING GIN(SearchVector);
+    CREATE INDEX IX_Customers_SearchVector ON Customers USING GIN(SearchVector);
 ");
 
 // Query
-var brokers = await context.Brokers
-    .Where(b => EF.Functions.ToTsVector("english", b.Name + " " + b.LicenseNumber)
+var customers = await context.Customers
+    .Where(c => EF.Functions.ToTsVector("english", c.Name + " " + c.TaxId)
         .Matches(EF.Functions.ToTsQuery("english", searchTerm)))
     .ToListAsync();
 ```
@@ -855,18 +858,18 @@ var brokers = await context.Brokers
 ### 5.3 Array Columns
 
 ```csharp
-public class Submission : BaseEntity
+public class Order : BaseEntity
 {
     public string[] Tags { get; set; } // Stored as PostgreSQL array
 }
 
 // EF Core configuration
-builder.Property(s => s.Tags)
+builder.Property(o => o.Tags)
     .HasColumnType("text[]");
 
 // Query
-var submissions = await context.Submissions
-    .Where(s => s.Tags.Contains("urgent"))
+var orders = await context.Orders
+    .Where(o => o.Tags.Contains("urgent"))
     .ToListAsync();
 ```
 
@@ -901,9 +904,9 @@ public Guid Id { get; set; } = Guid.CreateVersion7();
 ```csharp
 public class ActivityTimelineEvent : BaseEntity
 {
-    public string EntityType { get; set; } // "Broker", "Submission", etc.
+    public string EntityType { get; set; } // "Customer", "Order", etc.
     public Guid EntityId { get; set; } // No FK constraint (entity may be deleted)
-    public string EventType { get; set; } // "BrokerCreated", "BrokerUpdated", etc.
+    public string EventType { get; set; } // "CustomerCreated", "CustomerUpdated", etc.
     public Guid UserId { get; set; }
     public DateTime Timestamp { get; set; }
     public Dictionary<string, object> Payload { get; set; } // JSONB for flexibility
@@ -938,12 +941,12 @@ public class ActivityTimelineEventConfiguration : IEntityTypeConfiguration<Activ
 ```csharp
 public class WorkflowTransition : BaseEntity
 {
-    public Guid SubmissionId { get; set; } // Or other entity with workflow
+    public Guid OrderId { get; set; } // Or other entity with workflow
     public string FromStatus { get; set; }
     public string ToStatus { get; set; }
     public DateTime TransitionedAt { get; set; }
     public Guid TransitionedBy { get; set; }
-    public string? Reason { get; set; } // Required for Declined/Withdrawn
+    public string? Reason { get; set; } // Required for Cancelled/Returned
 }
 
 // EF Core configuration
@@ -953,7 +956,7 @@ public class WorkflowTransitionConfiguration : IEntityTypeConfiguration<Workflow
     {
         builder.ToTable("WorkflowTransitions");
 
-        builder.HasIndex(w => w.SubmissionId);
+        builder.HasIndex(w => w.OrderId);
         builder.HasIndex(w => w.TransitionedAt);
     }
 }
@@ -966,31 +969,31 @@ public class WorkflowTransitionConfiguration : IEntityTypeConfiguration<Workflow
 **Rebuild entity state from event stream (advanced pattern).**
 
 ```csharp
-// Not recommended for MVP, but consider for Phase 2 if needed
-public async Task<Broker> RebuildBrokerFromEventsAsync(Guid brokerId)
+// Consider for Phase 2 if needed
+public async Task<Customer> RebuildCustomerFromEventsAsync(Guid customerId)
 {
     var events = await context.ActivityTimelineEvents
-        .Where(e => e.EntityType == "Broker" && e.EntityId == brokerId)
+        .Where(e => e.EntityType == "Customer" && e.EntityId == customerId)
         .OrderBy(e => e.Timestamp)
         .ToListAsync();
 
-    var broker = new Broker();
+    var customer = new Customer();
     foreach (var evt in events)
     {
         switch (evt.EventType)
         {
-            case "BrokerCreated":
-                broker.Id = evt.EntityId;
-                broker.Name = evt.Payload["name"]?.ToString();
+            case "CustomerCreated":
+                customer.Id = evt.EntityId;
+                customer.Name = evt.Payload["name"]?.ToString();
                 // ... apply event
                 break;
-            case "BrokerUpdated":
+            case "CustomerUpdated":
                 // ... apply update
                 break;
         }
     }
 
-    return broker;
+    return customer;
 }
 ```
 
@@ -998,5 +1001,6 @@ public async Task<Broker> RebuildBrokerFromEventsAsync(Guid brokerId)
 
 ## Version History
 
+**Version 3.0** - 2026-02-03 - Replaced all solution-specific entities with standard generic set (customers/orders). Changed many-to-many example to Product/Category. See `BOUNDARY-POLICY.md` → "Standard Example Entities" for the convention.
 **Version 2.0** - 2026-01-31 - Comprehensive data modeling guide with EF Core 10 and PostgreSQL patterns (350 lines)
 **Version 1.0** - 2026-01-26 - Initial data modeling guide (54 lines)

@@ -74,22 +74,28 @@ cat planning-mds/architecture/SOLUTION-PATTERNS.md
 
 ## Scripts
 
-- `agents/frontend-developer/scripts/scaffold-component.py` - Generate React component boilerplate (TODO: implement)
-- `agents/frontend-developer/scripts/scaffold-page.py` - Generate page component with routing (TODO: implement)
+- `agents/frontend-developer/scripts/scaffold-component.py` - Generate React component module (TSX/types/index + optional tests/styles)
+- `agents/frontend-developer/scripts/scaffold-page.py` - Generate page module (TSX/types/index + optional tests + route metadata)
 - `agents/frontend-developer/scripts/run-tests.sh` - Run frontend tests (uses `FRONTEND_TEST_CMD` or `npm test`)
 
 ### Usage Examples
 
 ```bash
-# Scaffold a new component (TODO: implement)
+# Scaffold a shared component with tests and CSS module
 python3 agents/frontend-developer/scripts/scaffold-component.py CustomerCard \
   --type shared \
-  --with-tests
+  --with-tests \
+  --with-styles
 
-# Scaffold a new page (TODO: implement)
+# Scaffold a page with route metadata + tests
 python3 agents/frontend-developer/scripts/scaffold-page.py CustomerDetails \
   --route /customers/:id \
   --with-tests
+
+# Patch an existing route registry file (requires scaffold markers)
+python3 agents/frontend-developer/scripts/scaffold-page.py Orders \
+  --route /orders \
+  --routes-file experience/src/routes/index.tsx
 
 # Run tests
 FRONTEND_TEST_CMD="npm test" sh agents/frontend-developer/scripts/run-tests.sh

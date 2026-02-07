@@ -1,6 +1,6 @@
 # Performance Design Guide
 
-Comprehensive guide for designing performant systems for the Nebula insurance CRM. This guide covers performance requirements, database optimization, caching strategies, API performance, and load testing & monitoring.
+Comprehensive guide for designing performant systems. This guide covers performance requirements, database optimization, caching strategies, API performance, and load testing & monitoring.
 
 ---
 
@@ -9,8 +9,8 @@ Comprehensive guide for designing performant systems for the Nebula insurance CR
 ### 1.1 Response Time Targets
 
 **API Response Times** (95th percentile):
-- **Simple queries** (GET /api/brokers/{id}): < 100ms
-- **List queries** (GET /api/brokers?page=1): < 300ms
+- **Simple queries** (GET /api/customers/{id}): < 100ms
+- **List queries** (GET /api/customers?page=1): < 300ms
 - **Complex queries** (360 views with joins): < 500ms
 - **Mutations** (POST, PUT, DELETE): < 300ms
 - **Search queries**: < 1 second
@@ -85,11 +85,11 @@ Comprehensive guide for designing performant systems for the Nebula insurance CR
 - **Always index foreign keys** (EF Core doesn't auto-create FK indexes)
 
 ```csharp
-builder.HasIndex(s => s.BrokerId)
-    .HasDatabaseName("IX_Submissions_BrokerId");
+builder.HasIndex(o => o.CustomerId)
+    .HasDatabaseName("IX_Orders_CustomerId");
 
-builder.HasIndex(s => s.AssignedUnderwriterId)
-    .HasDatabaseName("IX_Submissions_AssignedUnderwriterId");
+builder.HasIndex(o => o.AssignedUserId)
+    .HasDatabaseName("IX_Orders_AssignedUserId");
 ```
 
 **Query-Specific Indexes:**
@@ -97,32 +97,32 @@ builder.HasIndex(s => s.AssignedUnderwriterId)
 
 ```csharp
 // Frequently filtered by Status
-builder.HasIndex(s => s.Status)
-    .HasDatabaseName("IX_Submissions_Status");
+builder.HasIndex(o => o.Status)
+    .HasDatabaseName("IX_Orders_Status");
 
-// Composite index for common query: status + effective date
-builder.HasIndex(s => new { s.Status, s.EffectiveDate })
-    .HasDatabaseName("IX_Submissions_Status_EffectiveDate");
+// Composite index for common query: status + order date
+builder.HasIndex(o => new { o.Status, o.OrderDate })
+    .HasDatabaseName("IX_Orders_Status_OrderDate");
 ```
 
 **Covering Indexes:**
 - Include all columns needed by query in index (avoid table lookup)
 
 ```csharp
-// Query: SELECT Id, Name, Status FROM Brokers WHERE State = 'CA'
-builder.HasIndex(b => b.State)
-    .IncludeProperties(b => new { b.Id, b.Name, b.Status })
-    .HasDatabaseName("IX_Brokers_State_Covering");
+// Query: SELECT Id, Name, Status FROM Customers WHERE Region = 'US-West'
+builder.HasIndex(c => c.Region)
+    .IncludeProperties(c => new { c.Id, c.Name, c.Status })
+    .HasDatabaseName("IX_Customers_Region_Covering");
 ```
 
 **Partial Indexes:**
 - Index only subset of rows (PostgreSQL feature)
 
 ```csharp
-// Index only active brokers
-builder.HasIndex(b => b.DeletedAt)
+// Index only active customers
+builder.HasIndex(c => c.DeletedAt)
     .HasFilter("DeletedAt IS NULL")
-    .HasDatabaseName("IX_Brokers_Active");
+    .HasDatabaseName("IX_Customers_Active");
 ```
 
 ---
@@ -133,15 +133,15 @@ builder.HasIndex(b => b.DeletedAt)
 
 ```csharp
 // BAD: Loads all 20 fields
-var brokers = await _context.Brokers.ToListAsync();
+var customers = await _context.Customers.ToListAsync();
 
 // GOOD: Project to DTO, load only needed fields
-var brokers = await _context.Brokers
-    .Select(b => new BrokerListItem
+var customers = await _context.Customers
+    .Select(c => new CustomerListItem
     {
-        Id = b.Id,
-        Name = b.Name,
-        Status = b.Status
+        Id = c.Id,
+        Name = c.Name,
+        Status = c.Status
     })
     .ToListAsync();
 ```
@@ -153,12 +153,12 @@ var brokers = await _context.Brokers
 **Problem:**
 
 ```csharp
-// BAD: N+1 queries (1 for brokers + N for each broker's contacts)
-var brokers = await _context.Brokers.ToListAsync(); // 1 query
-foreach (var broker in brokers)
+// BAD: N+1 queries (1 for customers + N for each customer's addresses)
+var customers = await _context.Customers.ToListAsync(); // 1 query
+foreach (var customer in customers)
 {
-    broker.Contacts = await _context.Contacts
-        .Where(c => c.BrokerId == broker.Id)
+    customer.Addresses = await _context.Addresses
+        .Where(a => a.CustomerId == customer.Id)
         .ToListAsync(); // N queries
 }
 ```
@@ -167,8 +167,8 @@ foreach (var broker in brokers)
 
 ```csharp
 // GOOD: Single query with JOIN
-var brokers = await _context.Brokers
-    .Include(b => b.Contacts)
+var customers = await _context.Customers
+    .Include(c => c.Addresses)
     .ToListAsync();
 ```
 
@@ -176,10 +176,10 @@ var brokers = await _context.Brokers
 
 ```csharp
 // When including multiple collections, use AsSplitQuery to avoid cartesian explosion
-var accounts = await _context.Accounts
-    .Include(a => a.Contacts)
-    .Include(a => a.Policies)
-    .Include(a => a.Submissions)
+var customers = await _context.Customers
+    .Include(c => c.Addresses)
+    .Include(c => c.Orders)
+    .Include(c => c.Notes)
     .AsSplitQuery() // Executes 4 separate queries instead of 1 huge JOIN
     .ToListAsync();
 ```
@@ -191,7 +191,7 @@ var accounts = await _context.Accounts
 **EF Core Connection Pooling** (enabled by default):
 
 ```csharp
-builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
+builder.Services.AddDbContextPool<AppDbContext>(options =>
     options.UseNpgsql(connectionString, npgsqlOptions =>
     {
         npgsqlOptions.EnableRetryOnFailure(3); // Retry 3 times on transient failure
@@ -212,8 +212,8 @@ builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
 **Offset Pagination** (for small datasets):
 
 ```csharp
-var brokers = await _context.Brokers
-    .OrderBy(b => b.Name)
+var customers = await _context.Customers
+    .OrderBy(c => c.Name)
     .Skip((page - 1) * pageSize)
     .Take(pageSize)
     .ToListAsync();
@@ -223,18 +223,18 @@ var brokers = await _context.Brokers
 
 ```csharp
 // First page
-var brokers = await _context.Brokers
-    .OrderBy(b => b.Name)
-    .ThenBy(b => b.Id)
+var customers = await _context.Customers
+    .OrderBy(c => c.Name)
+    .ThenBy(c => c.Id)
     .Take(pageSize)
     .ToListAsync();
 
 // Next page (using last seen name and id)
-var nextPage = await _context.Brokers
-    .Where(b => b.Name.CompareTo(lastSeenName) > 0 ||
-                (b.Name == lastSeenName && b.Id.CompareTo(lastSeenId) > 0))
-    .OrderBy(b => b.Name)
-    .ThenBy(b => b.Id)
+var nextPage = await _context.Customers
+    .Where(c => c.Name.CompareTo(lastSeenName) > 0 ||
+                (c.Name == lastSeenName && c.Id.CompareTo(lastSeenId) > 0))
+    .OrderBy(c => c.Name)
+    .ThenBy(c => c.Id)
     .Take(pageSize)
     .ToListAsync();
 ```
@@ -244,30 +244,30 @@ var nextPage = await _context.Brokers
 ### 2.6 Denormalization (When Justified)
 
 **Avoid premature denormalization**, but consider for:
-- Frequently accessed aggregations (total premium, submission count)
-- Complex calculations (commission splits)
+- Frequently accessed aggregations (total order amount, order count)
+- Complex calculations (discount tiers)
 
-**Example: Account Premium YTD**
+**Example: Customer Order Total YTD**
 
 ```csharp
 // Normalized: Calculate on every query (slow)
-var premiumYTD = account.Policies
-    .Where(p => p.EffectiveDate.Year == DateTime.UtcNow.Year)
-    .Sum(p => p.Premium);
+var orderTotalYTD = customer.Orders
+    .Where(o => o.OrderDate.Year == DateTime.UtcNow.Year)
+    .Sum(o => o.Amount);
 
-// Denormalized: Store in Account table, update on policy changes (fast)
-public class Account : BaseEntity
+// Denormalized: Store in Customer table, update on order changes (fast)
+public class Customer : BaseEntity
 {
-    public decimal PremiumYTD { get; set; } // Cached value
+    public decimal OrderTotalYTD { get; set; } // Cached value
 }
 
-// Update on policy create/update
-public async Task CreatePolicyAsync(Policy policy)
+// Update on order create/update
+public async Task CreateOrderAsync(Order order)
 {
-    await _context.Policies.AddAsync(policy);
+    await _context.Orders.AddAsync(order);
 
-    var account = await _context.Accounts.FindAsync(policy.AccountId);
-    account.PremiumYTD += policy.Premium;
+    var customer = await _context.Customers.FindAsync(order.CustomerId);
+    customer.OrderTotalYTD += order.Amount;
 
     await _context.SaveChangesAsync();
 }
@@ -288,10 +288,10 @@ builder.Services.AddResponseCaching();
 app.UseResponseCaching();
 
 // Endpoint with caching
-app.MapGet("/api/brokers", async (ApplicationDbContext context) =>
+app.MapGet("/api/customers", async (AppDbContext context) =>
 {
-    var brokers = await context.Brokers.ToListAsync();
-    return Results.Ok(brokers);
+    var customers = await context.Customers.ToListAsync();
+    return Results.Ok(customers);
 })
 .CacheOutput(policy => policy.Expire(TimeSpan.FromMinutes(5))); // Cache for 5 minutes
 ```
@@ -305,20 +305,20 @@ app.MapGet("/api/brokers", async (ApplicationDbContext context) =>
 
 ### 3.2 In-Memory Caching (Reference Data)
 
-**Cache reference data** (states, coverage types, carriers) in memory:
+**Cache reference data** (regions, categories, statuses) in memory:
 
 ```csharp
-public class StateService
+public class RegionService
 {
     private readonly IMemoryCache _cache;
-    private readonly ApplicationDbContext _context;
+    private readonly AppDbContext _context;
 
-    public async Task<List<State>> GetAllStatesAsync()
+    public async Task<List<Region>> GetAllRegionsAsync()
     {
-        return await _cache.GetOrCreateAsync("states", async entry =>
+        return await _cache.GetOrCreateAsync("regions", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24); // Cache for 24 hours
-            return await _context.States.ToListAsync();
+            return await _context.Regions.ToListAsync();
         });
     }
 }
@@ -330,8 +330,8 @@ public class StateService
 - Authorization policies (changes infrequently)
 
 **What NOT to Cache:**
-- Transactional data (submissions, policies)
-- Real-time data (submission status)
+- Transactional data (orders, payments)
+- Real-time data (order status)
 
 ---
 
@@ -343,30 +343,30 @@ public class StateService
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = "redis.example.com:6379";
-    options.InstanceName = "Nebula_";
+    options.InstanceName = "App_";
 });
 
-public class BrokerService
+public class CustomerService
 {
     private readonly IDistributedCache _cache;
 
-    public async Task<Broker?> GetBrokerByIdAsync(Guid brokerId)
+    public async Task<Customer?> GetCustomerByIdAsync(Guid customerId)
     {
-        var cacheKey = $"broker:{brokerId}";
+        var cacheKey = $"customer:{customerId}";
 
         // Try cache first
-        var cachedBroker = await _cache.GetStringAsync(cacheKey);
-        if (cachedBroker != null)
-            return JsonSerializer.Deserialize<Broker>(cachedBroker);
+        var cachedCustomer = await _cache.GetStringAsync(cacheKey);
+        if (cachedCustomer != null)
+            return JsonSerializer.Deserialize<Customer>(cachedCustomer);
 
         // Cache miss, query database
-        var broker = await _context.Brokers.FindAsync(brokerId);
+        var customer = await _context.Customers.FindAsync(customerId);
 
         // Store in cache for 10 minutes
-        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(broker),
+        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(customer),
             new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) });
 
-        return broker;
+        return customer;
     }
 }
 ```
@@ -378,14 +378,14 @@ public class BrokerService
 **Invalidate cache on updates:**
 
 ```csharp
-public async Task UpdateBrokerAsync(Guid brokerId, UpdateBrokerRequest request)
+public async Task UpdateCustomerAsync(Guid customerId, UpdateCustomerRequest request)
 {
-    var broker = await _context.Brokers.FindAsync(brokerId);
-    broker.Name = request.Name;
+    var customer = await _context.Customers.FindAsync(customerId);
+    customer.Name = request.Name;
     await _context.SaveChangesAsync();
 
     // Invalidate cache
-    await _cache.RemoveAsync($"broker:{brokerId}");
+    await _cache.RemoveAsync($"customer:{customerId}");
 }
 ```
 
@@ -405,22 +405,22 @@ public async Task UpdateBrokerAsync(Guid brokerId, UpdateBrokerRequest request)
 4. Return result
 
 ```csharp
-public async Task<Broker?> GetBrokerAsync(Guid id)
+public async Task<Customer?> GetCustomerAsync(Guid id)
 {
     // 1. Check cache
-    var cachedBroker = await _cache.GetAsync<Broker>($"broker:{id}");
-    if (cachedBroker != null)
-        return cachedBroker;
+    var cachedCustomer = await _cache.GetAsync<Customer>($"customer:{id}");
+    if (cachedCustomer != null)
+        return cachedCustomer;
 
     // 2. Cache miss, query database
-    var broker = await _context.Brokers.FindAsync(id);
+    var customer = await _context.Customers.FindAsync(id);
 
     // 3. Store in cache
-    if (broker != null)
-        await _cache.SetAsync($"broker:{id}", broker, TimeSpan.FromMinutes(10));
+    if (customer != null)
+        await _cache.SetAsync($"customer:{id}", customer, TimeSpan.FromMinutes(10));
 
     // 4. Return
-    return broker;
+    return customer;
 }
 ```
 
@@ -452,18 +452,18 @@ app.UseResponseCompression();
 **Always paginate list endpoints:**
 
 ```csharp
-app.MapGet("/api/brokers", async (
+app.MapGet("/api/customers", async (
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 20) =>
 {
     if (pageSize > 100) pageSize = 100; // Max 100 items per page
 
-    var brokers = await _context.Brokers
+    var customers = await _context.Customers
         .Skip((page - 1) * pageSize)
         .Take(pageSize)
         .ToListAsync();
 
-    return Results.Ok(new { data = brokers, page, pageSize });
+    return Results.Ok(new { data = customers, page, pageSize });
 });
 ```
 
@@ -476,11 +476,11 @@ app.MapGet("/api/brokers", async (
 **Allow clients to request only needed fields:**
 
 ```csharp
-// Request: GET /api/brokers?fields=id,name,status
-app.MapGet("/api/brokers", async (
+// Request: GET /api/customers?fields=id,name,status
+app.MapGet("/api/customers", async (
     [FromQuery] string? fields) =>
 {
-    var query = _context.Brokers.AsQueryable();
+    var query = _context.Customers.AsQueryable();
 
     // Project based on requested fields
     if (!string.IsNullOrEmpty(fields))
@@ -503,20 +503,20 @@ app.MapGet("/api/brokers", async (
 
 ```csharp
 // BAD: Client makes 10 separate requests
-// GET /api/brokers/1
-// GET /api/brokers/2
+// GET /api/customers/1
+// GET /api/customers/2
 // ...
 
 // GOOD: Batch endpoint
-// POST /api/brokers/batch
+// POST /api/customers/batch
 // { "ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }
-app.MapPost("/api/brokers/batch", async (BatchRequest request) =>
+app.MapPost("/api/customers/batch", async (BatchRequest request) =>
 {
-    var brokers = await _context.Brokers
-        .Where(b => request.Ids.Contains(b.Id))
+    var customers = await _context.Customers
+        .Where(c => request.Ids.Contains(c.Id))
         .ToListAsync();
 
-    return Results.Ok(brokers);
+    return Results.Ok(customers);
 });
 ```
 
@@ -575,7 +575,7 @@ export let options = {
 };
 
 export default function () {
-  let res = http.get('https://api.nebula.com/api/brokers');
+  let res = http.get('https://api.example.com/api/customers');
   check(res, {
     'status is 200': (r) => r.status === 200,
     'response time < 500ms': (r) => r.timings.duration < 500,
@@ -631,8 +631,8 @@ export default function () {
 builder.Services.AddApplicationInsightsTelemetry();
 
 // Custom metrics
-_telemetryClient.TrackMetric("SubmissionCreated", 1);
-_telemetryClient.TrackDependency("PostgreSQL", "GetBroker", startTime, duration, success);
+_telemetryClient.TrackMetric("OrderCreated", 1);
+_telemetryClient.TrackDependency("PostgreSQL", "GetCustomer", startTime, duration, success);
 ```
 
 ---
@@ -656,7 +656,7 @@ app.Use(async (context, next) =>
 });
 
 // All logs within request include correlation ID
-_logger.LogInformation("Processing request for broker {BrokerId}", brokerId);
+_logger.LogInformation("Processing request for customer {CustomerId}", customerId);
 ```
 
 **Benefits:** Trace single request across multiple services/logs.
@@ -673,12 +673,12 @@ builder.Services.AddSingleton<IMetricsCollector, PrometheusMetricsCollector>();
 public class PrometheusMetricsCollector
 {
     private readonly Counter _requestCounter = Metrics.CreateCounter(
-        "nebula_http_requests_total",
+        "app_http_requests_total",
         "Total HTTP requests",
         new CounterConfiguration { LabelNames = new[] { "method", "endpoint", "status" } });
 
     private readonly Histogram _requestDuration = Metrics.CreateHistogram(
-        "nebula_http_request_duration_seconds",
+        "app_http_request_duration_seconds",
         "HTTP request duration in seconds",
         new HistogramConfiguration { LabelNames = new[] { "method", "endpoint" } });
 

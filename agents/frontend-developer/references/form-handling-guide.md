@@ -8,29 +8,29 @@
 
 ## Overview
 
-This guide covers form handling in Nebula using **React Hook Form** for form state management and **Zod** for schema validation. This combination provides excellent TypeScript support, performance, and developer experience.
+This guide covers form handling using **React Hook Form** for form state management and **Zod** for schema validation. This combination provides excellent TypeScript support, performance, and developer experience.
 
 **Philosophy:** Forms should validate as users type, provide clear error messages, and match backend validation rules exactly.
 
 ---
 
-## ⚠️ When to Use This Approach vs JSON Schema
+## When to Use This Approach vs JSON Schema
 
 **Use React Hook Form + Zod when:**
-- ✅ Form structure is **static** and defined in code
-- ✅ You control the form schema (not driven by backend config)
-- ✅ You want excellent **TypeScript inference**
-- ✅ Form is simple to moderate complexity
-- ✅ Examples: Login forms, settings forms, simple CRUD forms
+- Form structure is **static** and defined in code
+- You control the form schema (not driven by backend config)
+- You want excellent **TypeScript inference**
+- Form is simple to moderate complexity
+- Examples: Login forms, settings forms, simple CRUD forms
 
 **Use JSON Schema + AJV + RJSF when:**
-- ✅ Forms are **dynamically generated** from backend/database
-- ✅ Form structure varies by state, coverage type, or other business rules
-- ✅ Need **backend/frontend validation parity** (same schema validates both)
-- ✅ Schema is stored in database or config files
-- ✅ Examples: Insurance submissions (state-specific), dynamic product configurators
+- Forms are **dynamically generated** from backend/database
+- Form structure varies by region, category, or other business rules
+- Need **backend/frontend validation parity** (same schema validates both)
+- Schema is stored in database or config files
+- Examples: Dynamic order forms (region-specific), dynamic product configurators
 
-**For Nebula:** We recommend JSON Schema + AJV for submission/renewal forms (see `json-schema-forms-guide.md`), but React Hook Form + Zod is perfect for simpler forms like user settings, filters, search forms, etc.
+**Recommendation:** Use JSON Schema + AJV for dynamic order forms (see `json-schema-forms-guide.md`), but React Hook Form + Zod is perfect for simpler forms like user settings, filters, search forms, etc.
 
 ---
 
@@ -54,52 +54,43 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 // 1. Define Zod schema
-const brokerSchema = z.object({
+const customerSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
-  licenseNumber: z.string().min(1, 'License number is required'),
   email: z.string().email('Invalid email address'),
   phone: z.string().regex(/^\d{10}$/, 'Phone must be 10 digits'),
+  region: z.string().min(1, 'Region is required'),
 });
 
 // 2. Infer TypeScript type from schema
-type BrokerFormData = z.infer<typeof brokerSchema>;
+type CustomerFormData = z.infer<typeof customerSchema>;
 
 // 3. Create form component
-function CreateBrokerForm() {
+function CreateCustomerForm() {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<BrokerFormData>({
-    resolver: zodResolver(brokerSchema),
+  } = useForm<CustomerFormData>({
+    resolver: zodResolver(customerSchema),
   });
 
-  const onSubmit = async (data: BrokerFormData) => {
+  const onSubmit = async (data: CustomerFormData) => {
     try {
-      await createBroker(data);
-      toast.success('Broker created successfully');
+      await createCustomer(data);
+      toast.success('Customer created successfully');
     } catch (error) {
-      toast.error('Failed to create broker');
+      toast.error('Failed to create customer');
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <Label htmlFor="name">Broker Name</Label>
+        <Label htmlFor="name">Customer Name</Label>
         <Input
           id="name"
           {...register('name')}
           error={errors.name?.message}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="licenseNumber">License Number</Label>
-        <Input
-          id="licenseNumber"
-          {...register('licenseNumber')}
-          error={errors.licenseNumber?.message}
         />
       </div>
 
@@ -122,8 +113,17 @@ function CreateBrokerForm() {
         />
       </div>
 
+      <div>
+        <Label htmlFor="region">Region</Label>
+        <Input
+          id="region"
+          {...register('region')}
+          error={errors.region?.message}
+        />
+      </div>
+
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Creating...' : 'Create Broker'}
+        {isSubmitting ? 'Creating...' : 'Create Customer'}
       </Button>
     </form>
   );
@@ -157,8 +157,8 @@ z.string().url('Invalid URL')
 // Phone (10 digits)
 z.string().regex(/^\d{10}$/, 'Phone must be 10 digits')
 
-// License number (alphanumeric)
-z.string().regex(/^[A-Z0-9]+$/, 'License must be alphanumeric')
+// Order number (alphanumeric)
+z.string().regex(/^[A-Z0-9]+$/, 'Order number must be alphanumeric')
 
 // Numbers
 z.number().min(0, 'Must be positive')
@@ -173,7 +173,7 @@ z.coerce.date() // Convert string to Date
 z.boolean()
 
 // Enums
-z.enum(['pending', 'approved', 'declined'])
+z.enum(['pending', 'approved', 'rejected'])
 
 // Arrays
 z.array(z.string()).min(1, 'At least one item required')
@@ -190,48 +190,42 @@ z.string().optional()
 z.string().nullish() // nullable + optional
 ```
 
-### Insurance Domain Schemas
+### Domain Schemas
 
 ```tsx
-// Broker creation
-export const createBrokerSchema = z.object({
-  name: z.string().min(1, 'Broker name is required').max(200),
-  licenseNumber: z.string().min(1, 'License number is required'),
-  licenseState: z.string().length(2, 'State must be 2 letters'),
+// Customer creation
+export const createCustomerSchema = z.object({
+  name: z.string().min(1, 'Customer name is required').max(200),
   email: z.string().email('Invalid email'),
   phone: z.string().regex(/^\d{10}$/, 'Phone must be 10 digits'),
+  region: z.string().min(1, 'Region is required'),
   website: z.string().url('Invalid URL').optional(),
   notes: z.string().max(1000).optional(),
 });
 
-// Submission creation
-export const createSubmissionSchema = z.object({
-  brokerId: z.string().uuid('Invalid broker'),
-  accountId: z.string().uuid('Invalid account'),
-  effectiveDate: z.coerce.date().min(new Date(), 'Date must be in future'),
-  expirationDate: z.coerce.date(),
-  premium: z.number().min(0, 'Premium must be positive'),
-  coverageType: z.enum(['general-liability', 'property', 'workers-comp']),
-  limits: z.object({
-    perOccurrence: z.number().min(0),
-    aggregate: z.number().min(0),
-  }),
+// Order creation
+export const createOrderSchema = z.object({
+  customerId: z.string().uuid('Invalid customer'),
+  orderDate: z.coerce.date().min(new Date(), 'Date must be in future'),
+  dueDate: z.coerce.date(),
+  amount: z.number().min(0, 'Amount must be positive'),
+  category: z.enum(['electronics', 'clothing', 'furniture']),
+  notes: z.string().max(1000).optional(),
   attachments: z.array(z.string().url()).optional(),
 }).refine(
-  (data) => data.expirationDate > data.effectiveDate,
+  (data) => data.dueDate > data.orderDate,
   {
-    message: 'Expiration date must be after effective date',
-    path: ['expirationDate'],
+    message: 'Due date must be after order date',
+    path: ['dueDate'],
   }
 );
 
-// Contact creation
-export const createContactSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email'),
-  phone: z.string().regex(/^\d{10}$/, 'Phone must be 10 digits').optional(),
-  title: z.string().optional(),
+// Address creation
+export const createAddressSchema = z.object({
+  street: z.string().min(1, 'Street is required'),
+  city: z.string().min(1, 'City is required'),
+  region: z.string().min(1, 'Region is required'),
+  postalCode: z.string().min(1, 'Postal code is required'),
   isPrimary: z.boolean().default(false),
 });
 ```
@@ -243,38 +237,38 @@ export const createContactSchema = z.object({
 const addressSchema = z.object({
   street: z.string().min(1, 'Street is required'),
   city: z.string().min(1, 'City is required'),
-  state: z.string().length(2, 'State must be 2 letters'),
-  zip: z.string().regex(/^\d{5}(-\d{4})?$/, 'Invalid ZIP code'),
+  region: z.string().min(1, 'Region is required'),
+  postalCode: z.string().min(1, 'Postal code is required'),
 });
 
-const contactSchema = z.object({
+const contactInfoSchema = z.object({
   email: z.string().email(),
   phone: z.string().regex(/^\d{10}$/),
 });
 
 // Compose into larger schema
-const brokerWithAddressSchema = createBrokerSchema.merge(
+const customerWithAddressSchema = createCustomerSchema.merge(
   z.object({
     mailingAddress: addressSchema,
     billingAddress: addressSchema.optional(),
   })
-).merge(contactSchema);
+).merge(contactInfoSchema);
 ```
 
 ### Conditional Validation
 
 ```tsx
-const submissionSchema = z.object({
-  coverageType: z.enum(['admitted', 'surplus']),
-  state: z.string().length(2),
-  surplusLinesBroker: z.string().optional(),
+const orderSchema = z.object({
+  category: z.enum(['standard', 'express']),
+  region: z.string().min(1),
+  expressPartner: z.string().optional(),
 }).superRefine((data, ctx) => {
-  // If surplus lines, broker is required
-  if (data.coverageType === 'surplus' && !data.surplusLinesBroker) {
+  // If express, partner is required
+  if (data.category === 'express' && !data.expressPartner) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Surplus lines broker is required for surplus coverage',
-      path: ['surplusLinesBroker'],
+      message: 'Express partner is required for express orders',
+      path: ['expressPartner'],
     });
   }
 });
@@ -297,13 +291,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-function BrokerForm() {
-  const form = useForm<BrokerFormData>({
-    resolver: zodResolver(brokerSchema),
+function CustomerForm() {
+  const form = useForm<CustomerFormData>({
+    resolver: zodResolver(customerSchema),
     defaultValues: {
       name: '',
-      licenseNumber: '',
       email: '',
+      region: '',
     },
   });
 
@@ -315,12 +309,12 @@ function BrokerForm() {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Broker Name</FormLabel>
+              <FormLabel>Customer Name</FormLabel>
               <FormControl>
-                <Input placeholder="ABC Insurance Brokers" {...field} />
+                <Input placeholder="Acme Corporation" {...field} />
               </FormControl>
               <FormDescription>
-                Legal name of the brokerage
+                Legal name of the organization
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -329,12 +323,12 @@ function BrokerForm() {
 
         <FormField
           control={form.control}
-          name="licenseNumber"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>License Number</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="0A12345" {...field} />
+                <Input placeholder="contact@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -355,20 +349,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 <FormField
   control={form.control}
-  name="state"
+  name="region"
   render={({ field }) => (
     <FormItem>
-      <FormLabel>State</FormLabel>
+      <FormLabel>Region</FormLabel>
       <Select onValueChange={field.onChange} defaultValue={field.value}>
         <FormControl>
           <SelectTrigger>
-            <SelectValue placeholder="Select a state" />
+            <SelectValue placeholder="Select a region" />
           </SelectTrigger>
         </FormControl>
         <SelectContent>
-          <SelectItem value="CA">California</SelectItem>
-          <SelectItem value="NY">New York</SelectItem>
-          <SelectItem value="TX">Texas</SelectItem>
+          <SelectItem value="US-West">US West</SelectItem>
+          <SelectItem value="US-East">US East</SelectItem>
+          <SelectItem value="EU-West">EU West</SelectItem>
         </SelectContent>
       </Select>
       <FormMessage />
@@ -393,7 +387,7 @@ import { Checkbox } from '@/components/ui/checkbox';
           onCheckedChange={field.onChange}
         />
       </FormControl>
-      <FormLabel className="!mt-0">Primary Contact</FormLabel>
+      <FormLabel className="!mt-0">Primary Address</FormLabel>
       <FormMessage />
     </FormItem>
   )}
@@ -407,10 +401,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 <FormField
   control={form.control}
-  name="coverageType"
+  name="category"
   render={({ field }) => (
     <FormItem>
-      <FormLabel>Coverage Type</FormLabel>
+      <FormLabel>Category</FormLabel>
       <FormControl>
         <RadioGroup
           onValueChange={field.onChange}
@@ -419,15 +413,15 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
         >
           <FormItem className="flex items-center space-x-2">
             <FormControl>
-              <RadioGroupItem value="admitted" />
+              <RadioGroupItem value="standard" />
             </FormControl>
-            <FormLabel className="!mt-0">Admitted</FormLabel>
+            <FormLabel className="!mt-0">Standard</FormLabel>
           </FormItem>
           <FormItem className="flex items-center space-x-2">
             <FormControl>
-              <RadioGroupItem value="surplus" />
+              <RadioGroupItem value="express" />
             </FormControl>
-            <FormLabel className="!mt-0">Surplus Lines</FormLabel>
+            <FormLabel className="!mt-0">Express</FormLabel>
           </FormItem>
         </RadioGroup>
       </FormControl>
@@ -447,10 +441,10 @@ import { format } from 'date-fns';
 
 <FormField
   control={form.control}
-  name="effectiveDate"
+  name="orderDate"
   render={({ field }) => (
     <FormItem className="flex flex-col">
-      <FormLabel>Effective Date</FormLabel>
+      <FormLabel>Order Date</FormLabel>
       <Popover>
         <PopoverTrigger asChild>
           <FormControl>
@@ -493,15 +487,15 @@ import { Combobox } from '@/components/ui/combobox';
 
 <FormField
   control={form.control}
-  name="brokerId"
+  name="customerId"
   render={({ field }) => (
     <FormItem>
-      <FormLabel>Broker</FormLabel>
+      <FormLabel>Customer</FormLabel>
       <Combobox
-        options={brokers.map(b => ({ label: b.name, value: b.id }))}
+        options={customers.map(c => ({ label: c.name, value: c.id }))}
         value={field.value}
         onValueChange={field.onChange}
-        placeholder="Search brokers..."
+        placeholder="Search customers..."
       />
       <FormMessage />
     </FormItem>
@@ -516,11 +510,11 @@ import { Combobox } from '@/components/ui/combobox';
 ### Multi-Step Forms
 
 ```tsx
-function CreateSubmissionWizard() {
+function CreateOrderWizard() {
   const [step, setStep] = useState(1);
 
-  const form = useForm<SubmissionFormData>({
-    resolver: zodResolver(submissionSchema),
+  const form = useForm<OrderFormData>({
+    resolver: zodResolver(orderSchema),
     mode: 'onChange', // Validate on change
   });
 
@@ -534,9 +528,9 @@ function CreateSubmissionWizard() {
     }
   };
 
-  const onSubmit = async (data: SubmissionFormData) => {
-    await createSubmission(data);
-    toast.success('Submission created');
+  const onSubmit = async (data: OrderFormData) => {
+    await createOrder(data);
+    toast.success('Order created');
   };
 
   return (
@@ -547,7 +541,7 @@ function CreateSubmissionWizard() {
 
         {/* Step content */}
         {step === 1 && <BasicInfoStep form={form} />}
-        {step === 2 && <CoverageStep form={form} />}
+        {step === 2 && <DetailsStep form={form} />}
         {step === 3 && <DocumentsStep form={form} />}
         {step === 4 && <ReviewStep form={form} />}
 
@@ -582,27 +576,27 @@ function CreateSubmissionWizard() {
 ```tsx
 import { useFieldArray } from 'react-hook-form';
 
-const contactsSchema = z.object({
-  contacts: z.array(
+const addressesSchema = z.object({
+  addresses: z.array(
     z.object({
-      name: z.string().min(1),
-      email: z.string().email(),
-      phone: z.string().optional(),
+      street: z.string().min(1),
+      city: z.string().min(1),
+      region: z.string().optional(),
     })
-  ).min(1, 'At least one contact is required'),
+  ).min(1, 'At least one address is required'),
 });
 
-function ContactsForm() {
-  const form = useForm<z.infer<typeof contactsSchema>>({
-    resolver: zodResolver(contactsSchema),
+function AddressesForm() {
+  const form = useForm<z.infer<typeof addressesSchema>>({
+    resolver: zodResolver(addressesSchema),
     defaultValues: {
-      contacts: [{ name: '', email: '', phone: '' }],
+      addresses: [{ street: '', city: '', region: '' }],
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: 'contacts',
+    name: 'addresses',
   });
 
   return (
@@ -612,7 +606,7 @@ function ContactsForm() {
           {fields.map((field, index) => (
             <Card key={field.id}>
               <CardHeader>
-                <CardTitle>Contact {index + 1}</CardTitle>
+                <CardTitle>Address {index + 1}</CardTitle>
                 {index > 0 && (
                   <Button
                     type="button"
@@ -627,10 +621,10 @@ function ContactsForm() {
               <CardContent className="space-y-4">
                 <FormField
                   control={form.control}
-                  name={`contacts.${index}.name`}
+                  name={`addresses.${index}.street`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Street</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -641,12 +635,12 @@ function ContactsForm() {
 
                 <FormField
                   control={form.control}
-                  name={`contacts.${index}.email`}
+                  name={`addresses.${index}.city`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>City</FormLabel>
                       <FormControl>
-                        <Input type="email" {...field} />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -660,9 +654,9 @@ function ContactsForm() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => append({ name: '', email: '', phone: '' })}
+          onClick={() => append({ street: '', city: '', region: '' })}
         >
-          Add Contact
+          Add Address
         </Button>
 
         <Button type="submit">Save</Button>
@@ -675,23 +669,23 @@ function ContactsForm() {
 ### Dependent Fields
 
 ```tsx
-function SubmissionForm() {
-  const form = useForm<SubmissionFormData>({
-    resolver: zodResolver(submissionSchema),
+function OrderForm() {
+  const form = useForm<OrderFormData>({
+    resolver: zodResolver(orderSchema),
   });
 
-  // Watch coverage type to show/hide fields
-  const coverageType = form.watch('coverageType');
+  // Watch category to show/hide fields
+  const category = form.watch('category');
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <FormField
           control={form.control}
-          name="coverageType"
+          name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Coverage Type</FormLabel>
+              <FormLabel>Category</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -699,8 +693,8 @@ function SubmissionForm() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="admitted">Admitted</SelectItem>
-                  <SelectItem value="surplus">Surplus Lines</SelectItem>
+                  <SelectItem value="standard">Standard</SelectItem>
+                  <SelectItem value="express">Express</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -708,14 +702,14 @@ function SubmissionForm() {
           )}
         />
 
-        {/* Conditionally show surplus lines broker field */}
-        {coverageType === 'surplus' && (
+        {/* Conditionally show express partner field */}
+        {category === 'express' && (
           <FormField
             control={form.control}
-            name="surplusLinesBroker"
+            name="expressPartner"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Surplus Lines Broker</FormLabel>
+                <FormLabel>Express Partner</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -733,15 +727,15 @@ function SubmissionForm() {
 ### Server-Side Validation
 
 ```tsx
-function BrokerForm() {
-  const form = useForm<BrokerFormData>({
-    resolver: zodResolver(brokerSchema),
+function CustomerForm() {
+  const form = useForm<CustomerFormData>({
+    resolver: zodResolver(customerSchema),
   });
 
-  const onSubmit = async (data: BrokerFormData) => {
+  const onSubmit = async (data: CustomerFormData) => {
     try {
-      await createBroker(data);
-      toast.success('Broker created');
+      await createCustomer(data);
+      toast.success('Customer created');
     } catch (error) {
       // Handle API validation errors
       if (error.response?.status === 400) {
@@ -749,7 +743,7 @@ function BrokerForm() {
 
         // Map server errors to form fields
         Object.entries(serverErrors).forEach(([field, message]) => {
-          form.setError(field as keyof BrokerFormData, {
+          form.setError(field as keyof CustomerFormData, {
             type: 'server',
             message: message as string,
           });
@@ -853,14 +847,14 @@ const { isDirty, isValid, isSubmitting, errors } = form.formState;
 ### Custom Error Messages
 
 ```tsx
-form.setError('licenseNumber', {
+form.setError('email', {
   type: 'custom',
-  message: 'License number already exists',
+  message: 'Email already exists',
 });
 
 form.setError('root', {
   type: 'server',
-  message: 'Failed to create broker. Please try again.',
+  message: 'Failed to create customer. Please try again.',
 });
 ```
 
@@ -870,27 +864,27 @@ form.setError('root', {
 
 ### 1. Match Backend Validation
 
-✅ **GOOD:** Frontend and backend validation rules are identical
+**GOOD:** Frontend and backend validation rules are identical
 ```tsx
 // Frontend
-const brokerSchema = z.object({
-  licenseNumber: z.string().regex(/^[A-Z0-9]{6,10}$/),
+const customerSchema = z.object({
+  email: z.string().email(),
 });
 
 // Backend (.NET)
-[RegularExpression(@"^[A-Z0-9]{6,10}$")]
-public string LicenseNumber { get; set; }
+[EmailAddress]
+public string Email { get; set; }
 ```
 
 ### 2. Use TypeScript Inference
 
-✅ **GOOD:**
+**GOOD:**
 ```tsx
 const schema = z.object({ name: z.string() });
 type FormData = z.infer<typeof schema>; // Inferred from schema
 ```
 
-❌ **BAD:**
+**BAD:**
 ```tsx
 interface FormData { name: string; } // Manually defined
 const schema = z.object({ name: z.string() }); // Duplicate definition
@@ -898,27 +892,27 @@ const schema = z.object({ name: z.string() }); // Duplicate definition
 
 ### 3. Provide Helpful Error Messages
 
-✅ **GOOD:**
+**GOOD:**
 ```tsx
 z.string()
-  .min(1, 'Broker name is required')
-  .max(200, 'Broker name must be less than 200 characters')
+  .min(1, 'Customer name is required')
+  .max(200, 'Customer name must be less than 200 characters')
 ```
 
-❌ **BAD:**
+**BAD:**
 ```tsx
 z.string().min(1).max(200) // Generic error messages
 ```
 
 ### 4. Use Default Values
 
-✅ **GOOD:**
+**GOOD:**
 ```tsx
 useForm({
   defaultValues: {
     isPrimary: false,
-    state: 'CA',
-    coverageType: 'admitted',
+    region: 'US-West',
+    category: 'standard',
   },
 });
 ```
@@ -940,12 +934,12 @@ useForm({
 
 ```tsx
 import { zodResolver } from '@hookform/resolvers/zod';
-import { brokerSchema } from './schemas';
+import { customerSchema } from './schemas';
 
-describe('Broker Schema', () => {
+describe('Customer Schema', () => {
   it('should reject invalid email', () => {
-    const result = brokerSchema.safeParse({
-      name: 'Test Broker',
+    const result = customerSchema.safeParse({
+      name: 'Test Customer',
       email: 'invalid-email',
     });
 
@@ -956,10 +950,11 @@ describe('Broker Schema', () => {
   });
 
   it('should accept valid data', () => {
-    const result = brokerSchema.safeParse({
-      name: 'Test Broker',
+    const result = customerSchema.safeParse({
+      name: 'Test Customer',
       email: 'test@example.com',
-      licenseNumber: 'ABC123',
+      phone: '5551234567',
+      region: 'US-West',
     });
 
     expect(result.success).toBe(true);

@@ -1,6 +1,6 @@
 # Product Manager Best Practices
 
-Comprehensive guide for writing high-quality product requirements for Nebula.
+Comprehensive guide for writing high-quality product requirements.
 
 ## Table of Contents
 
@@ -30,7 +30,7 @@ Comprehensive guide for writing high-quality product requirements for Nebula.
 - **Keep stories small:** Should fit in one iteration (1-2 weeks)
 - **Write from user perspective:** Not "The system should..." but "As a user, I want..."
 - **Include the "So that":** The business value or benefit must be explicit
-- **Be specific about the persona:** Not just "user" but "Distribution Manager" or "Underwriter"
+- **Be specific about the persona:** Not just "user" but "Sales Operations Manager" or "Order Operations Specialist"
 
 #### DON'T:
 - **Write technical solutions:** Focus on what, not how
@@ -42,18 +42,18 @@ Comprehensive guide for writing high-quality product requirements for Nebula.
 ### Story Sizing
 
 **Too Small (Tasks, not stories):**
-- "Add a column to broker table"
+- "Add a column to customer table"
 - "Change button color to blue"
 - These lack user value and should be combined into meaningful stories
 
 **Right Size (Vertical slices):**
-- "Create new broker with basic information"
-- "Search brokers by name and license number"
+- "Create new customer with basic information"
+- "Search customers by name and email"
 - Delivers end-to-end value, testable, fits in one iteration
 
 **Too Large (Epics, not stories):**
-- "Implement broker management system"
-- "Build submission workflow"
+- "Implement customer management system"
+- "Build order workflow"
 - These need to be broken down into 5-10 smaller stories
 
 ---
@@ -68,8 +68,8 @@ Every user story should be INVEST:
 - Minimizes coordination overhead
 
 **Example:**
-✅ Good: "Create broker" and "Update broker" are independent
-❌ Bad: "Create broker part 1" and "Create broker part 2" are dependent
+✅ Good: "Create customer" and "Update customer" are independent
+❌ Bad: "Create customer part 1" and "Create customer part 2" are dependent
 
 ### **N - Negotiable**
 - Story describes what, not how
@@ -77,8 +77,8 @@ Every user story should be INVEST:
 - Leaves room for developer creativity
 
 **Example:**
-✅ Good: "Search brokers by name and license"
-❌ Bad: "Implement ElasticSearch for broker search with fuzzy matching algorithm"
+✅ Good: "Search customers by name and email"
+❌ Bad: "Implement ElasticSearch for customer search with fuzzy matching algorithm"
 
 ### **V - Valuable**
 - Delivers measurable value to users or business
@@ -86,7 +86,7 @@ Every user story should be INVEST:
 - Not just technical work
 
 **Example:**
-✅ Good: "Search brokers so I can quickly find the right contact"
+✅ Good: "Search customers so I can quickly find the right contact"
 ❌ Bad: "Add database indexes" (no user value)
 
 ### **E - Estimable**
@@ -104,8 +104,8 @@ Every user story should be INVEST:
 - Reduces risk and enables faster feedback
 
 **Example:**
-✅ Good: "Create broker with basic fields"
-❌ Bad: "Implement complete broker lifecycle management" (too large)
+✅ Good: "Create customer with basic fields"
+❌ Bad: "Implement complete customer lifecycle management" (too large)
 
 ### **T - Testable**
 - Has clear acceptance criteria
@@ -113,7 +113,7 @@ Every user story should be INVEST:
 - Pass/fail is unambiguous
 
 **Example:**
-✅ Good: "When I enter duplicate license, I see error 'License already exists'"
+✅ Good: "When I enter duplicate email, I see error 'Email already exists'"
 ❌ Bad: "Error handling should work properly" (not testable)
 
 ---
@@ -134,18 +134,18 @@ See `vertical-slicing-guide.md` for comprehensive guide on breaking features int
 - Reduces integration risk
 - Allows parallel development
 
-**Example: Broker Management**
+**Example: Customer Management**
 
 **❌ Horizontal (Don't do this):**
-1. Build all broker UI screens
-2. Build all broker APIs
-3. Build broker database schema
+1. Build all customer UI screens
+2. Build all customer APIs
+3. Build customer database schema
 
 **✅ Vertical (Do this):**
-1. Slice 1: Create broker (form → API → DB → list view)
-2. Slice 2: View broker 360 (detail screen → API → DB)
-3. Slice 3: Update broker (edit form → API → DB → timeline)
-4. Slice 4: Delete broker (confirmation → API → DB → timeline)
+1. Slice 1: Create customer (form → API → DB → list view)
+2. Slice 2: View customer 360 (detail screen → API → DB)
+3. Slice 3: Update customer (edit form → API → DB → timeline)
+4. Slice 4: Delete customer (confirmation → API → DB → timeline)
 
 ---
 
@@ -165,9 +165,9 @@ And [additional outcome]
 
 **Example:**
 ```
-Given I'm on the Broker List screen
-When I click "Add New Broker"
-Then I'm navigated to the Create Broker form
+Given I'm on the Customer List screen
+When I click "Add New Customer"
+Then I'm navigated to the Create Customer form
 And the form is empty except for default values
 ```
 
@@ -183,8 +183,8 @@ And the form is empty except for default values
 
 **Example:**
 ```
-- [ ] Broker name is displayed as page title
-- [ ] Status badge shows broker status (Active/Inactive/Suspended)
+- [ ] Customer name is displayed as page title
+- [ ] Status badge shows customer status (Active/Inactive/Suspended)
 - [ ] Edit and Delete buttons are visible to authorized users
 ```
 
@@ -206,16 +206,16 @@ Examples:
 
 **Example:**
 ```
-Scenario: License number validation
-Given I'm creating a new broker
-When I enter license number <license>
+Scenario: Email validation
+Given I'm creating a new customer
+When I enter email <email>
 Then I see <result>
 
 Examples:
-| license        | result                    |
-| CA-12345       | Accepted                  |
-| (blank)        | "License is required"     |
-| invalid-format | "Invalid license format"  |
+| email        | result                    |
+| j.smith@example.com | Accepted            |
+| (blank)        | "Email is required"     |
+| invalid-format | "Invalid email format"  |
 ```
 
 ---
@@ -245,27 +245,27 @@ Examples:
    - Phase 1: Important but not critical
    - Future: Nice-to-have enhancements
 
-### Example: Broker Management Epic → Stories
+### Example: Customer Management Epic → Stories
 
-**Epic E1: Broker & MGA Relationship Management**
+**Epic E1: Customer Relationship Management**
 
 **MVP Stories:**
-- S1: Create broker with basic information
-- S2: View broker list with search and filtering
-- S3: View broker 360 detail screen
-- S4: Update broker information
-- S5: Delete broker (soft delete)
-- S6: View broker timeline events
+- S1: Create customer with basic information
+- S2: View customer list with search and filtering
+- S3: View customer 360 detail screen
+- S4: Update customer information
+- S5: Delete customer (soft delete)
+- S6: View customer timeline events
 
 **Phase 1 Stories:**
-- S7: Manage broker hierarchy (parent/sub-broker)
-- S8: Manage broker contacts
-- S9: Bulk import brokers from CSV
-- S10: Export broker data
+- S7: Manage customer hierarchy (parent/sub-customer)
+- S8: Manage customer addresses
+- S9: Bulk import customers from CSV
+- S10: Export customer data
 
 **Future Stories:**
-- S11: Broker performance analytics
-- S12: Automated broker health scoring
+- S11: Customer performance analytics
+- S12: Automated customer health scoring
 
 ---
 
@@ -279,8 +279,8 @@ Instead of asking "What features do users want?", ask:
 - **So I can** [outcome/benefit]
 
 **Example:**
-- **When** I receive a new submission email
-- **I want to** quickly create a submission record and assign to an underwriter
+- **When** I receive a new order email
+- **I want to** quickly create an order record and assign it to an order operations specialist
 - **So I can** ensure fast turnaround and not lose track of opportunities
 
 ### Creating Effective Personas
@@ -318,9 +318,9 @@ Instead of asking "What features do users want?", ask:
 - "What are the biggest challenges you face with [task]?"
 
 **Closed-Ended Questions (Validate):**
-- "Can a broker have multiple licenses?"
-- "Is license number unique per broker or per state?"
-- "What happens when a submission is declined?"
+- "Can a customer have multiple addresses?"
+- "Is email unique per customer?"
+- "What happens when an order is cancelled?"
 
 **Prioritization Questions:**
 - "If you could only have three features, which would they be?"
@@ -330,15 +330,15 @@ Instead of asking "What features do users want?", ask:
 ### Validating Requirements
 
 Use the "Five Whys" technique:
-1. **Requirement:** "We need a broker dashboard"
-2. **Why?** "To see broker activity at a glance"
-3. **Why do you need that?** "To identify which brokers need follow-up"
-4. **Why identify that?** "To increase quote-to-bind ratio"
-5. **Why increase that?** "To grow premium and hit revenue targets"
+1. **Requirement:** "We need a customer dashboard"
+2. **Why?** "To see customer activity at a glance"
+3. **Why do you need that?** "To identify which customers need follow-up"
+4. **Why identify that?** "To increase order completion rate"
+5. **Why increase that?** "To grow revenue and hit retention targets"
 
-**Root need:** Increase premium growth by improving broker relationships
+**Root need:** Increase revenue growth by improving customer relationships
 
-**Better requirement:** "Broker relationship health score with recommended actions"
+**Better requirement:** "Customer relationship health score with recommended actions"
 
 ### Handling Scope Creep
 
@@ -391,12 +391,12 @@ Use the "Five Whys" technique:
 - Prevents scope creep during development
 - Documents why certain features were excluded
 
-**Example Non-Goals for Nebula Phase 0:**
+**Example Non-Goals for Generic Phase 0:**
 ```
 ### Non-Goals (Phase 0 MVP)
 
 **Out of Scope:**
-- External broker/MGA portal access
+- External customer self-service portal access
 - Document upload and versioning
 - Advanced analytics and dashboards
 - Bulk operations (import/export)
@@ -419,7 +419,7 @@ Use the "Five Whys" technique:
 > As a developer, I want to use PostgreSQL, so that I can store data
 
 **✅ Good:**
-> As a Distribution Manager, I want to search brokers by name, so I can quickly find contact information
+> As a Sales Operations Manager, I want to search customers by name, so I can quickly find contact information
 
 **Fix:** Focus on user needs, not technical solutions
 
@@ -431,7 +431,7 @@ Use the "Five Whys" technique:
 > The form should work properly and validate inputs
 
 **✅ Good:**
-> When I submit the form with blank License Number, I see error "License Number is required"
+> When I submit the form with blank Email, I see error "Email is required"
 
 **Fix:** Be specific, testable, and include examples
 
@@ -440,10 +440,10 @@ Use the "Five Whys" technique:
 ### Pitfall 3: Gold-Plating (Over-Specifying)
 
 **❌ Bad:**
-> The broker name field should be exactly 24px from the top, use Inter font at 18px, with #2C3E50 color...
+> The customer name field should be exactly 24px from the top, use Inter font at 18px, with #2C3E50 color...
 
 **✅ Good:**
-> The broker name field should be prominently displayed near the top of the form
+> The customer name field should be prominently displayed near the top of the form
 
 **Fix:** Specify what matters to users, defer styling details to designers
 
@@ -452,10 +452,10 @@ Use the "Five Whys" technique:
 ### Pitfall 4: Invented Business Rules
 
 **❌ Bad:**
-> (Assuming) A broker can only have 5 contacts maximum
+> (Assuming) A customer can only have 5 addresses maximum
 
 **✅ Good:**
-> [Question raised] Is there a limit to how many contacts a broker can have?
+> [Question raised] Is there a limit to how many addresses a customer can have?
 
 **Fix:** Ask questions when business rules are unclear
 
@@ -464,14 +464,14 @@ Use the "Five Whys" technique:
 ### Pitfall 5: Stories That Are Too Large
 
 **❌ Bad:**
-> As a Distribution Manager, I want to manage brokers, so I can track relationships
+> As a Sales Operations Manager, I want to manage customers, so I can track relationships
 
 **✅ Good:**
-> - S1: Create new broker
-> - S2: View broker list
-> - S3: View broker 360
-> - S4: Update broker
-> - S5: Delete broker
+> - S1: Create new customer
+> - S2: View customer list
+> - S3: View customer 360
+> - S4: Update customer
+> - S5: Delete customer
 
 **Fix:** Break large stories into thin vertical slices
 

@@ -14,6 +14,7 @@ import argparse
 import sys
 from pathlib import Path
 import xml.etree.ElementTree as ET
+from typing import Optional
 
 LCOV_CANDIDATES = [
     "coverage/lcov.info",
@@ -52,7 +53,7 @@ def parse_cobertura(path: Path) -> float:
     return float(line_rate) * 100.0
 
 
-def find_auto_file() -> Path | None:
+def find_auto_file() -> Optional[Path]:
     for candidate in LCOV_CANDIDATES + COBERTURA_CANDIDATES:
         path = Path(candidate)
         if path.exists():

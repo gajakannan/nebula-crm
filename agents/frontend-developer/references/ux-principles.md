@@ -8,7 +8,7 @@
 
 ## Overview
 
-This document compiles user experience (UX) principles and best practices to guide the design and implementation of Nebula's frontend. These principles ensure our insurance CRM is intuitive, efficient, and delightful to use.
+This document compiles user experience (UX) principles and best practices to guide the design and implementation of the application's frontend. These principles ensure the application is intuitive, efficient, and delightful to use.
 
 ---
 
@@ -33,12 +33,12 @@ Laws of UX is a collection of psychology-based design principles that inform bet
 ```tsx
 // ✅ GOOD - Large, easy-to-click primary action
 <Button size="lg" className="w-full md:w-auto">
-  Create Submission
+  Create Order
 </Button>
 
 // ❌ BAD - Small, hard-to-click action
 <Button size="xs" className="float-right">
-  Create Submission
+  Create Order
 </Button>
 ```
 
@@ -84,14 +84,14 @@ Laws of UX is a collection of psychology-based design principles that inform bet
 **Example:**
 ```tsx
 // ✅ GOOD - Chunked information
-<BrokerCard>
+<CustomerCard>
   <Section title="Contact Info">
     {/* 3-4 fields */}
   </Section>
-  <Section title="License Info">
+  <Section title="Address Info">
     {/* 3-4 fields */}
   </Section>
-</BrokerCard>
+</CustomerCard>
 
 // ❌ BAD - 15 fields in flat list
 <div>
@@ -141,23 +141,23 @@ Laws of UX is a collection of psychology-based design principles that inform bet
 ```tsx
 // ✅ GOOD - Related fields grouped with spacing
 <div className="space-y-6">
-  <div className="space-y-4"> {/* Broker Info */}
-    <Input label="Broker Name" />
-    <Input label="License Number" />
+  <div className="space-y-4"> {/* Customer Info */}
+    <Input label="Customer Name" />
+    <Input label="Email" />
   </div>
 
-  <div className="space-y-4"> {/* Contact Info */}
-    <Input label="Email" />
-    <Input label="Phone" />
+  <div className="space-y-4"> {/* Address Info */}
+    <Input label="Street" />
+    <Input label="City" />
   </div>
 </div>
 
 // ❌ BAD - All fields equally spaced (no grouping)
 <div className="space-y-4">
-  <Input label="Broker Name" />
+  <Input label="Customer Name" />
+  <Input label="Street" />
   <Input label="Email" />
-  <Input label="License Number" />
-  <Input label="Phone" />
+  <Input label="City" />
 </div>
 ```
 
@@ -174,8 +174,8 @@ Laws of UX is a collection of psychology-based design principles that inform bet
 // ✅ GOOD - Visual grouping with cards
 <div className="grid grid-cols-2 gap-4">
   <Card>
-    <CardHeader>Broker Information</CardHeader>
-    <CardContent>{/* Broker fields */}</CardContent>
+    <CardHeader>Customer Information</CardHeader>
+    <CardContent>{/* Customer fields */}</CardContent>
   </Card>
   <Card>
     <CardHeader>Activity Timeline</CardHeader>
@@ -185,7 +185,7 @@ Laws of UX is a collection of psychology-based design principles that inform bet
 
 // ❌ BAD - No visual boundaries
 <div>
-  <h3>Broker Information</h3>
+  <h3>Customer Information</h3>
   {/* Fields */}
   <h3>Activity Timeline</h3>
   {/* Timeline */}
@@ -230,11 +230,11 @@ Laws of UX is a collection of psychology-based design principles that inform bet
 ```tsx
 // ✅ GOOD - Polished with transitions
 <Button className="transition-all hover:scale-105 hover:shadow-lg">
-  Create Submission
+  Create Order
 </Button>
 
 // ❌ BAD - No polish, abrupt changes
-<button>Create Submission</button>
+<button>Create Order</button>
 ```
 
 #### 9. Doherty Threshold
@@ -251,19 +251,19 @@ Laws of UX is a collection of psychology-based design principles that inform bet
 ```tsx
 // ✅ GOOD - Immediate feedback
 const { mutate, isPending } = useMutation({
-  mutationFn: createBroker,
-  onMutate: async (newBroker) => {
+  mutationFn: createCustomer,
+  onMutate: async (newCustomer) => {
     // Optimistic update
-    queryClient.setQueryData(['brokers'], (old) => [...old, newBroker]);
+    queryClient.setQueryData(['customers'], (old) => [...old, newCustomer]);
   },
 });
 
 <Button disabled={isPending}>
-  {isPending ? <Spinner /> : 'Create Broker'}
+  {isPending ? <Spinner /> : 'Create Customer'}
 </Button>
 
 // ❌ BAD - No loading state
-<Button onClick={createBroker}>Create Broker</Button>
+<Button onClick={createCustomer}>Create Customer</Button>
 ```
 
 #### 10. Goal-Gradient Effect
@@ -313,17 +313,17 @@ Industry-leading UX research organization. Key concepts:
 
 ```tsx
 // ✅ Visibility of system status
-<SubmissionCard>
+<OrderCard>
   <StatusBadge status="in_review" />
   <p className="text-sm text-muted">
     Updated 2 minutes ago by John Doe
   </p>
-</SubmissionCard>
+</OrderCard>
 
 // ✅ User control and freedom
 <Dialog>
   <DialogContent>
-    <p>Are you sure you want to delete this broker?</p>
+    <p>Are you sure you want to delete this customer?</p>
     <div className="flex gap-2">
       <Button variant="outline" onClick={onCancel}>Cancel</Button>
       <Button variant="destructive" onClick={onConfirm}>Delete</Button>
@@ -342,12 +342,12 @@ Industry-leading UX research organization. Key concepts:
 // ✅ Recognition over recall (autocomplete)
 <Combobox>
   <ComboboxTrigger>
-    <ComboboxValue placeholder="Select broker..." />
+    <ComboboxValue placeholder="Select customer..." />
   </ComboboxTrigger>
   <ComboboxContent>
-    {brokers.map(broker => (
-      <ComboboxItem key={broker.id} value={broker.id}>
-        {broker.name} - {broker.licenseNumber}
+    {customers.map(customer => (
+      <ComboboxItem key={customer.id} value={customer.id}>
+        {customer.name} - {customer.email}
       </ComboboxItem>
     ))}
   </ComboboxContent>
@@ -367,15 +367,15 @@ Practical design tips by Tailwind CSS creators. Key takeaways:
 ```tsx
 // ✅ GOOD - Clear hierarchy
 <div>
-  <h1 className="text-2xl font-bold text-gray-900">Broker Details</h1>
-  <p className="text-sm font-medium text-gray-700">License Information</p>
+  <h1 className="text-2xl font-bold text-gray-900">Customer Details</h1>
+  <p className="text-sm font-medium text-gray-700">Contact Information</p>
   <p className="text-sm text-gray-500">Additional details below</p>
 </div>
 
 // ❌ BAD - No hierarchy
 <div>
-  <h1 className="text-lg">Broker Details</h1>
-  <p className="text-lg">License Information</p>
+  <h1 className="text-lg">Customer Details</h1>
+  <p className="text-lg">Contact Information</p>
   <p className="text-lg">Additional details below</p>
 </div>
 ```
@@ -442,20 +442,20 @@ Accessible component patterns by Heydon Pickering.
 
 // ✅ GOOD - Proper heading hierarchy
 <article>
-  <h1>Broker 360</h1>
+  <h1>Customer 360</h1>
   <section>
     <h2>Contact Information</h2>
-    <h3>Primary Contact</h3>
+    <h3>Primary Address</h3>
   </section>
   <section>
-    <h2>Submission History</h2>
+    <h2>Order History</h2>
   </section>
 </article>
 ```
 
 ---
 
-## Insurance CRM-Specific UX Patterns
+## Application-Specific UX Patterns
 
 ### Data-Heavy Interfaces
 - Use **tables with fixed headers** for long lists
@@ -472,8 +472,8 @@ Accessible component patterns by Heydon Pickering.
 ### Forms and Data Entry
 - **Autosave drafts** every 30 seconds
 - Show **validation inline** as user types (debounced)
-- Use **smart defaults** from previous submissions
-- **Prefill data** from related entities (e.g., broker info)
+- Use **smart defaults** from previous orders
+- **Prefill data** from related entities (e.g., customer info)
 
 ### Search and Filters
 - **Search across all fields** by default
@@ -502,11 +502,11 @@ Accessible component patterns by Heydon Pickering.
     <Skeleton className="h-12 w-full" />
   </div>
 ) : (
-  <BrokerList brokers={data} />
+  <CustomerList customers={data} />
 )}
 
 // ❌ BAD - Blank screen while loading
-{!isLoading && <BrokerList brokers={data} />}
+{!isLoading && <CustomerList customers={data} />}
 ```
 
 ---
@@ -547,7 +547,7 @@ Accessible component patterns by Heydon Pickering.
 ```tsx
 // ✅ GOOD - Helpful error message
 <Input
-  error="Email is required. Please enter a valid email address like broker@example.com"
+  error="Email is required. Please enter a valid email address like user@example.com"
 />
 
 // ❌ BAD - Vague error
@@ -555,19 +555,19 @@ Accessible component patterns by Heydon Pickering.
 ```
 
 ### Empty States
-- **Explain why it's empty** - "No submissions yet"
-- **Provide next action** - "Create your first submission"
+- **Explain why it's empty** - "No orders yet"
+- **Provide next action** - "Create your first order"
 - **Add illustration or icon** - Visual interest
 
 ```tsx
 // ✅ GOOD - Helpful empty state
 <EmptyState>
   <EmptyStateIcon icon={FileText} />
-  <EmptyStateTitle>No submissions yet</EmptyStateTitle>
+  <EmptyStateTitle>No orders yet</EmptyStateTitle>
   <EmptyStateDescription>
-    Create your first submission to get started
+    Create your first order to get started
   </EmptyStateDescription>
-  <Button onClick={openCreateDialog}>Create Submission</Button>
+  <Button onClick={openCreateDialog}>Create Order</Button>
 </EmptyState>
 ```
 

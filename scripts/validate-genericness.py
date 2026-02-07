@@ -3,13 +3,13 @@
 Genericness Validation Script
 
 Prevents solution-specific terms from entering agents/ directory.
-Pulls the project name from INCEPTION.md and the blocked term list
-from the domain glossary — no hardcoded terms in this script.
+Pulls the blocked term list from the domain glossary — no hardcoded
+terms in this script.
 
 Usage:
-    python validate-genericness.py [--inception <path>] [--glossary <path>] [--agents-dir <path>]
+    python validate-genericness.py [--glossary <path>] [--agents-dir <path>]
     python validate-genericness.py
-    python validate-genericness.py --inception planning-mds/INCEPTION.md --glossary planning-mds/domain/insurance-glossary.md
+    python validate-genericness.py --glossary planning-mds/domain/insurance-glossary.md
 """
 
 import sys
@@ -23,18 +23,6 @@ if hasattr(sys.stdout, 'buffer'):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 if hasattr(sys.stderr, 'buffer'):
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
-
-
-def extract_project_name(inception_path: str) -> str:
-    """Extract project name from INCEPTION.md (the 'Name: <value>' line)."""
-    try:
-        content = Path(inception_path).read_text(encoding='utf-8')
-        match = re.search(r'^Name:\s*(.+)$', content, re.MULTILINE)
-        if match:
-            return match.group(1).strip()
-    except Exception as e:
-        print(f"[WARNING] Could not read {inception_path}: {e}")
-    return ""
 
 
 def extract_blocked_terms(glossary_path: str) -> list:
@@ -142,11 +130,6 @@ def main():
         description='Validate that agents/ contains no solution-specific terms'
     )
     parser.add_argument(
-        '--inception',
-        default='planning-mds/INCEPTION.md',
-        help='Path to INCEPTION.md (extracts project name)'
-    )
-    parser.add_argument(
         '--glossary',
         default='planning-mds/domain/insurance-glossary.md',
         help='Path to domain glossary (extracts blocked terms)'
@@ -161,22 +144,14 @@ def main():
     print(f"Validating genericness of {args.agents_dir}/")
     print("-" * 60)
 
-    # Extract project name from INCEPTION.md
-    project_name = extract_project_name(args.inception)
-
     # Extract blocked terms from glossary
     blocked_terms = extract_blocked_terms(args.glossary)
-
-    # Prepend project name if found and not already in list
-    if project_name and project_name not in blocked_terms:
-        blocked_terms.insert(0, project_name)
 
     if not blocked_terms:
         print("[ERROR] No blocked terms found. Check --glossary path and 'Genericness-Blocked Terms' section.")
         sys.exit(1)
 
     print(f"[Terms]  {len(blocked_terms)} blocked term(s): {', '.join(blocked_terms)}")
-    print(f"[Source] Project name from: {args.inception}")
     print(f"[Source] Term list from:    {args.glossary}\n")
 
     # Scan

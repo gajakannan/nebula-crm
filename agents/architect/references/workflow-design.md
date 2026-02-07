@@ -1,6 +1,6 @@
 # Workflow Design Guide
 
-Comprehensive guide for designing workflows and state machines for the Nebula insurance CRM. This guide covers workflow fundamentals, Temporal integration, submission workflow patterns, renewal workflows, and event sourcing.
+Comprehensive guide for designing workflows and state machines. This guide covers workflow fundamentals, Temporal integration, order workflow patterns, subscription expiration workflows, and event sourcing.
 
 ---
 
@@ -11,8 +11,8 @@ Comprehensive guide for designing workflows and state machines for the Nebula in
 **State Machine** is a model of computation with defined states and transitions.
 
 **Components:**
-- **States**: Discrete stages in a workflow (Received, Triaging, InReview, Quoted, Bound)
-- **Transitions**: Allowed state changes (Triaging → ReadyForUWReview)
+- **States**: Discrete stages in a workflow (Received, Pending, InReview, Approved, Completed)
+- **Transitions**: Allowed state changes (Pending → ReadyForReview)
 - **Events**: Triggers for transitions (user action, time-based, external system)
 - **Guards**: Conditions that must be true for transition to occur (required fields populated)
 - **Actions**: Side effects executed on transition (send email, log event)
@@ -22,30 +22,30 @@ Comprehensive guide for designing workflows and state machines for the Nebula in
 ### 1.2 State Types
 
 **Initial State:**
-- Entry point of workflow (e.g., Received for submissions)
+- Entry point of workflow (e.g., Received for orders)
 - Created automatically when entity created
 
 **Active States:**
-- Work-in-progress states (Triaging, InReview, Quoted)
+- Work-in-progress states (Pending, InReview, Approved)
 - Can transition to other states
 
 **Terminal States:**
-- End states, no further transitions allowed (Bound, Declined, Withdrawn)
+- End states, no further transitions allowed (Completed, Rejected, Cancelled)
 - Workflow complete
 
 **Example:**
 ```
 Received (initial)
     ↓
-Triaging (active)
+Pending (active)
     ↓
-ReadyForUWReview (active)
+ReadyForReview (active)
     ↓
 InReview (active)
     ↓
-Quoted (active)
+Approved (active)
     ↓
-Bound (terminal)
+Completed (terminal)
 ```
 
 ---
@@ -60,14 +60,14 @@ Bound (terminal)
 ```csharp
 private static readonly Dictionary<string, List<string>> AllowedTransitions = new()
 {
-    ["Triaging"] = new() { "WaitingOnBroker", "ReadyForUWReview", "Declined", "Withdrawn" },
-    ["ReadyForUWReview"] = new() { "InReview", "WaitingOnBroker", "Declined", "Withdrawn" },
-    ["InReview"] = new() { "Quoted", "WaitingOnBroker", "Declined", "Withdrawn" },
-    ["Quoted"] = new() { "BindRequested", "Declined", "Withdrawn" },
-    ["BindRequested"] = new() { "Bound", "Declined" },
-    ["Bound"] = new(), // Terminal, no transitions
-    ["Declined"] = new(), // Terminal
-    ["Withdrawn"] = new() // Terminal
+    ["Pending"] = new() { "NeedsInfo", "ReadyForReview", "Rejected", "Cancelled" },
+    ["ReadyForReview"] = new() { "InReview", "NeedsInfo", "Rejected", "Cancelled" },
+    ["InReview"] = new() { "Approved", "NeedsInfo", "Rejected", "Cancelled" },
+    ["Approved"] = new() { "PaymentPending", "Rejected", "Cancelled" },
+    ["PaymentPending"] = new() { "Completed", "Rejected" },
+    ["Completed"] = new(), // Terminal, no transitions
+    ["Rejected"] = new(), // Terminal
+    ["Cancelled"] = new() // Terminal
 };
 
 public static bool IsValidTransition(string fromStatus, string toStatus)
@@ -81,16 +81,16 @@ public static bool IsValidTransition(string fromStatus, string toStatus)
 ### 1.4 Workflow Events (Triggers)
 
 **User-Initiated Events:**
-- User clicks "Submit for Review" button → transition to ReadyForUWReview
-- Underwriter clicks "Generate Quote" → transition to Quoted
+- User clicks "Submit for Review" button → transition to ReadyForReview
+- Manager clicks "Approve" → transition to Approved
 
 **Time-Based Events:**
-- 120 days before policy expiration → trigger renewal reminder
-- 30 days before renewal due → escalate to manager
+- 120 days before subscription expiration → trigger expiration reminder
+- 30 days before expiration → escalate to manager
 
 **System Events:**
-- Payment confirmed → transition to Bound
-- External rating API returns quote → transition to Quoted
+- Payment confirmed → transition to Completed
+- External pricing API returns quote → transition to Approved
 
 ---
 
@@ -98,10 +98,10 @@ public static bool IsValidTransition(string fromStatus, string toStatus)
 
 **Compensation** is the process of undoing a workflow step when a later step fails.
 
-**Example: Bind Request Fails**
-- Transition to BindRequested
+**Example: Payment Request Fails**
+- Transition to PaymentPending
 - Call payment API → fails
-- Compensate: Transition back to Quoted
+- Compensate: Transition back to Approved
 - Log compensation event
 
 **Saga Pattern:** Sequence of local transactions with compensating transactions for rollback.
@@ -119,19 +119,19 @@ public static bool IsValidTransition(string fromStatus, string toStatus)
 
 **Example:**
 ```csharp
-public async Task TransitionAsync(Guid submissionId, string toStatus)
+public async Task TransitionAsync(Guid orderId, string toStatus)
 {
-    var submission = await _context.Submissions.FindAsync(submissionId);
+    var order = await _context.Orders.FindAsync(orderId);
 
     // Idempotency check
-    if (submission.Status == toStatus)
+    if (order.Status == toStatus)
         return; // Already in target state, no-op
 
     // Validate and execute transition
-    if (!IsValidTransition(submission.Status, toStatus))
+    if (!IsValidTransition(order.Status, toStatus))
         throw new InvalidTransitionException();
 
-    submission.Status = toStatus;
+    order.Status = toStatus;
     await _context.SaveChangesAsync();
 }
 ```
@@ -145,7 +145,7 @@ public async Task TransitionAsync(Guid submissionId, string toStatus)
 **Temporal** is a durable workflow orchestration engine.
 
 **Use Cases:**
-- Long-running workflows (renewal reminders spanning months)
+- Long-running workflows (expiration reminders spanning months)
 - Scheduled tasks (send reminder 120 days before expiration)
 - Reliable retries (retry failed external API calls)
 - Workflow versioning (change workflow logic without breaking in-flight workflows)
@@ -160,47 +160,47 @@ public async Task TransitionAsync(Guid submissionId, string toStatus)
 using Temporalio.Workflows;
 
 [Workflow]
-public class RenewalReminderWorkflow
+public class ExpirationReminderWorkflow
 {
     [WorkflowRun]
-    public async Task RunAsync(RenewalWorkflowInput input)
+    public async Task RunAsync(ExpirationWorkflowInput input)
     {
-        var policy = input.Policy;
+        var subscription = input.Subscription;
 
         // Schedule reminder 120 days before expiration
-        var delay120 = policy.ExpirationDate.AddDays(-120) - DateTime.UtcNow;
+        var delay120 = subscription.ExpirationDate.AddDays(-120) - DateTime.UtcNow;
         if (delay120 > TimeSpan.Zero)
         {
             await Workflow.DelayAsync(delay120);
-            await Workflow.ExecuteActivityAsync<SendRenewalReminderActivity>(
-                new ReminderActivityInput { PolicyId = policy.Id, DaysOut = 120 });
+            await Workflow.ExecuteActivityAsync<SendExpirationReminderActivity>(
+                new ReminderActivityInput { SubscriptionId = subscription.Id, DaysOut = 120 });
         }
 
         // Schedule reminder 90 days before expiration
         await Workflow.DelayAsync(TimeSpan.FromDays(30));
-        await Workflow.ExecuteActivityAsync<SendRenewalReminderActivity>(
-            new ReminderActivityInput { PolicyId = policy.Id, DaysOut = 90 });
+        await Workflow.ExecuteActivityAsync<SendExpirationReminderActivity>(
+            new ReminderActivityInput { SubscriptionId = subscription.Id, DaysOut = 90 });
 
         // Schedule reminder 60 days before expiration
         await Workflow.DelayAsync(TimeSpan.FromDays(30));
-        await Workflow.ExecuteActivityAsync<SendRenewalReminderActivity>(
-            new ReminderActivityInput { PolicyId = policy.Id, DaysOut = 60 });
+        await Workflow.ExecuteActivityAsync<SendExpirationReminderActivity>(
+            new ReminderActivityInput { SubscriptionId = subscription.Id, DaysOut = 60 });
 
-        // Check if renewal submission created
-        var renewalCreated = await Workflow.ExecuteActivityAsync<CheckRenewalSubmissionActivity>(
-            policy.Id);
+        // Check if follow-up order created
+        var followUpOrderCreated = await Workflow.ExecuteActivityAsync<CheckFollowUpOrderActivity>(
+            subscription.Id);
 
-        if (!renewalCreated)
+        if (!followUpOrderCreated)
         {
-            // Escalate to manager if no renewal 30 days before expiration
+            // Escalate to manager if no follow-up order 30 days before expiration
             await Workflow.DelayAsync(TimeSpan.FromDays(30));
-            await Workflow.ExecuteActivityAsync<EscalateRenewalActivity>(policy.Id);
+            await Workflow.ExecuteActivityAsync<EscalateFollowUpActivity>(subscription.Id);
         }
     }
 }
 
 // Workflow input
-public record RenewalWorkflowInput(Guid PolicyId, Policy Policy);
+public record ExpirationWorkflowInput(Guid SubscriptionId, Subscription Subscription);
 ```
 
 ---
@@ -215,19 +215,19 @@ public record RenewalWorkflowInput(Guid PolicyId, Policy Policy);
 using Temporalio.Activities;
 
 [Activity]
-public class SendRenewalReminderActivity
+public class SendExpirationReminderActivity
 {
     private readonly IEmailService _emailService;
 
     [ActivityMethod]
     public async Task ExecuteAsync(ReminderActivityInput input)
     {
-        var policy = await _policyRepository.GetByIdAsync(input.PolicyId);
+        var subscription = await _subscriptionRepository.GetByIdAsync(input.SubscriptionId);
 
-        await _emailService.SendRenewalReminderAsync(
-            to: policy.BrokerEmail,
-            subject: $"Renewal Reminder - {input.DaysOut} Days",
-            body: $"Your policy {policy.PolicyNumber} expires in {input.DaysOut} days.");
+        await _emailService.SendExpirationReminderAsync(
+            to: subscription.CustomerEmail,
+            subject: $"Expiration Reminder - {input.DaysOut} Days",
+            body: $"Your subscription {subscription.SubscriptionNumber} expires in {input.DaysOut} days.");
     }
 }
 ```
@@ -243,23 +243,23 @@ public class SendRenewalReminderActivity
 
 **Signals** send events to running workflows from external systems.
 
-**Example: Renewal Submitted Signal**
+**Example: Follow-up Order Submitted Signal**
 
 ```csharp
 [Workflow]
-public class RenewalReminderWorkflow
+public class ExpirationReminderWorkflow
 {
-    private bool _renewalSubmitted = false;
+    private bool _followUpOrderSubmitted = false;
 
     [WorkflowRun]
-    public async Task RunAsync(RenewalWorkflowInput input)
+    public async Task RunAsync(ExpirationWorkflowInput input)
     {
         // ... schedule reminders
 
-        // Wait for renewal submission or expiration date
-        await Workflow.WaitConditionAsync(() => _renewalSubmitted || DateTime.UtcNow >= input.Policy.ExpirationDate);
+        // Wait for follow-up order or expiration date
+        await Workflow.WaitConditionAsync(() => _followUpOrderSubmitted || DateTime.UtcNow >= input.Subscription.ExpirationDate);
 
-        if (_renewalSubmitted)
+        if (_followUpOrderSubmitted)
         {
             // Success, workflow complete
             return;
@@ -267,21 +267,21 @@ public class RenewalReminderWorkflow
         else
         {
             // Expiration reached, escalate
-            await Workflow.ExecuteActivityAsync<EscalateRenewalActivity>(input.PolicyId);
+            await Workflow.ExecuteActivityAsync<EscalateFollowUpActivity>(input.SubscriptionId);
         }
     }
 
     [WorkflowSignal]
-    public async Task RenewalSubmittedAsync()
+    public async Task FollowUpOrderSubmittedAsync()
     {
-        _renewalSubmitted = true;
+        _followUpOrderSubmitted = true;
     }
 }
 
 // External system signals workflow
-await _temporalClient.SignalWorkflowAsync<RenewalReminderWorkflow>(
-    workflowId: $"renewal-{policyId}",
-    signal: wf => wf.RenewalSubmittedAsync());
+await _temporalClient.SignalWorkflowAsync<ExpirationReminderWorkflow>(
+    workflowId: $"expiration-{subscriptionId}",
+    signal: wf => wf.FollowUpOrderSubmittedAsync());
 ```
 
 ---
@@ -292,7 +292,7 @@ await _temporalClient.SignalWorkflowAsync<RenewalReminderWorkflow>(
 
 ```csharp
 [Workflow]
-public class RenewalReminderWorkflow
+public class ExpirationReminderWorkflow
 {
     private int _remindersSent = 0;
 
@@ -300,16 +300,16 @@ public class RenewalReminderWorkflow
     public int GetRemindersSent() => _remindersSent;
 
     [WorkflowRun]
-    public async Task RunAsync(RenewalWorkflowInput input)
+    public async Task RunAsync(ExpirationWorkflowInput input)
     {
-        await Workflow.ExecuteActivityAsync<SendRenewalReminderActivity>(...);
+        await Workflow.ExecuteActivityAsync<SendExpirationReminderActivity>(...);
         _remindersSent++;
     }
 }
 
 // Query workflow
-var remindersSent = await _temporalClient.QueryWorkflowAsync<RenewalReminderWorkflow, int>(
-    workflowId: $"renewal-{policyId}",
+var remindersSent = await _temporalClient.QueryWorkflowAsync<ExpirationReminderWorkflow, int>(
+    workflowId: $"expiration-{subscriptionId}",
     query: wf => wf.GetRemindersSent());
 ```
 
@@ -327,10 +327,10 @@ var remindersSent = await _temporalClient.QueryWorkflowAsync<RenewalReminderWork
 
 ```csharp
 [Workflow]
-public class RenewalReminderWorkflow
+public class ExpirationReminderWorkflow
 {
     [WorkflowRun]
-    public async Task RunAsync(RenewalWorkflowInput input)
+    public async Task RunAsync(ExpirationWorkflowInput input)
     {
         var version = Workflow.GetVersion("add-60-day-reminder", Workflow.DefaultVersion, 2);
 
@@ -338,7 +338,7 @@ public class RenewalReminderWorkflow
         {
             // New logic: Send 60-day reminder
             await Workflow.DelayAsync(TimeSpan.FromDays(60));
-            await Workflow.ExecuteActivityAsync<SendRenewalReminderActivity>(...);
+            await Workflow.ExecuteActivityAsync<SendExpirationReminderActivity>(...);
         }
     }
 }
@@ -350,70 +350,67 @@ public class RenewalReminderWorkflow
 
 ---
 
-## 3. Submission Workflow Deep Dive
+## 3. Order Workflow Deep Dive
 
 ### 3.1 Complete State Machine
 
 **States:**
 1. Received (initial)
-2. Triaging
-3. WaitingOnBroker
-4. ReadyForUWReview
+2. Pending
+3. NeedsInfo
+4. ReadyForReview
 5. InReview
-6. Quoted
-7. BindRequested
-8. Bound (terminal)
-9. Declined (terminal)
-10. Withdrawn (terminal)
+6. Approved
+7. PaymentPending
+8. Completed (terminal)
+9. Rejected (terminal)
+10. Cancelled (terminal)
 
 **Transition Matrix:**
 
 | From | To | Prerequisites | Authorization | Side Effects |
 |------|----|--------------|--------------|--------------|
-| Received | Triaging | None | System | Log timeline event |
-| Triaging | WaitingOnBroker | Missing info documented | Distribution, Admin | Email broker, log event |
-| Triaging | ReadyForUWReview | All required fields | Distribution, Admin | Email underwriters, log event |
-| Triaging | Declined | Decline reason | Distribution, Admin | Email broker, log event |
-| WaitingOnBroker | ReadyForUWReview | Missing info received | Distribution, Admin | Email underwriters, log event |
-| ReadyForUWReview | InReview | Underwriter assigned | Underwriter, Admin | Log event |
-| InReview | Quoted | Quote generated | Underwriter, Admin | Email broker, log event |
-| Quoted | BindRequested | Broker acceptance | Distribution, Admin | Call payment API, log event |
-| BindRequested | Bound | Payment confirmed | Underwriter, Admin | Issue policy, email broker, log event |
+| Received | Pending | None | System | Log timeline event |
+| Pending | NeedsInfo | Missing info documented | User, Admin | Email customer, log event |
+| Pending | ReadyForReview | All required fields | User, Admin | Email reviewers, log event |
+| Pending | Rejected | Rejection reason | User, Admin | Email customer, log event |
+| NeedsInfo | ReadyForReview | Missing info received | User, Admin | Email reviewers, log event |
+| ReadyForReview | InReview | Reviewer assigned | Manager, Admin | Log event |
+| InReview | Approved | Approval granted | Manager, Admin | Email customer, log event |
+| Approved | PaymentPending | Customer acceptance | User, Admin | Call payment API, log event |
+| PaymentPending | Completed | Payment confirmed | Manager, Admin | Generate invoice, email customer, log event |
 
 ---
 
 ### 3.2 Validation Rules Per Transition
 
-**Triaging → ReadyForUWReview:**
+**Pending → ReadyForReview:**
 
 ```csharp
-public async Task ValidateReadyForUWReview(Submission submission)
+public async Task ValidateReadyForReview(Order order)
 {
     var errors = new List<string>();
 
-    if (string.IsNullOrEmpty(submission.InsuredName))
-        errors.Add("Insured name is required");
+    if (string.IsNullOrEmpty(order.CustomerName))
+        errors.Add("Customer name is required");
 
-    if (submission.CoverageType == null)
-        errors.Add("Coverage type is required");
+    if (order.Category == null)
+        errors.Add("Category is required");
 
-    if (submission.ProgramId == null)
-        errors.Add("Program must be selected");
+    if (order.CustomerId == null)
+        errors.Add("Customer must be assigned");
 
-    if (submission.BrokerId == null)
-        errors.Add("Broker must be assigned");
+    if (order.OrderDate == default)
+        errors.Add("Order date is required");
 
-    if (submission.EffectiveDate == default)
-        errors.Add("Effective date is required");
+    if (order.DueDate == default)
+        errors.Add("Due date is required");
 
-    if (submission.ExpirationDate == default)
-        errors.Add("Expiration date is required");
-
-    if (submission.EffectiveDate >= submission.ExpirationDate)
-        errors.Add("Expiration date must be after effective date");
+    if (order.OrderDate >= order.DueDate)
+        errors.Add("Due date must be after order date");
 
     if (errors.Any())
-        throw new ValidationException("Cannot transition to ReadyForUWReview", errors);
+        throw new ValidationException("Cannot transition to ReadyForReview", errors);
 }
 ```
 
@@ -424,14 +421,14 @@ public async Task ValidateReadyForUWReview(Submission submission)
 **On Transition:**
 
 ```csharp
-public async Task OnTransitionedToReadyForUWReview(Submission submission)
+public async Task OnTransitionedToReadyForReview(Order order)
 {
     // 1. Create workflow transition event (immutable)
     await _context.WorkflowTransitions.AddAsync(new WorkflowTransition
     {
-        SubmissionId = submission.Id,
-        FromStatus = "Triaging",
-        ToStatus = "ReadyForUWReview",
+        OrderId = order.Id,
+        FromStatus = "Pending",
+        ToStatus = "ReadyForReview",
         TransitionedAt = DateTime.UtcNow,
         TransitionedBy = _currentUser.UserId
     });
@@ -439,16 +436,16 @@ public async Task OnTransitionedToReadyForUWReview(Submission submission)
     // 2. Create timeline event
     await _context.ActivityTimelineEvents.AddAsync(new ActivityTimelineEvent
     {
-        EntityType = "Submission",
-        EntityId = submission.Id,
-        EventType = "SubmissionReadyForReview",
+        EntityType = "Order",
+        EntityId = order.Id,
+        EventType = "OrderReadyForReview",
         UserId = _currentUser.UserId,
         Timestamp = DateTime.UtcNow,
-        Payload = new { submissionNumber = submission.SubmissionNumber }
+        Payload = new { orderNumber = order.OrderNumber }
     });
 
-    // 3. Send email notification to underwriting team
-    await _emailService.SendSubmissionReadyEmailAsync(submission);
+    // 3. Send email notification to review team
+    await _emailService.SendOrderReadyForReviewEmailAsync(order);
 
     await _context.SaveChangesAsync();
 }
@@ -463,10 +460,10 @@ public async Task OnTransitionedToReadyForUWReview(Submission submission)
 ```json
 {
   "code": "INVALID_TRANSITION",
-  "message": "Cannot transition from Bound to Triaging",
+  "message": "Cannot transition from Completed to Pending",
   "details": {
-    "currentStatus": "Bound",
-    "attemptedStatus": "Triaging",
+    "currentStatus": "Completed",
+    "attemptedStatus": "Pending",
     "allowedStatuses": []
   }
 }
@@ -477,47 +474,47 @@ public async Task OnTransitionedToReadyForUWReview(Submission submission)
 ```json
 {
   "code": "MISSING_REQUIRED_FIELDS",
-  "message": "Cannot transition to ReadyForUWReview. Missing required fields.",
+  "message": "Cannot transition to ReadyForReview. Missing required fields.",
   "details": [
-    { "field": "insuredName", "message": "Insured name is required" },
-    { "field": "program", "message": "Program must be selected" }
+    { "field": "customerName", "message": "Customer name is required" },
+    { "field": "category", "message": "Category is required" }
   ]
 }
 ```
 
 ---
 
-### 3.5 Compensation (Rollback if Bind Fails)
+### 3.5 Compensation (Rollback if Payment Fails)
 
-**Scenario:** Transition to BindRequested → Payment API fails → Rollback to Quoted
+**Scenario:** Transition to PaymentPending → Payment API fails → Rollback to Approved
 
 ```csharp
-public async Task TransitionToBindRequestedAsync(Guid submissionId)
+public async Task TransitionToPaymentPendingAsync(Guid orderId)
 {
-    var submission = await _context.Submissions.FindAsync(submissionId);
+    var order = await _context.Orders.FindAsync(orderId);
 
-    // Transition to BindRequested
-    submission.Status = "BindRequested";
+    // Transition to PaymentPending
+    order.Status = "PaymentPending";
     await _context.SaveChangesAsync();
 
     try
     {
         // Call payment API
-        var paymentResult = await _paymentService.ProcessPaymentAsync(submission);
+        var paymentResult = await _paymentService.ProcessPaymentAsync(order);
 
         if (!paymentResult.Success)
             throw new PaymentFailedException(paymentResult.Error);
     }
     catch (Exception ex)
     {
-        // Compensate: Rollback to Quoted
-        submission.Status = "Quoted";
+        // Compensate: Rollback to Approved
+        order.Status = "Approved";
 
         await _context.WorkflowTransitions.AddAsync(new WorkflowTransition
         {
-            SubmissionId = submissionId,
-            FromStatus = "BindRequested",
-            ToStatus = "Quoted",
+            OrderId = orderId,
+            FromStatus = "PaymentPending",
+            ToStatus = "Approved",
             TransitionedAt = DateTime.UtcNow,
             TransitionedBy = _currentUser.UserId,
             Reason = $"Payment failed: {ex.Message}"
@@ -532,55 +529,55 @@ public async Task TransitionToBindRequestedAsync(Guid submissionId)
 
 ---
 
-## 4. Renewal Workflow
+## 4. Subscription Expiration Workflow
 
 ### 4.1 Scheduled Reminders
 
-**Temporal Workflow for Renewal Reminders:**
+**Temporal Workflow for expiration reminders:**
 
 ```csharp
 [Workflow]
-public class RenewalReminderWorkflow
+public class ExpirationReminderWorkflow
 {
     [WorkflowRun]
-    public async Task RunAsync(RenewalWorkflowInput input)
+    public async Task RunAsync(ExpirationWorkflowInput input)
     {
-        var policy = input.Policy;
+        var subscription = input.Subscription;
 
         // Reminder 1: 120 days before expiration
-        var delay120 = policy.ExpirationDate.AddDays(-120) - Workflow.UtcNow;
+        var delay120 = subscription.ExpirationDate.AddDays(-120) - Workflow.UtcNow;
         if (delay120 > TimeSpan.Zero)
         {
             await Workflow.DelayAsync(delay120);
-            await Workflow.ExecuteActivityAsync<SendRenewalReminderActivity>(
-                new ReminderActivityInput { PolicyId = policy.Id, DaysOut = 120 },
+            await Workflow.ExecuteActivityAsync<SendExpirationReminderActivity>(
+                new ReminderActivityInput { SubscriptionId = subscription.Id, DaysOut = 120 },
                 new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
         }
 
         // Reminder 2: 90 days before expiration
         await Workflow.DelayAsync(TimeSpan.FromDays(30));
-        await Workflow.ExecuteActivityAsync<SendRenewalReminderActivity>(
-            new ReminderActivityInput { PolicyId = policy.Id, DaysOut = 90 });
+        await Workflow.ExecuteActivityAsync<SendExpirationReminderActivity>(
+            new ReminderActivityInput { SubscriptionId = subscription.Id, DaysOut = 90 });
 
         // Reminder 3: 60 days before expiration
         await Workflow.DelayAsync(TimeSpan.FromDays(30));
-        await Workflow.ExecuteActivityAsync<SendRenewalReminderActivity>(
-            new ReminderActivityInput { PolicyId = policy.Id, DaysOut = 60 });
+        await Workflow.ExecuteActivityAsync<SendExpirationReminderActivity>(
+            new ReminderActivityInput { SubscriptionId = subscription.Id, DaysOut = 60 });
 
         // Final check: 30 days before expiration
         await Workflow.DelayAsync(TimeSpan.FromDays(30));
 
-        var renewalCreated = await Workflow.ExecuteActivityAsync<CheckRenewalSubmissionActivity>(
-            policy.Id);
+        var followUpOrderCreated = await Workflow.ExecuteActivityAsync<CheckFollowUpOrderActivity>(
+            subscription.Id);
 
-        if (!renewalCreated)
+        if (!followUpOrderCreated)
         {
             // Escalate to manager
-            await Workflow.ExecuteActivityAsync<EscalateRenewalActivity>(
+            await Workflow.ExecuteActivityAsync<EscalateFollowUpActivity>(
                 new EscalationActivityInput
                 {
-                    PolicyId = policy.Id,
-                    Reason = "No renewal submission created 30 days before expiration"
+                    SubscriptionId = subscription.Id,
+                    Reason = "No follow-up order created 30 days before expiration"
                 });
         }
     }
@@ -589,24 +586,24 @@ public class RenewalReminderWorkflow
 
 ---
 
-### 4.2 Renewal Status Tracking
+### 4.2 Expiration Status Tracking
 
-**Renewal Entity:**
+**Follow-up Tracking Entity:**
 
 ```csharp
-public class Renewal : BaseEntity
+public class SubscriptionFollowUp : BaseEntity
 {
-    public Guid PolicyId { get; set; }
-    public Policy Policy { get; set; }
+    public Guid SubscriptionId { get; set; }
+    public Subscription Subscription { get; set; }
 
-    public Guid? RenewalSubmissionId { get; set; }
-    public Submission? RenewalSubmission { get; set; }
+    public Guid? FollowUpOrderId { get; set; }
+    public Order? FollowUpOrder { get; set; }
 
-    public string Status { get; set; } // Pending, Quoted, Renewed, NonRenewed, Declined
+    public string Status { get; set; } // Pending, Approved, Completed, NotCompleted, Rejected
 
     public DateTime ExpirationDate { get; set; }
-    public DateTime? QuotedAt { get; set; }
-    public DateTime? RenewedAt { get; set; }
+    public DateTime? ApprovedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
 }
 ```
 
@@ -615,35 +612,35 @@ public class Renewal : BaseEntity
 ### 4.3 Escalation Rules
 
 **Escalation Triggers:**
-- No renewal submission created 30 days before expiration → escalate to manager
-- Renewal pending 60 days before expiration → escalate to director
+- No follow-up order created 30 days before expiration → escalate to manager
+- Follow-up pending 60 days before expiration → escalate to director
 
 **Escalation Activity:**
 
 ```csharp
 [Activity]
-public class EscalateRenewalActivity
+public class EscalateFollowUpActivity
 {
     [ActivityMethod]
     public async Task ExecuteAsync(EscalationActivityInput input)
     {
-        var policy = await _policyRepository.GetByIdAsync(input.PolicyId);
+        var subscription = await _subscriptionRepository.GetByIdAsync(input.SubscriptionId);
 
         // Send email to manager
         await _emailService.SendEscalationEmailAsync(
             to: "manager@example.com",
-            subject: $"Escalation: Renewal Pending for Policy {policy.PolicyNumber}",
-            body: $"Policy {policy.PolicyNumber} expires in 30 days. No renewal submission created. Reason: {input.Reason}");
+            subject: $"Escalation: Follow-up Pending for Subscription {subscription.SubscriptionNumber}",
+            body: $"Subscription {subscription.SubscriptionNumber} expires in 30 days. No follow-up order created. Reason: {input.Reason}");
 
         // Log escalation event
         await _context.ActivityTimelineEvents.AddAsync(new ActivityTimelineEvent
         {
-            EntityType = "Renewal",
-            EntityId = policy.Id,
-            EventType = "RenewalEscalated",
+            EntityType = "SubscriptionFollowUp",
+            EntityId = subscription.Id,
+            EventType = "FollowUpEscalated",
             UserId = Guid.Empty, // System user
             Timestamp = DateTime.UtcNow,
-            Payload = new { policyId = policy.Id, reason = input.Reason }
+            Payload = new { subscriptionId = subscription.Id, reason = input.Reason }
         });
 
         await _context.SaveChangesAsync();
@@ -662,12 +659,12 @@ public class EscalateRenewalActivity
 ```csharp
 public class WorkflowTransition : BaseEntity
 {
-    public Guid SubmissionId { get; set; } // Or other entity with workflow
+    public Guid OrderId { get; set; } // Or other entity with workflow
     public string FromStatus { get; set; }
     public string ToStatus { get; set; }
     public DateTime TransitionedAt { get; set; }
     public Guid TransitionedBy { get; set; }
-    public string? Reason { get; set; } // Required for Declined/Withdrawn
+    public string? Reason { get; set; } // Required for Rejected/Cancelled
 }
 ```
 
@@ -683,27 +680,27 @@ public class WorkflowTransition : BaseEntity
 **Rebuild current state by replaying events:**
 
 ```csharp
-public async Task<Submission> RebuildSubmissionFromEventsAsync(Guid submissionId)
+public async Task<Order> RebuildOrderFromEventsAsync(Guid orderId)
 {
     var transitions = await _context.WorkflowTransitions
-        .Where(t => t.SubmissionId == submissionId)
+        .Where(t => t.OrderId == orderId)
         .OrderBy(t => t.TransitionedAt)
         .ToListAsync();
 
-    var submission = new Submission { Id = submissionId, Status = "Received" };
+    var order = new Order { Id = orderId, Status = "Received" };
 
     foreach (var transition in transitions)
     {
-        submission.Status = transition.ToStatus;
+        order.Status = transition.ToStatus;
     }
 
-    return submission;
+    return order;
 }
 ```
 
 **Use Cases:**
 - Debugging (what was the state at time X?)
-- Analytics (how long do submissions spend in InReview?)
+- Analytics (how long do orders spend in InReview?)
 - Compliance (prove state was X at time Y)
 
 ---
@@ -717,7 +714,7 @@ public async Task<Submission> RebuildSubmissionFromEventsAsync(Guid submissionId
 ```csharp
 public class WorkflowTransition : BaseEntity
 {
-    public string EventType { get; set; } // "SubmissionTransitioned"
+    public string EventType { get; set; } // "OrderTransitioned"
     public int EventVersion { get; set; } // 1, 2, 3...
     public string Payload { get; set; } // JSON
 

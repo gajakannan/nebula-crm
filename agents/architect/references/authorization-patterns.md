@@ -1,6 +1,13 @@
 # Authorization Patterns
 
-Comprehensive guide for implementing Attribute-Based Access Control (ABAC) with Casbin for the Nebula insurance CRM. This guide covers ABAC fundamentals, Casbin architecture, Keycloak integration, common patterns, testing, and pitfalls to avoid.
+> **Examples in this guide use `customers` and `orders` as illustrative entities, with
+> roles like `Sales` and `Support` demonstrating ABAC patterns. These are not
+> prescriptive — substitute your own domain entities and roles when applying these
+> patterns. See `BOUNDARY-POLICY.md` → "Standard Example Entities" for the convention.
+
+---
+
+Comprehensive guide for implementing Attribute-Based Access Control (ABAC) with Casbin. This guide covers ABAC fundamentals, Casbin architecture, OIDC integration, common patterns, testing, and pitfalls to avoid.
 
 ---
 
@@ -15,8 +22,8 @@ Comprehensive guide for implementing Attribute-Based Access Control (ABAC) with 
 - **Environment**: time, IP address, location (optional)
 
 **Comparison with RBAC:**
-- **RBAC (Role-Based)**: "Admin can do everything, Underwriter can update submissions"
-- **ABAC (Attribute-Based)**: "Underwriter can update submissions assigned to them"
+- **RBAC (Role-Based)**: "Admin can do everything, Support can update orders"
+- **ABAC (Attribute-Based)**: "Support can update orders assigned to them"
 
 ABAC provides fine-grained control beyond simple role checks.
 
@@ -30,11 +37,11 @@ ABAC provides fine-grained control beyond simple role checks.
 ```csharp
 public class SubjectAttributes
 {
-    public Guid UserId { get; set; } // Keycloak subject ID
-    public string[] Roles { get; set; } // ["Distribution", "Underwriter", "Admin"]
+    public Guid UserId { get; set; } // OIDC subject ID
+    public string[] Roles { get; set; } // ["Sales", "Support", "Admin"]
     public string? Region { get; set; } // "West", "East", "Central"
-    public string? Department { get; set; } // "Underwriting", "Distribution"
-    public Guid? BrokerId { get; set; } // For broker portal users
+    public string? Department { get; set; } // "Operations", "Sales"
+    public Guid? CustomerId { get; set; } // For customer portal users
 }
 ```
 
@@ -46,9 +53,9 @@ public class SubjectAttributes
 ```json
 {
   "userId": "550e8400-e29b-41d4-a716-446655440000",
-  "roles": ["Underwriter"],
+  "roles": ["Support"],
   "region": "West",
-  "department": "Underwriting"
+  "department": "Operations"
 }
 ```
 
@@ -62,12 +69,12 @@ public class SubjectAttributes
 ```csharp
 public class ResourceAttributes
 {
-    public string Type { get; set; } // "Broker", "Submission", "Account"
+    public string Type { get; set; } // "Customer", "Order", "Product"
     public Guid Id { get; set; } // Entity ID
-    public string? Status { get; set; } // "Active", "Quoted", "Bound"
+    public string? Status { get; set; } // "Active", "Processing", "Shipped"
     public Guid? OwnerId { get; set; } // User who created/owns the resource
     public Guid? AssignedTo { get; set; } // User assigned to the resource
-    public Guid? BrokerId { get; set; } // Associated broker
+    public Guid? CustomerId { get; set; } // Associated customer
 }
 ```
 
@@ -78,11 +85,11 @@ public class ResourceAttributes
 **Example:**
 ```json
 {
-  "type": "Submission",
+  "type": "Order",
   "id": "789e4567-e89b-12d3-a456-426614174000",
-  "status": "InReview",
+  "status": "Processing",
   "assignedTo": "550e8400-e29b-41d4-a716-446655440000",
-  "brokerId": "123e4567-e89b-12d3-a456-426614174000"
+  "customerId": "123e4567-e89b-12d3-a456-426614174000"
 }
 ```
 
@@ -99,8 +106,8 @@ public class ResourceAttributes
 - `Delete` - Remove entity (soft delete)
 
 **Domain-Specific Actions:**
-- `Transition` - Change workflow status (e.g., Triaging → ReadyForUWReview)
-- `Assign` - Assign resource to user (e.g., assign submission to underwriter)
+- `Transition` - Change workflow status (e.g., Pending → Processing)
+- `Assign` - Assign resource to user (e.g., assign order to support agent)
 - `Restore` - Restore soft-deleted entity
 - `ViewAuditLog` - View audit trail
 - `Export` - Export data (reports, CSV)
@@ -117,7 +124,7 @@ public class ResourceAttributes
 - Geographic location
 - Device type (mobile, desktop)
 
-**Not implemented in Nebula MVP** (YAGNI - add if needed later).
+**Recommendation:** Start without environment attributes (YAGNI). Add if specific requirements emerge.
 
 ---
 
@@ -144,7 +151,7 @@ public class ResourceAttributes
 - **Matcher**: Expression to match request against policies
 - **Effect**: How to combine multiple matching policies (allow-override, deny-override)
 
-**Nebula's Casbin Model (`casbin_model.conf`):**
+**Example Casbin Model (`casbin_model.conf`):**
 ```ini
 [request_definition]
 r = sub, obj, act
@@ -177,7 +184,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act || p.sub == "Admin"
 - **Database**: PostgreSQL table, dynamic policies
 - **Remote API**: Centralized policy service (advanced)
 
-**Nebula Approach: Database Storage**
+**Recommended Approach: Database Storage**
 
 **CasbinRule Table:**
 ```sql
@@ -196,10 +203,10 @@ CREATE TABLE casbin_rule (
 **Example Policies:**
 ```sql
 INSERT INTO casbin_rule (ptype, v0, v1, v2, v3) VALUES
-('p', 'Distribution', 'Broker', 'Create', 'allow'),
-('p', 'Distribution', 'Broker', 'Read', 'allow'),
-('p', 'Distribution', 'Broker', 'Update', 'allow'),
-('p', 'Underwriter', 'Broker', 'Read', 'allow'),
+('p', 'Sales', 'Customer', 'Create', 'allow'),
+('p', 'Sales', 'Customer', 'Read', 'allow'),
+('p', 'Sales', 'Customer', 'Update', 'allow'),
+('p', 'Support', 'Customer', 'Read', 'allow'),
 ('p', 'Admin', '*', '*', 'allow');
 ```
 
@@ -260,7 +267,7 @@ public class CasbinAuthorizationMiddleware
         var path = request.Path.Value;
         var method = request.Method;
 
-        // Parse path: /api/brokers/{id} -> "Broker"
+        // Parse path: /api/customers/{id} -> "Customer"
         var pathSegments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
         var resourceType = pathSegments.Length > 1 ? pathSegments[1].TrimEnd('s') : "Unknown";
 
@@ -314,31 +321,31 @@ public class CurrentUserService : ICurrentUserService
 **Load Resource Attributes from Database:**
 
 ```csharp
-public async Task<ResourceAttributes> GetSubmissionAttributesAsync(Guid submissionId)
+public async Task<ResourceAttributes> GetOrderAttributesAsync(Guid orderId)
 {
-    var submission = await _context.Submissions
-        .Where(s => s.Id == submissionId)
-        .Select(s => new ResourceAttributes
+    var order = await _context.Orders
+        .Where(o => o.Id == orderId)
+        .Select(o => new ResourceAttributes
         {
-            Type = "Submission",
-            Id = s.Id,
-            Status = s.Status,
-            AssignedTo = s.AssignedUnderwriterId,
-            BrokerId = s.BrokerId
+            Type = "Order",
+            Id = o.Id,
+            Status = o.Status,
+            AssignedTo = o.AssignedSupportId,
+            CustomerId = o.CustomerId
         })
         .FirstOrDefaultAsync();
 
-    return submission ?? throw new NotFoundException("Submission not found");
+    return order ?? throw new NotFoundException("Order not found");
 }
 ```
 
 ---
 
-## 3. Keycloak Integration
+## 3. OIDC Provider Integration
 
 ### 3.1 JWT Token Structure
 
-**Keycloak issues JWT tokens with user claims:**
+**OIDC provider issues JWT tokens with user claims:**
 
 ```json
 {
@@ -347,11 +354,11 @@ public async Task<ResourceAttributes> GetSubmissionAttributesAsync(Guid submissi
   "name": "Sarah Chen",
   "preferred_username": "sarah.chen",
   "realm_access": {
-    "roles": ["Distribution", "User"]
+    "roles": ["Sales", "User"]
   },
   "resource_access": {
-    "nebula-api": {
-      "roles": ["CreateBroker", "UpdateSubmission"]
+    "your-api": {
+      "roles": ["CreateCustomer", "UpdateOrder"]
     }
   },
   "region": "West",
@@ -360,26 +367,26 @@ public async Task<ResourceAttributes> GetSubmissionAttributesAsync(Guid submissi
 }
 ```
 
-**Key Claims:**
-- `sub`: Unique user ID (Keycloak subject)
-- `realm_access.roles`: Keycloak roles assigned to user
-- `region`: Custom claim (configured in Keycloak)
+**Key Token Fields:**
+- `sub`: Unique user ID (OIDC subject)
+- `realm_access.roles`: Roles assigned to user
+- `region`: Custom token attribute (configured in your identity provider)
 
 ---
 
 ### 3.2 UserProfile Mapping
 
-**Map Keycloak User to Nebula UserProfile:**
+**Map OIDC User to Application UserProfile:**
 
 ```csharp
 public class UserProfile : BaseEntity
 {
-    public Guid Id { get; set; } // Same as Keycloak subject ID
+    public Guid Id { get; set; } // Same as OIDC subject ID
     public string Email { get; set; }
     public string FullName { get; set; }
-    public string[] Roles { get; set; } // Synced from Keycloak
+    public string[] Roles { get; set; } // Synced from OIDC provider
     public string? Region { get; set; }
-    public Guid? BrokerId { get; set; } // For broker portal users
+    public Guid? CustomerId { get; set; } // For customer portal users
 }
 
 // Sync on first login
@@ -402,7 +409,7 @@ public async Task SyncUserProfileAsync(ClaimsPrincipal user)
     }
     else
     {
-        // Update roles and region on each login (in case changed in Keycloak)
+        // Update roles and region on each login (in case changed in identity provider)
         profile.Roles = user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToArray();
         profile.Region = user.FindFirstValue("region");
     }
@@ -415,12 +422,12 @@ public async Task SyncUserProfileAsync(ClaimsPrincipal user)
 
 ### 3.3 Role Synchronization
 
-**Keycloak Roles → Casbin Subject Attributes:**
+**OIDC Provider Roles → Casbin Subject Attributes:**
 
-1. User logs in via Keycloak
-2. Keycloak returns JWT with roles in `realm_access.roles`
-3. Nebula syncs roles to UserProfile table
-4. Casbin policies use roles as subject (e.g., `Distribution`, `Underwriter`, `Admin`)
+1. User logs in via OIDC provider
+2. Provider returns JWT with roles in `realm_access.roles`
+3. Application syncs roles to UserProfile table
+4. Casbin policies use roles as subject (e.g., `Sales`, `Support`, `Admin`)
 
 **No need to manually sync roles to Casbin** - roles are already in JWT, extracted by CurrentUserService.
 
@@ -434,16 +441,16 @@ public async Task SyncUserProfileAsync(ClaimsPrincipal user)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "https://keycloak.example.com/realms/nebula";
-        options.Audience = "nebula-api";
+        options.Authority = "https://auth.example.com/realms/{your-realm}";
+        options.Audience = "your-api";
         options.RequireHttpsMetadata = true; // Enforce HTTPS
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = "https://keycloak.example.com/realms/nebula",
+            ValidIssuer = "https://auth.example.com/realms/{your-realm}",
             ValidateAudience = true,
-            ValidAudience = "nebula-api",
+            ValidAudience = "your-api",
             ValidateLifetime = true, // Check expiration
             ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 min clock skew
         };
@@ -459,13 +466,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 **Simple role-based authorization:**
 
 ```csv
-# Distribution users can create/read/update brokers
-p, Distribution, Broker, Create, allow
-p, Distribution, Broker, Read, allow
-p, Distribution, Broker, Update, allow
+# Sales users can create/read/update customers
+p, Sales, Customer, Create, allow
+p, Sales, Customer, Read, allow
+p, Sales, Customer, Update, allow
 
-# Underwriters can read brokers but not modify
-p, Underwriter, Broker, Read, allow
+# Support can read customers but not modify
+p, Support, Customer, Read, allow
 
 # Admins can do everything
 p, Admin, *, *, allow
@@ -502,19 +509,19 @@ var allowed = await enforcer.EnforceAsync(
 
 ### 4.3 Attribute-Based Policies
 
-**Underwriter can update submissions assigned to them:**
+**Support can update orders assigned to them:**
 
 ```csv
-p, Underwriter, Submission, Update, allow, sub.userId == res.assignedTo
+p, Support, Order, Update, allow, sub.userId == res.assignedTo
 ```
 
 **Enforcement:**
 ```csharp
-var submission = await _context.Submissions.FindAsync(submissionId);
+var order = await _context.Orders.FindAsync(orderId);
 
 var allowed = await enforcer.EnforceAsync(
-    new { role = "Underwriter", userId = currentUser.UserId },
-    new { type = "Submission", assignedTo = submission.AssignedUnderwriterId },
+    new { role = "Support", userId = currentUser.UserId },
+    new { type = "Order", assignedTo = order.AssignedSupportId },
     "Update"
 );
 ```
@@ -526,22 +533,22 @@ var allowed = await enforcer.EnforceAsync(
 **Managers can view records of their team members:**
 
 ```csv
-# Manager can read submissions assigned to team members
-p, Manager, Submission, Read, allow, sub.teamMembers.contains(res.assignedTo)
+# Manager can read orders assigned to team members
+p, Manager, Order, Read, allow, sub.teamMembers.contains(res.assignedTo)
 ```
 
 ---
 
 ### 4.5 Conditional Policies
 
-**User can transition submission only if in certain status:**
+**User can transition order only if in certain status:**
 
 ```csv
-# Distribution can transition submissions in Triaging or WaitingOnBroker status
-p, Distribution, Submission, Transition, allow, res.status in ["Triaging", "WaitingOnBroker"]
+# Sales can transition orders in Pending status
+p, Sales, Order, Transition, allow, res.status in ["Pending"]
 
-# Underwriter can transition submissions in InReview or Quoted status
-p, Underwriter, Submission, Transition, allow, sub.userId == res.assignedTo && res.status in ["ReadyForUWReview", "InReview", "Quoted", "BindRequested"]
+# Support can transition orders in Processing or Shipped status
+p, Support, Order, Transition, allow, sub.userId == res.assignedTo && res.status in ["Processing", "Shipped"]
 ```
 
 ---
@@ -554,42 +561,42 @@ p, Underwriter, Submission, Transition, allow, sub.userId == res.assignedTo && r
 
 ```csharp
 [Fact]
-public async Task Distribution_CanCreateBroker()
+public async Task Sales_CanCreateCustomer()
 {
     // Arrange
     var enforcer = await GetEnforcerAsync();
 
     // Act
-    var allowed = await enforcer.EnforceAsync("Distribution", "Broker", "Create");
+    var allowed = await enforcer.EnforceAsync("Sales", "Customer", "Create");
 
     // Assert
     Assert.True(allowed);
 }
 
 [Fact]
-public async Task Underwriter_CannotCreateBroker()
+public async Task Support_CannotCreateCustomer()
 {
     // Arrange
     var enforcer = await GetEnforcerAsync();
 
     // Act
-    var allowed = await enforcer.EnforceAsync("Underwriter", "Broker", "Create");
+    var allowed = await enforcer.EnforceAsync("Support", "Customer", "Create");
 
     // Assert
     Assert.False(allowed);
 }
 
 [Fact]
-public async Task Underwriter_CanUpdateAssignedSubmission()
+public async Task Support_CanUpdateAssignedOrder()
 {
     // Arrange
     var enforcer = await GetEnforcerAsync();
-    var underwriterId = Guid.NewGuid();
+    var supportUserId = Guid.NewGuid();
 
     // Act
     var allowed = await enforcer.EnforceAsync(
-        new { role = "Underwriter", userId = underwriterId },
-        new { type = "Submission", assignedTo = underwriterId },
+        new { role = "Support", userId = supportUserId },
+        new { type = "Order", assignedTo = supportUserId },
         "Update"
     );
 
@@ -606,34 +613,34 @@ public async Task Underwriter_CanUpdateAssignedSubmission()
 
 ```csharp
 [Fact]
-public async Task CreateBroker_WithDistributionRole_Returns201()
+public async Task CreateCustomer_WithSalesRole_Returns201()
 {
     // Arrange
     var client = _factory.CreateClient();
-    var token = GenerateJwtToken(new[] { "Distribution" });
+    var token = GenerateJwtToken(new[] { "Sales" });
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-    var request = new CreateBrokerRequest { Name = "Acme", LicenseNumber = "CA-12345", State = "CA" };
+    var request = new CreateCustomerRequest { Name = "Acme", Email = "contact@acme.com", Region = "West" };
 
     // Act
-    var response = await client.PostAsJsonAsync("/api/brokers", request);
+    var response = await client.PostAsJsonAsync("/api/customers", request);
 
     // Assert
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 }
 
 [Fact]
-public async Task CreateBroker_WithUnderwriterRole_Returns403()
+public async Task CreateCustomer_WithSupportRole_Returns403()
 {
     // Arrange
     var client = _factory.CreateClient();
-    var token = GenerateJwtToken(new[] { "Underwriter" });
+    var token = GenerateJwtToken(new[] { "Support" });
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-    var request = new CreateBrokerRequest { Name = "Acme", LicenseNumber = "CA-12345", State = "CA" };
+    var request = new CreateCustomerRequest { Name = "Acme", Email = "contact@acme.com", Region = "West" };
 
     // Act
-    var response = await client.PostAsJsonAsync("/api/brokers", request);
+    var response = await client.PostAsJsonAsync("/api/customers", request);
 
     // Assert
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -677,34 +684,41 @@ public void ValidatePolicies_NoRedundant()
 
 ### 5.4 Test Data Generation
 
-**Generate Test Users with Different Roles:**
+**Generate Test User Contexts with Different Roles:**
 
 ```csharp
+public sealed record TestUserContext(
+    Guid UserId,
+    string Email,
+    string[] Roles,
+    string Region
+);
+
 public static class TestUsers
 {
-    public static ClaimsPrincipal DistributionUser(Guid? userId = null) =>
-        new ClaimsPrincipal(new ClaimsIdentity(new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, (userId ?? Guid.NewGuid()).ToString()),
-            new Claim(ClaimTypes.Role, "Distribution"),
-            new Claim(ClaimTypes.Email, "dist@example.com")
-        }, "TestAuth"));
+    public static TestUserContext SalesUser(Guid? userId = null) =>
+        new(
+            userId ?? Guid.NewGuid(),
+            "sales@example.com",
+            new[] { "Sales" },
+            "West"
+        );
 
-    public static ClaimsPrincipal UnderwriterUser(Guid? userId = null) =>
-        new ClaimsPrincipal(new ClaimsIdentity(new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, (userId ?? Guid.NewGuid()).ToString()),
-            new Claim(ClaimTypes.Role, "Underwriter"),
-            new Claim(ClaimTypes.Email, "uw@example.com")
-        }, "TestAuth"));
+    public static TestUserContext SupportUser(Guid? userId = null) =>
+        new(
+            userId ?? Guid.NewGuid(),
+            "support@example.com",
+            new[] { "Support" },
+            "West"
+        );
 
-    public static ClaimsPrincipal AdminUser(Guid? userId = null) =>
-        new ClaimsPrincipal(new ClaimsIdentity(new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, (userId ?? Guid.NewGuid()).ToString()),
-            new Claim(ClaimTypes.Role, "Admin"),
-            new Claim(ClaimTypes.Email, "admin@example.com")
-        }, "TestAuth"));
+    public static TestUserContext AdminUser(Guid? userId = null) =>
+        new(
+            userId ?? Guid.NewGuid(),
+            "admin@example.com",
+            new[] { "Admin" },
+            "Central"
+        );
 }
 ```
 
@@ -726,12 +740,12 @@ public static class TestUsers
 
 ```csharp
 // WRONG: Authorization in endpoint logic (easy to forget)
-app.MapPost("/api/brokers", async (CreateBrokerRequest request, ICurrentUserService user) =>
+app.MapPost("/api/customers", async (CreateCustomerRequest request, ICurrentUserService user) =>
 {
-    if (!user.Roles.Contains("Distribution"))
+    if (!user.Roles.Contains("Sales"))
         return Results.Forbid();
 
-    // ... create broker
+    // ... create customer
 });
 
 // RIGHT: Authorization in middleware (enforced globally)
@@ -831,5 +845,6 @@ public class CasbinPolicyRefreshService : BackgroundService
 
 ## Version History
 
-**Version 2.0** - 2026-01-31 - Comprehensive authorization guide with ABAC, Casbin, and Keycloak (500 lines)
+**Version 3.0** - 2026-02-03 - Replaced all solution-specific entities with standard generic set (customers/orders). Replaced domain-specific legacy role examples with generic roles (Sales/Support). See `BOUNDARY-POLICY.md` → "Standard Example Entities" for the convention.
+**Version 2.0** - 2026-01-31 - Comprehensive authorization guide with ABAC, Casbin, and OIDC (500 lines)
 **Version 1.0** - 2026-01-26 - Initial authorization patterns guide (55 lines)

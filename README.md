@@ -27,8 +27,8 @@ The separation is intentional. Generic agents live in `agents/`. Solution-specif
 │                                                                              │
 │  init       │ Bootstrap project structure                                   │
 │  plan       │ Phase A (PM) → Phase B (Architect) [2 approval gates]         │
-│  build      │ Backend + Frontend + QA + DevOps → Review [2 gates]           │
-│  feature    │ Single vertical slice (Backend + Frontend + QA) [1 gate]      │
+│  build      │ Backend + Frontend + AI* + QA + DevOps → Review [2 gates]     │
+│  feature    │ Single vertical slice (Backend + Frontend + AI* + QA) [1 gate]│
 │  review     │ Code Reviewer + Security [1 gate]                             │
 │  validate   │ Architect + PM validation (read-only)                         │
 │  test       │ Quality Engineer testing workflow                             │
@@ -36,6 +36,7 @@ The separation is intentional. Generic agents live in `agents/`. Solution-specif
 │  blog       │ Blogger dev logs & articles                                   │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
+* AI Engineer runs when stories include AI/LLM/MCP scope. Architect owns implementation orchestration.
                                         ↓
                               Actions compose Agents
                                         ↓
@@ -78,9 +79,11 @@ The separation is intentional. Generic agents live in `agents/`. Solution-specif
 │  ├─ architecture/                                                           │
 │  │  ├─ SOLUTION-PATTERNS.md  │ Solution-specific patterns ⭐               │
 │  │  ├─ decisions/            │ ADRs                                         │
-│  │  ├─ data-model.md         │ Detailed ERD                                 │
-│  │  └─ api-contracts.md      │ API specifications                           │
-│  │                                                                           │
+│  │  └─ ...                   │ Data model docs, testing strategy, patterns  │
+│                                                                              │
+│  API Contracts                                                              │
+│  └─ api/               │ OpenAPI specifications (*.yaml)                    │
+│                                                                              │
 │  Examples & Artifacts                                                       │
 │  ├─ examples/          │ Personas, features, stories, screens               │
 │  ├─ security/          │ Threat models, security reviews                    │
@@ -103,6 +106,7 @@ The separation is intentional. Generic agents live in `agents/`. Solution-specif
 - `engine/` - Backend application layer (C# .NET APIs) - currently placeholder.
 - `experience/` - Frontend application layer (React UI) - currently placeholder.
 - `neuron/` - AI intelligence layer (Python LLMs, agents, MCP) 🧠 - directory structure created.
+- `docker/agent-builder/` - Container entrypoint/runtime helpers for the builder framework.
 - `docs/` - Meta documentation and audits.
 
 ## Reuse Workflow (New Project)
@@ -118,6 +122,29 @@ This keeps the framework reusable and the solution content replaceable.
 
 Everything under `planning-mds/` in this repo is specific to the Nebula insurance CRM. Treat it as a reference example only.
 When you start a new project, replace all `planning-mds/` content with your own domain knowledge and requirements.
+The actual application code should be generated from planning artifacts by implementation agents coordinated by Architect.
+
+## Run Framework In Docker
+
+Use the root `Dockerfile` to run the agent-builder framework in a reproducible container:
+
+```bash
+docker build -t nebula-agent-builder .
+docker run --rm -it -v "$PWD:/workspace" -w /workspace nebula-agent-builder bash
+```
+
+Or use compose:
+
+```bash
+docker compose -f docker-compose.agent-builder.yml run --rm agent-builder
+```
+
+Security note:
+- The compose workflow mounts your workspace read-write for local development.
+- Use selective or read-only mounts in shared/production-like environments.
+- The container runs as a non-root user by default.
+
+See `docs/CONTAINER-STRATEGY.md` for builder vs application runtime separation.
 
 ## Tech Stack Assumptions
 
@@ -132,11 +159,22 @@ keep the agent roles but replace the stack-specific reference guides and example
 - `BOUNDARY-POLICY.md` - Rules that separate generic vs solution-specific content.
 - `inception-setup/README.md` - Bootstrap steps for a new project.
 - `docs/FAQ.md` - Common questions about reuse, stacks, and boundaries.
+- `docs/CONTAINER-STRATEGY.md` - Two-container model (builder runtime vs application runtime).
+- `docs/ORCHESTRATION-CONTRACT.md` - Orchestrator-neutral execution contract.
 
 ## Why This Exists
 
 The goal is to prove out AI-agentic driven development in a reusable way, while also demonstrating the approach with a
 real, end-to-end example (insurance CRM). This repo intentionally contains both; the boundary is the key.
+
+## Framework Posture
+
+This repository is a reference framework (specifications, templates, role definitions, and action contracts).
+It is orchestrator-agnostic and model-agnostic:
+
+- You can execute it with any agent runtime that follows `docs/ORCHESTRATION-CONTRACT.md`.
+- Action files define composition patterns; your orchestrator maps user intents to those actions.
+- This repository does not enforce a single vendor-specific orchestration runtime.
 
 ## Boundary Policy (Short Version)
 

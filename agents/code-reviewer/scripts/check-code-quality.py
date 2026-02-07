@@ -49,10 +49,12 @@ INCLUDE_EXTS = {
 def iter_files(root: Path):
     for path in root.rglob("*"):
         if path.is_dir():
-            if path.name in EXCLUDE_DIRS:
-                # Skip directory subtree
-                for _ in path.rglob("*"):
-                    pass
+            continue
+        try:
+            rel_parts = path.relative_to(root).parts
+        except ValueError:
+            continue
+        if any(part in EXCLUDE_DIRS for part in rel_parts):
             continue
         if path.suffix in INCLUDE_EXTS:
             yield path

@@ -43,6 +43,7 @@ planning-mds/
 │   ├── features/            # (empty, ready for PM)
 │   └── stories/             # (empty, ready for PM)
 ├── architecture/
+│   ├── SOLUTION-PATTERNS.md # Solution conventions for all implementation agents
 │   └── decisions/           # (empty, ready for Architect)
 └── security/                # (empty, ready for Security)
 ```
@@ -51,6 +52,7 @@ planning-mds/
 - **`planning-mds/INCEPTION.md`** - Sections 0-2 filled with user inputs, sections 3-6 as TODOs
 - **`planning-mds/README.md`** - Overview of planning artifacts and how to use them
 - **`planning-mds/domain/glossary.md`** - Domain glossary skeleton ready for population
+- **`planning-mds/architecture/SOLUTION-PATTERNS.md`** - Scaffolded from `agents/templates/solution-patterns-template.md`
 
 ## Agent Responsibilities
 
@@ -63,13 +65,15 @@ planning-mds/
    - Section 2: Technology baseline (if specified)
    - Sections 3-6: Marked as TODO with clear instructions
 4. Create domain glossary skeleton
-5. Validate that all required inputs are captured
+5. Copy `agents/templates/solution-patterns-template.md` to `planning-mds/architecture/SOLUTION-PATTERNS.md`
+6. Validate that all required inputs are captured
 
 ## Validation Criteria
 
 - [ ] `planning-mds/INCEPTION.md` exists with Sections 0-2 populated
 - [ ] Directory structure matches template
 - [ ] Domain glossary skeleton created
+- [ ] `planning-mds/architecture/SOLUTION-PATTERNS.md` exists
 - [ ] No placeholder text remains (or is clearly marked as TODO)
 - [ ] User can immediately proceed to Phase A (planning) or Phase B (architecture)
 

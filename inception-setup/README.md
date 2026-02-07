@@ -6,9 +6,10 @@ This folder contains **process/meta** guidance for starting a new project. It is
 
 1) Create `planning-mds/INCEPTION.md` with sections 0–2 (context, scope, constraints).
 2) Create `planning-mds/domain/` and add your glossary + competitive analysis.
-3) Create `planning-mds/examples/` with at least one persona, feature, and story example.
-4) Create `planning-mds/features/` and `planning-mds/stories/` for actual requirements.
-5) Create `planning-mds/screens/` and `planning-mds/workflows/` for UI and state specs.
+3) Create `planning-mds/architecture/SOLUTION-PATTERNS.md` from `agents/templates/solution-patterns-template.md`.
+4) Create `planning-mds/examples/` with at least one persona, feature, and story example.
+5) Create `planning-mds/features/` and `planning-mds/stories/` for actual requirements.
+6) Create `planning-mds/screens/` and `planning-mds/workflows/` for UI and state specs.
 
 ## Minimal Folder Scaffold
 
@@ -36,13 +37,15 @@ Use these generic templates from `agents/templates/`:
 - `screen-spec-template.md`
 - `workflow-spec-template.md`
 - `api-contract-template.yaml`
+- `solution-patterns-template.md`
 
 ## Examples (Non-Insurance)
 
 See `inception-setup/examples/` for small, partial examples across different domains.
 
-## First 3 Artifacts (Minimum)
+## First 4 Artifacts (Minimum)
 
 1) `planning-mds/INCEPTION.md`
 2) `planning-mds/domain/[project]-glossary.md`
-3) `planning-mds/examples/stories/[project]-story-example.md`
+3) `planning-mds/architecture/SOLUTION-PATTERNS.md`
+4) `planning-mds/examples/stories/[project]-story-example.md`

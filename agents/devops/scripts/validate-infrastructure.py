@@ -11,6 +11,7 @@ Usage:
 import argparse
 from pathlib import Path
 import sys
+from typing import Iterable
 
 COMPOSE_FILES = ["docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"]
 DOCKERFILES = ["Dockerfile", "Dockerfile.dev", "Dockerfile.prod"]
@@ -18,11 +19,11 @@ CI_DIRS = [".github/workflows", ".gitlab", ".circleci"]
 ENV_FILES = [".env.example", ".env.sample"]
 
 
-def exists_any(root: Path, names: list[str]) -> bool:
+def exists_any(root: Path, names: Iterable[str]) -> bool:
     return any((root / name).exists() for name in names)
 
 
-def exists_any_dir(root: Path, names: list[str]) -> bool:
+def exists_any_dir(root: Path, names: Iterable[str]) -> bool:
     return any((root / name).is_dir() for name in names)
 
 

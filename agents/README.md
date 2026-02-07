@@ -18,8 +18,8 @@ This directory contains **generic, reusable** agent role definitions for buildin
 │                                                                              │
 │  init       │ Bootstrap project structure                                   │
 │  plan       │ Phase A (PM) → Phase B (Architect) [2 approval gates]         │
-│  build      │ Backend + Frontend + QA + DevOps → Review [2 gates]           │
-│  feature    │ Single vertical slice (Backend + Frontend + QA) [1 gate]      │
+│  build      │ Backend + Frontend + AI* + QA + DevOps → Review [2 gates]     │
+│  feature    │ Single vertical slice (Backend + Frontend + AI* + QA) [1 gate]│
 │  review     │ Code Reviewer + Security [1 gate]                             │
 │  validate   │ Architect + PM validation (read-only)                         │
 │  test       │ Quality Engineer testing workflow                             │
@@ -27,6 +27,7 @@ This directory contains **generic, reusable** agent role definitions for buildin
 │  blog       │ Blogger dev logs & articles                                   │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
+* AI Engineer runs when stories include AI/LLM/MCP scope. Architect orchestrates implementation sequencing.
                                         ↓
                               Actions compose Agents
                                         ↓
@@ -69,9 +70,11 @@ This directory contains **generic, reusable** agent role definitions for buildin
 │  ├─ architecture/                                                           │
 │  │  ├─ SOLUTION-PATTERNS.md  │ Solution-specific patterns ⭐               │
 │  │  ├─ decisions/            │ ADRs                                         │
-│  │  ├─ data-model.md         │ Detailed ERD                                 │
-│  │  └─ api-contracts.md      │ API specifications                           │
-│  │                                                                           │
+│  │  └─ ...                   │ Data model docs, testing strategy, patterns  │
+│                                                                              │
+│  API Contracts                                                              │
+│  └─ api/               │ OpenAPI specifications (*.yaml)                    │
+│                                                                              │
 │  Examples & Artifacts                                                       │
 │  ├─ examples/          │ Personas, features, stories, screens               │
 │  ├─ security/          │ Threat models, security reviews                    │

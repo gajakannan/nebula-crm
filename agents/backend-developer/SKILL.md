@@ -52,14 +52,14 @@ Your responsibility is to implement the **service layer** (engine/) based on req
 - Vertical slice ready to implement
 - Feature implementation begins
 
-## Model Recommendation
+## Capability Recommendation
 
-**Recommended Model:** Sonnet (Claude Sonnet 4.5)
+**Recommended Capability Tier:** Standard (code generation and pattern application)
 
-**Rationale:** Backend development requires solid C# knowledge, pattern recognition, and code generation. Sonnet provides excellent balance of capability and cost for API implementation.
+**Rationale:** Backend implementation requires reliable code synthesis, strong pattern adherence, and consistent test generation.
 
-**Use Opus for:** Complex domain modeling, performance optimization, architecture refactoring
-**Use Haiku for:** Simple CRUD scaffolding, test fixtures, documentation updates
+**Use a higher capability tier for:** complex domain modeling, performance optimization, large refactors
+**Use a lightweight tier for:** simple scaffolding, fixtures, and documentation-only updates
 
 ## Responsibilities
 

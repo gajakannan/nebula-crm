@@ -2,7 +2,7 @@
 # check-accessibility.sh -- Run frontend accessibility checks.
 #
 # Usage:
-#   sh check-accessibility.sh [--frontend-dir DIR] [-- <runner-args>]
+#   sh check-accessibility.sh [--frontend-dir DIR] [--strict] [-- <runner-args>]
 #
 # Examples:
 #   sh check-accessibility.sh
@@ -12,12 +12,14 @@
 # Behavior:
 # - If A11Y_TEST_CMD is set, run that command in FRONTEND_DIR.
 # - Otherwise detect package manager and run "test:a11y" or "a11y" npm script.
-# - Exits non-zero for missing setup or failed accessibility checks.
+# - Missing frontend setup is skipped unless --strict is set.
+# - Exits non-zero for failed accessibility checks.
 
 FRONTEND_DIR="${FRONTEND_DIR:-experience}"
+STRICT=0
 
 print_usage() {
-  echo "Usage: $0 [--frontend-dir DIR] [-- <runner-args>]"
+  echo "Usage: $0 [--frontend-dir DIR] [--strict] [-- <runner-args>]"
 }
 
 # Parse script options only. Remaining args are forwarded.
@@ -26,6 +28,10 @@ while [ $# -gt 0 ]; do
     --frontend-dir)
       FRONTEND_DIR="$2"
       shift 2
+      ;;
+    --strict)
+      STRICT=1
+      shift
       ;;
     -h|--help)
       print_usage
@@ -41,15 +47,23 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+skip_or_fail() {
+  msg="$1"
+  if [ "$STRICT" -eq 1 ]; then
+    echo "ERROR: ${msg}" >&2
+    exit 2
+  fi
+  echo "SKIP: ${msg}"
+  exit 0
+}
+
 if [ ! -d "$FRONTEND_DIR" ]; then
-  echo "ERROR: frontend directory not found: $FRONTEND_DIR" >&2
-  exit 2
+  skip_or_fail "frontend directory not found: $FRONTEND_DIR"
 fi
 
 PKG="${FRONTEND_DIR}/package.json"
 if [ ! -f "$PKG" ]; then
-  echo "ERROR: package.json not found: $PKG" >&2
-  exit 2
+  skip_or_fail "package.json not found: $PKG"
 fi
 
 if [ -n "${A11Y_TEST_CMD:-}" ]; then
@@ -66,9 +80,14 @@ if grep -Eq '"test:a11y"[[:space:]]*:' "$PKG"; then
 elif grep -Eq '"a11y"[[:space:]]*:' "$PKG"; then
   SCRIPT_NAME="a11y"
 else
-  echo "ERROR: no accessibility script found in $PKG." >&2
-  echo "Expected \"test:a11y\" or \"a11y\", or set A11Y_TEST_CMD." >&2
-  exit 2
+  if [ "$STRICT" -eq 1 ]; then
+    echo "ERROR: no accessibility script found in $PKG." >&2
+    echo "Expected \"test:a11y\" or \"a11y\", or set A11Y_TEST_CMD." >&2
+    exit 2
+  fi
+  echo "SKIP: no accessibility script found in $PKG."
+  echo "Expected \"test:a11y\" or \"a11y\", or set A11Y_TEST_CMD."
+  exit 0
 fi
 
 if [ -f "${FRONTEND_DIR}/pnpm-lock.yaml" ] && command -v pnpm >/dev/null 2>&1; then
@@ -78,8 +97,7 @@ elif [ -f "${FRONTEND_DIR}/yarn.lock" ] && command -v yarn >/dev/null 2>&1; then
 elif command -v npm >/dev/null 2>&1; then
   RUNNER="npm"
 else
-  echo "ERROR: no supported package manager found (pnpm, yarn, npm)." >&2
-  exit 2
+  skip_or_fail "no supported package manager found (pnpm, yarn, npm)"
 fi
 
 echo "Running accessibility checks with ${RUNNER} (${SCRIPT_NAME}) in $FRONTEND_DIR"

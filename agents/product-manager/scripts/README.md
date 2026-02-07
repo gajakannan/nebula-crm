@@ -2,6 +2,9 @@
 
 Generic scripts for validating stories and generating indexes.
 
+Story convention:
+- One story per markdown file.
+
 ## validate-stories.py
 
 Validate one or more story files:

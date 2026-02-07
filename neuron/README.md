@@ -12,7 +12,13 @@ Neuron is the cognitive layer that powers intelligent features in Nebula CRM thr
 - Model Context Protocol (MCP) servers
 - AI-powered automation and decision support
 
+## Current Status
+
+`neuron/` is currently scaffold-only. The application implementation has not started yet.
+
 ## Directory Structure
+
+Target scaffold (planned structure for implementation; some files are not created yet):
 
 ```
 neuron/
@@ -78,26 +84,24 @@ The **AI Engineer** agent (see `agents/ai-engineer/`) is responsible for:
 # Python 3.11+
 python --version
 
-# Install dependencies
-pip install -r neuron/requirements.txt
+# Dependency setup will be added with the first runnable neuron implementation.
+# For now, there is no pinned requirements file in this directory.
 ```
 
 ### Running MCP Server
 ```bash
-cd neuron/mcp
-python server.py
+# Not implemented yet.
+# First implementation target:
+#   neuron/mcp/server.py
 ```
 
 ### Configuration
-1. Copy `config/models.yaml.example` to `config/models.yaml`
-2. Add your API keys:
-   ```yaml
-   anthropic:
-     api_key: ${ANTHROPIC_API_KEY}
+When implementation begins, create:
+- `neuron/config/models.yaml`
+- `neuron/config/agents.yaml`
+- `neuron/config/mcp.yaml`
 
-   ollama:
-     base_url: http://localhost:11434
-   ```
+Keep secrets in environment variables and never commit API keys.
 
 ## Key Concepts
 

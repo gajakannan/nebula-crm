@@ -140,9 +140,9 @@ Solution-specific references must live in:
 ### Deliverables
 
 - Vision & non-goals → `planning-mds/INCEPTION.md` (Section 3.1)
-- Personas → `planning-mds/INCEPTION.md` (Section 3.2) or `planning-mds/personas/`
+- Personas → `planning-mds/INCEPTION.md` (Section 3.2) or `planning-mds/examples/personas/`
 - Epics/features → `planning-mds/INCEPTION.md` (Section 3.3) and `planning-mds/features/`
-- Stories → `planning-mds/stories/`
+- Stories → `planning-mds/stories/` (one markdown file per story)
 - Screens → `planning-mds/screens/` or `planning-mds/INCEPTION.md` (Section 3.5)
 - Workflows → `planning-mds/workflows/` or `planning-mds/INCEPTION.md` (Section 3.5)
 

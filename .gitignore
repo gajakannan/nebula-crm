@@ -1,0 +1,45 @@
+# Environment
+.env*
+!.env.example
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.csproj.user
+
+# Node / React
+node_modules/
+dist/
+.next/
+build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+
+# Security reports
+security-reports/

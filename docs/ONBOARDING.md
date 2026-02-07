@@ -4,6 +4,7 @@
 
 - [ ] Clone repository
 - [ ] Read `README.md`
+- [ ] (Optional) Build/run the framework container: `docker build -t nebula-agent-builder .`
 - [ ] Review `inception-setup/README.md`
 - [ ] Understand `BOUNDARY-POLICY.md`
 
@@ -31,6 +32,6 @@
 
 ## Validation
 
-- [ ] Run `scripts/validate-genericness.sh`
+- [ ] Run `python scripts/validate-genericness.py`
 - [ ] Verify no solution-specific content in `agents/`
 - [ ] Confirm all specs follow templates

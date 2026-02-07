@@ -868,19 +868,17 @@ const uiSchema = {
 
 ---
 
-## Comparison: JSON Schema + AJV vs Zod
+## Comparison: Shared JSON Schema vs Per-Layer Validation
 
-| Feature | JSON Schema + AJV | Zod |
-|---------|-------------------|-----|
-| **TypeScript Inference** | No (manual types) | Excellent |
-| **Backend Sharing** | Works in .NET/Node/Python | TypeScript only |
-| **Dynamic Forms** | Designed for this | Possible but awkward |
-| **Learning Curve** | Steeper (JSON Schema spec) | Simpler API |
-| **Industry Standard** | ISO standard | Library-specific |
-| **Tooling** | Many validators/generators | Limited to JS/TS |
-| **Complex Validation** | `allOf`, `anyOf`, `if/then` | `.refine()`, `.superRefine()` |
-| **Error Messages** | Requires ajv-errors | Built-in |
-| **Performance** | Very fast (compiled) | Fast |
+| Feature | JSON Schema + AJV (Shared) | Per-Layer Validation (Separate Rules) |
+|---------|-----------------------------|----------------------------------------|
+| **Validation Source** | Single schema shared by frontend + backend | Separate frontend and backend rules |
+| **Drift Risk** | Low | High |
+| **Backend Sharing** | Works in .NET/Node/Python | Reimplementation required per stack |
+| **Dynamic Forms** | Designed for schema-driven rendering | Usually custom-coded |
+| **Tooling** | Validators, generators, OpenAPI alignment | Fragmented by language/library |
+| **Compliance/Auditability** | Strong (explicit schema artifacts) | Weaker (scattered rule definitions) |
+| **Performance** | Very fast (compiled validators) | Varies by implementation |
 
 **Recommendation:**
 Use **JSON Schema + AJV + RJSF** when:
@@ -893,19 +891,12 @@ Use **JSON Schema + AJV + RJSF** when:
 
 ## Migration Path
 
-If you have existing Zod schemas:
+If you currently validate only at one layer (frontend or backend), migrate in this order:
 
-```typescript
-// Convert Zod to JSON Schema
-import { zodToJsonSchema } from 'zod-to-json-schema';
-
-const zodSchema = z.object({
-  name: z.string().min(1).max(200),
-  email: z.string().email(),
-});
-
-const jsonSchema = zodToJsonSchema(zodSchema, 'CustomerSchema');
-```
+1. Define canonical JSON Schemas under `planning-mds/schemas/` or `experience/src/schemas/`
+2. Wire frontend forms to `ajvResolver` (manual forms) or RJSF validator (dynamic forms)
+3. Wire backend request validation to the same schemas
+4. Remove duplicated per-layer validation rules once parity tests pass
 
 ---
 

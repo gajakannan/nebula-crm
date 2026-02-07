@@ -20,7 +20,7 @@ Use architecture specs in `planning-mds/` and:
 
 - `agents/backend-developer/scripts/scaffold-entity.py` - scaffold a domain entity (optional EF Core config)
 - `agents/backend-developer/scripts/scaffold-usecase.py` - scaffold a use case (command/query)
-- `agents/backend-developer/scripts/run-tests.sh` - run backend tests (uses `BACKEND_TEST_CMD` or `dotnet test`)
+- `agents/backend-developer/scripts/run-tests.sh` - run backend tests (uses `BACKEND_TEST_CMD` or `dotnet test`; skips missing setup unless `--strict`)
 
 ## Usage Examples
 
@@ -40,4 +40,7 @@ python3 agents/backend-developer/scripts/scaffold-usecase.py CreateCustomer \
 
 ```bash
 BACKEND_TEST_CMD="dotnet test" sh agents/backend-developer/scripts/run-tests.sh
+
+# Enforce test setup in implementation phase
+sh agents/backend-developer/scripts/run-tests.sh --strict
 ```

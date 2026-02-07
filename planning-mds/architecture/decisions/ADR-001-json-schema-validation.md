@@ -30,8 +30,8 @@ How do we maintain consistent validation rules across TypeScript frontend and C#
 - ❌ High maintenance burden
 - ❌ Inconsistent error messages
 
-**Option 2: TypeScript-Only Validation (Zod)**
-- Use Zod for frontend validation, rely on backend model validation
+**Option 2: TypeScript-Only Validation Library**
+- Use a TypeScript-only schema library for frontend validation, rely on backend model validation
 - ✅ Excellent TypeScript integration
 - ✅ Type inference
 - ❌ TypeScript-specific (can't share with C# backend)

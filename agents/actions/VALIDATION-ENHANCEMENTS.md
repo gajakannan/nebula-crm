@@ -180,7 +180,7 @@ Section 4.2 (Data Model) ↔ Code (Database)
 Step 1: Product Manager generates requirements
   ↓
 Step 1.5: CLARIFICATION GATE (NEW!)
-  - Claude identifies vague criteria
+  - Agent identifies vague criteria
   - Asks specific clarification questions
   - Updates requirements with quantified specs
   - Validates testability
@@ -193,7 +193,7 @@ Step 3: Architect designs architecture
 ### When Running validate Action:
 
 ```
-Claude runs enhanced validation checklists:
+Agent runtime runs enhanced validation checklists:
 
 PM Validation:
   - Testability check (measurable criteria?)

@@ -1,0 +1,51 @@
+services:
+  backend:
+    image: your-backend-image:latest
+    container_name: app-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CONNECTION_STRING=Host=db;Port=5432;Database=app;Username=app;Password=app
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  frontend:
+    image: your-frontend-image:latest
+    container_name: app-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - API_BASE_URL=http://backend:5000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  db:
+    image: postgres:16
+    container_name: app-db
+    environment:
+      - POSTGRES_DB=app
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=app
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+volumes:
+  db-data:
+
+networks:
+  app-network:
+    driver: bridge
+
+# Customization notes:
+# - Replace placeholder images with project-specific build outputs.
+# - Add auth/cache/queue services as required by your architecture.
+# - Do not commit real credentials; use environment files or secret managers.

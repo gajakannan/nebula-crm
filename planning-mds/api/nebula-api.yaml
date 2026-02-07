@@ -1,5 +1,581 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: Nebula API
-  version: 0.1.0
-paths: {}
+  version: 0.2.0
+  description: |
+    Public baseline API contract for the Nebula insurance CRM reference implementation.
+servers:
+  - url: https://api.nebula.local
+security:
+  - bearerAuth: []
+paths:
+  /api/brokers:
+    get:
+      operationId: listBrokers
+      summary: List brokers
+      responses:
+        "200":
+          description: Broker list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Broker"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: createBroker
+      summary: Create broker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrokerCreateRequest"
+      responses:
+        "201":
+          description: Broker created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Broker"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/brokers/{brokerId}:
+    parameters:
+      - $ref: "#/components/parameters/BrokerId"
+    get:
+      operationId: getBrokerById
+      summary: Get broker by id
+      responses:
+        "200":
+          description: Broker details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Broker"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      operationId: updateBroker
+      summary: Update broker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrokerUpdateRequest"
+      responses:
+        "200":
+          description: Broker updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Broker"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteBroker
+      summary: Delete broker
+      responses:
+        "204":
+          description: Broker deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/contacts:
+    get:
+      operationId: listContacts
+      summary: List contacts
+      responses:
+        "200":
+          description: Contact list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Contact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: createContact
+      summary: Create contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactCreateRequest"
+      responses:
+        "201":
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/accounts:
+    get:
+      operationId: listAccounts
+      summary: List accounts
+      responses:
+        "200":
+          description: Account list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/mgas:
+    get:
+      operationId: listMgas
+      summary: List MGAs
+      responses:
+        "200":
+          description: MGA list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MGA"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/programs:
+    get:
+      operationId: listPrograms
+      summary: List programs
+      responses:
+        "200":
+          description: Program list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Program"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/submissions/{submissionId}/transitions:
+    parameters:
+      - $ref: "#/components/parameters/SubmissionId"
+    get:
+      operationId: listSubmissionTransitions
+      summary: List submission transitions
+      responses:
+        "200":
+          description: Submission transition history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowTransitionRecord"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: transitionSubmission
+      summary: Transition submission workflow state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkflowTransitionRequest"
+      responses:
+        "201":
+          description: Transition recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowTransitionRecord"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/renewals/{renewalId}/transitions:
+    parameters:
+      - $ref: "#/components/parameters/RenewalId"
+    get:
+      operationId: listRenewalTransitions
+      summary: List renewal transitions
+      responses:
+        "200":
+          description: Renewal transition history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowTransitionRecord"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+    post:
+      operationId: transitionRenewal
+      summary: Transition renewal workflow state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkflowTransitionRequest"
+      responses:
+        "201":
+          description: Transition recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowTransitionRecord"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    BrokerId:
+      name: brokerId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SubmissionId:
+      name: submissionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RenewalId:
+      name: renewalId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Authentication required or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Authenticated but not allowed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Conflict with current state (for example invalid transition)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    ErrorResponse:
+      type: object
+      description: Standard API error payload.
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        traceId:
+          type: string
+
+    Broker:
+      type: object
+      description: Broker profile.
+      required:
+        - id
+        - legalName
+        - licenseNumber
+        - state
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        legalName:
+          type: string
+        licenseNumber:
+          type: string
+        state:
+          type: string
+        status:
+          type: string
+
+    BrokerCreateRequest:
+      type: object
+      description: Payload to create a broker.
+      required:
+        - legalName
+        - licenseNumber
+        - state
+      properties:
+        legalName:
+          type: string
+        licenseNumber:
+          type: string
+        state:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+
+    BrokerUpdateRequest:
+      type: object
+      description: Payload to update a broker.
+      required:
+        - legalName
+        - state
+        - status
+      properties:
+        legalName:
+          type: string
+        state:
+          type: string
+        status:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+
+    Contact:
+      type: object
+      description: Contact record.
+      required:
+        - id
+        - fullName
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        brokerId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+
+    ContactCreateRequest:
+      type: object
+      description: Payload to create a contact.
+      required:
+        - brokerId
+        - fullName
+        - email
+      properties:
+        brokerId:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+
+    Account:
+      type: object
+      description: Insured account profile.
+      required:
+        - id
+        - name
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        status:
+          type: string
+        industry:
+          type: string
+
+    MGA:
+      type: object
+      description: MGA profile.
+      required:
+        - id
+        - name
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        status:
+          type: string
+
+    Program:
+      type: object
+      description: Insurance program profile.
+      required:
+        - id
+        - name
+        - mgaId
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        mgaId:
+          type: string
+          format: uuid
+
+    WorkflowTransitionRequest:
+      type: object
+      description: Request to transition workflow state.
+      required:
+        - toState
+      properties:
+        toState:
+          type: string
+        reason:
+          type: string
+
+    WorkflowTransitionRecord:
+      type: object
+      description: Immutable workflow transition record.
+      required:
+        - id
+        - workflowType
+        - entityId
+        - fromState
+        - toState
+        - occurredAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        workflowType:
+          type: string
+        entityId:
+          type: string
+          format: uuid
+        fromState:
+          type: string
+        toState:
+          type: string
+        reason:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time

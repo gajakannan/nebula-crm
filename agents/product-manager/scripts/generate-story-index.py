@@ -63,7 +63,11 @@ class StoryIndexGenerator:
                     metadata.title = heading_match.group(1).strip()
 
             # Extract Feature
-            feature_match = re.search(r"\*\*Feature:\*\*\s*([^\n]+)", content)
+            feature_match = re.search(r"\*\*Epic/Feature:\*\*\s*([^\n]+)", content)
+            if not feature_match:
+                feature_match = re.search(r"\*\*Feature:\*\*\s*([^\n]+)", content)
+            if not feature_match:
+                feature_match = re.search(r"\*\*Epic:\*\*\s*([^\n]+)", content)
             if feature_match:
                 metadata.feature = feature_match.group(1).strip()
 

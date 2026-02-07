@@ -2,10 +2,11 @@
 # check-lint.sh — Run linter and formatter checks for the project.
 #
 # Usage:
-#   ./check-lint.sh [--frontend-dir DIR]
+#   ./check-lint.sh [--frontend-dir DIR] [--strict]
 #
 # Defaults:
-#   --frontend-dir  . (current directory; set to the directory containing package.json)
+#   --frontend-dir  experience
+#   --strict        off (missing frontend/tooling is skipped)
 #
 # What it checks:
 #   Frontend: ESLint (npm run lint) + Prettier format check (npm run format -- --check)
@@ -20,15 +21,17 @@
 #   No backend linter is specified in the current project conventions.
 #   When one is adopted, add its invocation in the "backend checks" section below.
 
-FRONTEND_DIR="."
+FRONTEND_DIR="experience"
+STRICT=0
 FAILED=0
 
 # --- parse arguments ---
 while [ $# -gt 0 ]; do
   case "$1" in
     --frontend-dir)  FRONTEND_DIR="$2"; shift 2 ;;
+    --strict)        STRICT=1; shift ;;
     -h|--help)
-      echo "Usage: $0 [--frontend-dir DIR]"
+      echo "Usage: $0 [--frontend-dir DIR] [--strict]"
       exit 0
       ;;
     *)
@@ -37,6 +40,15 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+skip_or_fail() {
+  msg="$1"
+  if [ "$STRICT" -eq 1 ]; then
+    echo "ERROR: ${msg}" >&2
+    exit 2
+  fi
+  echo "SKIP: ${msg}"
+}
 
 # --- helper: run a named check, capture exit code ---
 run_check() {
@@ -58,27 +70,44 @@ run_check() {
 # =====================================================================
 PKG="${FRONTEND_DIR}/package.json"
 
-if [ ! -f "$PKG" ]; then
-  echo "SKIP (frontend): package.json not found at '${FRONTEND_DIR}/' — nothing to lint."
+if [ ! -d "$FRONTEND_DIR" ]; then
+  skip_or_fail "frontend directory not found at '${FRONTEND_DIR}'"
+elif [ ! -f "$PKG" ]; then
+  skip_or_fail "package.json not found at '${PKG}'"
 else
   # Verify the expected scripts exist before running them.
-  HAS_LINT=$(node -e "const p=require('./${PKG}');process.exit(p.scripts&&p.scripts.lint?0:1)" 2>/dev/null && echo yes || echo no)
-  HAS_FORMAT=$(node -e "const p=require('./${PKG}');process.exit(p.scripts&&p.scripts.format?0:1)" 2>/dev/null && echo yes || echo no)
+  HAS_LINT=$(grep -Eq '"lint"[[:space:]]*:' "$PKG" && echo yes || echo no)
+  HAS_FORMAT=$(grep -Eq '"format"[[:space:]]*:' "$PKG" && echo yes || echo no)
 
-  if [ "$HAS_LINT" = "yes" ]; then
+  if [ "$HAS_LINT" = "yes" ] && [ "$HAS_FORMAT" = "yes" ]; then
     cd "$FRONTEND_DIR" || exit 1
     run_check "ESLint" npm run lint
-    cd - >/dev/null
-  else
-    echo "SKIP (frontend lint): no 'lint' script in package.json"
-  fi
-
-  if [ "$HAS_FORMAT" = "yes" ]; then
-    cd "$FRONTEND_DIR" || exit 1
     run_check "Prettier (format check)" npm run format -- --check
     cd - >/dev/null
   else
-    echo "SKIP (frontend format): no 'format' script in package.json"
+    if [ "$HAS_LINT" = "yes" ]; then
+      cd "$FRONTEND_DIR" || exit 1
+      run_check "ESLint" npm run lint
+      cd - >/dev/null
+    else
+      if [ "$STRICT" -eq 1 ]; then
+        echo "ERROR: no 'lint' script in ${PKG}" >&2
+        exit 2
+      fi
+      echo "SKIP (frontend lint): no 'lint' script in package.json"
+    fi
+
+    if [ "$HAS_FORMAT" = "yes" ]; then
+      cd "$FRONTEND_DIR" || exit 1
+      run_check "Prettier (format check)" npm run format -- --check
+      cd - >/dev/null
+    else
+      if [ "$STRICT" -eq 1 ]; then
+        echo "ERROR: no 'format' script in ${PKG}" >&2
+        exit 2
+      fi
+      echo "SKIP (frontend format): no 'format' script in package.json"
+    fi
   fi
 fi
 

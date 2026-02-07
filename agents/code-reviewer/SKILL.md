@@ -55,14 +55,14 @@ You run **in parallel with the Security agent** during the review action. Securi
 
 **Always runs in parallel with:** Security agent (see `actions/review.md`)
 
-## Model Recommendation
+## Capability Recommendation
 
-**Recommended Model:** Sonnet
+**Recommended Capability Tier:** Standard (cross-file review and reasoning)
 
-**Rationale:** Code review requires reading multiple files, cross-referencing requirements, and reasoning about correctness across layers. Solid mid-tier reasoning with good code comprehension.
+**Rationale:** Code review requires multi-file reasoning, requirement mapping, and defect classification.
 
-**Use Opus for:** Reviewing complex architecture changes, evaluating design trade-offs, reviewing large refactors
-**Use Haiku for:** Formatting checks, simple naming suggestions, documentation review
+**Use a higher capability tier for:** complex architecture reviews and large refactor evaluation
+**Use a lightweight tier for:** formatting checks, naming suggestions, and documentation review
 
 ## Review Dimensions
 
@@ -239,9 +239,14 @@ Read in this order before touching the code:
 ```bash
 # Code quality scan — TODOs, line length, file size
 python agents/code-reviewer/scripts/check-code-quality.py <path>
+
+# Optional helpers (run when applicable)
+sh agents/code-reviewer/scripts/check-lint.sh
+sh agents/code-reviewer/scripts/check-pr-size.sh --base main --max 500
+sh agents/code-reviewer/scripts/check-test-coverage.sh --min 80 --auto
 ```
 
-Note: `check-lint.sh`, `check-pr-size.sh`, `check-test-coverage.sh` are stubs — not yet implemented. Do not rely on them.
+Use `--strict` with `check-lint.sh` when frontend linting is expected to exist.
 
 ### Step 3: Review Against All 9 Dimensions
 For each finding, record:
@@ -276,10 +281,10 @@ The review action presents your report alongside the Security agent's report. Th
 
 | Script | Status | What it does |
 |--------|--------|--------------|
-| `scripts/check-code-quality.py` | Implemented | Scans for TODOs/FIXMEs, line length violations, large files |
-| `scripts/check-lint.sh` | Stub | Intended for linter invocation — not yet implemented |
-| `scripts/check-pr-size.sh` | Stub | Intended for PR size gate — not yet implemented |
-| `scripts/check-test-coverage.sh` | Stub | Intended to parse coverage reports — not yet implemented |
+| `agents/code-reviewer/scripts/check-code-quality.py` | Implemented | Scans for TODOs/FIXMEs, line length violations, large files |
+| `agents/code-reviewer/scripts/check-lint.sh` | Implemented | Runs frontend lint/format checks; skips missing frontend unless `--strict` |
+| `agents/code-reviewer/scripts/check-pr-size.sh` | Implemented | Flags oversized diffs relative to a base branch |
+| `agents/code-reviewer/scripts/check-test-coverage.sh` | Implemented | Delegates coverage validation to QE script |
 
 ## Input Contract
 

@@ -11,7 +11,11 @@ If you are starting a new project, see `inception-setup/README.md` for bootstrap
 ```bash
 mkdir -p planning-mds/{domain,examples,features,stories,screens,workflows,architecture,api,security,testing,operations}
 mkdir -p planning-mds/examples/{personas,features,stories,screens,architecture,architecture/adrs}
+mkdir -p planning-mds/security/reviews
 ```
+
+Story convention:
+- Keep one story per markdown file under `planning-mds/stories/`.
 
 ## Rule of Thumb
 

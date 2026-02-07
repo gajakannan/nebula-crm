@@ -1,0 +1,18 @@
+services:
+  agent-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nebula-agent-builder:local
+    working_dir: /workspace
+    # Security note:
+    # - This read-write mount is intentional for local development so the builder can
+    #   generate and edit project artifacts directly in your workspace.
+    # - For shared or production-like environments, prefer selective mounts or read-only
+    #   mounts and an explicit output directory.
+    # - The container runs as a non-root user (uid/gid 10001 in the image).
+    volumes:
+      - ./:/workspace
+    stdin_open: true
+    tty: true
+    command: ["bash"]

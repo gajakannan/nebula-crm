@@ -5,6 +5,7 @@ Generic specification for the Architect role.
 ## Overview
 
 The Architect defines **HOW** to build what the Product Manager specified. All solution-specific architecture content lives in `planning-mds/`.
+Architect also owns implementation orchestration kickoff artifacts in Phase C.
 
 ## Quick Start
 
@@ -19,6 +20,8 @@ cat planning-mds/INCEPTION.md
 - `agents/templates/entity-model-template.md`
 - `agents/templates/adr-template.md`
 - `agents/templates/workflow-spec-template.md`
+- `agents/templates/application-assembly-plan-template.md`
+- `agents/templates/feature-assembly-plan-template.md`
 
 ## References
 

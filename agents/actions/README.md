@@ -32,8 +32,8 @@ An action is a **composition recipe** that:
 - **[validate](./validate.md)** - Validate requirements, architecture, and implementation alignment
 
 ### Implementation Actions
-- **[build](./build.md)** - Full implementation flow: code + tests + deployment
-- **[feature](./feature.md)** - Single vertical slice end-to-end
+- **[build](./build.md)** - Full implementation flow: app code + AI code (if needed) + tests + deployment
+- **[feature](./feature.md)** - Single vertical slice end-to-end (including AI when in scope, with code + security reviews)
 
 ### Quality Actions
 - **[review](./review.md)** - Comprehensive review: code quality + security + standards
@@ -121,13 +121,15 @@ Phase B (Architect/Tech Lead Mode)
   └─ validate action → Architect
 
 Phase C (Implementation Mode)
-  └─ build action    → Backend Developer + Frontend Developer + DevOps + Quality Engineer
-  └─ feature action  → Backend Developer + Frontend Developer + Quality Engineer
+  └─ build action    → Architect (orchestration) → (Backend Developer + Frontend Developer + AI Engineer* + DevOps + Quality Engineer)
+  └─ feature action  → Architect (orchestration) → (Backend Developer + Frontend Developer + AI Engineer* + Quality Engineer)
   └─ review action   → Code Reviewer + Security
   └─ test action     → Quality Engineer
   └─ document action → Technical Writer
   └─ blog action     → Blogger
 ```
+
+\* AI Engineer runs when stories include AI/LLM/MCP scope.
 
 ## Common Patterns
 
@@ -140,7 +142,7 @@ Product Manager → Architect → Backend Developer
 ### Parallel Flow Pattern
 When agents can work independently on different aspects:
 ```
-Backend Developer + Frontend Developer + Quality Engineer
+Backend Developer + Frontend Developer + AI Engineer + Quality Engineer
 ```
 
 ### Mixed Flow Pattern

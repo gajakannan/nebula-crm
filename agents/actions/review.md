@@ -22,7 +22,7 @@ Review Complete
 
 ### Step 1: Parallel Reviews
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 Execute these review agents **in parallel**:
 
@@ -30,7 +30,7 @@ Execute these review agents **in parallel**:
 1. **Activate Code Reviewer agent** by reading `agents/code-reviewer/SKILL.md`
 
 2. **Read context:**
-   - Source code (backend and frontend)
+   - Source code (backend, frontend, and `neuron/` when AI scope exists)
    - Test suites
    - `planning-mds/INCEPTION.md` (requirements and architecture)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
@@ -246,6 +246,7 @@ Execute these review agents **in parallel**:
    - OWASP Top 10 assessment
    - Vulnerability findings with remediation
    - Compliance checklist
+   - Save report under `planning-mds/security/reviews/` (for example: `security-review-YYYY-MM-DD.md`)
 
 **Completion Criteria for Step 1:**
 - [ ] Both reviews completed
@@ -255,7 +256,7 @@ Execute these review agents **in parallel**:
 
 ### Step 2: APPROVAL GATE (Review Results)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 1. **Present combined review results to user:**
    ```
@@ -392,7 +393,7 @@ Execute these review agents **in parallel**:
 
 ### Step 3: Review Complete
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 Present completion summary based on user decision:
 
@@ -517,7 +518,7 @@ Security:
   - Recommendation: PASS
 
 [Step 2: Approval gate]
-Claude: "Review complete.
+Agent Runtime: "Review complete.
   Code: APPROVED WITH RECOMMENDATIONS (2 medium issues)
   Security: PASS
 
@@ -525,7 +526,7 @@ Claude: "Review complete.
 
 User: "approve"
 
-Claude: "Review approved! Code ready to merge."
+Agent Runtime: "Review approved! Code ready to merge."
 ```
 
 ### Scenario 2: Critical Security Issue
@@ -543,7 +544,7 @@ Security:
   - Recommendation: FIX CRITICAL
 
 [Step 2: Approval gate]
-Claude: "Review complete.
+Agent Runtime: "Review complete.
   Code: APPROVED WITH RECOMMENDATIONS
   Security: FAIL (1 critical vulnerability)
 
@@ -555,18 +556,18 @@ Claude: "Review complete.
 
 User: "fix critical"
 
-Claude: "Fixing SQL injection vulnerability..."
+Agent Runtime: "Fixing SQL injection vulnerability..."
 [Backend Developer fixes using parameterized queries]
 
-Claude: "Issue fixed. Running security review again..."
+Agent Runtime: "Issue fixed. Running security review again..."
 [Security re-reviews]
 
-Claude: "Security review: PASS. Critical issue resolved.
+Agent Runtime: "Security review: PASS. Critical issue resolved.
   Do you approve now?"
 
 User: "approve"
 
-Claude: "Review approved!"
+Agent Runtime: "Review approved!"
 ```
 
 ---

@@ -120,6 +120,7 @@ All builder agent specifications are now complete and ready to use.
 
 ## Quick Decision Tree
 
+**Need to turn planning artifacts into a runnable app?** → Architect (orchestration) + implementation agents
 **Need to define what to build?** → Product Manager
 **Need to design how to build it?** → Architect
 **Need to implement backend logic?** → Backend Developer (C# .NET)

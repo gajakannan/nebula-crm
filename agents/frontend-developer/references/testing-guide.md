@@ -729,9 +729,9 @@ it('should submit form when valid', async () => {
 
 ❌ **BAD:**
 ```tsx
-it('should validate with Zod', () => {
-  const schema = z.string().min(3);
-  expect(() => schema.parse('ab')).toThrow();
+it('should unit test AJV internals', () => {
+  const validate = ajv.compile(schema);
+  expect(validate({ name: 'ab' })).toBe(false);
 });
 ```
 

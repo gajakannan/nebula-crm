@@ -7,7 +7,9 @@ Implement planned features by generating production-quality code, tests, and dep
 ## Agent Flow
 
 ```
-(Backend Developer + Frontend Developer + Quality Engineer + DevOps)
+Architect (Implementation Orchestration)
+  ↓
+(Backend Developer + Frontend Developer + AI Engineer [if AI scope] + Quality Engineer + DevOps)
   ↓ [Parallel Implementation]
 [SELF-REVIEW GATE: Each agent validates their work]
   ↓
@@ -22,24 +24,72 @@ Security
 Build Complete
 ```
 
-**Flow Type:** Mixed (parallel implementation, sequential reviews with approval gates)
+**Flow Type:** Mixed (architect-led orchestration kickoff, parallel implementation, sequential reviews with approval gates)
 
 ---
 
 ## Execution Steps
 
+### Step 0: Architect-Led Assembly Planning
+
+**Execution Instructions:**
+
+1. **Activate Architect agent** by reading `agents/architect/SKILL.md`
+2. **Read context:**
+   - `planning-mds/INCEPTION.md`
+   - `planning-mds/stories/`
+   - `planning-mds/architecture/SOLUTION-PATTERNS.md`
+   - `planning-mds/api/`
+3. **Produce assembly plan:**
+   - Build order for vertical slices
+   - Explicit backend/frontend/AI handoffs
+   - Integration checkpoints for QA and DevOps
+   - Clear definition of "done" for each slice
+4. **Output artifact:**
+   - `planning-mds/architecture/application-assembly-plan.md` (use `agents/templates/application-assembly-plan-template.md`)
+
+**Completion Criteria for Step 0:**
+- [ ] Application assembly plan exists
+- [ ] Scope split across implementation agents is explicit
+- [ ] Integration checkpoints defined
+
+---
+
+### Step 0.5: Assembly Plan Validation
+
+**Execution Instructions:**
+
+Validate the assembly plan before parallel implementation begins:
+
+- [ ] Scope split matches story requirements
+- [ ] Dependencies between agents are identified
+- [ ] Integration checkpoints are feasible
+- [ ] No missing or conflicting artifact ownership
+
+Validator:
+- Code Reviewer or a second Architect review (lightweight checklist is sufficient)
+
+---
+
 ### Step 1: Parallel Implementation
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
-Execute these agents **in parallel** (all working simultaneously):
+Execute these agents **in parallel** (all working simultaneously). Run AI Engineer when stories include AI/LLM/MCP scope:
+
+**AI Scope Checklist — include AI Engineer if ANY apply:**
+- [ ] Story mentions LLM, AI, or machine learning behavior
+- [ ] Story requires MCP server/tool/resource work
+- [ ] Story involves prompts, agent behavior, or tool orchestration
+- [ ] Story changes files under `neuron/`
+- [ ] Story requires model selection, cost controls, or guardrails
 
 #### 1a. Backend Developer
 1. **Activate Backend Developer agent** by reading `agents/backend-developer/SKILL.md`
 2. **Read context:**
    - `planning-mds/INCEPTION.md` Section 4 (architecture, data model, API contracts)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
-   - `planning-mds/examples/stories/` (user stories to implement)
+   - `planning-mds/stories/` (user stories to implement)
 3. **Execute responsibilities:**
    - Implement domain entities matching data model
    - Create EF Core DbContext and entities
@@ -70,17 +120,17 @@ Execute these agents **in parallel** (all working simultaneously):
 2. **Read context:**
    - `planning-mds/INCEPTION.md` Section 3 (screens, user stories)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
-   - `planning-mds/architecture/api-contracts.md` (API to call)
+   - `planning-mds/api/` (OpenAPI contracts to implement against)
 3. **Execute responsibilities:**
    - Create React components for screens
-   - Implement forms with React Hook Form + Zod validation
+   - Implement forms with React Hook Form + AJV (JSON Schema) validation
    - Set up TanStack Query for API calls
    - Implement routing and navigation
    - Style with Tailwind + shadcn/ui components
    - Write component tests
 4. **Follow SOLUTION-PATTERNS.md:**
    - React Hook Form for all forms
-   - Zod for validation schemas
+   - AJV + JSON Schema for validation
    - TanStack Query for API calls
    - Tailwind + shadcn/ui for styling
 5. **Outputs:**
@@ -94,7 +144,7 @@ Execute these agents **in parallel** (all working simultaneously):
 #### 1c. Quality Engineer
 1. **Activate Quality Engineer agent** by reading `agents/quality-engineer/SKILL.md`
 2. **Read context:**
-   - `planning-mds/examples/stories/` (acceptance criteria)
+   - `planning-mds/stories/` (acceptance criteria)
    - `planning-mds/INCEPTION.md` Section 4.4 (workflows)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
 3. **Execute responsibilities:**
@@ -139,8 +189,32 @@ Execute these agents **in parallel** (all working simultaneously):
    - Deployment scripts
    - README updates (run instructions)
 
+#### 1e. AI Engineer (if AI scope)
+1. **Activate AI Engineer agent** by reading `agents/ai-engineer/SKILL.md`
+2. **Read context:**
+   - `planning-mds/INCEPTION.md` (AI-related stories and constraints)
+   - `planning-mds/architecture/SOLUTION-PATTERNS.md`
+   - `planning-mds/stories/` (AI feature acceptance criteria)
+   - Existing `neuron/` code (if present)
+3. **Execute responsibilities:**
+   - Implement AI features in `neuron/` (model integration, prompts, workflows, tools)
+   - Implement MCP servers/resources when required by stories
+   - Add guardrails (input/output validation, retries/timeouts, error handling)
+   - Add observability (decision/tool-call logs and usage tracking)
+   - Write unit/integration tests for AI components
+4. **Follow SOLUTION-PATTERNS.md:**
+   - Keep configuration in environment/config files (no hardcoded secrets)
+   - Align AI behavior and outputs with story acceptance criteria
+   - Keep interfaces explicit for backend/frontend integration
+5. **Outputs:**
+   - `neuron/` implementation updates
+   - AI configs and prompt templates
+   - MCP server/tool definitions (if needed)
+   - AI unit/integration tests
+   - `neuron/README.md` updates (if behavior or setup changed)
+
 **Completion Criteria for Step 1:**
-- [ ] All four agents have completed their work
+- [ ] All required agents have completed their work (Backend, Frontend, Quality, DevOps, and AI Engineer if AI scope)
 - [ ] Code compiles/builds successfully
 - [ ] No critical errors or blockers
 
@@ -148,7 +222,7 @@ Execute these agents **in parallel** (all working simultaneously):
 
 ### Step 2: SELF-REVIEW GATE (Agent Validation)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 Each agent validates their own work before proceeding to code review:
 
@@ -166,7 +240,7 @@ Each agent validates their own work before proceeding to code review:
    - [ ] Forms work with validation
    - [ ] API integration successful
    - [ ] Component tests passing
-   - [ ] SOLUTION-PATTERNS.md followed (React Hook Form, Zod, TanStack Query)
+   - [ ] SOLUTION-PATTERNS.md followed (React Hook Form, AJV, TanStack Query)
    - [ ] All acceptance criteria met
    - [ ] No console errors
 
@@ -183,13 +257,21 @@ Each agent validates their own work before proceeding to code review:
    - [ ] All services start correctly
    - [ ] Environment variables documented
 
+5. **AI Engineer self-review (if AI scope):**
+   - [ ] AI workflows/prompts implemented per stories
+   - [ ] MCP resources/tools functional (if required)
+   - [ ] AI unit/integration tests passing
+   - [ ] Cost/safety/observability controls implemented
+   - [ ] No hardcoded API keys or secrets
+
 **If any self-review fails:**
 - Agent fixes issues
 - Re-runs self-review
 - Repeats until passing
 
 **Gate Criteria:**
-- [ ] All agents pass self-review
+- [ ] Architect confirms assembled output matches Step 0 plan
+- [ ] All required agents pass self-review
 - [ ] All tests passing
 - [ ] Application runs successfully
 
@@ -197,7 +279,7 @@ Each agent validates their own work before proceeding to code review:
 
 ### Step 3: Execute Code Reviewer
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 1. **Activate Code Reviewer agent** by reading `agents/code-reviewer/SKILL.md`
 
@@ -205,7 +287,7 @@ Each agent validates their own work before proceeding to code review:
    - All code produced in Step 1
    - `planning-mds/INCEPTION.md` (requirements and architecture)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
-   - `planning-mds/examples/stories/` (acceptance criteria)
+   - `planning-mds/stories/` (acceptance criteria)
 
 3. **Execute code review responsibilities:**
    - Review code structure and organization
@@ -266,7 +348,7 @@ Each agent validates their own work before proceeding to code review:
 
 ### Step 4: APPROVAL GATE (Code Review)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 1. **Present code review results to user:**
    ```
@@ -334,7 +416,7 @@ Each agent validates their own work before proceeding to code review:
 
    - **If "reject":**
      - Capture feedback
-     - Return to Step 1 (re-implement with feedback)
+     - Return to Step 0 (re-plan and re-implement with feedback)
 
 **Gate Criteria:**
 - [ ] Code review passed or approved with minor recommendations
@@ -345,7 +427,7 @@ Each agent validates their own work before proceeding to code review:
 
 ### Step 5: Execute Security Review
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 1. **Activate Security agent** by reading `agents/security/SKILL.md`
 
@@ -428,7 +510,7 @@ Each agent validates their own work before proceeding to code review:
 
 ### Step 6: APPROVAL GATE (Security Review)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 1. **Present security review results to user:**
    ```
@@ -500,7 +582,7 @@ Each agent validates their own work before proceeding to code review:
 
    - **If "reject":**
      - Capture feedback
-     - Return to Step 1 (re-implement with security focus)
+     - Return to Step 0 (re-plan and re-implement with security focus)
 
 **Gate Criteria:**
 - [ ] Security review passed or approved with low-severity findings only
@@ -509,9 +591,23 @@ Each agent validates their own work before proceeding to code review:
 
 ---
 
+### Step 6.5: Performance Validation (Informational)
+
+**Execution Instructions:**
+
+If `planning-mds/INCEPTION.md` Section 4 defines measurable NFR targets, validate implementation against them and record results:
+
+- [ ] API latency target (for example p95)
+- [ ] Throughput/concurrency target
+- [ ] Frontend performance targets (for example Core Web Vitals) when applicable
+
+This is an informational gate for release readiness reporting and does not block progression by itself.
+
+---
+
 ### Step 7: Build Complete
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 Present completion summary:
 
@@ -519,6 +615,12 @@ Present completion summary:
 ═══════════════════════════════════════════════════════════
 Build Action Complete! ✓
 ═══════════════════════════════════════════════════════════
+
+Application Assembly:
+  ✓ Architect
+    - Assembly plan created
+    - Cross-agent handoffs validated
+    - Integration checkpoints tracked
 
 Implementation (Parallel):
   ✓ Backend Developer
@@ -542,6 +644,11 @@ Implementation (Parallel):
     - Docker containers ready
     - docker-compose configured
     - Deployment scripts created
+
+  ✓ AI Engineer (if AI scope)
+    - [count] AI workflows/prompts implemented
+    - [count] MCP tools/resources added
+    - [count] AI tests passing
 
 Code Review:
   ✓ Code Reviewer: APPROVED
@@ -573,8 +680,10 @@ All features implemented and approved! ✓
 ## Validation Criteria
 
 **Overall Build Action Success:**
-- [ ] All implementation agents completed work
+- [ ] Application assembly plan created and followed
+- [ ] All required implementation agents completed work (including AI Engineer when AI scope exists)
 - [ ] All tests passing (unit, integration, E2E)
+- [ ] AI tests passing (if AI scope)
 - [ ] Code review approved
 - [ ] Security review approved
 - [ ] Application runs successfully

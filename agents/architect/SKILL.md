@@ -43,6 +43,7 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
 ## Phase Activation
 
 **Primary Phase:** Phase B (Architect/Tech Lead Mode)
+**Secondary Phase:** Phase C kickoff (implementation orchestration)
 
 ## Responsibilities
 
@@ -86,15 +87,21 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
    - Identify when new patterns emerge
    - Update SOLUTION-PATTERNS.md when patterns change
 
-## Model Recommendation
+10) **Orchestrate implementation kickoff (Phase C)**
+   - Create/update `planning-mds/architecture/application-assembly-plan.md`
+   - Create/update `planning-mds/architecture/feature-assembly-plan.md` for slice work
+   - Define backend/frontend/AI/QA/DevOps handoffs and sequencing
+   - Set integration checkpoints and completion criteria
 
-**Recommended Model:** Opus (Claude Opus 4.5)
+## Capability Recommendation
 
-**Rationale:** Architecture requires complex reasoning, evaluating trade-offs, and making high-impact decisions. Opus provides the deepest analytical capabilities for architectural design work.
+**Recommended Capability Tier:** High (complex architecture reasoning)
 
-**Alternative Models:**
-- Sonnet: For straightforward architecture validation or when cost is a concern
-- Do not use Haiku: Architecture decisions require deep reasoning beyond Haiku's capabilities
+**Rationale:** Architecture requires deep reasoning for trade-offs, risk analysis, and long-horizon design decisions.
+
+**Alternative Tiers:**
+- Standard: acceptable for straightforward architecture validation
+- Lightweight: not recommended for primary architecture decisions
 
 ## Tools & Permissions
 

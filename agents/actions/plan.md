@@ -26,7 +26,7 @@ Ready for Build
 
 ### Step 1: Execute Product Manager (Phase A)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 1. **Activate Product Manager agent** by reading `agents/product-manager/SKILL.md`
 
@@ -45,8 +45,8 @@ Ready for Build
 4. **Produce outputs:**
    - Update `planning-mds/INCEPTION.md` Section 3 (complete, no TODOs)
    - Create `planning-mds/examples/personas/*.md` (if detailed personas needed)
-   - Create `planning-mds/examples/features/*.md` (if detailed features needed)
-   - Create `planning-mds/examples/stories/*.md` (if detailed stories needed)
+   - Create `planning-mds/features/*.md` (if detailed feature specs are needed)
+   - Create `planning-mds/stories/` content (if detailed stories needed)
 
 5. **Validate Phase A outputs:**
    - [ ] Vision and non-goals documented
@@ -60,14 +60,14 @@ Ready for Build
 **Phase A Outputs:**
 - `planning-mds/INCEPTION.md` Section 3 (complete)
 - `planning-mds/examples/personas/` (optional)
-- `planning-mds/examples/features/` (optional)
-- `planning-mds/examples/stories/` (optional)
+- `planning-mds/features/` (optional)
+- `planning-mds/stories/` (optional)
 
 ---
 
 ### Step 1.5: CLARIFICATION GATE (Requirements Clarification)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 1. **Review Phase A outputs for underspecified areas:**
 
@@ -209,7 +209,7 @@ Replace with:
 
 ### Step 2: APPROVAL GATE (Phase A Review)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 1. **Present Phase A outputs to user:**
    ```
@@ -242,8 +242,8 @@ Replace with:
    Review the following files:
    - planning-mds/INCEPTION.md (Section 3)
    - planning-mds/examples/personas/ (if created)
-   - planning-mds/examples/features/ (if created)
-   - planning-mds/examples/stories/ (if created)
+   - planning-mds/features/ (if created)
+   - planning-mds/stories/ (if created)
    ═══════════════════════════════════════════════════════════
    ```
 
@@ -294,7 +294,7 @@ Replace with:
 
 ### Step 3: Execute Architect (Phase B)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 1. **Activate Architect agent** by reading `agents/architect/SKILL.md`
 
@@ -327,7 +327,7 @@ Replace with:
    - Update `planning-mds/INCEPTION.md` Section 4 (complete, no TODOs)
    - Create `planning-mds/architecture/decisions/*.md` (ADRs for key decisions)
    - Create `planning-mds/architecture/data-model.md` (if detailed ERD needed)
-   - Create `planning-mds/architecture/api-contracts.md` (if detailed API specs needed)
+   - Create `planning-mds/api/*.yaml` (OpenAPI contracts for implementation)
 
 6. **Validate Phase B outputs:**
    - [ ] Service boundaries clear
@@ -345,13 +345,13 @@ Replace with:
 - `planning-mds/INCEPTION.md` Section 4 (complete)
 - `planning-mds/architecture/decisions/*.md` (ADRs)
 - `planning-mds/architecture/data-model.md` (optional)
-- `planning-mds/architecture/api-contracts.md` (optional)
+- `planning-mds/api/*.yaml` (OpenAPI contracts)
 
 ---
 
 ### Step 4: APPROVAL GATE (Phase B Review)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 1. **Present Phase B outputs to user:**
    ```
@@ -449,7 +449,7 @@ Replace with:
 
 ### Step 5: Plan Complete
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 Present completion summary:
 
@@ -521,12 +521,12 @@ Before running plan action:
 ```
 User: "Run the plan action for customer management"
 
-Claude: [Reads plan.md]
-Claude: "I'll execute Step 1: Product Manager for Phase A..."
+Agent Runtime: [Reads plan.md]
+Agent Runtime: "I'll execute Step 1: Product Manager for Phase A..."
 
 [Product Manager executes - defines personas, stories, screens for customer management]
 
-Claude: "Phase A complete. Outputs:
+Agent Runtime: "Phase A complete. Outputs:
   - 2 personas (Distribution Manager, Customer Relationship Manager)
   - 5 features (Customer CRUD, Search, Activity Timeline)
   - 15 user stories with acceptance criteria
@@ -536,11 +536,11 @@ Do you approve Phase A? (approve/reject/request changes)"
 
 User: "approve"
 
-Claude: "Proceeding to Step 3: Architect for Phase B..."
+Agent Runtime: "Proceeding to Step 3: Architect for Phase B..."
 
 [Architect executes - designs data model, API, authorization, workflows]
 
-Claude: "Phase B complete. Outputs:
+Agent Runtime: "Phase B complete. Outputs:
   - Data model: Customer entity with relationships
   - API: 7 endpoints defined
   - Authorization: ABAC policies for customer operations
@@ -550,7 +550,7 @@ Do you approve Phase B? (approve/reject/request changes)"
 
 User: "approve"
 
-Claude: "Plan action complete! Ready for build action."
+Agent Runtime: "Plan action complete! Ready for build action."
 ```
 
 ### Scenario 2: Iteration on Phase A
@@ -559,19 +559,19 @@ User: "Run the plan action for order processing workflow"
 
 [Phase A executes]
 
-Claude: "Phase A complete. Do you approve?"
+Agent Runtime: "Phase A complete. Do you approve?"
 
 User: "reject - the personas don't match our actual users"
 
-Claude: "What feedback do you have? What should be changed?"
+Agent Runtime: "What feedback do you have? What should be changed?"
 
 User: "Add a persona for Enterprise Account Managers, they're a key user"
 
-Claude: "Understood. Iterating on Phase A with your feedback..."
+Agent Runtime: "Understood. Iterating on Phase A with your feedback..."
 
 [Product Manager updates personas]
 
-Claude: "Phase A updated. New outputs:
+Agent Runtime: "Phase A updated. New outputs:
   - 3 personas (added Enterprise Account Manager)
   - Stories updated to reflect enterprise account needs
 

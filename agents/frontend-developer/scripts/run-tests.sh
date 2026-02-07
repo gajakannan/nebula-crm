@@ -2,7 +2,7 @@
 # run-tests.sh — Run frontend tests with sensible defaults.
 #
 # Usage:
-#   sh run-tests.sh [--frontend-dir DIR] [-- <test-runner-args>]
+#   sh run-tests.sh [--frontend-dir DIR] [--strict] [-- <test-runner-args>]
 #
 # Examples:
 #   sh run-tests.sh
@@ -12,12 +12,14 @@
 # Behavior:
 # - If FRONTEND_TEST_CMD is set, run that command (and forward args after --).
 # - Otherwise auto-detect package manager (pnpm/yarn/npm) and run test script.
-# - Exits non-zero on missing setup or test failures.
+# - Missing frontend setup is skipped unless --strict is set.
+# - Exits non-zero on test failures.
 
 FRONTEND_DIR="${FRONTEND_DIR:-experience}"
+STRICT=0
 
 print_usage() {
-  echo "Usage: $0 [--frontend-dir DIR] [-- <test-runner-args>]"
+  echo "Usage: $0 [--frontend-dir DIR] [--strict] [-- <test-runner-args>]"
 }
 
 # Parse script options only; remaining args are forwarded.
@@ -26,6 +28,10 @@ while [ $# -gt 0 ]; do
     --frontend-dir)
       FRONTEND_DIR="$2"
       shift 2
+      ;;
+    --strict)
+      STRICT=1
+      shift
       ;;
     -h|--help)
       print_usage
@@ -41,15 +47,23 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+skip_or_fail() {
+  msg="$1"
+  if [ "$STRICT" -eq 1 ]; then
+    echo "ERROR: ${msg}" >&2
+    exit 2
+  fi
+  echo "SKIP: ${msg}"
+  exit 0
+}
+
 if [ ! -d "$FRONTEND_DIR" ]; then
-  echo "ERROR: frontend directory not found: $FRONTEND_DIR" >&2
-  exit 2
+  skip_or_fail "frontend directory not found: $FRONTEND_DIR"
 fi
 
 PKG="${FRONTEND_DIR}/package.json"
 if [ ! -f "$PKG" ]; then
-  echo "ERROR: package.json not found: $PKG" >&2
-  exit 2
+  skip_or_fail "package.json not found: $PKG"
 fi
 
 if [ -n "${FRONTEND_TEST_CMD:-}" ]; then
@@ -68,9 +82,14 @@ else
 fi
 
 if [ "$HAS_TEST_SCRIPT" -ne 1 ]; then
-  echo "ERROR: no \"test\" script found in $PKG." >&2
-  echo "Set FRONTEND_TEST_CMD to run a custom test command." >&2
-  exit 2
+  if [ "$STRICT" -eq 1 ]; then
+    echo "ERROR: no \"test\" script found in $PKG." >&2
+    echo "Set FRONTEND_TEST_CMD to run a custom test command." >&2
+    exit 2
+  fi
+  echo "SKIP: no \"test\" script found in $PKG."
+  echo "Set FRONTEND_TEST_CMD or run with --strict once tests are expected."
+  exit 0
 fi
 
 if [ -f "${FRONTEND_DIR}/pnpm-lock.yaml" ] && command -v pnpm >/dev/null 2>&1; then
@@ -80,8 +99,7 @@ elif [ -f "${FRONTEND_DIR}/yarn.lock" ] && command -v yarn >/dev/null 2>&1; then
 elif command -v npm >/dev/null 2>&1; then
   RUNNER="npm"
 else
-  echo "ERROR: no supported package manager found (pnpm, yarn, npm)." >&2
-  exit 2
+  skip_or_fail "no supported package manager found (pnpm, yarn, npm)"
 fi
 
 echo "Running frontend tests with ${RUNNER} in $FRONTEND_DIR"

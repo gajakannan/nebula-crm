@@ -48,14 +48,14 @@ Your responsibility is to build the **intelligence layer** (neuron/) that powers
 - Agent workflows needed
 - MCP servers to be built
 
-## Model Recommendation
+## Capability Recommendation
 
-**Recommended Model:** Sonnet (Claude Sonnet 4.5)
+**Recommended Capability Tier:** Standard (integration and workflow implementation)
 
-**Rationale:** AI engineering requires solid technical capability for integrations, prompt crafting, and workflow building. Sonnet provides excellent code generation and reasoning at reasonable cost.
+**Rationale:** AI engineering needs consistent coding, prompt/system design, and multi-component integration quality.
 
-**Use Opus for:** Complex agentic reasoning, advanced prompt optimization, multi-agent orchestration design
-**Use Haiku for:** Simple prompt templates, basic tool configurations
+**Use a higher capability tier for:** complex reasoning pipelines, advanced prompt optimization, multi-agent orchestration design
+**Use a lightweight tier for:** simple prompt templates and basic tool configurations
 
 ## Responsibilities
 

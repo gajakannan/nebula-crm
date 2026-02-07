@@ -9,6 +9,7 @@
 #   --backend-dir DIR    Backend directory (default: engine)
 #   --ai-dir DIR         AI directory (default: neuron)
 #   --min PCT            Minimum coverage percent for validation (default: 80)
+#   --strict             Fail when no coverage jobs can run
 #   --no-validate        Generate reports but skip threshold validation
 #   --skip-frontend      Skip frontend coverage
 #   --skip-backend       Skip backend coverage
@@ -28,6 +29,7 @@ FRONTEND_DIR="${FRONTEND_DIR:-experience}"
 BACKEND_DIR="${BACKEND_DIR:-engine}"
 AI_DIR="${AI_DIR:-neuron}"
 MIN_COVERAGE="${MIN_COVERAGE:-80}"
+STRICT=0
 VALIDATE=1
 RUN_FRONTEND=1
 RUN_BACKEND=1
@@ -48,6 +50,7 @@ Options:
   --backend-dir DIR    Backend directory (default: engine)
   --ai-dir DIR         AI directory (default: neuron)
   --min PCT            Minimum coverage percent for validation (default: 80)
+  --strict             Fail when no coverage jobs can run
   --no-validate        Generate reports but skip threshold validation
   --skip-frontend      Skip frontend coverage
   --skip-backend       Skip backend coverage
@@ -129,6 +132,10 @@ while [ $# -gt 0 ]; do
     --min)
       MIN_COVERAGE="$2"
       shift 2
+      ;;
+    --strict)
+      STRICT=1
+      shift
       ;;
     --no-validate)
       VALIDATE=0
@@ -349,8 +356,12 @@ echo "=== Coverage Summary ==="
 if [ "$RAN_ANY" -eq 1 ]; then
   echo "At least one coverage job ran."
 else
-  echo "No coverage jobs ran. Check directories/tooling or pass custom commands."
-  exit 2
+  if [ "$STRICT" -eq 1 ]; then
+    echo "No coverage jobs ran. Check directories/tooling or pass custom commands."
+    exit 2
+  fi
+  echo "SKIP: no coverage jobs ran. Use --strict when coverage must be present."
+  exit 0
 fi
 
 if [ "$FAILED" -ne 0 ]; then

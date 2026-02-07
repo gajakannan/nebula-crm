@@ -52,14 +52,14 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 - Backend APIs available (or mocked for parallel development)
 - Feature implementation or vertical slice ready to build
 
-## Model Recommendation
+## Capability Recommendation
 
-**Recommended Model:** Sonnet (Claude Sonnet 4.5)
+**Recommended Capability Tier:** Standard (UI implementation and component patterns)
 
-**Rationale:** Frontend development requires strong TypeScript/React knowledge, pattern recognition, and code generation. Sonnet provides excellent balance of capability and cost for UI implementation.
+**Rationale:** Frontend implementation needs dependable TypeScript/React generation, form and state patterns, and testable component output.
 
-**Use Opus for:** Complex state management architectures, performance optimization strategies, accessibility remediation
-**Use Haiku for:** Simple component scaffolding, basic styling tweaks, documentation updates
+**Use a higher capability tier for:** complex state architecture, performance redesign, accessibility remediation
+**Use a lightweight tier for:** simple component scaffolding, styling tweaks, documentation
 
 ## Responsibilities
 
@@ -818,7 +818,7 @@ function CustomerInfiniteList() {
 ### XSS Prevention
 - **Never use `dangerouslySetInnerHTML`** unless absolutely necessary and sanitized
 - **Escape user input** - React does this by default for JSX content
-- **Validate all inputs** - Use Zod schemas
+- **Validate all inputs** - Use JSON Schema + AJV validation
 - **Sanitize HTML** - Use DOMPurify if rendering user HTML
 
 ```tsx
@@ -1024,8 +1024,8 @@ Generic frontend best practices:
 - `agents/frontend-developer/references/typescript-patterns.md`
 - `agents/frontend-developer/references/accessibility-guide.md`
 - `agents/frontend-developer/references/ux-principles.md`
-- `agents/frontend-developer/references/form-handling-guide.md`
-- `agents/frontend-developer/references/json-schema-forms-guide.md`
+- `agents/frontend-developer/references/json-schema-forms-guide.md` (primary form-validation guide)
+- `agents/frontend-developer/references/form-handling-guide.md` (legacy comparison only; do not use for project defaults)
 - `agents/frontend-developer/references/tanstack-query-guide.md`
 - `agents/frontend-developer/references/testing-guide.md`
 - `agents/frontend-developer/references/design-inspiration.md`

@@ -55,14 +55,14 @@ Your responsibility is to implement the **deployment and operations layer** - ma
 
 **Continuous:** DevOps is involved throughout development and operations.
 
-## Model Recommendation
+## Capability Recommendation
 
-**Recommended Model:** Sonnet (Claude Sonnet 4.5)
+**Recommended Capability Tier:** Standard (infrastructure automation and operations patterns)
 
-**Rationale:** DevOps requires understanding multiple technologies (Docker, PostgreSQL, Keycloak, GitHub Actions), scripting, and infrastructure patterns. Sonnet provides excellent balance of capability and cost.
+**Rationale:** DevOps work spans containerization, scripting, CI/CD, and environment configuration with cross-system constraints.
 
-**Use Opus for:** Complex infrastructure architecture, performance optimization, disaster recovery planning
-**Use Haiku for:** Simple Dockerfile updates, environment variable configs, documentation
+**Use a higher capability tier for:** complex infrastructure design, resilience strategy, disaster recovery planning
+**Use a lightweight tier for:** simple Dockerfile/env updates and documentation
 
 ## Responsibilities
 

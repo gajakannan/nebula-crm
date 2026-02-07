@@ -296,7 +296,7 @@ const widgets = { TextWidget: CustomTextWidget };
 **Applied in:** All forms with validation, API request/response validation
 **Schema Location:** `planning-mds/schemas/` or `experience/src/schemas/` (shared schemas in planning-mds)
 
-**Why JSON Schema over Zod:**
+**Why JSON Schema + AJV for this architecture:**
 - Backend C# can validate using same schema (NJsonSchema or similar)
 - Single source of truth for validation rules
 - TypeScript types can be generated from schemas

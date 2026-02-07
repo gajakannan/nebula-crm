@@ -8,6 +8,8 @@ applies_to: product-manager
 
 Use this template for all user stories to ensure consistency and completeness. Keep it domain-neutral; project-specific examples live in `planning-mds/examples/`.
 
+One story per file. Do not combine multiple stories in a single markdown document.
+
 ## Story Header
 
 **Story ID:** [S1, S2, ...]

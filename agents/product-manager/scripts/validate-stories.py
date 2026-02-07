@@ -49,6 +49,7 @@ class StoryValidator:
             return False, self.errors, self.warnings
 
         # Required sections
+        self.check_single_story_per_file()
         self.check_story_header_fields()
         self.check_user_story_format()
         self.check_context_background()
@@ -70,14 +71,25 @@ class StoryValidator:
 
     def check_user_story_format(self):
         """Check for 'As a...I want...So that...' format."""
-        story_pattern = r"(?i)\*\*As\s+a\*\*.*\*\*I\s+want\*\*.*\*\*So\s+that\*\*"
+        story_pattern = r"\*\*As\s+a\*\*.*\*\*I\s+want\*\*.*\*\*So\s+that\*\*"
 
-        if not re.search(story_pattern, self.content):
+        if not re.search(story_pattern, self.content, re.IGNORECASE | re.DOTALL):
             self.errors.append("Missing or malformed user story (As a...I want...So that...)")
         else:
             # Check if persona is specific (not just "user")
             if re.search(r"\*\*As\s+a\*\*\s+(user|someone|person)", self.content, re.IGNORECASE):
                 self.warnings.append("User story uses generic persona 'user' - be more specific")
+
+    def check_single_story_per_file(self):
+        """Ensure story files contain exactly one story."""
+        story_id_markers = re.findall(r"\*\*Story ID:\*\*", self.content)
+        if len(story_id_markers) > 1:
+            self.errors.append("Multiple stories detected in one file. Keep one story per file.")
+
+        # Legacy combined examples often use headings like "## Story S1: ..."
+        legacy_story_headings = re.findall(r"^##\s+Story\s+[A-Za-z0-9_-]+", self.content, re.IGNORECASE | re.MULTILINE)
+        if len(legacy_story_headings) > 1:
+            self.errors.append("Multiple story sections detected. Split into separate files (one story per file).")
 
     def check_acceptance_criteria(self):
         """Check for acceptance criteria section."""
@@ -149,10 +161,13 @@ class StoryValidator:
     def check_invest_criteria(self):
         """Check INVEST criteria quality."""
 
+        user_story_section = self.get_section_content("User Story")
+        invest_scope = user_story_section if user_story_section else self.content
+
         # Independent: Check for phrases indicating dependencies
         dependency_phrases = ["depends on", "requires", "needs", "after", "once", "when.*is complete"]
         for phrase in dependency_phrases:
-            if re.search(phrase, self.content, re.IGNORECASE):
+            if re.search(phrase, invest_scope, re.IGNORECASE):
                 self.warnings.append(f"Story may have dependencies - check 'Independent' (INVEST)")
                 break
 
@@ -194,7 +209,13 @@ class StoryValidator:
 
         # Check for audit trail (if mutation involved)
         mutation_keywords = ["create", "update", "delete", "change", "transition", "modify"]
-        if any(keyword in self.content.lower() for keyword in mutation_keywords):
+        mutation_scope = "\n".join(
+            [
+                self.get_section_content("User Story"),
+                ac_section,
+            ]
+        ).lower()
+        if any(keyword in mutation_scope for keyword in mutation_keywords):
             if "timeline" not in ac_text and "audit" not in ac_text:
                 self.warnings.append("Story involves data mutation but has no audit/timeline requirements")
 

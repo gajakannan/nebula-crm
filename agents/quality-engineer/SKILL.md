@@ -56,14 +56,14 @@ Your responsibility is to implement the **quality assurance layer** - tests that
 
 **Continuous:** Quality Engineer is involved throughout Phase C, not just at the end.
 
-## Model Recommendation
+## Capability Recommendation
 
-**Recommended Model:** Sonnet (Claude Sonnet 4.5)
+**Recommended Capability Tier:** Standard (test strategy execution and debugging)
 
-**Rationale:** Quality engineering requires solid understanding of multiple tech stacks (React, C#, Python), test automation patterns, and debugging. Sonnet provides excellent code generation and reasoning at reasonable cost.
+**Rationale:** Quality work requires cross-stack test design, failure analysis, and repeatable automation decisions.
 
-**Use Opus for:** Complex test strategy design, debugging flaky tests, performance optimization
-**Use Haiku for:** Simple test fixtures, test data generation, documentation
+**Use a higher capability tier for:** complex test strategy, flaky-test diagnosis, performance analysis
+**Use a lightweight tier for:** fixtures, test data, and documentation updates
 
 ## Responsibilities
 

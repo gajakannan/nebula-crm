@@ -7,28 +7,79 @@ Build a single feature as a complete vertical slice (backend + frontend + tests)
 ## Agent Flow
 
 ```
-(Backend Developer + Frontend Developer + Quality Engineer)
+Architect (Implementation Orchestration)
+  ↓
+(Backend Developer + Frontend Developer + AI Engineer [if AI scope] + Quality Engineer)
   ↓ [Parallel Implementation]
 [SELF-REVIEW GATE: Each agent validates their work]
   ↓
-Code Reviewer
+Code Reviewer + Security
+  ↓ [Parallel Reviews]
+[Review Gate: resolve critical findings]
   ↓
 [APPROVAL GATE: User reviews and approves]
   ↓
 Feature Complete
 ```
 
-**Flow Type:** Mixed (parallel implementation, sequential review with approval gate)
+**Flow Type:** Mixed (architect-led orchestration kickoff, parallel implementation, parallel code+security reviews, single approval gate; AI Engineer runs when feature includes AI scope)
 
 ---
 
 ## Execution Steps
 
+### Step 0: Architect-Led Feature Assembly Planning
+
+**Execution Instructions:**
+
+1. **Activate Architect agent** by reading `agents/architect/SKILL.md`
+2. **Read context:**
+   - Feature stories in `planning-mds/stories/`
+   - `planning-mds/INCEPTION.md` scope and constraints
+   - `planning-mds/architecture/SOLUTION-PATTERNS.md`
+   - `planning-mds/api/` contracts for this feature
+3. **Produce feature assembly plan:**
+   - Required backend/frontend/AI changes for this feature only
+   - Integration checkpoints and dependency order
+   - Test and release checklist for the vertical slice
+4. **Output artifact:**
+   - `planning-mds/architecture/feature-assembly-plan.md` (use `agents/templates/feature-assembly-plan-template.md`)
+
+**Completion Criteria for Step 0:**
+- [ ] Feature assembly plan exists
+- [ ] Feature scope and handoffs are explicit
+- [ ] Integration/test checkpoints defined
+
+---
+
+### Step 0.5: Assembly Plan Validation
+
+**Execution Instructions:**
+
+Validate the feature assembly plan before parallel implementation:
+
+- [ ] Scope split matches feature story requirements
+- [ ] Dependencies between agents are identified
+- [ ] Integration checkpoints are feasible
+- [ ] No missing or conflicting artifact ownership
+
+Validator:
+- Code Reviewer or a second Architect review (lightweight checklist is sufficient)
+
+---
+
 ### Step 1: Parallel Feature Implementation
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
-Execute these agents **in parallel** for the specific feature:
+Execute these agents **in parallel** for the specific feature. Run AI Engineer when the feature touches `neuron/`, LLM workflows, prompts, or MCP:
+
+**AI Scope Checklist — include AI Engineer if ANY apply:**
+- [ ] Story mentions LLM, AI, or machine learning behavior
+- [ ] Story requires MCP server/tool/resource work
+- [ ] Story involves prompts, agent behavior, or tool orchestration
+- [ ] Story changes files under `neuron/`
+- [ ] Story requires model selection, cost controls, or guardrails
 
 #### 1a. Backend Developer (Feature Scope)
 1. **Activate Backend Developer agent** by reading `agents/backend-developer/SKILL.md`
@@ -66,14 +117,14 @@ Execute these agents **in parallel** for the specific feature:
    - API contracts for THIS FEATURE ONLY
 3. **Execute responsibilities (feature-scoped):**
    - Create React components for feature screens
-   - Implement forms for this feature (React Hook Form + Zod)
+   - Implement forms for this feature (React Hook Form + AJV with JSON Schema)
    - Set up TanStack Query hooks for feature API calls
    - Add routing for feature screens
    - Style with Tailwind + shadcn/ui
    - Write component tests
 4. **Follow SOLUTION-PATTERNS.md:**
    - React Hook Form for forms
-   - Zod for validation
+   - AJV + JSON Schema for validation
    - TanStack Query for API
    - Tailwind + shadcn/ui for styling
 5. **Outputs (feature-specific):**
@@ -83,7 +134,27 @@ Execute these agents **in parallel** for the specific feature:
    - Routing updates
    - Component tests
 
-#### 1c. Quality Engineer (Feature Scope)
+#### 1c. AI Engineer (Feature Scope, if AI scope)
+1. **Activate AI Engineer agent** by reading `agents/ai-engineer/SKILL.md`
+2. **Read context:**
+   - AI-related user stories for THIS FEATURE
+   - `planning-mds/architecture/SOLUTION-PATTERNS.md`
+   - Existing `neuron/` code and interfaces
+3. **Execute responsibilities (feature-scoped):**
+   - Implement AI workflow/prompt/tool logic for this feature
+   - Add/modify MCP resources/tools if the feature requires them
+   - Add runtime guardrails (validation, retries, error handling)
+   - Add tests for AI behavior and integrations
+4. **Follow SOLUTION-PATTERNS.md:**
+   - No hardcoded secrets
+   - Explicit integration contracts with backend/frontend
+   - Observable AI behavior (logs/metrics)
+5. **Outputs (feature-specific):**
+   - `neuron/` feature implementation
+   - AI tests
+   - Prompt/config updates
+
+#### 1d. Quality Engineer (Feature Scope)
 1. **Activate Quality Engineer agent** by reading `agents/quality-engineer/SKILL.md`
 2. **Read context:**
    - User stories for THIS FEATURE with acceptance criteria
@@ -105,7 +176,7 @@ Execute these agents **in parallel** for the specific feature:
    - Feature test coverage report
 
 **Completion Criteria for Step 1:**
-- [ ] All three agents completed feature implementation
+- [ ] All required agents completed feature implementation (Backend, Frontend, Quality, and AI Engineer if AI scope)
 - [ ] Feature code compiles/builds successfully
 - [ ] No critical errors
 
@@ -113,7 +184,7 @@ Execute these agents **in parallel** for the specific feature:
 
 ### Step 2: SELF-REVIEW GATE (Agent Validation)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 Each agent validates their feature work:
 
@@ -134,7 +205,13 @@ Each agent validates their feature work:
    - [ ] SOLUTION-PATTERNS.md followed
    - [ ] Feature acceptance criteria met
 
-3. **Quality Engineer self-review:**
+3. **AI Engineer self-review (if AI scope):**
+   - [ ] AI feature behavior meets acceptance criteria
+   - [ ] AI tests passing
+   - [ ] MCP/tool interfaces validated (if used)
+   - [ ] Safety/cost/observability controls in place
+
+4. **Quality Engineer self-review:**
    - [ ] Feature test plan complete
    - [ ] E2E tests passing for feature
    - [ ] Coverage adequate for feature code
@@ -146,15 +223,20 @@ Each agent validates their feature work:
 - Repeats until passing
 
 **Gate Criteria:**
-- [ ] All agents pass self-review for feature
+- [ ] Architect confirms feature output matches Step 0 plan
+- [ ] All required agents pass self-review for feature
 - [ ] All feature tests passing
 - [ ] Feature works end-to-end
 
 ---
 
-### Step 3: Execute Code Reviewer
+### Step 3: Execute Reviews (Parallel)
 
-**Instructions for Claude:**
+**Execution Instructions:**
+
+Run these review agents in parallel:
+
+#### 3a. Code Reviewer
 
 1. **Activate Code Reviewer agent** by reading `agents/code-reviewer/SKILL.md`
 
@@ -188,6 +270,7 @@ Each agent validates their feature work:
    ## Vertical Slice Completeness
    - [ ] Backend complete (API endpoints functional)
    - [ ] Frontend complete (screens functional)
+   - [ ] AI layer complete (if AI scope)
    - [ ] Tests complete (unit, integration, E2E)
    - [ ] Can be deployed independently
 
@@ -216,29 +299,84 @@ Each agent validates their feature work:
 - Feature code review report
 - Approval or rejection
 
+#### 3b. Security
+
+1. **Activate Security agent** by reading `agents/security/SKILL.md`
+
+2. **Read context:**
+   - Feature code produced in Step 1
+   - `planning-mds/INCEPTION.md` (feature requirements)
+   - `planning-mds/architecture/SOLUTION-PATTERNS.md`
+   - Feature user stories with acceptance criteria
+   - Existing `planning-mds/security/` artifacts (if present)
+
+3. **Execute security review (feature-focused):**
+   - Check OWASP Top 10 risks relevant to this feature
+   - Verify authorization coverage for feature endpoints/actions
+   - Validate input/output validation and error leakage controls
+   - Check secrets/config handling (no hardcoded secrets)
+   - Validate audit logging coverage for mutations
+
+4. **Produce feature security review report:**
+   ```markdown
+   # Feature Security Review Report
+
+   Feature: [Feature Name]
+
+   ## Summary
+   - Assessment: [PASS / PASS WITH RECOMMENDATIONS / FAIL]
+   - Findings: [count by severity]
+
+   ## Findings
+   - Critical: [list]
+   - High: [list]
+   - Medium: [list]
+   - Low: [list]
+
+   ## Control Checks
+   - [ ] Authorization coverage complete
+   - [ ] Input validation enforced
+   - [ ] No secrets in code
+   - [ ] Auditability requirements met
+
+   ## Recommendation
+   [APPROVE / FIX CRITICAL / FIX HIGH / REJECT]
+   ```
+
+**Security Review Outputs:**
+- Feature security review report
+- Vulnerability findings and remediation guidance
+
 ---
 
 ### Step 4: APPROVAL GATE (Feature Review)
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
-1. **Present feature review results to user:**
+1. **Present combined review results to user:**
    ```
    ═══════════════════════════════════════════════════════════
-   Feature Code Review Complete
+   Feature Reviews Complete
    ═══════════════════════════════════════════════════════════
 
    Feature: [Feature Name]
-   Reviewer: Code Reviewer Agent
-   Status: [APPROVED / APPROVED WITH RECOMMENDATIONS / REJECTED]
+   Code Reviewer Status: [APPROVED / APPROVED WITH RECOMMENDATIONS / REJECTED]
+   Security Status: [PASS / PASS WITH RECOMMENDATIONS / FAIL]
 
    ✓ Vertical Slice Completeness
      - Backend: [Complete/Incomplete]
      - Frontend: [Complete/Incomplete]
+     - AI: [N/A/Complete/Incomplete]
      - Tests: [Complete/Incomplete]
      - Deployable: [Yes/No]
 
    Issues Found:
+     - Critical: [count]
+     - High: [count]
+     - Medium: [count]
+     - Low: [count]
+
+   Security Findings:
      - Critical: [count]
      - High: [count]
      - Medium: [count]
@@ -258,6 +396,7 @@ Each agent validates their feature work:
    ═══════════════════════════════════════════════════════════
    Review Details:
    [Link to feature code review report]
+   [Link to feature security review report]
    ═══════════════════════════════════════════════════════════
    ```
 
@@ -267,8 +406,10 @@ Each agent validates their feature work:
    - [ ] Feature is a complete vertical slice
    - [ ] Backend implementation complete
    - [ ] Frontend implementation complete
+   - [ ] AI implementation complete (if AI scope)
    - [ ] Tests cover feature completely
    - [ ] No critical issues
+   - [ ] No critical/high security vulnerabilities
    - [ ] SOLUTION-PATTERNS.md followed
    - [ ] All feature acceptance criteria met
    - [ ] Feature can be deployed independently
@@ -291,14 +432,15 @@ Each agent validates their feature work:
    - **If "fix issues":**
      - Identify issues to fix
      - Agents fix issues
-     - Return to Step 3 (re-run code review)
+     - Return to Step 3 (re-run code and security reviews)
 
    - **If "reject":**
      - Capture feedback
-     - Return to Step 1 (re-implement feature)
+     - Return to Step 0 (re-plan and re-implement feature)
 
 **Gate Criteria:**
 - [ ] Code review passed
+- [ ] Security review passed (or only accepted low-risk findings remain)
 - [ ] No critical issues
 - [ ] Feature is complete vertical slice
 - [ ] User explicitly approves
@@ -307,7 +449,7 @@ Each agent validates their feature work:
 
 ### Step 5: Feature Complete
 
-**Instructions for Claude:**
+**Execution Instructions:**
 
 Present completion summary:
 
@@ -317,6 +459,11 @@ Feature Complete! ✓
 ═══════════════════════════════════════════════════════════
 
 Feature: [Feature Name]
+
+Application Assembly:
+  ✓ Architect
+    - Feature assembly plan created
+    - Dependencies and checkpoints validated
 
 Implementation:
   ✓ Backend Developer
@@ -336,11 +483,21 @@ Implementation:
     - [count] E2E tests passing
     - [percentage]% coverage for feature code
 
+  ✓ AI Engineer (if AI scope)
+    - [count] AI workflows/prompts delivered
+    - [count] AI tests passing
+
 Code Review:
   ✓ Code Reviewer: APPROVED
   ✓ Vertical slice complete
   ✓ Acceptance criteria met
   Status: APPROVED
+
+Security Review:
+  ✓ Security Agent: PASS
+  ✓ No critical/high vulnerabilities
+  ✓ Authorization and validation checks complete
+  Status: PASS
 
 ═══════════════════════════════════════════════════════════
 Next Steps:
@@ -365,9 +522,12 @@ Feature delivered! ✓
 ## Validation Criteria
 
 **Overall Feature Action Success:**
-- [ ] Feature is complete vertical slice (backend + frontend + tests)
+- [ ] Feature assembly plan created and followed
+- [ ] Feature is complete vertical slice (backend + frontend + tests + AI when in scope)
 - [ ] All feature tests passing
+- [ ] AI tests passing (if AI scope)
 - [ ] Code review approved
+- [ ] Security review approved
 - [ ] All feature acceptance criteria met
 - [ ] Feature can be deployed independently
 - [ ] User approved
@@ -381,6 +541,7 @@ Before running feature action:
 - [ ] Feature has clear user stories with acceptance criteria
 - [ ] Feature scope is small (2-5 days of work)
 - [ ] SOLUTION-PATTERNS.md exists
+- [ ] AI scope is explicit (if feature includes AI behavior)
 - [ ] User is available for approval
 
 ---
@@ -389,7 +550,7 @@ Before running feature action:
 
 ### What Makes a Good Vertical Slice?
 
-1. **Complete:** Includes backend, frontend, and tests
+1. **Complete:** Includes backend, frontend, tests, and AI layer changes when AI scope exists
 2. **Deployable:** Can be released independently
 3. **Testable:** Has clear acceptance criteria
 4. **Small:** Can be completed in 2-5 days
@@ -419,8 +580,13 @@ Before running feature action:
 ```
 User: "Run the feature action for customer list with pagination"
 
-Claude: [Reads feature.md]
-Claude: "I'll implement the customer list feature as a vertical slice..."
+Agent Runtime: [Reads feature.md]
+Agent Runtime: "I'll implement the customer list feature as a vertical slice..."
+
+[Step 0: Feature assembly planning]
+  Architect:
+    - Feature scope and dependencies mapped
+    - Ownership assigned for backend/frontend/AI/test tasks
 
 [Step 1: Parallel implementation]
   Backend Developer:
@@ -442,49 +608,51 @@ Claude: "I'll implement the customer list feature as a vertical slice..."
 
 [Step 2: Self-review - all pass]
 
-[Step 3: Code review]
-Claude: "Code review complete. Results:
+[Step 3: Parallel reviews]
+Agent Runtime: "Code and security reviews complete. Results:
   - Vertical slice: Complete
   - Issues: 2 medium (naming conventions)
+  - Security findings: 0 critical, 0 high, 1 low
   - Test coverage: 85%
   - Acceptance criteria: All met
   - Recommendation: APPROVED WITH RECOMMENDATIONS"
 
 [Step 4: Approval gate]
-Claude: "Feature review complete. Do you approve? (approve/fix issues/reject)"
+Agent Runtime: "Feature review complete. Do you approve? (approve/fix issues/reject)"
 
 User: "approve"
 
-Claude: "Feature complete! Customer list with pagination ready to merge."
+Agent Runtime: "Feature complete! Customer list with pagination ready to merge."
 ```
 
 ### Scenario 2: Iteration After Rejection
 ```
 User: "Run the feature action for customer search"
 
-[Steps 1-3 execute]
+[Steps 0.5-3 execute]
 
 [Step 4: Approval gate]
-Claude: "Feature review results:
+Agent Runtime: "Feature review results:
   - Issues: 1 critical (missing authorization check)
   - Recommendation: FIX ISSUES"
 
 User: "fix issues"
 
-Claude: "Fixing authorization check..."
+Agent Runtime: "Fixing authorization check..."
 [Backend Developer adds authorization]
 
 [Step 3: Re-review]
-Claude: "Code review updated. Results:
+Agent Runtime: "Code and security reviews updated. Results:
   - Authorization: Fixed
+  - Security status: PASS
   - Recommendation: APPROVED"
 
 [Step 4: Re-approval]
-Claude: "Do you approve now?"
+Agent Runtime: "Do you approve now?"
 
 User: "approve"
 
-Claude: "Feature complete!"
+Agent Runtime: "Feature complete!"
 ```
 
 ---
@@ -505,5 +673,5 @@ Claude: "Feature complete!"
 - Features can build on each other (dependencies allowed)
 - Prefer small, frequent features over large batches
 - Feature action ensures true vertical slicing discipline
-- Security review can be added if feature involves sensitive operations
+- Security review is part of the feature action (run `review` action separately for deeper audit scope when needed)
 - DevOps agent not included (assumes Docker setup already exists)

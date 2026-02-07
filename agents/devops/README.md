@@ -23,6 +23,13 @@ cat planning-mds/INCEPTION.md
 6) Write deployment documentation
 7) Deploy to staging and production
 
+## Framework-Only Mode
+
+Before application code exists (`engine/`, `experience/`, deploy manifests), infra validation is expected to report missing artifacts.
+
+- Non-strict check: `python agents/devops/scripts/validate-infrastructure.py .` (informational warnings)
+- Strict gate (for implementation phase): `python agents/devops/scripts/validate-infrastructure.py . --strict`
+
 ## Tech Stack (All Free & Open Source)
 
 **Containerization:**

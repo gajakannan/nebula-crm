@@ -8,7 +8,7 @@
 
 ## Overview
 
-TanStack Query (formerly React Query) is our solution for managing server state in Nebula. It handles data fetching, caching, synchronization, and updates with minimal boilerplate.
+TanStack Query (formerly React Query) is our solution for managing server state. It handles data fetching, caching, synchronization, and updates with minimal boilerplate.
 
 **Core Philosophy:** Server state is fundamentally different from client state. TanStack Query treats it as a cache that can become stale and needs revalidation.
 
@@ -67,12 +67,12 @@ function App() {
 
 ```tsx
 import { useQuery } from '@tanstack/react-query';
-import { getBrokers } from '@/api/brokers';
+import { getCustomers } from '@/api/customers';
 
-function BrokerList() {
+function CustomerList() {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['brokers'],
-    queryFn: getBrokers,
+    queryKey: ['customers'],
+    queryFn: getCustomers,
   });
 
   if (isLoading) return <Skeleton />;
@@ -80,8 +80,8 @@ function BrokerList() {
 
   return (
     <div>
-      {data.map(broker => (
-        <BrokerCard key={broker.id} broker={broker} />
+      {data.map(customer => (
+        <CustomerCard key={customer.id} customer={customer} />
       ))}
     </div>
   );
@@ -91,11 +91,11 @@ function BrokerList() {
 ### Query with Parameters
 
 ```tsx
-function BrokerDetails({ brokerId }: { brokerId: string }) {
-  const { data: broker, isLoading } = useQuery({
-    queryKey: ['brokers', brokerId], // Include params in key
-    queryFn: () => getBroker(brokerId),
-    enabled: !!brokerId, // Only run if brokerId exists
+function CustomerDetails({ customerId }: { customerId: string }) {
+  const { data: customer, isLoading } = useQuery({
+    queryKey: ['customers', customerId], // Include params in key
+    queryFn: () => getCustomer(customerId),
+    enabled: !!customerId, // Only run if customerId exists
   });
 
   // ...
@@ -107,47 +107,47 @@ function BrokerDetails({ brokerId }: { brokerId: string }) {
 ```tsx
 // ✅ GOOD - Hierarchical, specific keys
 const queryKeys = {
-  // All brokers queries
-  all: ['brokers'] as const,
+  // All customers queries
+  all: ['customers'] as const,
 
-  // Broker lists (with filters)
+  // Customer lists (with filters)
   lists: () => [...queryKeys.all, 'list'] as const,
-  list: (filters: BrokerFilters) => [...queryKeys.lists(), filters] as const,
+  list: (filters: CustomerFilters) => [...queryKeys.lists(), filters] as const,
 
-  // Individual brokers
+  // Individual customers
   details: () => [...queryKeys.all, 'detail'] as const,
   detail: (id: string) => [...queryKeys.details(), id] as const,
 
-  // Broker submissions
-  submissions: (brokerId: string) => [...queryKeys.detail(brokerId), 'submissions'] as const,
+  // Customer orders
+  orders: (customerId: string) => [...queryKeys.detail(customerId), 'orders'] as const,
 };
 
 // Usage
 useQuery({
-  queryKey: queryKeys.detail(brokerId),
-  queryFn: () => getBroker(brokerId),
+  queryKey: queryKeys.detail(customerId),
+  queryFn: () => getCustomer(customerId),
 });
 
 // ❌ BAD - Inconsistent, hard to invalidate
-useQuery({ queryKey: ['broker', brokerId], ... });
-useQuery({ queryKey: [brokerId, 'broker'], ... }); // Different order!
+useQuery({ queryKey: ['customer', customerId], ... });
+useQuery({ queryKey: [customerId, 'customer'], ... }); // Different order!
 ```
 
 ### Dependent Queries
 
 ```tsx
-function SubmissionDetails({ submissionId }: { submissionId: string }) {
-  // First query: Get submission
-  const { data: submission } = useQuery({
-    queryKey: ['submissions', submissionId],
-    queryFn: () => getSubmission(submissionId),
+function OrderDetails({ orderId }: { orderId: string }) {
+  // First query: Get order
+  const { data: order } = useQuery({
+    queryKey: ['orders', orderId],
+    queryFn: () => getOrder(orderId),
   });
 
-  // Second query: Get broker (depends on first query)
-  const { data: broker } = useQuery({
-    queryKey: ['brokers', submission?.brokerId],
-    queryFn: () => getBroker(submission!.brokerId),
-    enabled: !!submission?.brokerId, // Only run after submission loads
+  // Second query: Get customer (depends on first query)
+  const { data: customer } = useQuery({
+    queryKey: ['customers', order?.customerId],
+    queryFn: () => getCustomer(order!.customerId),
+    enabled: !!order?.customerId, // Only run after order loads
   });
 
   // ...
@@ -158,31 +158,31 @@ function SubmissionDetails({ submissionId }: { submissionId: string }) {
 
 ```tsx
 function Dashboard() {
-  const brokers = useQuery({
-    queryKey: ['brokers'],
-    queryFn: getBrokers,
+  const customers = useQuery({
+    queryKey: ['customers'],
+    queryFn: getCustomers,
   });
 
-  const submissions = useQuery({
-    queryKey: ['submissions'],
-    queryFn: getSubmissions,
+  const orders = useQuery({
+    queryKey: ['orders'],
+    queryFn: getOrders,
   });
 
-  const renewals = useQuery({
-    queryKey: ['renewals'],
-    queryFn: getRenewals,
+  const subscriptions = useQuery({
+    queryKey: ['subscriptions'],
+    queryFn: getSubscriptions,
   });
 
   // All three queries run in parallel
-  if (brokers.isLoading || submissions.isLoading || renewals.isLoading) {
+  if (customers.isLoading || orders.isLoading || subscriptions.isLoading) {
     return <DashboardSkeleton />;
   }
 
   return (
     <div>
-      <BrokersWidget data={brokers.data} />
-      <SubmissionsWidget data={submissions.data} />
-      <RenewalsWidget data={renewals.data} />
+      <CustomersWidget data={customers.data} />
+      <OrdersWidget data={orders.data} />
+      <SubscriptionsWidget data={subscriptions.data} />
     </div>
   );
 }
@@ -191,18 +191,18 @@ function Dashboard() {
 ### Paginated Queries
 
 ```tsx
-function BrokerList() {
+function CustomerList() {
   const [page, setPage] = useState(1);
 
   const { data, isLoading, isPlaceholderData } = useQuery({
-    queryKey: ['brokers', { page }],
-    queryFn: () => getBrokers({ page, pageSize: 20 }),
+    queryKey: ['customers', { page }],
+    queryFn: () => getCustomers({ page, pageSize: 20 }),
     placeholderData: (previousData) => previousData, // Keep old data while loading new
   });
 
   return (
     <div>
-      {data?.items.map(broker => <BrokerCard key={broker.id} broker={broker} />)}
+      {data?.items.map(customer => <CustomerCard key={customer.id} customer={customer} />)}
 
       <Pagination
         currentPage={page}
@@ -218,15 +218,15 @@ function BrokerList() {
 ### Infinite Queries
 
 ```tsx
-function SubmissionFeed() {
+function OrderFeed() {
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['submissions', 'feed'],
-    queryFn: ({ pageParam = 1 }) => getSubmissions({ page: pageParam }),
+    queryKey: ['orders', 'feed'],
+    queryFn: ({ pageParam = 1 }) => getOrders({ page: pageParam }),
     getNextPageParam: (lastPage) => lastPage.nextPage ?? undefined,
     initialPageParam: 1,
   });
@@ -234,8 +234,8 @@ function SubmissionFeed() {
   return (
     <div>
       {data?.pages.map((page) =>
-        page.items.map((submission) => (
-          <SubmissionCard key={submission.id} submission={submission} />
+        page.items.map((order) => (
+          <OrderCard key={order.id} order={order} />
         ))
       )}
 
@@ -260,30 +260,30 @@ function SubmissionFeed() {
 
 ```tsx
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createBroker } from '@/api/brokers';
+import { createCustomer } from '@/api/customers';
 
-function CreateBrokerDialog() {
+function CreateCustomerDialog() {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: createBroker,
+    mutationFn: createCustomer,
     onSuccess: () => {
-      // Invalidate and refetch broker list
-      queryClient.invalidateQueries({ queryKey: ['brokers'] });
-      toast.success('Broker created successfully');
+      // Invalidate and refetch customer list
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      toast.success('Customer created successfully');
     },
     onError: (error) => {
       toast.error(error.message);
     },
   });
 
-  const handleSubmit = (data: CreateBrokerRequest) => {
+  const handleSubmit = (data: CreateCustomerRequest) => {
     mutation.mutate(data);
   };
 
   return (
     <Dialog>
-      <BrokerForm
+      <CustomerForm
         onSubmit={handleSubmit}
         isSubmitting={mutation.isPending}
       />
@@ -295,48 +295,48 @@ function CreateBrokerDialog() {
 ### Optimistic Updates
 
 ```tsx
-function UpdateBrokerName({ brokerId }: { brokerId: string }) {
+function UpdateCustomerName({ customerId }: { customerId: string }) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (newName: string) => updateBroker(brokerId, { name: newName }),
+    mutationFn: (newName: string) => updateCustomer(customerId, { name: newName }),
 
     // Optimistic update: update UI immediately
     onMutate: async (newName) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['brokers', brokerId] });
+      await queryClient.cancelQueries({ queryKey: ['customers', customerId] });
 
       // Snapshot previous value
-      const previousBroker = queryClient.getQueryData(['brokers', brokerId]);
+      const previousCustomer = queryClient.getQueryData(['customers', customerId]);
 
       // Optimistically update
-      queryClient.setQueryData(['brokers', brokerId], (old: Broker) => ({
+      queryClient.setQueryData(['customers', customerId], (old: Customer) => ({
         ...old,
         name: newName,
       }));
 
       // Return context with snapshot
-      return { previousBroker };
+      return { previousCustomer };
     },
 
     // Rollback on error
     onError: (err, newName, context) => {
       queryClient.setQueryData(
-        ['brokers', brokerId],
-        context?.previousBroker
+        ['customers', customerId],
+        context?.previousCustomer
       );
-      toast.error('Failed to update broker name');
+      toast.error('Failed to update customer name');
     },
 
     // Always refetch after success or error
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['brokers', brokerId] });
+      queryClient.invalidateQueries({ queryKey: ['customers', customerId] });
     },
   });
 
   return (
     <Input
-      defaultValue={broker.name}
+      defaultValue={customer.name}
       onBlur={(e) => mutation.mutate(e.target.value)}
     />
   );
@@ -346,22 +346,22 @@ function UpdateBrokerName({ brokerId }: { brokerId: string }) {
 ### Mutation with Cache Updates
 
 ```tsx
-function DeleteBroker({ brokerId }: { brokerId: string }) {
+function DeleteCustomer({ customerId }: { customerId: string }) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: () => deleteBroker(brokerId),
+    mutationFn: () => deleteCustomer(customerId),
     onSuccess: () => {
       // Option 1: Invalidate (refetch from server)
-      queryClient.invalidateQueries({ queryKey: ['brokers'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
 
       // Option 2: Update cache directly (faster, no refetch)
-      queryClient.setQueryData(['brokers'], (old: Broker[]) =>
-        old.filter(b => b.id !== brokerId)
+      queryClient.setQueryData(['customers'], (old: Customer[]) =>
+        old.filter(c => c.id !== customerId)
       );
 
-      // Remove individual broker from cache
-      queryClient.removeQueries({ queryKey: ['brokers', brokerId] });
+      // Remove individual customer from cache
+      queryClient.removeQueries({ queryKey: ['customers', customerId] });
     },
   });
 
@@ -412,10 +412,10 @@ function App() {
 ### Query-Level Error Handling
 
 ```tsx
-function BrokerDetails({ brokerId }: { brokerId: string }) {
+function CustomerDetails({ customerId }: { customerId: string }) {
   const { data, error, isError, refetch } = useQuery({
-    queryKey: ['brokers', brokerId],
-    queryFn: () => getBroker(brokerId),
+    queryKey: ['customers', customerId],
+    queryFn: () => getCustomer(customerId),
     retry: (failureCount, error) => {
       // Don't retry on 404
       if (error.response?.status === 404) return false;
@@ -426,7 +426,7 @@ function BrokerDetails({ brokerId }: { brokerId: string }) {
 
   if (isError) {
     if (error.response?.status === 404) {
-      return <NotFoundAlert message="Broker not found" />;
+      return <NotFoundAlert message="Customer not found" />;
     }
     return (
       <ErrorAlert
@@ -448,21 +448,21 @@ function BrokerDetails({ brokerId }: { brokerId: string }) {
 
 ```tsx
 // Invalidate specific query
-queryClient.invalidateQueries({ queryKey: ['brokers', brokerId] });
+queryClient.invalidateQueries({ queryKey: ['customers', customerId] });
 
-// Invalidate all broker queries
-queryClient.invalidateQueries({ queryKey: ['brokers'] });
+// Invalidate all customer queries
+queryClient.invalidateQueries({ queryKey: ['customers'] });
 
-// Invalidate queries starting with 'brokers'
-queryClient.invalidateQueries({ queryKey: ['brokers'], exact: false });
+// Invalidate queries starting with 'customers'
+queryClient.invalidateQueries({ queryKey: ['customers'], exact: false });
 ```
 
 ### Time-Based Invalidation
 
 ```tsx
 useQuery({
-  queryKey: ['brokers'],
-  queryFn: getBrokers,
+  queryKey: ['customers'],
+  queryFn: getCustomers,
   staleTime: 1000 * 60 * 5, // Data is fresh for 5 minutes
   gcTime: 1000 * 60 * 30, // Cache for 30 minutes
 });
@@ -472,8 +472,8 @@ useQuery({
 
 ```tsx
 useQuery({
-  queryKey: ['submissions'],
-  queryFn: getSubmissions,
+  queryKey: ['orders'],
+  queryFn: getOrders,
   refetchOnWindowFocus: true, // Refetch when window regains focus
   refetchOnReconnect: true, // Refetch when network reconnects
 });
@@ -486,10 +486,10 @@ useQuery({
 ### Skeleton Screens
 
 ```tsx
-function BrokerList() {
+function CustomerList() {
   const { data, isLoading } = useQuery({
-    queryKey: ['brokers'],
-    queryFn: getBrokers,
+    queryKey: ['customers'],
+    queryFn: getCustomers,
   });
 
   if (isLoading) {
@@ -504,7 +504,7 @@ function BrokerList() {
 
   return (
     <div className="space-y-4">
-      {data.map(broker => <BrokerCard key={broker.id} broker={broker} />)}
+      {data.map(customer => <CustomerCard key={customer.id} customer={customer} />)}
     </div>
   );
 }
@@ -515,21 +515,21 @@ function BrokerList() {
 ```tsx
 import { useSuspenseQuery } from '@tanstack/react-query';
 
-function BrokerDetails({ brokerId }: { brokerId: string }) {
+function CustomerDetails({ customerId }: { customerId: string }) {
   // No isLoading check needed - Suspense handles it
-  const { data: broker } = useSuspenseQuery({
-    queryKey: ['brokers', brokerId],
-    queryFn: () => getBroker(brokerId),
+  const { data: customer } = useSuspenseQuery({
+    queryKey: ['customers', customerId],
+    queryFn: () => getCustomer(customerId),
   });
 
-  return <BrokerCard broker={broker} />;
+  return <CustomerCard customer={customer} />;
 }
 
 // Wrap with Suspense
-function BrokerPage({ brokerId }: { brokerId: string }) {
+function CustomerPage({ customerId }: { customerId: string }) {
   return (
-    <Suspense fallback={<BrokerDetailsSkeleton />}>
-      <BrokerDetails brokerId={brokerId} />
+    <Suspense fallback={<CustomerDetailsSkeleton />}>
+      <CustomerDetails customerId={customerId} />
     </Suspense>
   );
 }
@@ -542,22 +542,22 @@ function BrokerPage({ brokerId }: { brokerId: string }) {
 ### On Hover
 
 ```tsx
-function BrokerListItem({ broker }: { broker: Broker }) {
+function CustomerListItem({ customer }: { customer: Customer }) {
   const queryClient = useQueryClient();
 
   const handleMouseEnter = () => {
     queryClient.prefetchQuery({
-      queryKey: ['brokers', broker.id],
-      queryFn: () => getBroker(broker.id),
+      queryKey: ['customers', customer.id],
+      queryFn: () => getCustomer(customer.id),
     });
   };
 
   return (
     <Link
-      to={`/brokers/${broker.id}`}
+      to={`/customers/${customer.id}`}
       onMouseEnter={handleMouseEnter}
     >
-      {broker.name}
+      {customer.name}
     </Link>
   );
 }
@@ -567,13 +567,13 @@ function BrokerListItem({ broker }: { broker: Broker }) {
 
 ```tsx
 import { queryClient } from '@/lib/queryClient';
-import { getBroker } from '@/api/brokers';
+import { getCustomer } from '@/api/customers';
 
 // In router loader
-export const brokerLoader = async ({ params }: LoaderParams) => {
+export const customerLoader = async ({ params }: LoaderParams) => {
   await queryClient.ensureQueryData({
-    queryKey: ['brokers', params.brokerId],
-    queryFn: () => getBroker(params.brokerId!),
+    queryKey: ['customers', params.customerId],
+    queryFn: () => getCustomer(params.customerId!),
   });
   return null;
 };
@@ -588,22 +588,22 @@ export const brokerLoader = async ({ params }: LoaderParams) => {
 ```tsx
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
-interface Broker {
+interface Customer {
   id: string;
   name: string;
-  licenseNumber: string;
+  email: string;
 }
 
-function useBroker(brokerId: string): UseQueryResult<Broker, Error> {
+function useCustomer(customerId: string): UseQueryResult<Customer, Error> {
   return useQuery({
-    queryKey: ['brokers', brokerId],
-    queryFn: () => getBroker(brokerId),
+    queryKey: ['customers', customerId],
+    queryFn: () => getCustomer(customerId),
   });
 }
 
 // Usage
-function BrokerDetails({ brokerId }: { brokerId: string }) {
-  const { data } = useBroker(brokerId); // data is typed as Broker | undefined
+function CustomerDetails({ customerId }: { customerId: string }) {
+  const { data } = useCustomer(customerId); // data is typed as Customer | undefined
   // ...
 }
 ```
@@ -612,16 +612,16 @@ function BrokerDetails({ brokerId }: { brokerId: string }) {
 
 ```tsx
 // src/lib/queryKeys.ts
-export const brokerKeys = {
-  all: ['brokers'] as const,
-  lists: () => [...brokerKeys.all, 'list'] as const,
-  list: (filters: BrokerFilters) => [...brokerKeys.lists(), filters] as const,
-  details: () => [...brokerKeys.all, 'detail'] as const,
-  detail: (id: string) => [...brokerKeys.details(), id] as const,
+export const customerKeys = {
+  all: ['customers'] as const,
+  lists: () => [...customerKeys.all, 'list'] as const,
+  list: (filters: CustomerFilters) => [...customerKeys.lists(), filters] as const,
+  details: () => [...customerKeys.all, 'detail'] as const,
+  detail: (id: string) => [...customerKeys.details(), id] as const,
 };
 
 // TypeScript infers correct types
-const key = brokerKeys.detail('123'); // readonly ['brokers', 'detail', '123']
+const key = customerKeys.detail('123'); // readonly ['customers', 'detail', '123']
 ```
 
 ---
@@ -632,17 +632,17 @@ const key = brokerKeys.detail('123'); // readonly ['brokers', 'detail', '123']
 
 ✅ **GOOD:**
 ```tsx
-const brokerKeys = {
-  all: ['brokers'] as const,
-  detail: (id: string) => [...brokerKeys.all, id] as const,
+const customerKeys = {
+  all: ['customers'] as const,
+  detail: (id: string) => [...customerKeys.all, id] as const,
 };
 
-useQuery({ queryKey: brokerKeys.detail(brokerId), ... });
+useQuery({ queryKey: customerKeys.detail(customerId), ... });
 ```
 
 ❌ **BAD:**
 ```tsx
-useQuery({ queryKey: ['brokers', brokerId], ... });
+useQuery({ queryKey: ['customers', customerId], ... });
 ```
 
 ### 2. Handle Loading and Error States
@@ -653,13 +653,13 @@ const { data, isLoading, error } = useQuery(...);
 
 if (isLoading) return <Skeleton />;
 if (error) return <ErrorAlert error={error} />;
-return <BrokerCard broker={data} />;
+return <CustomerCard customer={data} />;
 ```
 
 ❌ **BAD:**
 ```tsx
 const { data } = useQuery(...);
-return <BrokerCard broker={data} />; // data could be undefined!
+return <CustomerCard customer={data} />; // data could be undefined!
 ```
 
 ### 3. Invalidate After Mutations
@@ -667,9 +667,9 @@ return <BrokerCard broker={data} />; // data could be undefined!
 ✅ **GOOD:**
 ```tsx
 useMutation({
-  mutationFn: createBroker,
+  mutationFn: createCustomer,
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['brokers'] });
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
   },
 });
 ```
@@ -677,7 +677,7 @@ useMutation({
 ❌ **BAD:**
 ```tsx
 useMutation({
-  mutationFn: createBroker,
+  mutationFn: createCustomer,
   // No invalidation - UI won't update!
 });
 ```
@@ -700,15 +700,15 @@ onMutate: async (newData) => {
 ```tsx
 // Static data: long stale time
 useQuery({
-  queryKey: ['states'],
-  queryFn: getStates,
+  queryKey: ['regions'],
+  queryFn: getRegions,
   staleTime: Infinity, // Never becomes stale
 });
 
 // Real-time data: short stale time
 useQuery({
-  queryKey: ['submissions'],
-  queryFn: getSubmissions,
+  queryKey: ['orders'],
+  queryFn: getOrders,
   staleTime: 1000 * 10, // Stale after 10 seconds
 });
 ```
@@ -718,58 +718,58 @@ useQuery({
 ✅ **GOOD:**
 ```tsx
 useQuery({
-  queryKey: ['broker', brokerId],
-  queryFn: () => getBroker(brokerId),
-  enabled: !!brokerId, // Only run when brokerId exists
+  queryKey: ['customer', customerId],
+  queryFn: () => getCustomer(customerId),
+  enabled: !!customerId, // Only run when customerId exists
 });
 ```
 
 ---
 
-## Common Patterns for Nebula
+## Common Patterns
 
-### Broker 360 View
+### Customer 360 View
 
 ```tsx
-function Broker360({ brokerId }: { brokerId: string }) {
-  const broker = useQuery({
-    queryKey: brokerKeys.detail(brokerId),
-    queryFn: () => getBroker(brokerId),
+function Customer360({ customerId }: { customerId: string }) {
+  const customer = useQuery({
+    queryKey: customerKeys.detail(customerId),
+    queryFn: () => getCustomer(customerId),
   });
 
-  const submissions = useQuery({
-    queryKey: ['submissions', { brokerId }],
-    queryFn: () => getSubmissions({ brokerId }),
-    enabled: broker.isSuccess, // Wait for broker to load
+  const orders = useQuery({
+    queryKey: ['orders', { customerId }],
+    queryFn: () => getOrders({ customerId }),
+    enabled: customer.isSuccess, // Wait for customer to load
   });
 
-  const contacts = useQuery({
-    queryKey: ['contacts', { brokerId }],
-    queryFn: () => getContacts({ brokerId }),
-    enabled: broker.isSuccess,
+  const addresses = useQuery({
+    queryKey: ['addresses', { customerId }],
+    queryFn: () => getAddresses({ customerId }),
+    enabled: customer.isSuccess,
   });
 
-  if (broker.isLoading) return <Skeleton />;
-  if (broker.error) return <ErrorAlert error={broker.error} />;
+  if (customer.isLoading) return <Skeleton />;
+  if (customer.error) return <ErrorAlert error={customer.error} />;
 
   return (
     <div>
-      <BrokerHeader broker={broker.data} />
+      <CustomerHeader customer={customer.data} />
 
       <Tabs>
-        <TabsContent value="submissions">
-          {submissions.isLoading ? (
+        <TabsContent value="orders">
+          {orders.isLoading ? (
             <Skeleton />
           ) : (
-            <SubmissionsTable data={submissions.data} />
+            <OrdersTable data={orders.data} />
           )}
         </TabsContent>
 
-        <TabsContent value="contacts">
-          {contacts.isLoading ? (
+        <TabsContent value="addresses">
+          {addresses.isLoading ? (
             <Skeleton />
           ) : (
-            <ContactsList data={contacts.data} />
+            <AddressesList data={addresses.data} />
           )}
         </TabsContent>
       </Tabs>
@@ -781,18 +781,18 @@ function Broker360({ brokerId }: { brokerId: string }) {
 ### Workflow State Transitions
 
 ```tsx
-function useSubmissionTransition(submissionId: string) {
+function useOrderTransition(orderId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (toState: SubmissionState) =>
-      transitionSubmission(submissionId, toState),
+    mutationFn: (toState: OrderState) =>
+      transitionOrder(orderId, toState),
     onMutate: async (toState) => {
       // Optimistic update
-      await queryClient.cancelQueries({ queryKey: ['submissions', submissionId] });
-      const previous = queryClient.getQueryData(['submissions', submissionId]);
+      await queryClient.cancelQueries({ queryKey: ['orders', orderId] });
+      const previous = queryClient.getQueryData(['orders', orderId]);
 
-      queryClient.setQueryData(['submissions', submissionId], (old: Submission) => ({
+      queryClient.setQueryData(['orders', orderId], (old: Order) => ({
         ...old,
         state: toState,
       }));
@@ -801,14 +801,14 @@ function useSubmissionTransition(submissionId: string) {
     },
     onError: (err, toState, context) => {
       // Rollback
-      queryClient.setQueryData(['submissions', submissionId], context?.previous);
+      queryClient.setQueryData(['orders', orderId], context?.previous);
       toast.error(`Failed to transition to ${toState}`);
     },
     onSuccess: () => {
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['submissions'] });
-      queryClient.invalidateQueries({ queryKey: ['timeline', submissionId] });
-      toast.success('Submission updated');
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['timeline', orderId] });
+      toast.success('Order updated');
     },
   });
 }

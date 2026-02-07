@@ -1,6 +1,6 @@
 # Security Architecture Guide
 
-Comprehensive security architecture guide for the Nebula insurance CRM. This guide covers security principles, authentication, authorization, data protection, audit & compliance, and OWASP Top 10 mitigation strategies.
+Comprehensive security architecture guide for the application. This guide covers security principles, authentication, authorization, data protection, audit & compliance, and OWASP Top 10 mitigation strategies.
 
 ---
 
@@ -10,7 +10,7 @@ Comprehensive security architecture guide for the Nebula insurance CRM. This gui
 
 **Multiple layers of security** so that if one layer is breached, others provide protection.
 
-**Layers in Nebula:**
+**Layers:**
 1. **Network Layer**: HTTPS/TLS 1.3, firewall rules, VPN for internal access
 2. **Authentication Layer**: Keycloak OIDC/JWT, MFA enforcement
 3. **Authorization Layer**: Casbin ABAC policies enforced on every request
@@ -28,14 +28,14 @@ Comprehensive security architecture guide for the Nebula insurance CRM. This gui
 
 **Implementation:**
 - New users start with no permissions (explicit grant required)
-- Roles define permissions (Distribution, Underwriter, Admin)
-- ABAC policies further restrict based on attributes (assigned underwriter, broker region)
-- Service accounts have limited scopes (e.g., renewal workflow can only read policies, not delete)
+- Roles define permissions (User, Manager, Admin)
+- ABAC policies further restrict based on attributes (assigned user, customer region)
+- Service accounts have limited scopes (e.g., notification workflow can only read orders, not delete)
 
 **Example:**
-- Underwriter can **read** all submissions
-- Underwriter can **update** only submissions **assigned to them**
-- Underwriter **cannot delete** any submission
+- Manager can **read** all orders
+- Manager can **update** only orders **assigned to them**
+- Manager **cannot delete** any order
 
 ---
 
@@ -43,7 +43,7 @@ Comprehensive security architecture guide for the Nebula insurance CRM. This gui
 
 **Security is the default state**, not an opt-in feature.
 
-**Defaults in Nebula:**
+**Defaults:**
 - All API endpoints require authentication (no public endpoints except health check)
 - All mutations require authorization (Casbin check on every write)
 - HTTPS enforced (HTTP redirects to HTTPS)
@@ -103,30 +103,30 @@ catch (Exception ex)
 **Keycloak** handles all authentication (login, logout, password management, MFA).
 
 **Flow:**
-1. User visits Nebula frontend (https://app.nebula.com)
+1. User visits application frontend (https://app.example.com)
 2. Frontend redirects to Keycloak login page
 3. User enters credentials (+ MFA if enabled)
 4. Keycloak validates credentials and issues JWT token
 5. Frontend stores token (in memory or httpOnly cookie)
 6. Frontend includes token in API requests (`Authorization: Bearer <token>`)
-7. Nebula API validates token and extracts user claims
+7. API validates token and extracts user claims
 
 **Configuration:**
 ```csharp
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "https://keycloak.example.com/realms/nebula";
-        options.Audience = "nebula-api";
+        options.Authority = "https://keycloak.example.com/realms/app";
+        options.Audience = "app-api";
         options.RequireHttpsMetadata = true; // HTTPS only
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = "https://keycloak.example.com/realms/nebula",
+            ValidIssuer = "https://keycloak.example.com/realms/app",
             ValidateAudience = true,
-            ValidAudience = "nebula-api",
-            ValidateLifetime = true, // Check exp claim
+            ValidAudience = "app-api",
+            ValidateLifetime = true, // Check exp field
             ValidateIssuerSigningKey = true, // Verify signature
             ClockSkew = TimeSpan.FromMinutes(5) // Allow 5 min clock drift
         };
@@ -141,16 +141,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 **Checks Performed:**
 1. **Signature**: Verify token signed by Keycloak (using public key from JWKS endpoint)
-2. **Issuer**: Verify `iss` claim matches Keycloak realm
-3. **Audience**: Verify `aud` claim matches nebula-api
-4. **Expiration**: Verify `exp` claim is in future (token not expired)
-5. **Not Before**: Verify `nbf` claim is in past (token is valid now)
+2. **Issuer**: Verify `iss` field matches Keycloak realm
+3. **Audience**: Verify `aud` field matches app-api
+4. **Expiration**: Verify `exp` field is in future (token not expired)
+5. **Not Before**: Verify `nbf` field is in past (token is valid now)
 
 **JWT Structure:**
 ```json
 {
-  "iss": "https://keycloak.example.com/realms/nebula",
-  "aud": "nebula-api",
+  "iss": "https://keycloak.example.com/realms/app",
+  "aud": "app-api",
   "sub": "550e8400-e29b-41d4-a716-446655440000",
   "exp": 1706749200,
   "nbf": 1706745600,
@@ -158,7 +158,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
   "jti": "unique-token-id",
   "email": "sarah.chen@example.com",
   "realm_access": {
-    "roles": ["Distribution"]
+    "roles": ["User"]
   }
 }
 ```
@@ -203,10 +203,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 **Configuration:**
 - Admins require MFA (mandatory)
-- Underwriters require MFA (mandatory)
-- Distribution users optional MFA (recommended)
+- Managers require MFA (mandatory)
+- Standard users optional MFA (recommended)
 
-**Nebula does not implement MFA** (delegated to Keycloak).
+**The application does not implement MFA** (delegated to Keycloak).
 
 ---
 
@@ -265,26 +265,26 @@ public class AuthorizationMiddleware
 **Check permissions at resource level**, not just endpoint level.
 
 **Example:**
-- User can access `/api/submissions/{id}` endpoint
-- But can they access **this specific** submission?
-- Check: Is user assigned underwriter? Is user's broker associated with submission?
+- User can access `/api/orders/{id}` endpoint
+- But can they access **this specific** order?
+- Check: Is user the assigned owner? Is user's customer associated with order?
 
 ```csharp
-public async Task<Submission> GetSubmissionAsync(Guid submissionId, ClaimsPrincipal user)
+public async Task<Order> GetOrderAsync(Guid orderId, ClaimsPrincipal user)
 {
-    var submission = await _context.Submissions.FindAsync(submissionId);
+    var order = await _context.Orders.FindAsync(orderId);
 
     // Check resource-level permission
     var allowed = await _enforcer.EnforceAsync(
         new { role = user.FindFirstValue(ClaimTypes.Role), userId = GetUserId(user) },
-        new { type = "Submission", id = submissionId, assignedTo = submission.AssignedUnderwriterId },
+        new { type = "Order", id = orderId, assignedTo = order.AssignedUserId },
         "Read"
     );
 
     if (!allowed)
         throw new ForbiddenException();
 
-    return submission;
+    return order;
 }
 ```
 
@@ -294,10 +294,10 @@ public async Task<Submission> GetSubmissionAsync(Guid submissionId, ClaimsPrinci
 
 **Different operations require different permissions:**
 
-**Example: Submission Operations**
-- **Read**: Underwriter can read all submissions
-- **Update**: Underwriter can update only assigned submissions
-- **Transition**: Distribution can transition Triaging→ReadyForUWReview, Underwriter can transition InReview→Quoted
+**Example: Order Operations**
+- **Read**: Manager can read all orders
+- **Update**: Manager can update only assigned orders
+- **Transition**: User can transition Draft→Submitted, Manager can transition Submitted→Approved
 - **Delete**: Only Admin can delete
 
 ---
@@ -308,7 +308,7 @@ public async Task<Submission> GetSubmissionAsync(Guid submissionId, ClaimsPrinci
 
 **Example:**
 ```csharp
-public class BrokerResponse
+public class CustomerResponse
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
@@ -317,23 +317,23 @@ public class BrokerResponse
     public string? InternalNotes { get; set; }
 
     [InternalOnly]
-    public decimal? CommissionRate { get; set; }
+    public decimal? DiscountRate { get; set; }
 }
 
 // Mapper filters fields based on role
-public BrokerResponse ToBrokerResponse(Broker broker, ClaimsPrincipal user)
+public CustomerResponse ToCustomerResponse(Customer customer, ClaimsPrincipal user)
 {
-    var response = new BrokerResponse
+    var response = new CustomerResponse
     {
-        Id = broker.Id,
-        Name = broker.Name
+        Id = customer.Id,
+        Name = customer.Name
     };
 
     // Include internal fields only for internal users
-    if (user.IsInRole("Admin") || user.IsInRole("Distribution") || user.IsInRole("Underwriter"))
+    if (user.IsInRole("Admin") || user.IsInRole("User") || user.IsInRole("Manager"))
     {
-        response.InternalNotes = broker.InternalNotes;
-        response.CommissionRate = broker.CommissionRate;
+        response.InternalNotes = customer.InternalNotes;
+        response.DiscountRate = customer.DiscountRate;
     }
 
     return response;
@@ -402,10 +402,10 @@ builder.WebHost.ConfigureKestrel(options =>
 **Example:**
 ```csharp
 // WRONG: Hardcoded secret
-var connectionString = "Host=localhost;Database=nebula;Username=admin;Password=secret123";
+var connectionString = "Host=localhost;Database=appdb;Username=admin;Password=secret123";
 
 // RIGHT: Secret from environment variable
-var connectionString = builder.Configuration.GetConnectionString("NebulaDatabse");
+var connectionString = builder.Configuration.GetConnectionString("AppDatabase");
 // Connection string stored in Azure Key Vault or AWS Secrets Manager
 ```
 
@@ -415,7 +415,7 @@ var connectionString = builder.Configuration.GetConnectionString("NebulaDatabse"
 
 **Personally Identifiable Information (PII)** requires special handling.
 
-**PII Fields in Nebula:**
+**PII Fields:**
 - SSN (Social Security Number)
 - Tax ID (EIN)
 - Email addresses
@@ -427,7 +427,7 @@ var connectionString = builder.Configuration.GetConnectionString("NebulaDatabse"
 - Encrypt in transit (HTTPS)
 - Mask in logs (never log SSN, Tax ID)
 - Access logging (log who accessed PII, when)
-- Data retention policies (delete after 7 years per regulations)
+- Data retention policies (delete after required retention period per regulations)
 
 ---
 
@@ -446,7 +446,7 @@ public string MaskSSN(string ssn)
 }
 
 // Logging
-_logger.LogInformation("User accessed SSN for account {AccountId}", accountId);
+_logger.LogInformation("User accessed SSN for customer {CustomerId}", customerId);
 // Never log: _logger.LogInformation("SSN: {SSN}", ssn); ❌
 ```
 
@@ -462,28 +462,28 @@ _logger.LogInformation("User accessed SSN for account {AccountId}", accountId);
 - **Who**: UserId (from JWT token)
 - **What**: Entity type + entity ID + operation (Created, Updated, Deleted, Transitioned)
 - **When**: Timestamp (UTC)
-- **Why**: Reason (optional, required for Declined/Withdrawn)
+- **Why**: Reason (optional, required for Rejected/Cancelled)
 - **Before/After**: Before and after state (for updates)
 
 **Implementation:**
 ```csharp
-public async Task<Broker> UpdateBrokerAsync(Guid brokerId, UpdateBrokerRequest request, Guid userId)
+public async Task<Customer> UpdateCustomerAsync(Guid customerId, UpdateCustomerRequest request, Guid userId)
 {
-    var broker = await _context.Brokers.FindAsync(brokerId);
-    var beforeState = JsonSerializer.Serialize(broker);
+    var customer = await _context.Customers.FindAsync(customerId);
+    var beforeState = JsonSerializer.Serialize(customer);
 
     // Apply update
-    broker.Name = request.Name;
-    broker.Email = request.Email;
+    customer.Name = request.Name;
+    customer.Email = request.Email;
 
-    var afterState = JsonSerializer.Serialize(broker);
+    var afterState = JsonSerializer.Serialize(customer);
 
     // Log audit event
     await _context.ActivityTimelineEvents.AddAsync(new ActivityTimelineEvent
     {
-        EntityType = "Broker",
-        EntityId = brokerId,
-        EventType = "BrokerUpdated",
+        EntityType = "Customer",
+        EntityId = customerId,
+        EventType = "CustomerUpdated",
         UserId = userId,
         Timestamp = DateTime.UtcNow,
         Payload = new
@@ -495,7 +495,7 @@ public async Task<Broker> UpdateBrokerAsync(Guid brokerId, UpdateBrokerRequest r
     });
 
     await _context.SaveChangesAsync();
-    return broker;
+    return customer;
 }
 ```
 
@@ -540,7 +540,7 @@ public class TimelineEventRepository
 
 **Regulatory Compliance:**
 - **Financial records**: Retain 7 years (Sarbanes-Oxley, IRS)
-- **Insurance records**: Retain per state regulations (typically 5-7 years)
+- **Business records**: Retain per applicable regulations (typically 5-7 years)
 - **Audit logs**: Retain 7 years minimum
 
 **Implementation:**
@@ -577,11 +577,11 @@ public class TimelineEventRepository
 
 ```csharp
 // WRONG: SQL injection vulnerability
-var query = $"SELECT * FROM Brokers WHERE Name = '{userInput}'";
+var query = $"SELECT * FROM Customers WHERE Name = '{userInput}'";
 
 // RIGHT: Parameterized query (EF Core)
-var brokers = await _context.Brokers
-    .Where(b => b.Name == userInput)
+var customers = await _context.Customers
+    .Where(c => c.Name == userInput)
     .ToListAsync();
 ```
 
@@ -596,7 +596,7 @@ var brokers = await _context.Brokers
 **Mitigations:**
 - Use Keycloak for authentication (proven, secure)
 - Enforce password complexity (Keycloak policy)
-- Require MFA for admins and underwriters
+- Require MFA for admins and managers
 - Use short-lived access tokens (15 min)
 - Validate JWT signature, expiration, issuer, audience
 
@@ -693,7 +693,7 @@ app.Use(async (context, next) =>
 
 ```csharp
 // Validate input
-var request = await JsonSerializer.DeserializeAsync<CreateBrokerRequest>(requestBody);
+var request = await JsonSerializer.DeserializeAsync<CreateCustomerRequest>(requestBody);
 var validationResult = await _validator.ValidateAsync(request);
 if (!validationResult.IsValid)
     return Results.BadRequest(validationResult.Errors);

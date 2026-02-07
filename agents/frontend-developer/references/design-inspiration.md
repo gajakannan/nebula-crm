@@ -8,7 +8,7 @@
 
 ## Overview
 
-This document curates modern design systems, applications, and websites that exemplify excellence in UI/UX design. Use these as inspiration for Nebula's visual design, interaction patterns, and overall aesthetic.
+This document curates modern design systems, applications, and websites that exemplify excellence in UI/UX design. Use these as inspiration for the application's visual design, interaction patterns, and overall aesthetic.
 
 The focus is on **developer tools, SaaS platforms, and B2B applications** with clean, professional, and functional design.
 
@@ -42,7 +42,7 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
     <h1 className="text-6xl font-bold tracking-tight">
       The high-performance
       <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-        {" "}Insurance CRM
+        {" "}business platform
       </span>
     </h1>
   </div>
@@ -68,7 +68,7 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
 - Clear information architecture
 
 **Elements to Adopt:**
-- Monospace fonts for technical data (license numbers, IDs)
+- Monospace fonts for technical data (order numbers, IDs)
 - Generous line spacing for readability
 - Black buttons for primary actions
 - Grid layouts with consistent spacing
@@ -76,13 +76,13 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
 ```tsx
 // Vercel-style monospace for technical data
 <div className="space-y-1">
-  <Label className="text-xs text-gray-500">License Number</Label>
-  <div className="font-mono text-sm">{broker.licenseNumber}</div>
+  <Label className="text-xs text-gray-500">Order Number</Label>
+  <div className="font-mono text-sm">{customer.orderNumber}</div>
 </div>
 
 // Clean black button
 <Button className="bg-black hover:bg-gray-800 text-white">
-  Create Submission
+  Create Order
 </Button>
 ```
 
@@ -108,13 +108,13 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
   <CommandInput placeholder="Type a command or search..." />
   <CommandList>
     <CommandGroup heading="Quick Actions">
-      <CommandItem onSelect={() => navigate('/submissions/new')}>
+      <CommandItem onSelect={() => navigate('/orders/new')}>
         <Plus className="mr-2 h-4 w-4" />
-        Create Submission
+        Create Order
       </CommandItem>
-      <CommandItem onSelect={() => navigate('/brokers/new')}>
+      <CommandItem onSelect={() => navigate('/customers/new')}>
         <UserPlus className="mr-2 h-4 w-4" />
-        Add Broker
+        Add Customer
       </CommandItem>
     </CommandGroup>
   </CommandList>
@@ -122,7 +122,7 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
 
 // Keyboard shortcut hint
 <Button className="relative">
-  Create Submission
+  Create Order
   <kbd className="absolute -top-2 -right-2 rounded bg-gray-800 px-1.5 py-0.5 text-xs text-white">
     ⌘N
   </kbd>
@@ -162,20 +162,20 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
 <Table>
   <TableHeader>
     <TableRow>
-      <TableHead>Broker</TableHead>
-      <TableHead>License</TableHead>
+      <TableHead>Customer</TableHead>
+      <TableHead>Email</TableHead>
       <TableHead>Status</TableHead>
     </TableRow>
   </TableHeader>
   <TableBody>
-    {brokers.map((broker, i) => (
+    {customers.map((customer, i) => (
       <TableRow
-        key={broker.id}
+        key={customer.id}
         className={i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}
       >
-        <TableCell>{broker.name}</TableCell>
-        <TableCell className="font-mono text-sm">{broker.license}</TableCell>
-        <TableCell><StatusBadge status={broker.status} /></TableCell>
+        <TableCell>{customer.name}</TableCell>
+        <TableCell className="font-mono text-sm">{customer.email}</TableCell>
+        <TableCell><StatusBadge status={customer.status} /></TableCell>
       </TableRow>
     ))}
   </TableBody>
@@ -242,7 +242,7 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
 <div className="rounded-lg border bg-white p-2 shadow-2xl">
   <img
     src="/dashboard-screenshot.png"
-    alt="Nebula Dashboard"
+    alt="App Dashboard"
     className="rounded"
   />
 </div>
@@ -392,11 +392,11 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
 
 ---
 
-## Design Patterns for Nebula
+## Design Patterns
 
 ### Navigation Patterns
 
-**Sidebar Navigation (Recommended for CRM)**
+**Sidebar Navigation (Recommended)**
 
 ```tsx
 <div className="flex h-screen">
@@ -407,9 +407,9 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
     </div>
     <nav className="space-y-1 px-2">
       <NavItem icon={Home} href="/" label="Dashboard" />
-      <NavItem icon={Users} href="/brokers" label="Brokers" />
-      <NavItem icon={FileText} href="/submissions" label="Submissions" />
-      <NavItem icon={RefreshCw} href="/renewals" label="Renewals" />
+      <NavItem icon={Users} href="/customers" label="Customers" />
+      <NavItem icon={FileText} href="/orders" label="Orders" />
+      <NavItem icon={RefreshCw} href="/subscriptions" label="Subscriptions" />
       <NavItem icon={Calendar} href="/tasks" label="Tasks" />
     </nav>
   </aside>
@@ -425,40 +425,40 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
 
 ### Data Display Patterns
 
-**360 View (Broker/Account Detail)**
+**360 View (Customer Detail)**
 
 ```tsx
 <div className="space-y-6">
   {/* Header with primary actions */}
   <div className="flex items-center justify-between">
     <div>
-      <h1 className="text-3xl font-bold">{broker.name}</h1>
-      <p className="text-sm text-gray-500">License: {broker.license}</p>
+      <h1 className="text-3xl font-bold">{customer.name}</h1>
+      <p className="text-sm text-gray-500">Email: {customer.email}</p>
     </div>
     <div className="flex gap-2">
       <Button variant="outline">Edit</Button>
-      <Button>New Submission</Button>
+      <Button>New Order</Button>
     </div>
   </div>
 
   {/* Stats cards */}
   <div className="grid gap-4 md:grid-cols-4">
-    <StatCard label="Active Submissions" value={12} />
-    <StatCard label="Bound YTD" value="$2.4M" />
-    <StatCard label="Quote Ratio" value="68%" />
-    <StatCard label="Avg Days to Bind" value={14} />
+    <StatCard label="Active Orders" value={12} />
+    <StatCard label="Completed YTD" value="$2.4M" />
+    <StatCard label="Approval Rate" value="68%" />
+    <StatCard label="Avg Days to Complete" value={14} />
   </div>
 
   {/* Tabbed content */}
-  <Tabs defaultValue="submissions">
+  <Tabs defaultValue="orders">
     <TabsList>
-      <TabsTrigger value="submissions">Submissions</TabsTrigger>
-      <TabsTrigger value="contacts">Contacts</TabsTrigger>
+      <TabsTrigger value="orders">Orders</TabsTrigger>
+      <TabsTrigger value="addresses">Addresses</TabsTrigger>
       <TabsTrigger value="documents">Documents</TabsTrigger>
       <TabsTrigger value="activity">Activity</TabsTrigger>
     </TabsList>
-    <TabsContent value="submissions">
-      <SubmissionsTable brokerId={broker.id} />
+    <TabsContent value="orders">
+      <OrdersTable customerId={customer.id} />
     </TabsContent>
     {/* Other tabs */}
   </Tabs>
@@ -469,7 +469,7 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
 
 ### Form Patterns
 
-**Multi-Step Form (Submission Creation)**
+**Multi-Step Form (Order Creation)**
 
 ```tsx
 <Form>
@@ -478,7 +478,7 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
     <ol className="flex items-center gap-2">
       <Step number={1} label="Basic Info" active />
       <Separator />
-      <Step number={2} label="Coverage" />
+      <Step number={2} label="Details" />
       <Separator />
       <Step number={3} label="Documents" />
       <Separator />
@@ -512,13 +512,13 @@ The focus is on **developer tools, SaaS platforms, and B2B applications** with c
   <div className="rounded-full bg-gray-100 p-6">
     <FileText className="h-12 w-12 text-gray-400" />
   </div>
-  <h3 className="mt-4 text-lg font-semibold">No submissions yet</h3>
+  <h3 className="mt-4 text-lg font-semibold">No orders yet</h3>
   <p className="mt-2 text-sm text-gray-500">
-    Get started by creating your first submission
+    Get started by creating your first order
   </p>
   <Button className="mt-6" onClick={openCreateDialog}>
     <Plus className="mr-2 h-4 w-4" />
-    Create Submission
+    Create Order
   </Button>
 </div>
 ```
@@ -588,9 +588,9 @@ const statusColors = {
   draft: 'bg-gray-100 text-gray-700',
   pending: 'bg-yellow-100 text-yellow-700',
   in_review: 'bg-blue-100 text-blue-700',
-  quoted: 'bg-purple-100 text-purple-700',
-  bound: 'bg-green-100 text-green-700',
-  declined: 'bg-red-100 text-red-700',
+  approved: 'bg-purple-100 text-purple-700',
+  completed: 'bg-green-100 text-green-700',
+  rejected: 'bg-red-100 text-red-700',
 };
 ```
 
@@ -630,7 +630,7 @@ module.exports = {
 
 ```tsx
 // Headings
-<h1 className="text-4xl font-bold">Broker 360</h1>
+<h1 className="text-4xl font-bold">Customer 360</h1>
 <h2 className="text-2xl font-semibold">Recent Activity</h2>
 <h3 className="text-lg font-medium">Contact Information</h3>
 
@@ -640,7 +640,7 @@ module.exports = {
 <p className="text-xs text-gray-500">Meta information</p>
 
 // Technical (monospace)
-<code className="font-mono text-sm">License: ABC123456</code>
+<code className="font-mono text-sm">Order: ORD-123456</code>
 ```
 
 ---

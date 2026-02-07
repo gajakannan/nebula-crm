@@ -8,13 +8,13 @@
 
 ## Overview
 
-This guide covers dynamic form handling in Nebula using **JSON Schema** for schema definition, **AJV** for validation (frontend and backend), and **React JSON Schema Form (RJSF)** for rendering.
+This guide covers dynamic form handling using **JSON Schema** for schema definition, **AJV** for validation (frontend and backend), and **React JSON Schema Form (RJSF)** for rendering.
 
 **Why This Approach:**
 - **Backend/Frontend Parity**: Same JSON Schema validates on both .NET backend and React frontend
 - **Dynamic Forms**: Forms driven by configuration/database, not hardcoded
 - **Industry Standard**: JSON Schema is ISO standard (draft-07, draft-2020-12)
-- **Complex Insurance Logic**: State-specific rules, coverage type variations, compliance requirements
+- **Complex Business Logic**: Region-specific rules, category variations, compliance requirements
 - **Reusable Schemas**: Share schemas across services and teams
 
 ---
@@ -36,8 +36,8 @@ npm install @rjsf/mui  # Material-UI theme (optional, can use shadcn/ui custom t
 │                  Backend (.NET)                      │
 │  ┌────────────────────────────────────────────────┐ │
 │  │ JSON Schema Definition (shared)                │ │
-│  │ - broker-schema.json                           │ │
-│  │ - submission-schema.json                       │ │
+│  │ - customer-schema.json                         │ │
+│  │ - order-schema.json                            │ │
 │  │ - stored in database or config                 │ │
 │  └────────────────────────────────────────────────┘ │
 │  ┌────────────────────────────────────────────────┐ │
@@ -47,7 +47,7 @@ npm install @rjsf/mui  # Material-UI theme (optional, can use shadcn/ui custom t
 │  └────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────┘
                          │
-                         │ API: GET /api/schemas/broker
+                         │ API: GET /api/schemas/customer
                          ↓
 ┌─────────────────────────────────────────────────────┐
 │                Frontend (React)                      │
@@ -67,40 +67,34 @@ npm install @rjsf/mui  # Material-UI theme (optional, can use shadcn/ui custom t
 
 ## JSON Schema Basics
 
-### Simple Broker Schema
+### Simple Customer Schema
 
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://nebula.com/schemas/broker.json",
-  "title": "Broker",
-  "description": "Insurance broker information",
+  "$id": "https://example.com/schemas/customer.json",
+  "title": "Customer",
+  "description": "Customer information",
   "type": "object",
-  "required": ["name", "licenseNumber", "licenseState", "email"],
+  "required": ["name", "email", "region"],
   "properties": {
     "name": {
       "type": "string",
-      "title": "Broker Name",
+      "title": "Customer Name",
       "minLength": 1,
       "maxLength": 200,
-      "description": "Legal name of the brokerage"
-    },
-    "licenseNumber": {
-      "type": "string",
-      "title": "License Number",
-      "pattern": "^[A-Z0-9]{6,10}$",
-      "description": "State-issued license number"
-    },
-    "licenseState": {
-      "type": "string",
-      "title": "License State",
-      "enum": ["CA", "NY", "TX", "FL", "IL"],
-      "description": "State where broker is licensed"
+      "description": "Legal name of the organization"
     },
     "email": {
       "type": "string",
       "format": "email",
       "title": "Email Address"
+    },
+    "region": {
+      "type": "string",
+      "title": "Region",
+      "enum": ["US-West", "US-East", "EU-West", "APAC"],
+      "description": "Customer region"
     },
     "phone": {
       "type": "string",
@@ -117,68 +111,63 @@ npm install @rjsf/mui  # Material-UI theme (optional, can use shadcn/ui custom t
 }
 ```
 
-### Complex Submission Schema with Conditional Logic
+### Complex Order Schema with Conditional Logic
 
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://nebula.com/schemas/submission.json",
-  "title": "Insurance Submission",
+  "$id": "https://example.com/schemas/order.json",
+  "title": "Order",
   "type": "object",
-  "required": ["brokerId", "accountId", "coverageType", "effectiveDate"],
+  "required": ["customerId", "category", "orderDate"],
   "properties": {
-    "brokerId": {
+    "customerId": {
       "type": "string",
       "format": "uuid",
-      "title": "Broker"
+      "title": "Customer"
     },
-    "accountId": {
+    "category": {
       "type": "string",
-      "format": "uuid",
-      "title": "Account"
+      "title": "Category",
+      "enum": ["standard", "express"],
+      "default": "standard"
     },
-    "coverageType": {
-      "type": "string",
-      "title": "Coverage Type",
-      "enum": ["admitted", "surplus"],
-      "default": "admitted"
-    },
-    "effectiveDate": {
+    "orderDate": {
       "type": "string",
       "format": "date",
-      "title": "Effective Date"
+      "title": "Order Date"
     },
-    "expirationDate": {
+    "dueDate": {
       "type": "string",
       "format": "date",
-      "title": "Expiration Date"
+      "title": "Due Date"
     },
-    "premium": {
+    "amount": {
       "type": "number",
-      "title": "Premium",
+      "title": "Amount",
       "minimum": 0,
       "exclusiveMinimum": true
     },
-    "limits": {
+    "items": {
       "type": "object",
-      "title": "Coverage Limits",
-      "required": ["perOccurrence", "aggregate"],
+      "title": "Order Items",
+      "required": ["quantity", "unitPrice"],
       "properties": {
-        "perOccurrence": {
+        "quantity": {
           "type": "number",
-          "title": "Per Occurrence",
+          "title": "Quantity",
           "minimum": 0
         },
-        "aggregate": {
+        "unitPrice": {
           "type": "number",
-          "title": "Aggregate",
+          "title": "Unit Price",
           "minimum": 0
         }
       }
     },
-    "surplusLinesBroker": {
+    "expressPartner": {
       "type": "string",
-      "title": "Surplus Lines Broker",
+      "title": "Express Partner",
       "minLength": 1
     }
   },
@@ -186,11 +175,11 @@ npm install @rjsf/mui  # Material-UI theme (optional, can use shadcn/ui custom t
     {
       "if": {
         "properties": {
-          "coverageType": { "const": "surplus" }
+          "category": { "const": "express" }
         }
       },
       "then": {
-        "required": ["surplusLinesBroker"]
+        "required": ["expressPartner"]
       }
     }
   ]
@@ -204,26 +193,26 @@ npm install @rjsf/mui  # Material-UI theme (optional, can use shadcn/ui custom t
 ### Storing Schemas in .NET
 
 ```csharp
-// Domain/Schemas/BrokerSchema.cs
+// Domain/Schemas/FormSchemas.cs
 public static class FormSchemas
 {
-    public static readonly string BrokerSchema = @"{
+    public static readonly string CustomerSchema = @"{
       ""$schema"": ""https://json-schema.org/draft/2020-12/schema"",
       ""type"": ""object"",
-      ""required"": [""name"", ""licenseNumber"", ""email""],
+      ""required"": [""name"", ""email"", ""region""],
       ""properties"": {
         ""name"": {
           ""type"": ""string"",
           ""minLength"": 1,
           ""maxLength"": 200
         },
-        ""licenseNumber"": {
-          ""type"": ""string"",
-          ""pattern"": ""^[A-Z0-9]{6,10}$""
-        },
         ""email"": {
           ""type"": ""string"",
           ""format"": ""email""
+        },
+        ""region"": {
+          ""type"": ""string"",
+          ""enum"": [""US-West"", ""US-East"", ""EU-West"", ""APAC""]
         }
       }
     }";
@@ -234,8 +223,8 @@ app.MapGet("/api/schemas/{schemaName}", (string schemaName) =>
 {
     return schemaName switch
     {
-        "broker" => Results.Json(JsonSerializer.Deserialize<JsonElement>(FormSchemas.BrokerSchema)),
-        "submission" => Results.Json(JsonSerializer.Deserialize<JsonElement>(FormSchemas.SubmissionSchema)),
+        "customer" => Results.Json(JsonSerializer.Deserialize<JsonElement>(FormSchemas.CustomerSchema)),
+        "order" => Results.Json(JsonSerializer.Deserialize<JsonElement>(FormSchemas.OrderSchema)),
         _ => Results.NotFound()
     };
 }).WithName("GetFormSchema").WithTags("Schemas");
@@ -262,13 +251,13 @@ public class SchemaValidator
 }
 
 // In Minimal API endpoint
-app.MapPost("/api/brokers", async (
-    CreateBrokerRequest request,
+app.MapPost("/api/customers", async (
+    CreateCustomerRequest request,
     SchemaValidator validator) =>
 {
     var requestJson = JsonSerializer.Serialize(request);
     var (isValid, errors) = await validator.ValidateAsync(
-        FormSchemas.BrokerSchema,
+        FormSchemas.CustomerSchema,
         requestJson
     );
 
@@ -294,42 +283,37 @@ app.MapPost("/api/brokers", async (
 ### Basic Form with RJSF
 
 ```tsx
-// components/forms/BrokerForm.tsx
+// components/forms/CustomerForm.tsx
 import Form from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
 import { RJSFSchema, UiSchema } from '@rjsf/utils';
 
-interface BrokerFormProps {
+interface CustomerFormProps {
   onSubmit: (data: any) => void;
   initialData?: any;
 }
 
-export function BrokerForm({ onSubmit, initialData }: BrokerFormProps) {
+export function CustomerForm({ onSubmit, initialData }: CustomerFormProps) {
   // Schema would typically be fetched from backend
   const schema: RJSFSchema = {
     type: 'object',
-    required: ['name', 'licenseNumber', 'email'],
+    required: ['name', 'email', 'region'],
     properties: {
       name: {
         type: 'string',
-        title: 'Broker Name',
+        title: 'Customer Name',
         minLength: 1,
         maxLength: 200,
-      },
-      licenseNumber: {
-        type: 'string',
-        title: 'License Number',
-        pattern: '^[A-Z0-9]{6,10}$',
-      },
-      licenseState: {
-        type: 'string',
-        title: 'License State',
-        enum: ['CA', 'NY', 'TX', 'FL'],
       },
       email: {
         type: 'string',
         format: 'email',
         title: 'Email',
+      },
+      region: {
+        type: 'string',
+        title: 'Region',
+        enum: ['US-West', 'US-East', 'EU-West', 'APAC'],
       },
       phone: {
         type: 'string',
@@ -341,16 +325,12 @@ export function BrokerForm({ onSubmit, initialData }: BrokerFormProps) {
 
   // UI Schema for custom rendering
   const uiSchema: UiSchema = {
-    licenseNumber: {
-      'ui:help': 'Enter alphanumeric license number',
-      'ui:placeholder': 'CA0123456',
+    email: {
+      'ui:widget': 'email',
     },
     phone: {
       'ui:help': '10 digits, no formatting',
       'ui:placeholder': '5551234567',
-    },
-    email: {
-      'ui:widget': 'email',
     },
   };
 
@@ -386,8 +366,8 @@ export function useFormSchema(schemaName: string) {
 }
 
 // Usage
-function DynamicBrokerForm() {
-  const { data: schema, isLoading } = useFormSchema('broker');
+function DynamicCustomerForm() {
+  const { data: schema, isLoading } = useFormSchema('customer');
 
   if (isLoading) return <Skeleton />;
 
@@ -513,7 +493,7 @@ import { withTheme } from '@rjsf/core';
 
 const ThemedForm = withTheme(ShadcnTheme);
 
-function BrokerForm() {
+function CustomerForm() {
   return (
     <ThemedForm
       schema={schema}
@@ -554,7 +534,7 @@ export function createAjvInstance() {
     validate: (value: string) => /^\d{10}$/.test(value),
   });
 
-  ajv.addFormat('license-number', {
+  ajv.addFormat('order-number', {
     type: 'string',
     validate: (value: string) => /^[A-Z0-9]{6,10}$/.test(value),
   });
@@ -588,23 +568,23 @@ export const customValidator = customizeValidator({}, createAjvInstance());
 {
   "type": "object",
   "properties": {
-    "coverageType": {
+    "category": {
       "type": "string",
-      "enum": ["admitted", "surplus"],
-      "default": "admitted"
+      "enum": ["standard", "express"],
+      "default": "standard"
     },
-    "surplusLinesBroker": {
+    "expressPartner": {
       "type": "string"
     }
   },
   "dependencies": {
-    "coverageType": {
+    "category": {
       "oneOf": [
         {
           "properties": {
-            "coverageType": { "const": "surplus" }
+            "category": { "const": "express" }
           },
-          "required": ["surplusLinesBroker"]
+          "required": ["expressPartner"]
         }
       ]
     }
@@ -618,11 +598,11 @@ export const customValidator = customizeValidator({}, createAjvInstance());
 {
   "type": "object",
   "properties": {
-    "state": {
+    "region": {
       "type": "string",
-      "enum": ["CA", "NY", "TX"]
+      "enum": ["US-West", "US-East", "EU-West"]
     },
-    "surplusLinesLicense": {
+    "regionCode": {
       "type": "string"
     }
   },
@@ -630,13 +610,13 @@ export const customValidator = customizeValidator({}, createAjvInstance());
     {
       "if": {
         "properties": {
-          "state": { "const": "CA" }
+          "region": { "const": "US-West" }
         }
       },
       "then": {
         "properties": {
-          "surplusLinesLicense": {
-            "pattern": "^CA[0-9]{7}$"
+          "regionCode": {
+            "pattern": "^USW[0-9]{7}$"
           }
         }
       }
@@ -644,13 +624,13 @@ export const customValidator = customizeValidator({}, createAjvInstance());
     {
       "if": {
         "properties": {
-          "state": { "const": "NY" }
+          "region": { "const": "EU-West" }
         }
       },
       "then": {
         "properties": {
-          "surplusLinesLicense": {
-            "pattern": "^NY[0-9]{7}$"
+          "regionCode": {
+            "pattern": "^EUW[0-9]{7}$"
           }
         }
       }
@@ -669,26 +649,26 @@ export const customValidator = customizeValidator({}, createAjvInstance());
 {
   "type": "object",
   "properties": {
-    "effectiveDate": {
+    "orderDate": {
       "type": "string",
       "format": "date"
     },
-    "expirationDate": {
+    "dueDate": {
       "type": "string",
       "format": "date"
     }
   },
   "if": {
     "properties": {
-      "effectiveDate": { "type": "string" },
-      "expirationDate": { "type": "string" }
+      "orderDate": { "type": "string" },
+      "dueDate": { "type": "string" }
     },
-    "required": ["effectiveDate", "expirationDate"]
+    "required": ["orderDate", "dueDate"]
   },
   "then": {
     "properties": {
-      "expirationDate": {
-        "formatMinimum": { "$data": "1/effectiveDate" }
+      "dueDate": {
+        "formatMinimum": { "$data": "1/orderDate" }
       }
     }
   }
@@ -701,12 +681,12 @@ export const customValidator = customizeValidator({}, createAjvInstance());
 {
   "type": "object",
   "properties": {
-    "premium": {
+    "amount": {
       "type": "number",
       "minimum": 0,
       "errorMessage": {
-        "type": "Premium must be a number",
-        "minimum": "Premium must be greater than zero"
+        "type": "Amount must be a number",
+        "minimum": "Amount must be greater than zero"
       }
     }
   }
@@ -715,47 +695,48 @@ export const customValidator = customizeValidator({}, createAjvInstance());
 
 ---
 
-## State-Specific Schema Examples
+## Region-Specific Schema Examples
 
-### California-Specific Submission Schema
+### US-West-Specific Order Schema
 
 ```typescript
-// lib/schemas/state-schemas.ts
-export const californiaSubmissionSchema = {
+// lib/schemas/region-schemas.ts
+export const usWestOrderSchema = {
   $schema: 'https://json-schema.org/draft/2020-12/schema',
   type: 'object',
-  required: ['earthquakeCoverage', 'surplusLinesTax'],
+  required: ['shippingMethod', 'regionalTax'],
   properties: {
-    earthquakeCoverage: {
-      type: 'boolean',
-      title: 'Earthquake Coverage Required?',
-      description: 'California requires earthquake coverage disclosure',
+    shippingMethod: {
+      type: 'string',
+      title: 'Shipping Method',
+      enum: ['ground', 'express', 'overnight'],
+      description: 'US-West shipping options',
     },
-    surplusLinesTax: {
+    regionalTax: {
       type: 'number',
-      title: 'Surplus Lines Tax (%)',
+      title: 'Regional Tax (%)',
       minimum: 0,
       maximum: 100,
-      default: 3.0,
-      description: 'California surplus lines stamping fee',
+      default: 7.25,
+      description: 'Regional tax rate',
     },
   },
 };
 
 // Merge with base schema
-export function getSubmissionSchema(state: string) {
-  const baseSchema = { /* base submission schema */ };
-  const stateSchema = stateSchemas[state] || {};
+export function getOrderSchema(region: string) {
+  const baseSchema = { /* base order schema */ };
+  const regionSchema = regionSchemas[region] || {};
 
   return {
     ...baseSchema,
     properties: {
       ...baseSchema.properties,
-      ...stateSchema.properties,
+      ...regionSchema.properties,
     },
     required: [
       ...baseSchema.required,
-      ...(stateSchema.required || []),
+      ...(regionSchema.required || []),
     ],
   };
 }
@@ -769,18 +750,17 @@ export function getSubmissionSchema(state: string) {
 
 ```typescript
 import Ajv from 'ajv';
-import { brokerSchema } from './schemas/broker';
+import { customerSchema } from './schemas/customer';
 
-describe('Broker Schema', () => {
+describe('Customer Schema', () => {
   const ajv = new Ajv();
-  const validate = ajv.compile(brokerSchema);
+  const validate = ajv.compile(customerSchema);
 
-  it('should accept valid broker data', () => {
+  it('should accept valid customer data', () => {
     const validData = {
-      name: 'ABC Insurance Brokers',
-      licenseNumber: 'CA0123456',
-      licenseState: 'CA',
-      email: 'contact@abc.com',
+      name: 'Acme Corporation',
+      email: 'contact@acme.com',
+      region: 'US-West',
       phone: '5551234567',
     };
 
@@ -790,10 +770,9 @@ describe('Broker Schema', () => {
 
   it('should reject invalid email', () => {
     const invalidData = {
-      name: 'ABC Insurance',
-      licenseNumber: 'CA0123456',
-      licenseState: 'CA',
+      name: 'Acme Corp',
       email: 'invalid-email',
+      region: 'US-West',
     };
 
     const isValid = validate(invalidData);
@@ -801,11 +780,10 @@ describe('Broker Schema', () => {
     expect(validate.errors?.[0].keyword).toBe('format');
   });
 
-  it('should require license number', () => {
+  it('should require email', () => {
     const invalidData = {
-      name: 'ABC Insurance',
-      licenseState: 'CA',
-      email: 'contact@abc.com',
+      name: 'Acme Corp',
+      region: 'US-West',
     };
 
     const isValid = validate(invalidData);
@@ -824,7 +802,7 @@ describe('Broker Schema', () => {
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://nebula.com/schemas/broker/v1.0.0",
+  "$id": "https://example.com/schemas/customer/v1.0.0",
   "version": "1.0.0",
   "type": "object"
 }
@@ -837,12 +815,12 @@ describe('Broker Schema', () => {
   "$defs": {
     "address": {
       "type": "object",
-      "required": ["street", "city", "state", "zip"],
+      "required": ["street", "city", "region", "postalCode"],
       "properties": {
         "street": { "type": "string" },
         "city": { "type": "string" },
-        "state": { "type": "string", "pattern": "^[A-Z]{2}$" },
-        "zip": { "type": "string", "pattern": "^\\d{5}(-\\d{4})?$" }
+        "region": { "type": "string" },
+        "postalCode": { "type": "string" }
       }
     }
   },
@@ -859,10 +837,10 @@ describe('Broker Schema', () => {
 ```json
 {
   "properties": {
-    "premium": {
+    "amount": {
       "type": "number",
       "minimum": 0,
-      "errorMessage": "Premium must be a positive number"
+      "errorMessage": "Amount must be a positive number"
     }
   }
 }
@@ -872,14 +850,14 @@ describe('Broker Schema', () => {
 
 ```typescript
 const uiSchema = {
-  premium: {
+  amount: {
     'ui:widget': 'updown',
-    'ui:help': 'Enter premium in USD',
+    'ui:help': 'Enter amount in USD',
     'ui:options': {
       prefix: '$',
     },
   },
-  effectiveDate: {
+  orderDate: {
     'ui:widget': 'date',
     'ui:options': {
       yearsRange: [2024, 2030],
@@ -894,19 +872,19 @@ const uiSchema = {
 
 | Feature | JSON Schema + AJV | Zod |
 |---------|-------------------|-----|
-| **TypeScript Inference** | ❌ No (manual types) | ✅ Excellent |
-| **Backend Sharing** | ✅ Works in .NET/Node/Python | ❌ TypeScript only |
-| **Dynamic Forms** | ✅ Designed for this | ⚠️ Possible but awkward |
-| **Learning Curve** | ⚠️ Steeper (JSON Schema spec) | ✅ Simpler API |
-| **Industry Standard** | ✅ ISO standard | ❌ Library-specific |
-| **Tooling** | ✅ Many validators/generators | ⚠️ Limited to JS/TS |
-| **Complex Validation** | ✅ `allOf`, `anyOf`, `if/then` | ✅ `.refine()`, `.superRefine()` |
-| **Error Messages** | ⚠️ Requires ajv-errors | ✅ Built-in |
-| **Performance** | ✅ Very fast (compiled) | ✅ Fast |
+| **TypeScript Inference** | No (manual types) | Excellent |
+| **Backend Sharing** | Works in .NET/Node/Python | TypeScript only |
+| **Dynamic Forms** | Designed for this | Possible but awkward |
+| **Learning Curve** | Steeper (JSON Schema spec) | Simpler API |
+| **Industry Standard** | ISO standard | Library-specific |
+| **Tooling** | Many validators/generators | Limited to JS/TS |
+| **Complex Validation** | `allOf`, `anyOf`, `if/then` | `.refine()`, `.superRefine()` |
+| **Error Messages** | Requires ajv-errors | Built-in |
+| **Performance** | Very fast (compiled) | Fast |
 
-**Recommendation for Nebula:**
-Use **JSON Schema + AJV + RJSF** because:
-- Insurance forms are dynamic and state-specific
+**Recommendation:**
+Use **JSON Schema + AJV + RJSF** when:
+- Forms are dynamic and region-specific
 - Need backend/frontend validation parity (.NET + React)
 - Schemas can be stored in database and updated without code deploy
 - Industry standard for compliance and auditing
@@ -926,7 +904,7 @@ const zodSchema = z.object({
   email: z.string().email(),
 });
 
-const jsonSchema = zodToJsonSchema(zodSchema, 'BrokerSchema');
+const jsonSchema = zodToJsonSchema(zodSchema, 'CustomerSchema');
 ```
 
 ---

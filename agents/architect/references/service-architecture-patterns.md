@@ -1,6 +1,6 @@
 # Service Architecture Patterns
 
-Comprehensive guide for designing service architecture, module boundaries, and integration patterns for the Nebula insurance CRM. This guide covers modular monolith architecture, Clean Architecture layers, Domain-Driven Design patterns, CQRS considerations, and integration strategies.
+Comprehensive guide for designing service architecture, module boundaries, and integration patterns. This guide covers modular monolith architecture, Clean Architecture layers, Domain-Driven Design patterns, CQRS considerations, and integration strategies.
 
 ---
 
@@ -12,51 +12,46 @@ Comprehensive guide for designing service architecture, module boundaries, and i
 
 **Key Characteristics:**
 - **Single Deployment**: One executable, one Docker container
-- **Logical Modules**: Organized by domain (Broker, Account, Submission, Renewal)
+- **Logical Modules**: Organized by domain (Customer, Order, Notification)
 - **Clear Boundaries**: Each module has well-defined interfaces
 - **Shared Database**: All modules share one PostgreSQL database
 - **In-Process Communication**: Modules call each other via interfaces (no network calls)
 
-**Why Modular Monolith for Nebula:**
-- ✅ Simpler deployment (single container vs managing many services)
-- ✅ Easier transactions (ACID across modules, single database)
-- ✅ Faster development (no inter-service communication overhead)
-- ✅ Lower operational complexity (one database, one deployment, simpler monitoring)
-- ✅ Appropriate scale (50-500 users, not Netflix scale)
-- ✅ Future microservices path (modules can be extracted later if needed)
+**Why Modular Monolith:**
+- Simpler deployment (single container vs managing many services)
+- Easier transactions (ACID across modules, single database)
+- Faster development (no inter-service communication overhead)
+- Lower operational complexity (one database, one deployment, simpler monitoring)
+- Appropriate scale (50-500 users, not Netflix scale)
+- Future microservices path (modules can be extracted later if needed)
 
 ---
 
 ### 1.2 Module Boundaries
 
-**Nebula Modules:**
+**Modules:**
 
-1. **Broker Module**
-   - Entities: Broker, Contact, BrokerHierarchy
-   - Responsibilities: Broker CRUD, broker hierarchy, broker contacts
-   - APIs: `/api/brokers/*`
+1. **Customer Module**
+   - Entities: Customer, Address, CustomerHierarchy
+   - Responsibilities: Customer CRUD, customer hierarchy, customer addresses
+   - APIs: `/api/customers/*`
 
-2. **Account Module**
-   - Entities: Account, AccountContact
-   - Responsibilities: Insured account management, account contacts
-   - APIs: `/api/accounts/*`
+2. **Order Module**
+   - Entities: Order, OrderDocument, Invoice
+   - Responsibilities: Order intake, workflow, document management, invoicing
+   - APIs: `/api/orders/*`
 
-3. **Submission Module**
-   - Entities: Submission, SubmissionDocument, Quote
-   - Responsibilities: Submission intake, workflow, document management, quoting
-   - APIs: `/api/submissions/*`
+3. **Subscription Module**
+   - Entities: Subscription, SubscriptionFollowUp
+   - Responsibilities: Subscription pipeline, reminders, expiration status tracking
+   - APIs: `/api/subscriptions/*`
 
-4. **Renewal Module**
-   - Entities: Renewal, RenewalReminder
-   - Responsibilities: Renewal pipeline, reminders, renewal status tracking
-   - APIs: `/api/renewals/*`
-
-5. **Timeline Module (Shared)**
+4. **Timeline Module (Shared)**
    - Entities: ActivityTimelineEvent, WorkflowTransition
    - Responsibilities: Audit trail, activity timeline, workflow history
    - APIs: `/api/timeline/*`
 
-6. **Identity Module**
+5. **Identity Module**
    - Entities: UserProfile, UserPreference
    - Responsibilities: User profiles, preferences, Keycloak integration
    - APIs: `/api/users/*`, `/api/profile/*`
@@ -68,26 +63,26 @@ Comprehensive guide for designing service architecture, module boundaries, and i
 **Modules communicate via interfaces, not direct dependencies:**
 
 ```csharp
-// Submission Module depends on Broker Module interface
-public interface IBrokerService
+// Order Module depends on Customer Module interface
+public interface ICustomerService
 {
-    Task<Broker?> GetByIdAsync(Guid brokerId);
-    Task<bool> IsActiveAsync(Guid brokerId);
+    Task<Customer?> GetByIdAsync(Guid customerId);
+    Task<bool> IsActiveAsync(Guid customerId);
 }
 
-// Submission Module uses interface
-public class SubmissionService
+// Order Module uses interface
+public class OrderService
 {
-    private readonly IBrokerService _brokerService;
+    private readonly ICustomerService _customerService;
 
-    public async Task<Submission> CreateAsync(CreateSubmissionRequest request)
+    public async Task<Order> CreateAsync(CreateOrderRequest request)
     {
-        // Validate broker exists and is active
-        var brokerExists = await _brokerService.IsActiveAsync(request.BrokerId);
-        if (!brokerExists)
-            throw new ValidationException("Broker not found or inactive");
+        // Validate customer exists and is active
+        var customerExists = await _customerService.IsActiveAsync(request.CustomerId);
+        if (!customerExists)
+            throw new ValidationException("Customer not found or inactive");
 
-        // ... create submission
+        // ... create order
     }
 }
 ```
@@ -111,12 +106,12 @@ public class SubmissionService
 - Common value objects (Money, EmailAddress, PhoneNumber)
 
 **What Doesn't Go in Shared Kernel:**
-- Domain entities (Broker, Submission) - belong to specific modules
+- Domain entities (Customer, Order) - belong to specific modules
 - Business logic - belongs to modules
 
 **Project Structure:**
 ```
-Nebula.SharedKernel/
+App.SharedKernel/
   ├── BaseEntity.cs
   ├── Result.cs
   ├── ErrorResponse.cs
@@ -172,10 +167,10 @@ Nebula.SharedKernel/
 ### 2.2 Domain Layer
 
 **Contains:**
-- Entities (Broker, Submission, Account)
+- Entities (Customer, Order)
 - Value Objects (Address, Money, EmailAddress)
-- Domain Events (BrokerCreated, SubmissionTransitioned)
-- Domain Exceptions (BrokerNotFoundException, InvalidStatusTransitionException)
+- Domain Events (CustomerCreated, OrderTransitioned)
+- Domain Exceptions (CustomerNotFoundException, InvalidStatusTransitionException)
 - Interfaces (IRepository is defined here, implemented in Infrastructure)
 
 **No Dependencies:**
@@ -186,27 +181,27 @@ Nebula.SharedKernel/
 **Example:**
 
 ```csharp
-// Domain Layer: Nebula.Domain/Entities/Broker.cs
-public class Broker : BaseEntity
+// Domain Layer: App.Domain/Entities/Customer.cs
+public class Customer : BaseEntity
 {
     public string Name { get; private set; }
-    public string LicenseNumber { get; private set; }
+    public string Email { get; private set; }
     public string Status { get; private set; }
 
     // Domain methods (business logic)
     public void Activate()
     {
         if (Status == "Suspended")
-            throw new InvalidOperationException("Cannot activate suspended broker");
+            throw new InvalidOperationException("Cannot activate suspended customer");
 
         Status = "Active";
-        DomainEvents.Raise(new BrokerActivated(Id));
+        DomainEvents.Raise(new CustomerActivated(Id));
     }
 
     public void Suspend(string reason)
     {
         Status = "Suspended";
-        DomainEvents.Raise(new BrokerSuspended(Id, reason));
+        DomainEvents.Raise(new CustomerSuspended(Id, reason));
     }
 }
 ```
@@ -216,9 +211,9 @@ public class Broker : BaseEntity
 ### 2.3 Application Layer
 
 **Contains:**
-- Use Cases / Application Services (CreateBrokerUseCase, GetBrokerUseCase)
-- DTOs (CreateBrokerRequest, BrokerResponse)
-- Interfaces (IBrokerService, ISubmissionService)
+- Use Cases / Application Services (CreateCustomerUseCase, GetCustomerUseCase)
+- DTOs (CreateCustomerRequest, CustomerResponse)
+- Interfaces (ICustomerService, IOrderService)
 - Validation (FluentValidation validators)
 - Mapping (AutoMapper profiles)
 
@@ -227,41 +222,41 @@ public class Broker : BaseEntity
 **Example:**
 
 ```csharp
-// Application Layer: Nebula.Application/Brokers/CreateBrokerUseCase.cs
-public class CreateBrokerUseCase
+// Application Layer: App.Application/Customers/CreateCustomerUseCase.cs
+public class CreateCustomerUseCase
 {
-    private readonly IRepository<Broker> _repository;
+    private readonly IRepository<Customer> _repository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public async Task<Result<BrokerResponse>> ExecuteAsync(CreateBrokerRequest request)
+    public async Task<Result<CustomerResponse>> ExecuteAsync(CreateCustomerRequest request)
     {
         // Validate
-        var validator = new CreateBrokerRequestValidator();
+        var validator = new CreateCustomerRequestValidator();
         var validation = await validator.ValidateAsync(request);
         if (!validation.IsValid)
-            return Result<BrokerResponse>.Failure(validation.Errors);
+            return Result<CustomerResponse>.Failure(validation.Errors);
 
         // Create entity
-        var broker = new Broker
+        var customer = new Customer
         {
             Name = request.Name,
-            LicenseNumber = request.LicenseNumber,
-            State = request.State
+            Email = request.Email,
+            Region = request.Region
         };
 
         // Save
-        await _repository.AddAsync(broker);
+        await _repository.AddAsync(customer);
         await _unitOfWork.CommitAsync();
 
         // Map to DTO
-        var response = new BrokerResponse
+        var response = new CustomerResponse
         {
-            Id = broker.Id,
-            Name = broker.Name,
-            Status = broker.Status
+            Id = customer.Id,
+            Name = customer.Name,
+            Status = customer.Status
         };
 
-        return Result<BrokerResponse>.Success(response);
+        return Result<CustomerResponse>.Success(response);
     }
 }
 ```
@@ -282,31 +277,31 @@ public class CreateBrokerUseCase
 **Example:**
 
 ```csharp
-// Infrastructure Layer: Nebula.Infrastructure/Persistence/ApplicationDbContext.cs
-public class ApplicationDbContext : DbContext
+// Infrastructure Layer: App.Infrastructure/Persistence/AppDbContext.cs
+public class AppDbContext : DbContext
 {
-    public DbSet<Broker> Brokers { get; set; }
-    public DbSet<Submission> Submissions { get; set; }
+    public DbSet<Customer> Customers { get; set; }
+    public DbSet<Order> Orders { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }
 
-// Infrastructure Layer: Nebula.Infrastructure/Persistence/BrokerRepository.cs
-public class BrokerRepository : IRepository<Broker>
+// Infrastructure Layer: App.Infrastructure/Persistence/CustomerRepository.cs
+public class CustomerRepository : IRepository<Customer>
 {
-    private readonly ApplicationDbContext _context;
+    private readonly AppDbContext _context;
 
-    public async Task<Broker?> GetByIdAsync(Guid id)
+    public async Task<Customer?> GetByIdAsync(Guid id)
     {
-        return await _context.Brokers.FindAsync(id);
+        return await _context.Customers.FindAsync(id);
     }
 
-    public async Task AddAsync(Broker broker)
+    public async Task AddAsync(Customer customer)
     {
-        await _context.Brokers.AddAsync(broker);
+        await _context.Customers.AddAsync(customer);
     }
 }
 ```
@@ -326,7 +321,7 @@ public class BrokerRepository : IRepository<Broker>
 **Example:**
 
 ```csharp
-// API Layer: Nebula.API/Program.cs
+// API Layer: App.API/Program.cs
 var builder = WebApplication.CreateBuilder(args);
 
 // Register dependencies
@@ -336,17 +331,17 @@ builder.Services.AddInfrastructure(builder.Configuration); // Infrastructure Lay
 var app = builder.Build();
 
 // Minimal API endpoints
-app.MapPost("/api/brokers", async (
-    CreateBrokerRequest request,
-    CreateBrokerUseCase useCase) =>
+app.MapPost("/api/customers", async (
+    CreateCustomerRequest request,
+    CreateCustomerUseCase useCase) =>
 {
     var result = await useCase.ExecuteAsync(request);
     return result.IsSuccess
-        ? Results.Created($"/api/brokers/{result.Value.Id}", result.Value)
+        ? Results.Created($"/api/customers/{result.Value.Id}", result.Value)
         : Results.BadRequest(result.Error);
 })
-.WithName("CreateBroker")
-.WithTags("Brokers");
+.WithName("CreateCustomer")
+.WithTags("Customers");
 
 app.Run();
 ```
@@ -370,7 +365,7 @@ Infrastructure Layer
 
 **Dependency Inversion Principle:**
 - Application defines `IRepository<T>` interface
-- Infrastructure implements `BrokerRepository : IRepository<Broker>`
+- Infrastructure implements `CustomerRepository : IRepository<Customer>`
 - API layer wires them together via DI
 
 ---
@@ -386,42 +381,42 @@ Infrastructure Layer
 - Enforces invariants (business rules)
 - Controls lifecycle of contained entities
 
-**Example: Broker Aggregate**
+**Example: Customer Aggregate**
 
 ```csharp
-public class Broker : BaseEntity // Aggregate Root
+public class Customer : BaseEntity // Aggregate Root
 {
     public string Name { get; private set; }
-    public ICollection<Contact> Contacts { get; private set; } // Contained entities
+    public ICollection<Address> Addresses { get; private set; } // Contained entities
 
     // Aggregate root enforces business rules
-    public void AddContact(Contact contact)
+    public void AddAddress(Address address)
     {
-        if (Contacts.Count >= 10)
-            throw new DomainException("Broker cannot have more than 10 contacts");
+        if (Addresses.Count >= 10)
+            throw new DomainException("Customer cannot have more than 10 addresses");
 
-        Contacts.Add(contact);
+        Addresses.Add(address);
     }
 
-    public void RemoveContact(Guid contactId)
+    public void RemoveAddress(Guid addressId)
     {
-        var contact = Contacts.FirstOrDefault(c => c.Id == contactId);
-        if (contact == null)
-            throw new DomainException("Contact not found");
+        var address = Addresses.FirstOrDefault(a => a.Id == addressId);
+        if (address == null)
+            throw new DomainException("Address not found");
 
-        Contacts.Remove(contact);
+        Addresses.Remove(address);
     }
 }
 
 // Repository works at aggregate root level
-public interface IBrokerRepository
+public interface ICustomerRepository
 {
-    Task<Broker?> GetByIdAsync(Guid id); // Returns entire aggregate
-    Task AddAsync(Broker broker); // Saves entire aggregate
+    Task<Customer?> GetByIdAsync(Guid id); // Returns entire aggregate
+    Task AddAsync(Customer customer); // Saves entire aggregate
 }
 ```
 
-**Design Principle:** Don't access Contact directly. Always go through Broker aggregate root.
+**Design Principle:** Don't access Address directly. Always go through Customer aggregate root.
 
 ---
 
@@ -472,19 +467,19 @@ public class Money : ValueObject
 
 **Domain Event** represents something that happened in the domain.
 
-**Example: SubmissionTransitioned Event**
+**Example: OrderTransitioned Event**
 
 ```csharp
-public record SubmissionTransitioned : DomainEvent
+public record OrderTransitioned : DomainEvent
 {
-    public Guid SubmissionId { get; init; }
+    public Guid OrderId { get; init; }
     public string FromStatus { get; init; }
     public string ToStatus { get; init; }
     public DateTime TransitionedAt { get; init; }
 }
 
 // Raised by domain entity
-public class Submission : BaseEntity
+public class Order : BaseEntity
 {
     public void Transition(string toStatus)
     {
@@ -492,9 +487,9 @@ public class Submission : BaseEntity
         Status = toStatus;
 
         // Raise domain event
-        DomainEvents.Raise(new SubmissionTransitioned
+        DomainEvents.Raise(new OrderTransitioned
         {
-            SubmissionId = Id,
+            OrderId = Id,
             FromStatus = fromStatus,
             ToStatus = toStatus,
             TransitionedAt = DateTime.UtcNow
@@ -503,21 +498,21 @@ public class Submission : BaseEntity
 }
 
 // Handled by application layer
-public class SubmissionTransitionedHandler : IDomainEventHandler<SubmissionTransitioned>
+public class OrderTransitionedHandler : IDomainEventHandler<OrderTransitioned>
 {
-    public async Task Handle(SubmissionTransitioned @event)
+    public async Task Handle(OrderTransitioned @event)
     {
         // Create timeline event
         await _timelineService.LogEventAsync(new ActivityTimelineEvent
         {
-            EntityType = "Submission",
-            EntityId = @event.SubmissionId,
-            EventType = "SubmissionTransitioned",
+            EntityType = "Order",
+            EntityId = @event.OrderId,
+            EventType = "OrderTransitioned",
             Payload = JsonSerializer.Serialize(@event)
         });
 
         // Send email notification
-        await _emailService.SendStatusChangeEmailAsync(@event.SubmissionId, @event.ToStatus);
+        await _emailService.SendStatusChangeEmailAsync(@event.OrderId, @event.ToStatus);
     }
 }
 ```
@@ -546,7 +541,7 @@ public interface IRepository<T> where T : BaseEntity
 ```csharp
 public class Repository<T> : IRepository<T> where T : BaseEntity
 {
-    private readonly ApplicationDbContext _context;
+    private readonly AppDbContext _context;
 
     public async Task<T?> GetByIdAsync(Guid id)
     {
@@ -566,24 +561,24 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
 
 **Domain Service** contains business logic that doesn't belong to a single entity.
 
-**Example: Commission Calculation Service**
+**Example: Pricing Calculation Service**
 
 ```csharp
-public class CommissionCalculationService
+public class PricingCalculationService
 {
-    public async Task<List<CommissionSplit>> CalculateCommissionsAsync(Policy policy)
+    public async Task<List<PricingTier>> CalculatePricingAsync(Order order)
     {
         // Business logic spanning multiple aggregates
-        var broker = await _brokerRepository.GetByIdAsync(policy.BrokerId);
-        var schedule = await _commissionScheduleRepository.GetByCarrierAndCoverageAsync(
-            policy.CarrierName, policy.CoverageType);
+        var customer = await _customerRepository.GetByIdAsync(order.CustomerId);
+        var schedule = await _pricingScheduleRepository.GetByRegionAndCategoryAsync(
+            customer.Region, order.Category);
 
-        var totalCommission = policy.Premium * (schedule.CommissionRate / 100);
+        var totalDiscount = order.Amount * (schedule.DiscountRate / 100);
 
-        // Split commission across broker hierarchy
-        var splits = new List<CommissionSplit>();
+        // Calculate pricing tiers across customer hierarchy
+        var tiers = new List<PricingTier>();
         // ... calculation logic
-        return splits;
+        return tiers;
     }
 }
 ```
@@ -618,7 +613,7 @@ public class CommissionCalculationService
 - High read volume, low write volume
 - Need to scale reads independently
 
-**Nebula MVP: NOT Using CQRS**
+**MVP: NOT Using CQRS**
 - Simple CRUD operations
 - Reads and writes use same data model
 - No extreme performance requirements
@@ -635,11 +630,11 @@ public class CommissionCalculationService
 **Use projections for complex queries:**
 
 ```csharp
-// Write model: Full Broker entity
-public class Broker : BaseEntity { /* all fields */ }
+// Write model: Full Customer entity
+public class Customer : BaseEntity { /* all fields */ }
 
 // Read model: Optimized for list view
-public class BrokerListItem
+public class CustomerListItem
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
@@ -647,12 +642,12 @@ public class BrokerListItem
 }
 
 // Query projects to read model
-var brokers = await context.Brokers
-    .Select(b => new BrokerListItem
+var customers = await context.Customers
+    .Select(c => new CustomerListItem
     {
-        Id = b.Id,
-        Name = b.Name,
-        Status = b.Status
+        Id = c.Id,
+        Name = c.Name,
+        Status = c.Status
     })
     .ToListAsync();
 ```
@@ -661,7 +656,7 @@ var brokers = await context.Brokers
 
 ### 4.4 When NOT to Use CQRS
 
-**Avoid CQRS for Nebula MVP:**
+**Avoid CQRS for MVP:**
 - Adds significant complexity (two models to maintain)
 - Eventual consistency between read/write sides
 - More infrastructure (separate databases or projections)
@@ -680,33 +675,33 @@ var brokers = await context.Brokers
 ```csharp
 // Workflow definition
 [Workflow]
-public class RenewalWorkflow
+public class SubscriptionExpirationWorkflow
 {
     [WorkflowRun]
-    public async Task RunAsync(RenewalWorkflowInput input)
+    public async Task RunAsync(ExpirationWorkflowInput input)
     {
         // Schedule reminder 120 days before expiration
-        await Workflow.DelayAsync(input.Policy.ExpirationDate.AddDays(-120) - DateTime.UtcNow);
-        await Workflow.ExecuteActivityAsync<SendRenewalReminderActivity>(
-            new ReminderInput { PolicyId = input.PolicyId, DaysOut = 120 });
+        await Workflow.DelayAsync(input.Subscription.ExpirationDate.AddDays(-120) - DateTime.UtcNow);
+        await Workflow.ExecuteActivityAsync<SendExpirationReminderActivity>(
+            new ReminderInput { SubscriptionId = input.SubscriptionId, DaysOut = 120 });
 
         // ... more reminders
     }
 }
 
 // Triggered from application layer
-public class PolicyService
+public class SubscriptionService
 {
     private readonly ITemporalClient _temporalClient;
 
-    public async Task CreatePolicyAsync(Policy policy)
+    public async Task CreateSubscriptionAsync(Subscription subscription)
     {
-        // Save policy
-        await _repository.AddAsync(policy);
+        // Save subscription
+        await _repository.AddAsync(subscription);
 
         // Start Temporal workflow
-        await _temporalClient.StartWorkflowAsync<RenewalWorkflow>(
-            new RenewalWorkflowInput { PolicyId = policy.Id, Policy = policy });
+        await _temporalClient.StartWorkflowAsync<SubscriptionExpirationWorkflow>(
+            new ExpirationWorkflowInput { SubscriptionId = subscription.Id, Subscription = subscription });
     }
 }
 ```
@@ -720,17 +715,17 @@ public class PolicyService
 ```csharp
 // User logs in via Keycloak (OIDC redirect)
 // Keycloak returns JWT token
-// Nebula validates JWT and extracts claims
+// API validates JWT and extracts claims
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "https://keycloak.example.com/realms/nebula";
-        options.Audience = "nebula-api";
+        options.Authority = "https://keycloak.example.com/realms/app";
+        options.Audience = "app-api";
     });
 ```
 
-**On first login, sync user to Nebula UserProfile table:**
+**On first login, sync user to UserProfile table:**
 
 ```csharp
 public async Task OnFirstLoginAsync(ClaimsPrincipal user)
@@ -755,30 +750,30 @@ public async Task OnFirstLoginAsync(ClaimsPrincipal user)
 
 ---
 
-### 5.3 External Carrier APIs (Submission Rating)
+### 5.3 External Partner APIs (Order Pricing)
 
-**Call carrier APIs for rating submissions:**
+**Call partner APIs for pricing orders:**
 
 ```csharp
-public interface ICarrierRatingClient
+public interface IPartnerPricingClient
 {
-    Task<RatingResponse> GetRateAsync(RatingRequest request);
+    Task<PricingResponse> GetPriceAsync(PricingRequest request);
 }
 
-public class CarrierRatingClient : ICarrierRatingClient
+public class PartnerPricingClient : IPartnerPricingClient
 {
     private readonly HttpClient _httpClient;
 
-    public async Task<RatingResponse> GetRateAsync(RatingRequest request)
+    public async Task<PricingResponse> GetPriceAsync(PricingRequest request)
     {
-        var response = await _httpClient.PostAsJsonAsync("/api/rate", request);
+        var response = await _httpClient.PostAsJsonAsync("/api/price", request);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<RatingResponse>();
+        return await response.Content.ReadFromJsonAsync<PricingResponse>();
     }
 }
 
 // Resilience with Polly
-builder.Services.AddHttpClient<ICarrierRatingClient, CarrierRatingClient>()
+builder.Services.AddHttpClient<IPartnerPricingClient, PartnerPricingClient>()
     .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(3, _ => TimeSpan.FromSeconds(2)))
     .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 ```
@@ -792,26 +787,26 @@ builder.Services.AddHttpClient<ICarrierRatingClient, CarrierRatingClient>()
 ```csharp
 public interface IEmailService
 {
-    Task SendRenewalReminderAsync(Guid policyId, int daysOut);
+    Task SendExpirationReminderAsync(Guid subscriptionId, int daysOut);
 }
 
 public class SendGridEmailService : IEmailService
 {
     private readonly ISendGridClient _sendGridClient;
 
-    public async Task SendRenewalReminderAsync(Guid policyId, int daysOut)
+    public async Task SendExpirationReminderAsync(Guid subscriptionId, int daysOut)
     {
-        var policy = await _policyRepository.GetByIdAsync(policyId);
+        var subscription = await _subscriptionRepository.GetByIdAsync(subscriptionId);
 
         var message = new SendGridMessage
         {
-            From = new EmailAddress("noreply@nebula.com", "Nebula CRM"),
-            Subject = $"Renewal Reminder - {daysOut} Days",
-            PlainTextContent = $"Your policy {policy.PolicyNumber} expires in {daysOut} days.",
-            HtmlContent = $"<p>Your policy <strong>{policy.PolicyNumber}</strong> expires in {daysOut} days.</p>"
+            From = new EmailAddress("noreply@example.com", "App Notifications"),
+            Subject = $"Expiration Reminder - {daysOut} Days",
+            PlainTextContent = $"Your subscription {subscription.SubscriptionNumber} expires in {daysOut} days.",
+            HtmlContent = $"<p>Your subscription <strong>{subscription.SubscriptionNumber}</strong> expires in {daysOut} days.</p>"
         };
 
-        message.AddTo(new EmailAddress(policy.BrokerEmail));
+        message.AddTo(new EmailAddress(subscription.CustomerEmail));
 
         await _sendGridClient.SendEmailAsync(message);
     }
@@ -839,7 +834,7 @@ public class S3DocumentStorageService : IDocumentStorageService
 
     public async Task<string> UploadAsync(Stream fileStream, string fileName, string contentType)
     {
-        var key = $"submissions/{Guid.NewGuid()}/{fileName}";
+        var key = $"orders/{Guid.NewGuid()}/{fileName}";
 
         var request = new PutObjectRequest
         {
@@ -864,17 +859,17 @@ public class S3DocumentStorageService : IDocumentStorageService
 ```csharp
 public class WebhookNotificationService
 {
-    public async Task NotifySubmissionBoundAsync(Submission submission)
+    public async Task NotifyOrderCompletedAsync(Order order)
     {
         var webhook = new
         {
-            eventType = "submission.bound",
-            submissionId = submission.Id,
-            policyNumber = submission.PolicyNumber,
+            eventType = "order.completed",
+            orderId = order.Id,
+            orderNumber = order.OrderNumber,
             timestamp = DateTime.UtcNow
         };
 
-        var subscribedWebhooks = await _webhookRepository.GetActiveWebhooksAsync("submission.bound");
+        var subscribedWebhooks = await _webhookRepository.GetActiveWebhooksAsync("order.completed");
 
         foreach (var webhookUrl in subscribedWebhooks)
         {

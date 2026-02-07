@@ -8,7 +8,7 @@
 
 ## Overview
 
-This guide covers frontend testing in Nebula using **React Testing Library** and **Vitest**. We follow the principle: **"Test behavior, not implementation."**
+This guide covers frontend testing using **React Testing Library** and **Vitest**. We follow the principle: **"Test behavior, not implementation."**
 
 **Philosophy:** Write tests that interact with components the same way users do - through the rendered UI, not internal implementation details.
 
@@ -90,36 +90,36 @@ Object.defineProperty(window, 'matchMedia', {
 ### Simple Component Test
 
 ```tsx
-// BrokerCard.test.tsx
+// CustomerCard.test.tsx
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { BrokerCard } from './BrokerCard';
+import { CustomerCard } from './CustomerCard';
 
-describe('BrokerCard', () => {
-  const mockBroker = {
+describe('CustomerCard', () => {
+  const mockCustomer = {
     id: '123',
-    name: 'ABC Insurance Brokers',
-    licenseNumber: 'CA0123456',
-    email: 'contact@abc.com',
+    name: 'Acme Corporation',
+    email: 'contact@acme.com',
+    region: 'US-West',
   };
 
-  it('should render broker name', () => {
-    render(<BrokerCard broker={mockBroker} />);
+  it('should render customer name', () => {
+    render(<CustomerCard customer={mockCustomer} />);
 
-    expect(screen.getByText('ABC Insurance Brokers')).toBeInTheDocument();
+    expect(screen.getByText('Acme Corporation')).toBeInTheDocument();
   });
 
-  it('should render license number', () => {
-    render(<BrokerCard broker={mockBroker} />);
+  it('should render email', () => {
+    render(<CustomerCard customer={mockCustomer} />);
 
-    expect(screen.getByText(/CA0123456/)).toBeInTheDocument();
+    expect(screen.getByText(/contact@acme.com/)).toBeInTheDocument();
   });
 
   it('should render email as a link', () => {
-    render(<BrokerCard broker={mockBroker} />);
+    render(<CustomerCard customer={mockCustomer} />);
 
-    const emailLink = screen.getByRole('link', { name: /contact@abc.com/i });
-    expect(emailLink).toHaveAttribute('href', 'mailto:contact@abc.com');
+    const emailLink = screen.getByRole('link', { name: /contact@acme.com/i });
+    expect(emailLink).toHaveAttribute('href', 'mailto:contact@acme.com');
   });
 });
 ```
@@ -134,27 +134,27 @@ describe('BrokerCard', () => {
 ```tsx
 // By role (best for accessibility)
 screen.getByRole('button', { name: /submit/i });
-screen.getByRole('heading', { name: /broker details/i });
+screen.getByRole('heading', { name: /customer details/i });
 screen.getByRole('textbox', { name: /email/i });
 screen.getByRole('link', { name: /view details/i });
 
 // By label text (forms)
-screen.getByLabelText(/broker name/i);
+screen.getByLabelText(/customer name/i);
 
 // By placeholder
-screen.getByPlaceholderText(/search brokers/i);
+screen.getByPlaceholderText(/search customers/i);
 
 // By text content
-screen.getByText(/no brokers found/i);
+screen.getByText(/no customers found/i);
 ```
 
 2. **Semantic Queries**
 ```tsx
 // By display value (inputs with values)
-screen.getByDisplayValue(/abc insurance/i);
+screen.getByDisplayValue(/acme corporation/i);
 
 // By alt text (images)
-screen.getByAltText(/broker logo/i);
+screen.getByAltText(/customer logo/i);
 
 // By title
 screen.getByTitle(/close dialog/i);
@@ -162,7 +162,7 @@ screen.getByTitle(/close dialog/i);
 
 3. **Test IDs (Last resort)**
 ```tsx
-screen.getByTestId('broker-card');
+screen.getByTestId('customer-card');
 ```
 
 ### Query Variants
@@ -191,26 +191,26 @@ const buttons = screen.getAllByRole('button');
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
-describe('CreateBrokerForm', () => {
+describe('CreateCustomerForm', () => {
   it('should submit form with valid data', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
 
-    render(<CreateBrokerForm onSubmit={onSubmit} />);
+    render(<CreateCustomerForm onSubmit={onSubmit} />);
 
     // Type into inputs
-    await user.type(screen.getByLabelText(/broker name/i), 'ABC Insurance');
-    await user.type(screen.getByLabelText(/license number/i), 'CA0123456');
-    await user.type(screen.getByLabelText(/email/i), 'test@abc.com');
+    await user.type(screen.getByLabelText(/customer name/i), 'Acme Corporation');
+    await user.type(screen.getByLabelText(/email/i), 'test@acme.com');
+    await user.type(screen.getByLabelText(/phone/i), '5551234567');
 
     // Click button
     await user.click(screen.getByRole('button', { name: /submit/i }));
 
     // Assert
     expect(onSubmit).toHaveBeenCalledWith({
-      name: 'ABC Insurance',
-      licenseNumber: 'CA0123456',
-      email: 'test@abc.com',
+      name: 'Acme Corporation',
+      email: 'test@acme.com',
+      phone: '5551234567',
     });
   });
 });
@@ -256,10 +256,10 @@ await user.upload(fileInput, file);
 ### Form Validation
 
 ```tsx
-describe('BrokerForm validation', () => {
+describe('CustomerForm validation', () => {
   it('should show error for invalid email', async () => {
     const user = userEvent.setup();
-    render(<BrokerForm />);
+    render(<CustomerForm />);
 
     const emailInput = screen.getByLabelText(/email/i);
     await user.type(emailInput, 'invalid-email');
@@ -270,17 +270,17 @@ describe('BrokerForm validation', () => {
 
   it('should show error for required field', async () => {
     const user = userEvent.setup();
-    render(<BrokerForm />);
+    render(<CustomerForm />);
 
     const submitButton = screen.getByRole('button', { name: /submit/i });
     await user.click(submitButton);
 
-    expect(await screen.findByText(/broker name is required/i)).toBeInTheDocument();
+    expect(await screen.findByText(/customer name is required/i)).toBeInTheDocument();
   });
 
   it('should clear errors when valid input is entered', async () => {
     const user = userEvent.setup();
-    render(<BrokerForm />);
+    render(<CustomerForm />);
 
     const emailInput = screen.getByLabelText(/email/i);
 
@@ -304,27 +304,27 @@ describe('BrokerForm validation', () => {
 ```tsx
 it('should submit form and show success message', async () => {
   const user = userEvent.setup();
-  const mockCreateBroker = vi.fn().mockResolvedValue({ id: '123' });
+  const mockCreateCustomer = vi.fn().mockResolvedValue({ id: '123' });
 
-  render(<CreateBrokerForm createBroker={mockCreateBroker} />);
+  render(<CreateCustomerForm createCustomer={mockCreateCustomer} />);
 
   // Fill form
-  await user.type(screen.getByLabelText(/broker name/i), 'ABC Insurance');
-  await user.type(screen.getByLabelText(/license number/i), 'CA0123456');
-  await user.type(screen.getByLabelText(/email/i), 'test@abc.com');
+  await user.type(screen.getByLabelText(/customer name/i), 'Acme Corporation');
+  await user.type(screen.getByLabelText(/email/i), 'test@acme.com');
+  await user.type(screen.getByLabelText(/phone/i), '5551234567');
 
   // Submit
   await user.click(screen.getByRole('button', { name: /submit/i }));
 
   // Assert API was called
-  expect(mockCreateBroker).toHaveBeenCalledWith({
-    name: 'ABC Insurance',
-    licenseNumber: 'CA0123456',
-    email: 'test@abc.com',
+  expect(mockCreateCustomer).toHaveBeenCalledWith({
+    name: 'Acme Corporation',
+    email: 'test@acme.com',
+    phone: '5551234567',
   });
 
   // Assert success message
-  expect(await screen.findByText(/broker created successfully/i)).toBeInTheDocument();
+  expect(await screen.findByText(/customer created successfully/i)).toBeInTheDocument();
 });
 ```
 
@@ -337,22 +337,22 @@ it('should submit form and show success message', async () => {
 ```tsx
 import { waitFor } from '@testing-library/react';
 
-it('should load and display brokers', async () => {
-  const mockBrokers = [
-    { id: '1', name: 'ABC Insurance' },
-    { id: '2', name: 'XYZ Brokers' },
+it('should load and display customers', async () => {
+  const mockCustomers = [
+    { id: '1', name: 'Acme Corporation' },
+    { id: '2', name: 'Beta Corp' },
   ];
 
-  render(<BrokerList />);
+  render(<CustomerList />);
 
-  // Wait for brokers to load
-  expect(await screen.findByText('ABC Insurance')).toBeInTheDocument();
-  expect(await screen.findByText('XYZ Brokers')).toBeInTheDocument();
+  // Wait for customers to load
+  expect(await screen.findByText('Acme Corporation')).toBeInTheDocument();
+  expect(await screen.findByText('Beta Corp')).toBeInTheDocument();
 });
 
 // Or use waitFor for custom conditions
 it('should update status after transition', async () => {
-  render(<SubmissionCard />);
+  render(<OrderCard />);
 
   const button = screen.getByRole('button', { name: /approve/i });
   await userEvent.click(button);
@@ -370,14 +370,14 @@ it('should update status after transition', async () => {
 import { http, HttpResponse } from 'msw';
 
 export const handlers = [
-  http.get('/api/brokers', () => {
+  http.get('/api/customers', () => {
     return HttpResponse.json([
-      { id: '1', name: 'ABC Insurance', licenseNumber: 'CA0123456' },
-      { id: '2', name: 'XYZ Brokers', licenseNumber: 'NY9876543' },
+      { id: '1', name: 'Acme Corporation', email: 'contact@acme.com' },
+      { id: '2', name: 'Beta Corp', email: 'info@beta.com' },
     ]);
   }),
 
-  http.post('/api/brokers', async ({ request }) => {
+  http.post('/api/customers', async ({ request }) => {
     const body = await request.json();
     return HttpResponse.json(
       { id: '123', ...body },
@@ -385,7 +385,7 @@ export const handlers = [
     );
   }),
 
-  http.delete('/api/brokers/:id', () => {
+  http.delete('/api/customers/:id', () => {
     return HttpResponse.json(null, { status: 204 });
   }),
 ];
@@ -411,11 +411,11 @@ afterAll(() => server.close());
 import { server } from '@/test/mocks/server';
 import { http, HttpResponse } from 'msw';
 
-describe('BrokerList', () => {
+describe('CustomerList', () => {
   it('should handle API error', async () => {
     // Override default handler for this test
     server.use(
-      http.get('/api/brokers', () => {
+      http.get('/api/customers', () => {
         return HttpResponse.json(
           { message: 'Internal Server Error' },
           { status: 500 }
@@ -423,21 +423,21 @@ describe('BrokerList', () => {
       })
     );
 
-    render(<BrokerList />);
+    render(<CustomerList />);
 
-    expect(await screen.findByText(/failed to load brokers/i)).toBeInTheDocument();
+    expect(await screen.findByText(/failed to load customers/i)).toBeInTheDocument();
   });
 
-  it('should show empty state when no brokers', async () => {
+  it('should show empty state when no customers', async () => {
     server.use(
-      http.get('/api/brokers', () => {
+      http.get('/api/customers', () => {
         return HttpResponse.json([]);
       })
     );
 
-    render(<BrokerList />);
+    render(<CustomerList />);
 
-    expect(await screen.findByText(/no brokers found/i)).toBeInTheDocument();
+    expect(await screen.findByText(/no customers found/i)).toBeInTheDocument();
   });
 });
 ```
@@ -480,21 +480,21 @@ export function renderWithQueryClient(ui: ReactNode) {
 ```tsx
 import { renderWithQueryClient } from '@/test/utils';
 
-describe('BrokerDetails', () => {
-  it('should load and display broker', async () => {
-    renderWithQueryClient(<BrokerDetails brokerId="123" />);
+describe('CustomerDetails', () => {
+  it('should load and display customer', async () => {
+    renderWithQueryClient(<CustomerDetails customerId="123" />);
 
     // Loading state
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
 
     // Data loaded
-    expect(await screen.findByText('ABC Insurance')).toBeInTheDocument();
-    expect(screen.getByText('CA0123456')).toBeInTheDocument();
+    expect(await screen.findByText('Acme Corporation')).toBeInTheDocument();
+    expect(screen.getByText('contact@acme.com')).toBeInTheDocument();
   });
 
-  it('should show error when broker not found', async () => {
+  it('should show error when customer not found', async () => {
     server.use(
-      http.get('/api/brokers/:id', () => {
+      http.get('/api/customers/:id', () => {
         return HttpResponse.json(
           { message: 'Not found' },
           { status: 404 }
@@ -502,9 +502,9 @@ describe('BrokerDetails', () => {
       })
     );
 
-    renderWithQueryClient(<BrokerDetails brokerId="999" />);
+    renderWithQueryClient(<CustomerDetails customerId="999" />);
 
-    expect(await screen.findByText(/broker not found/i)).toBeInTheDocument();
+    expect(await screen.findByText(/customer not found/i)).toBeInTheDocument();
   });
 });
 ```
@@ -512,27 +512,27 @@ describe('BrokerDetails', () => {
 ### Testing Mutations
 
 ```tsx
-it('should create broker and refetch list', async () => {
+it('should create customer and refetch list', async () => {
   const user = userEvent.setup();
   const testQueryClient = createTestQueryClient();
 
   render(
     <QueryClientProvider client={testQueryClient}>
-      <BrokerList />
-      <CreateBrokerDialog />
+      <CustomerList />
+      <CreateCustomerDialog />
     </QueryClientProvider>
   );
 
-  // Initially 2 brokers
+  // Initially 2 customers
   expect(await screen.findAllByRole('article')).toHaveLength(2);
 
-  // Open dialog and create broker
-  await user.click(screen.getByRole('button', { name: /create broker/i }));
-  await user.type(screen.getByLabelText(/broker name/i), 'New Broker');
-  await user.type(screen.getByLabelText(/license/i), 'TX1111111');
+  // Open dialog and create customer
+  await user.click(screen.getByRole('button', { name: /create customer/i }));
+  await user.type(screen.getByLabelText(/customer name/i), 'New Customer');
+  await user.type(screen.getByLabelText(/email/i), 'new@example.com');
   await user.click(screen.getByRole('button', { name: /submit/i }));
 
-  // List should refetch and show 3 brokers
+  // List should refetch and show 3 customers
   await waitFor(() => {
     expect(screen.getAllByRole('article')).toHaveLength(3);
   });
@@ -547,27 +547,27 @@ it('should create broker and refetch list', async () => {
 
 ```tsx
 it('should have accessible button', () => {
-  render(<DeleteBrokerButton />);
+  render(<DeleteCustomerButton />);
 
-  const button = screen.getByRole('button', { name: /delete broker/i });
+  const button = screen.getByRole('button', { name: /delete customer/i });
   expect(button).toBeInTheDocument();
 });
 
 it('should have accessible form fields', () => {
-  render(<BrokerForm />);
+  render(<CustomerForm />);
 
   // Labels should be associated with inputs
-  const nameInput = screen.getByLabelText(/broker name/i);
-  expect(nameInput).toHaveAccessibleName('Broker Name');
+  const nameInput = screen.getByLabelText(/customer name/i);
+  expect(nameInput).toHaveAccessibleName('Customer Name');
 });
 
 it('should have accessible error messages', async () => {
   const user = userEvent.setup();
-  render(<BrokerForm />);
+  render(<CustomerForm />);
 
   await user.click(screen.getByRole('button', { name: /submit/i }));
 
-  const errorMessage = await screen.findByText(/broker name is required/i);
+  const errorMessage = await screen.findByText(/customer name is required/i);
   expect(errorMessage).toHaveAccessibleDescription();
 });
 ```
@@ -577,9 +577,9 @@ it('should have accessible error messages', async () => {
 ```tsx
 it('should be keyboard navigable', async () => {
   const user = userEvent.setup();
-  render(<BrokerForm />);
+  render(<CustomerForm />);
 
-  const nameInput = screen.getByLabelText(/broker name/i);
+  const nameInput = screen.getByLabelText(/customer name/i);
   const emailInput = screen.getByLabelText(/email/i);
   const submitButton = screen.getByRole('button', { name: /submit/i });
 
@@ -618,9 +618,9 @@ it('should close dialog with Escape', async () => {
 ```tsx
 import { renderHook, waitFor } from '@testing-library/react';
 
-describe('useBroker', () => {
-  it('should fetch broker data', async () => {
-    const { result } = renderHook(() => useBroker('123'), {
+describe('useCustomer', () => {
+  it('should fetch customer data', async () => {
+    const { result } = renderHook(() => useCustomer('123'), {
       wrapper: ({ children }) => (
         <QueryClientProvider client={createTestQueryClient()}>
           {children}
@@ -638,7 +638,7 @@ describe('useBroker', () => {
 
     expect(result.current.data).toEqual({
       id: '123',
-      name: 'ABC Insurance',
+      name: 'Acme Corporation',
     });
   });
 });
@@ -739,20 +739,20 @@ it('should validate with Zod', () => {
 
 ✅ **GOOD:**
 ```tsx
-it('should display broker name', () => {
-  render(<BrokerCard broker={mockBroker} />);
-  expect(screen.getByText('ABC Insurance')).toBeInTheDocument();
+it('should display customer name', () => {
+  render(<CustomerCard customer={mockCustomer} />);
+  expect(screen.getByText('Acme Corporation')).toBeInTheDocument();
 });
 
-it('should display license number', () => {
-  render(<BrokerCard broker={mockBroker} />);
-  expect(screen.getByText('CA0123456')).toBeInTheDocument();
+it('should display email', () => {
+  render(<CustomerCard customer={mockCustomer} />);
+  expect(screen.getByText('contact@acme.com')).toBeInTheDocument();
 });
 ```
 
 ❌ **BAD:**
 ```tsx
-it('should render broker card correctly', () => {
+it('should render customer card correctly', () => {
   // Tests 10 different things
 });
 ```
@@ -794,13 +794,13 @@ npm test -- --coverage
 
 ```tsx
 it('should show skeleton while loading', () => {
-  render(<BrokerList />);
+  render(<CustomerList />);
   expect(screen.getByTestId('skeleton')).toBeInTheDocument();
 });
 
 it('should show content after loading', async () => {
-  render(<BrokerList />);
-  expect(await screen.findByText('ABC Insurance')).toBeInTheDocument();
+  render(<CustomerList />);
+  expect(await screen.findByText('Acme Corporation')).toBeInTheDocument();
   expect(screen.queryByTestId('skeleton')).not.toBeInTheDocument();
 });
 ```
@@ -810,13 +810,13 @@ it('should show content after loading', async () => {
 ```tsx
 it('should show empty state when no data', async () => {
   server.use(
-    http.get('/api/brokers', () => HttpResponse.json([]))
+    http.get('/api/customers', () => HttpResponse.json([]))
   );
 
-  render(<BrokerList />);
+  render(<CustomerList />);
 
-  expect(await screen.findByText(/no brokers found/i)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /create broker/i })).toBeInTheDocument();
+  expect(await screen.findByText(/no customers found/i)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /create customer/i })).toBeInTheDocument();
 });
 ```
 
@@ -824,12 +824,12 @@ it('should show empty state when no data', async () => {
 
 ```tsx
 it('should show edit button for admin users', () => {
-  render(<BrokerCard broker={mockBroker} userRole="admin" />);
+  render(<CustomerCard customer={mockCustomer} userRole="admin" />);
   expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
 });
 
 it('should not show edit button for regular users', () => {
-  render(<BrokerCard broker={mockBroker} userRole="user" />);
+  render(<CustomerCard customer={mockCustomer} userRole="user" />);
   expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
 });
 ```

@@ -43,27 +43,27 @@ Comprehensive guide to breaking features into thin vertical slices that deliver 
 
 ## Vertical vs Horizontal Slicing
 
-### Example: Broker Management Feature
+### Example: Customer Management Feature
 
 #### ❌ Horizontal Slicing (DON'T DO THIS)
 
 **Sprint 1: All UI**
-- Build broker list screen
-- Build broker detail screen
-- Build broker create form
-- Build broker edit form
+- Build customer list screen
+- Build customer detail screen
+- Build customer create form
+- Build customer edit form
 - **Problem:** Nothing works without backend!
 
 **Sprint 2: All APIs**
-- Build GET /brokers
-- Build GET /brokers/:id
-- Build POST /brokers
-- Build PUT /brokers/:id
-- Build DELETE /brokers/:id
+- Build GET /customers
+- Build GET /customers/:id
+- Build POST /customers
+- Build PUT /customers/:id
+- Build DELETE /customers/:id
 - **Problem:** Still can't test end-to-end!
 
 **Sprint 3: All Database**
-- Create broker table
+- Create customer table
 - Create indexes
 - Create migrations
 - **Problem:** Integration hell begins!
@@ -80,43 +80,43 @@ Comprehensive guide to breaking features into thin vertical slices that deliver 
 
 #### ✅ Vertical Slicing (DO THIS)
 
-**Sprint 1, Slice 1: View Broker List (Read-Only)**
-- UI: Broker list screen (table, pagination)
-- API: GET /brokers with filtering
-- DB: Broker table + sample data
-- **Value:** Users can see brokers!
+**Sprint 1, Slice 1: View Customer List (Read-Only)**
+- UI: Customer list screen (table, pagination)
+- API: GET /customers with filtering
+- DB: Customer table + sample data
+- **Value:** Users can see customers!
 - **Testable:** End-to-end integration test
 
-**Sprint 1, Slice 2: Create Broker**
-- UI: Create broker form (name, license, state)
-- API: POST /brokers with validation
-- DB: Insert broker record
-- Timeline: Log "Broker Created" event
-- **Value:** Users can add new brokers!
+**Sprint 1, Slice 2: Create Customer**
+- UI: Create customer form (name, email, region)
+- API: POST /customers with validation
+- DB: Insert customer record
+- Timeline: Log "Customer Created" event
+- **Value:** Users can add new customers!
 - **Testable:** Full create flow works
 
-**Sprint 2, Slice 3: View Broker 360**
-- UI: Broker detail screen
-- API: GET /brokers/:id
+**Sprint 2, Slice 3: View Customer 360**
+- UI: Customer detail screen
+- API: GET /customers/:id
 - DB: Join with related entities
 - Timeline: Display timeline events
-- **Value:** Users can see broker details!
+- **Value:** Users can see customer details!
 - **Testable:** Navigation from list to detail works
 
-**Sprint 2, Slice 4: Update Broker**
-- UI: Edit broker form (pre-filled)
-- API: PUT /brokers/:id
-- DB: Update broker record
-- Timeline: Log "Broker Updated" event with changes
+**Sprint 2, Slice 4: Update Customer**
+- UI: Edit customer form (pre-filled)
+- API: PUT /customers/:id
+- DB: Update customer record
+- Timeline: Log "Customer Updated" event with changes
 - **Value:** Users can fix incorrect data!
 - **Testable:** Full update flow works
 
-**Sprint 3, Slice 5: Delete Broker (Soft Delete)**
+**Sprint 3, Slice 5: Delete Customer (Soft Delete)**
 - UI: Delete button with confirmation
-- API: DELETE /brokers/:id (soft delete)
+- API: DELETE /customers/:id (soft delete)
 - DB: Update deleted_at timestamp
-- Timeline: Log "Broker Deleted" event
-- **Value:** Users can remove invalid brokers!
+- Timeline: Log "Customer Deleted" event
+- **Value:** Users can remove invalid customers!
 - **Testable:** Delete flow works, data preserved
 
 **Result:** Working features delivered incrementally every sprint
@@ -148,18 +148,18 @@ Most entities can be sliced by CRUD operations:
 
 For workflows, slice by state transitions:
 
-**Example: Submission Workflow**
+**Example: Order Workflow**
 
-States: Received → Triaging → ReadyForUWReview → InReview → Quoted → Bound
+States: Received → Validating → ReadyForProcessing → Processing → Completed
 
 **Slices:**
-- Slice 1: Receive submission (Received state)
-- Slice 2: Triage submission (Received → Triaging → ReadyForUWReview)
-- Slice 3: Underwriter reviews (ReadyForUWReview → InReview)
-- Slice 4: Generate quote (InReview → Quoted)
-- Slice 5: Bind policy (Quoted → Bound)
-- Slice 6: Handle declination (any state → Declined)
-- Slice 7: Handle withdrawal (any state → Withdrawn)
+- Slice 1: Receive order (Received state)
+- Slice 2: Validate order (Received → Validating → ReadyForProcessing)
+- Slice 3: Process order (ReadyForProcessing → Processing)
+- Slice 4: Complete order (Processing → Completed)
+- Slice 5: Archive completed order (Completed → Archived)
+- Slice 6: Handle cancellation (any state → Cancelled)
+- Slice 7: Handle hold (any state → OnHold)
 
 ---
 
@@ -167,12 +167,12 @@ States: Received → Triaging → ReadyForUWReview → InReview → Quoted → B
 
 Start simple, add complexity incrementally:
 
-**Example: Broker Search**
+**Example: Customer Search**
 
-- **Slice 1 (Simple):** Search by exact broker name
+- **Slice 1 (Simple):** Search by exact customer name
 - **Slice 2 (Better):** Search by partial name (contains)
-- **Slice 3 (Advanced):** Add license number search
-- **Slice 4 (Filters):** Add state filter
+- **Slice 3 (Advanced):** Add email search
+- **Slice 4 (Filters):** Add region filter
 - **Slice 5 (Polish):** Add status filter, sorting
 
 ---
@@ -181,10 +181,10 @@ Start simple, add complexity incrementally:
 
 Slice by user role or persona:
 
-**Example: Broker 360 Screen**
+**Example: Customer 360 Screen**
 
-- **Slice 1:** Distribution user view (basic broker info + timeline)
-- **Slice 2:** Underwriter view (add submission history)
+- **Slice 1:** Sales operations view (basic customer info + timeline)
+- **Slice 2:** Order operations view (add order history)
 - **Slice 3:** Relationship Manager view (add performance metrics)
 - **Slice 4:** Admin view (add audit log, delete capability)
 
@@ -194,11 +194,11 @@ Slice by user role or persona:
 
 Build happy path, then error cases:
 
-**Example: Create Broker**
+**Example: Create Customer**
 
-- **Slice 1:** Create broker with valid data (happy path)
+- **Slice 1:** Create customer with valid data (happy path)
 - **Slice 2:** Validation errors (required fields, format checks)
-- **Slice 3:** Business rule errors (duplicate license)
+- **Slice 3:** Business rule errors (duplicate email)
 - **Slice 4:** Permission errors (unauthorized user)
 - **Slice 5:** System errors (database unavailable)
 
@@ -212,9 +212,9 @@ Build happy path, then error cases:
 
 **Purpose:** Prove integration works before building full features
 
-**Example: Broker Management Walking Skeleton**
-- UI: Display "Hello, Brokers" text
-- API: GET /brokers returns `{"message": "Hello"}`
+**Example: Customer Management Walking Skeleton**
+- UI: Display "Hello, Customers" text
+- API: GET /customers returns `{"message": "Hello"}`
 - DB: Simple health check query
 
 **Value:** Confirms deployment pipeline, authentication, authorization all work
@@ -233,8 +233,8 @@ Build happy path, then error cases:
 - Add optional features
 - Implement full logic
 
-**Example: Broker Status**
-- Slice 1: All brokers are "Active" (hardcoded)
+**Example: Customer Status**
+- Slice 1: All customers are "Active" (hardcoded)
 - Slice 2: Add "Inactive" status with toggle
 - Slice 3: Add "Suspended" status with reason field
 - Slice 4: Add automated status changes based on rules
@@ -247,10 +247,10 @@ Build happy path, then error cases:
 
 **Purpose:** Prove the approach works for a concrete scenario
 
-**Example: Submission Workflow**
-- Tracer Bullet: One specific submission (General Liability for Restaurant)
+**Example: Order Workflow**
+- Tracer Bullet: One specific order (Starter Subscription for Small Business)
 - Build full flow for this case
-- Then generalize to other coverage types
+- Then generalize to other order types
 
 ---
 
@@ -264,22 +264,22 @@ Build happy path, then error cases:
 - Story 3: Build database schema
 
 ✅ **Good:**
-- Story 1: View broker list (UI + API + DB)
-- Story 2: Create broker (UI + API + DB)
+- Story 1: View customer list (UI + API + DB)
+- Story 2: Create customer (UI + API + DB)
 
 ---
 
 ### Mistake 2: Making Slices Too Large
 
 ❌ **Bad:**
-- Story 1: Complete broker management system
+- Story 1: Complete customer management system
 
 ✅ **Good:**
-- Story 1: View broker list
-- Story 2: Create broker
-- Story 3: View broker details
-- Story 4: Update broker
-- Story 5: Delete broker
+- Story 1: View customer list
+- Story 2: Create customer
+- Story 3: View customer details
+- Story 4: Update customer
+- Story 5: Delete customer
 
 **Rule of Thumb:** If a story takes more than 1-2 weeks, it's too large
 
@@ -288,26 +288,26 @@ Build happy path, then error cases:
 ### Mistake 3: Slicing by Component
 
 ❌ **Bad:**
-- Story 1: Broker header component
-- Story 2: Broker form component
-- Story 3: Broker table component
+- Story 1: Customer header component
+- Story 2: Customer form component
+- Story 3: Customer table component
 
 ✅ **Good:**
-- Story 1: View broker list (includes table component)
-- Story 2: Create broker (includes form component)
-- Story 3: View broker 360 (includes header component)
+- Story 1: View customer list (includes table component)
+- Story 2: Create customer (includes form component)
+- Story 3: View customer 360 (includes header component)
 
 ---
 
 ### Mistake 4: UI-Only or API-Only Stories
 
 ❌ **Bad:**
-- Story 1: Implement broker API endpoints
-- Story 2: Build broker UI screens
+- Story 1: Implement customer API endpoints
+- Story 2: Build customer UI screens
 
 ✅ **Good:**
-- Story 1: View broker list (UI + API + DB)
-- Story 2: Create broker (UI + API + DB)
+- Story 1: View customer list (UI + API + DB)
+- Story 2: Create customer (UI + API + DB)
 
 **Exception:** Infrastructure or refactoring stories may be horizontal, but feature stories should always be vertical
 
@@ -317,38 +317,38 @@ Build happy path, then error cases:
 
 ### Original Requirement
 
-> "As a Distribution Manager, I want to manage broker relationships including contacts, hierarchy, submissions, and performance metrics, so that I can optimize our broker network."
+> "As a Sales Operations Manager, I want to manage customer relationships including addresses, hierarchy, orders, and performance metrics, so that I can optimize our customer network."
 
 ### Step 1: Identify Core Entities
-- Broker
-- Contact
+- Customer
+- Address
 - Hierarchy
-- Submission
+- Order
 - Performance Metrics
 
 ### Step 2: Apply CRUD Pattern
 
-**Broker:**
-- S1: View broker list
-- S2: Create broker
-- S3: View broker 360
-- S4: Update broker
-- S5: Delete broker
+**Customer:**
+- S1: View customer list
+- S2: Create customer
+- S3: View customer 360
+- S4: Update customer
+- S5: Delete customer
 
-**Contact (Separate Epic):**
-- S6: View contacts for broker
-- S7: Add contact to broker
-- S8: Update contact
-- S9: Remove contact
+**Addresses (Separate Epic):**
+- S6: View addresses for customer
+- S7: Add address to customer
+- S8: Update address
+- S9: Remove address
 
 **Hierarchy (Separate Epic):**
-- S10: View broker hierarchy
-- S11: Assign parent broker
-- S12: View sub-brokers
+- S10: View customer hierarchy
+- S11: Assign parent customer
+- S12: View sub-customers
 
-**Submissions (Separate Epic):**
-- S13: View submissions for broker
-- S14: Link submission to broker
+**Orders (Separate Epic):**
+- S13: View orders for customer
+- S14: Link order to customer
 
 **Performance Metrics (Future Phase):**
 - Deferred - not MVP
@@ -356,15 +356,15 @@ Build happy path, then error cases:
 ### Step 3: Prioritize for MVP
 
 **MVP (Must Have):**
-- S1: View broker list ✓
-- S2: Create broker ✓
-- S3: View broker 360 ✓
-- S4: Update broker ✓
+- S1: View customer list ✓
+- S2: Create customer ✓
+- S3: View customer 360 ✓
+- S4: Update customer ✓
 
 **Phase 1 (Should Have):**
-- S5: Delete broker
-- S6: View contacts
-- S7: Add contact
+- S5: Delete customer
+- S6: View addresses
+- S7: Add address
 - S10: View hierarchy
 
 **Future (Nice to Have):**
@@ -373,14 +373,14 @@ Build happy path, then error cases:
 
 ---
 
-## Real-World Example: Broker CRUD
+## Real-World Example: Customer CRUD
 
-### Slice 1: View Broker List (Read)
+### Slice 1: View Customer List (Read)
 
 **What's Included:**
-- UI: Broker list screen with table
-- API: GET /brokers endpoint
-- DB: Broker table with sample data
+- UI: Customer list screen with table
+- API: GET /customers endpoint
+- DB: Customer table with sample data
 - Features: Pagination, sorting by name
 - Test: Integration test for list retrieval
 
@@ -391,10 +391,10 @@ Build happy path, then error cases:
 
 **Acceptance Criteria:**
 ```
-Given I navigate to /brokers
+Given I navigate to /customers
 When the page loads
-Then I see a table with columns: Name, License Number, State, Status
-And I see 20 brokers per page
+Then I see a table with columns: Name, Email, Region, Status
+And I see 20 customers per page
 And I can navigate to next/previous pages
 And I can sort by clicking column headers
 ```
@@ -403,57 +403,57 @@ And I can sort by clicking column headers
 
 ---
 
-### Slice 2: Create Broker (Create)
+### Slice 2: Create Customer (Create)
 
 **What's Included:**
-- UI: Create broker form (Name, License, State)
-- API: POST /brokers with validation
-- DB: Insert broker record
-- Timeline: Log "Broker Created" event
+- UI: Create customer form (Name, Email, Region)
+- API: POST /customers with validation
+- DB: Insert customer record
+- Timeline: Log "Customer Created" event
 - Test: Create flow end-to-end
 
 **What's Excluded (Defer):**
-- Contact management (Slice 6)
+- Address management (Slice 6)
 - Hierarchy assignment (Slice 10)
 - Bulk import (Phase 1)
 
 **Acceptance Criteria:**
 ```
-Given I'm on the broker list
-When I click "Add New Broker"
-Then I see a create form with fields: Name, License Number, State
+Given I'm on the customer list
+When I click "Add New Customer"
+Then I see a create form with fields: Name, Email, Region
 When I fill valid data and click Save
-Then the broker is created
-And I see success message "Broker created successfully"
-And I'm redirected to Broker 360 view
-And a timeline event "Broker Created" is logged
+Then the customer is created
+And I see success message "Customer created successfully"
+And I'm redirected to Customer 360 view
+And a timeline event "Customer Created" is logged
 ```
 
 **Estimate:** 3-5 days
 
 ---
 
-### Slice 3: View Broker 360 (Read Detail)
+### Slice 3: View Customer 360 (Read Detail)
 
 **What's Included:**
-- UI: Broker detail screen with tabs
-- API: GET /brokers/:id
-- DB: Fetch broker with related data
+- UI: Customer detail screen with tabs
+- API: GET /customers/:id
+- DB: Fetch customer with related data
 - Timeline: Display recent timeline events
 - Test: Navigation from list to detail
 
 **What's Excluded (Defer):**
-- Contacts tab (Slice 6)
-- Submissions tab (Epic 3)
+- Addresses tab (Slice 6)
+- Orders tab (Epic 3)
 - Performance metrics (Future)
 
 **Acceptance Criteria:**
 ```
-Given I'm on the broker list
-When I click on a broker name
-Then I see the Broker 360 screen showing:
-  - Broker name as page title
-  - Basic info: License Number, State, Status
+Given I'm on the customer list
+When I click on a customer name
+Then I see the Customer 360 screen showing:
+  - Customer name as page title
+  - Basic info: Email, Region, Status
   - Activity timeline with recent events
   - Edit and Delete action buttons
 ```
@@ -462,13 +462,13 @@ Then I see the Broker 360 screen showing:
 
 ---
 
-### Slice 4: Update Broker (Update)
+### Slice 4: Update Customer (Update)
 
 **What's Included:**
-- UI: Edit broker form (pre-populated)
-- API: PUT /brokers/:id
-- DB: Update broker record
-- Timeline: Log "Broker Updated" event with field changes
+- UI: Edit customer form (pre-populated)
+- API: PUT /customers/:id
+- DB: Update customer record
+- Timeline: Log "Customer Updated" event with field changes
 - Test: Update flow end-to-end
 
 **What's Excluded (Defer):**
@@ -478,49 +478,49 @@ Then I see the Broker 360 screen showing:
 
 **Acceptance Criteria:**
 ```
-Given I'm on Broker 360 screen
+Given I'm on Customer 360 screen
 When I click Edit button
 Then I see the edit form pre-filled with current values
-When I change Name from "Acme" to "Acme Insurance"
+When I change Name from "Acme" to "Acme Retail"
 And I click Save
-Then the broker is updated
-And I see success message "Broker updated successfully"
-And I'm redirected to Broker 360 view
-And a timeline event "Broker Updated" is logged showing:
+Then the customer is updated
+And I see success message "Customer updated successfully"
+And I'm redirected to Customer 360 view
+And a timeline event "Customer Updated" is logged showing:
   - Field: Name
   - Old Value: "Acme"
-  - New Value: "Acme Insurance"
+  - New Value: "Acme Retail"
 ```
 
 **Estimate:** 3-5 days
 
 ---
 
-### Slice 5: Delete Broker (Delete)
+### Slice 5: Delete Customer (Delete)
 
 **What's Included:**
 - UI: Delete button with confirmation modal
-- API: DELETE /brokers/:id (soft delete)
+- API: DELETE /customers/:id (soft delete)
 - DB: Set deleted_at timestamp
-- Timeline: Log "Broker Deleted" event
+- Timeline: Log "Customer Deleted" event
 - Test: Delete flow end-to-end
 
 **What's Excluded (Defer):**
 - Hard delete (Admin only, Phase 1)
-- Restore deleted broker (Phase 1)
+- Restore deleted customer (Phase 1)
 - Cascade delete prevention (Phase 1)
 
 **Acceptance Criteria:**
 ```
-Given I'm on Broker 360 screen
+Given I'm on Customer 360 screen
 When I click Delete button
-Then I see confirmation modal "Are you sure you want to delete this broker?"
+Then I see confirmation modal "Are you sure you want to delete this customer?"
 When I click Confirm
-Then the broker is soft deleted (deleted_at timestamp set)
-And I see success message "Broker deleted successfully"
-And I'm redirected to broker list
-And the deleted broker no longer appears in the list
-And a timeline event "Broker Deleted" is logged
+Then the customer is soft deleted (deleted_at timestamp set)
+And I see success message "Customer deleted successfully"
+And I'm redirected to customer list
+And the deleted customer no longer appears in the list
+And a timeline event "Customer Deleted" is logged
 ```
 
 **Estimate:** 2-3 days

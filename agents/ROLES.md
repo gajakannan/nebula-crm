@@ -50,7 +50,7 @@ This document provides a quick index of all agent roles. For detailed specificat
 **Scope:** Review auth/authz, security practices, auditability
 **Phase:** Phase B (design review) + Phase C (implementation review)
 **Key Outputs:** Security review reports, threat models, audit recommendations
-**Status:** SKILL.md, README.md, references/ (5 files) created; scripts optional
+**Status:** SKILL.md expanded (full workflow + severity model + deliverables), README.md, references/ (4 files), scripts/ created
 
 ---
 
@@ -70,13 +70,13 @@ This document provides a quick index of all agent roles. For detailed specificat
 **Scope:** Create API docs, README, runbooks
 **Phase:** Phase C (Implementation Mode) + ongoing
 **Key Outputs:** API documentation, README.md, runbooks, developer guides
-**Status:** SKILL.md, README.md, references/ (1 file) created; scripts optional
+**Status:** SKILL.md expanded (artifact workflows + quality gates + collaboration rules), README.md, references/ (1 file) created
 
 ### [Blogger](./blogger/SKILL.md) ✅ **COMPLETE**
 **Scope:** Publish dev logs, decisions, lessons learned
 **Phase:** All phases (continuous)
 **Key Outputs:** Blog posts, development logs, technical articles
-**Status:** SKILL.md, README.md, references/ (1 file) created; scripts optional
+**Status:** SKILL.md expanded (editorial workflow + safety guardrails + publishing quality gates), README.md, references/ (1 file) created
 
 ---
 
@@ -88,9 +88,9 @@ This document provides a quick index of all agent roles. For detailed specificat
 
 ---
 
-## Completion Status: 11/11 Agents Complete! 🎉
+## Completion Status: 11/11 Agents Complete
 
-All builder agent specifications are now complete and ready to use!
+All builder agent specifications are now complete and ready to use.
 
 ---
 

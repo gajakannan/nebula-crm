@@ -365,7 +365,6 @@ This glossary ensures consistent use of insurance terms in product requirements 
 
 The following terms are specific to the Nebula insurance CRM domain and must not appear in `agents/` (generic, reusable content). Parsed by `scripts/validate-genericness.py` to enforce the boundary policy defined in `BOUNDARY-POLICY.md`.
 
-- Nebula
 - Broker
 - MGA
 - Underwriter

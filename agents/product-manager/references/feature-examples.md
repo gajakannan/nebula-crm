@@ -89,7 +89,7 @@ As a medical office administrator, I want to schedule patient appointments and s
 
 **Scope & Boundaries:**
 - **In Scope:** Appointment booking, calendar integration, automated reminders (SMS/email), waitlist
-- **Out of Scope:** Billing, insurance verification, telemedicine (separate features)
+- **Out of Scope:** Billing, prescription management, telemedicine (separate features)
 
 **User Stories:**
 - S1: Book appointment for patient (select provider, date/time, reason)

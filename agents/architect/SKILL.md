@@ -1,6 +1,7 @@
 ---
-name: architect
-description: Design system architecture, data models, API contracts, and technical specifications. Use when starting Phase B (Architect/Tech Lead Mode) or when technical design decisions are needed.
+name: architecting
+description: "Designs system architecture, data models, API contracts, and technical specifications. Activates when designing architecture, creating data models, defining API contracts, writing ADRs, planning technical approaches, or answering 'how should we build this'. Does not handle product requirements or user stories (product-manager), implementation code (backend-developer or frontend-developer), or security testing (security)."
+allowed-tools: "Read Write Edit AskUserQuestion"
 ---
 
 # Architect Agent
@@ -39,6 +40,17 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
 - UI/UX design
 - Infrastructure provisioning (DevOps)
 - Security testing execution (Security Agent)
+
+## Degrees of Freedom
+
+| Area | Freedom | Guidance |
+|------|---------|----------|
+| Data model structure | **Low** | Follow entity specs exactly. Do not add/remove fields without user approval. |
+| API contract design | **Low** | Follow REST conventions in SOLUTION-PATTERNS.md. Endpoints must match OpenAPI spec format exactly. |
+| JSON Schema definitions | **Low** | Schemas must match data model precisely. No optional-by-default fields unless specified. |
+| ADR format and content | **Medium** | Use ADR template structure but adapt rationale depth to decision complexity. |
+| Technology trade-off analysis | **High** | Use judgment to evaluate alternatives, weigh pros/cons, and recommend approaches. |
+| NFR thresholds | **Medium** | Propose measurable targets based on context. User approves final values. |
 
 ## Phase Activation
 
@@ -142,168 +154,7 @@ Generic references in `agents/architect/references/` only. Solution-specific exa
 
 ## JSON Schema Validation Architecture
 
-**Cross-Tier Validation Strategy:**
-
-JSON Schema serves as the **single source of truth** for validation rules, shared between frontend and backend to ensure consistency.
-
-### Architecture Pattern
-
-```
-planning-mds/schemas/
-├── customer.schema.json          # Shared validation schema
-├── account.schema.json
-└── order.schema.json
-         ↓
-    ┌────┴────────────┐
-    ↓                 ↓
-Frontend           Backend
-(TypeScript)       (C# / .NET)
-    ↓                 ↓
-AJV Validator    NJsonSchema
-or RJSF          Validator
-```
-
-### Design Decisions
-
-**1. Schema Location:**
-- Store all JSON Schemas in `planning-mds/schemas/`
-- Frontend loads schemas from this location
-- Backend loads schemas from this location
-- Version control ensures frontend/backend stay in sync
-
-**2. Validation Points:**
-
-**Frontend:**
-- **Manual forms:** React Hook Form + AJV resolver
-- **Dynamic forms:** RJSF (auto-validates with JSON Schema)
-- **Why validate frontend?** Immediate user feedback, reduce server load
-
-**Backend:**
-- **API endpoints:** Validate all incoming requests with NJsonSchema
-- **Before domain logic:** Prevent invalid data from entering system
-- **Why validate backend?** Security (never trust client), data integrity
-
-**3. Integration with OpenAPI:**
-- OpenAPI 3.x uses JSON Schema for request/response bodies
-- Reuse JSON Schemas in OpenAPI `components/schemas` section
-- Single schema definition serves both validation and documentation
-
-### Example JSON Schema
-
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://your-app.com/schemas/customer.json",
-  "title": "Customer",
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 100,
-      "errorMessage": "Name is required and must be at most 100 characters"
-    },
-    "email": {
-      "type": "string",
-      "format": "email",
-      "errorMessage": "Invalid email address"
-    },
-    "phone": {
-      "type": "string",
-      "pattern": "^\\d{10}$",
-      "errorMessage": "Phone must be 10 digits"
-    },
-    "status": {
-      "type": "string",
-      "enum": ["Active", "Inactive"]
-    }
-  },
-  "required": ["name", "email", "status"],
-  "additionalProperties": false
-}
-```
-
-### Integration with OpenAPI
-
-```yaml
-# planning-mds/api/customers.yaml
-openapi: 3.0.0
-info:
-  title: Customer API
-  version: 1.0.0
-paths:
-  /api/customers:
-    post:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '../schemas/customer.schema.json'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '../schemas/customer.schema.json'
-        '400':
-          description: Validation Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-```
-
-### Validation Library Choices
-
-**Frontend:**
-- **AJV** - Industry standard JSON Schema validator for JavaScript/TypeScript
-- **RJSF** - React JSON Schema Form (includes validation + UI generation)
-- **@hookform/resolvers/ajv** - Integrates AJV with React Hook Form
-
-**Backend:**
-- **NJsonSchema** - .NET library for JSON Schema validation and code generation
-- Alternatives: Json.Schema.Net, Newtonsoft.Json.Schema
-
-### Type Generation
-
-**Frontend:**
-```bash
-# Generate TypeScript types from JSON Schema
-npx json-schema-to-typescript schemas/customer.schema.json > types/customer.ts
-```
-
-**Backend:**
-```csharp
-// NJsonSchema can generate C# classes from schemas
-var schema = await JsonSchema.FromFileAsync("schemas/customer.schema.json");
-var generator = new CSharpGenerator(schema);
-var code = generator.GenerateFile("Customer");
-```
-
-### Benefits
-
-✅ **Single Source of Truth** - One schema definition, validated consistently across tiers
-✅ **Type Safety** - Generate TypeScript and C# types from schemas
-✅ **API Documentation** - OpenAPI specs include validation rules
-✅ **Developer Experience** - Change schema once, frontend and backend update automatically
-✅ **Consistency** - Same validation errors on frontend and backend
-✅ **Maintainability** - Update validation rules in one place
-
-### Architectural Decision Record (ADR)
-
-Document this decision in `planning-mds/architecture/decisions/`:
-
-**ADR: Use JSON Schema for Cross-Tier Validation**
-- **Status:** Accepted
-- **Context:** Need consistent validation between TypeScript frontend and C# backend
-- **Decision:** Use JSON Schema as single source of truth for validation
-- **Consequences:**
-  - ✅ Consistency across tiers
-  - ✅ Reduced duplication
-  - ✅ TypeScript/C# type generation
-  - ❌ Additional tooling required (AJV, NJsonSchema)
-  - ❌ Learning curve for JSON Schema syntax
+JSON Schema serves as the single source of truth for cross-tier validation (frontend and backend). For full architecture details, schema examples, OpenAPI integration patterns, library choices, and type generation guides, see `agents/architect/references/json-schema-validation-architecture.md`.
 
 ## Input Contract
 
@@ -412,6 +263,16 @@ All outputs written to `planning-mds/INCEPTION.md` sections 4.x and supporting f
 | Threat Models | | | | | | ✅ |
 | Architecture Decisions (ADRs) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
+## Self-Validation (Feedback Loop)
+
+Before declaring work complete, verify each deliverable:
+1. Validate OpenAPI specs are syntactically correct (if tooling available)
+2. Validate JSON Schemas parse without errors
+3. Cross-check data model entities against API contracts — every entity with CRUD should have matching endpoints
+4. Cross-check JSON Schemas against OpenAPI request/response definitions — schemas must align
+5. If inconsistencies found → fix, re-validate
+6. Only declare Definition of Done when all cross-checks pass
+
 ## Definition of Done
 
 - Service boundaries clear
@@ -425,3 +286,20 @@ All outputs written to `planning-mds/INCEPTION.md` sections 4.x and supporting f
 - ADRs recorded for major decisions
 - Validation strategy documented (JSON Schema for both frontend and backend)
 - No TODOs remain
+
+## Troubleshooting
+
+### Schema Drift Between Frontend and Backend
+**Symptom:** Frontend and backend validate differently for the same entity.
+**Cause:** JSON Schemas not stored in shared location or updated independently.
+**Solution:** All schemas must live in `planning-mds/schemas/`. Both frontend (AJV) and backend (NJsonSchema) load from this single source. See `references/json-schema-validation-architecture.md`.
+
+### Missing ADR for Design Decision
+**Symptom:** Architecture decision made but not recorded, causing confusion later.
+**Cause:** Decision was made informally without documenting rationale and alternatives.
+**Solution:** Use `agents/templates/adr-template.md` for every non-trivial decision. Store in `planning-mds/architecture/decisions/`.
+
+### API Contract Doesn't Match Implementation
+**Symptom:** Backend endpoints diverge from OpenAPI spec.
+**Cause:** Spec was not updated when implementation changed, or backend invented endpoints not in spec.
+**Solution:** OpenAPI spec in `planning-mds/api/` is the contract. Backend must implement exactly per spec. Changes require architect approval and spec update first.

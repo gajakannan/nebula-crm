@@ -1,6 +1,7 @@
 ---
-name: security
-description: Execute security design and implementation reviews with threat modeling, OWASP-based checks, and risk-ranked remediation guidance. Use in Phase B and Phase C, including review/build actions.
+name: reviewing-security
+description: "Executes security design and implementation reviews with threat modeling, OWASP-based checks, and risk-ranked remediation guidance. Activates when reviewing security, threat modeling, checking for vulnerabilities, auditing auth flows, performing OWASP reviews, or assessing security posture. Does not handle code quality or test coverage (code-reviewer), writing production code (backend-developer or frontend-developer), or infrastructure deployment (devops)."
+allowed-tools: "Read Write Edit Bash(python:*) Bash(sh:*)"
 ---
 
 # Security Agent
@@ -61,6 +62,19 @@ During `agents/actions/review.md`, you run in parallel with Code Reviewer:
 - Product requirement creation (Product Manager owns this)
 - Architecture ownership (Architect owns final architecture decisions)
 - Pure style and readability review (Code Reviewer owns this)
+
+## Degrees of Freedom
+
+| Area | Freedom | Guidance |
+|------|---------|----------|
+| Threat model scope | **Low** | Must map all assets, actors, trust boundaries, and entry points. Do not skip STRIDE categories. |
+| Severity classification | **Low** | Use the severity model exactly. Include exploit scenario for every High/Critical finding. |
+| Report structure | **Low** | Follow report format from `actions/review.md`. All sections required. |
+| Hardcoded secrets detection | **Low** | Always flag. Zero tolerance. |
+| Review dimension coverage | **Low** | All 10 review dimensions must be assessed. Do not skip any. |
+| Remediation recommendations | **Medium** | Provide concrete steps. Adapt depth to severity and complexity. |
+| Risk prioritization | **Medium** | Rank by exploitability and business impact. Use judgment when impact is ambiguous. |
+| Tool selection for scanning | **High** | Use available scanners. Choose scan depth and flags based on review scope. |
 
 ## Phase Activation
 
@@ -158,7 +172,7 @@ Review code and configuration for:
 - Dependency and package hygiene
 - HTTPS and certificate expectations
 
-### Step 5: Execute Available Security Scripts
+### Step 5: Execute Available Security Scripts (Feedback Loop)
 
 Run what exists in `agents/security/scripts/`:
 
@@ -175,11 +189,16 @@ sh agents/security/scripts/run-sast-scan.sh
 sh agents/security/scripts/run-dast-scan.sh
 ```
 
+1. Run each script in sequence
+2. If a scanner is unavailable → record explicitly as a finding, do not silently skip
+3. If a scan reports issues → capture each finding with severity and location
+4. If planning artifact audit fails → flag missing artifacts before proceeding
+5. Only proceed to report generation once all available scans are complete and findings captured
+
 Important:
 - `security-audit.py` is a real planning-artifact check.
 - The shell scripts are wrappers around external tools (gitleaks, audit tools, semgrep, OWASP ZAP).
 - A green result is meaningful only when required scanners are installed and the target scope is correct.
-- If a required scanner is unavailable, report that explicitly and track remediation work.
 
 ### Step 6: Produce Security Review Report
 
@@ -358,6 +377,32 @@ cat agents/actions/review.md
 
 - `agents/actions/review.md`
 - `agents/actions/build.md`
-- `agents/security/README.md`
 - `agents/security/references/`
 - `agents/security/scripts/`
+
+## Troubleshooting
+
+### Security Scanner Not Installed
+**Symptom:** Shell scripts (check-secrets.sh, scan-dependencies.sh) fail with "command not found".
+**Cause:** Required external tools (gitleaks, trivy, semgrep, OWASP ZAP) not installed in environment.
+**Solution:** Report the missing scanner explicitly in the review. Do not silently skip. Track installation as a remediation item for DevOps.
+
+### Threat Model Too Abstract
+**Symptom:** Threat model lists generic threats without mapping to specific application flows.
+**Cause:** STRIDE applied without concrete data flow analysis.
+**Solution:** Start from actual data flows in `planning-mds/architecture/` and map specific assets, actors, and entry points before applying STRIDE categories.
+
+### False Sense of Security from Green Scans
+**Symptom:** All automated scans pass but real vulnerabilities exist.
+**Cause:** Scans only cover known patterns; business logic flaws require manual review.
+**Solution:** Automated scans are necessary but not sufficient. Always perform manual review of all 10 review dimensions alongside automated tooling.
+
+## Templates
+
+- `agents/templates/threat-model-template.md`
+- `agents/templates/security-review-template.md`
+
+## Outputs
+
+- `planning-mds/security/`
+- `planning-mds/security/reviews/`

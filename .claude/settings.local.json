@@ -19,7 +19,17 @@
       "Bash(python:*)",
       "Bash(PYTHONIOENCODING=utf-8 python:*)",
       "Bash(xargs:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "WebFetch(domain:resources.anthropic.com)",
+      "Bash(curl:*)",
+      "Bash(pip install:*)",
+      "Bash(for agent in ai-engineer architect backend-developer blogger code-reviewer devops frontend-developer product-manager quality-engineer security technical-writer)",
+      "Bash(do echo \"=== $agent/references/ ===\" ls -la \"/c/Users/gajap/sandbox/nebula-crm/agents/$agent/references/\")",
+      "Bash(git diff:*)",
+      "Bash(for d in /c/Users/gajap/sandbox/nebula-crm/agents/*/SKILL.md)",
+      "Bash(do wc -l \"$d\")",
+      "WebFetch(domain:leehanchung.github.io)",
+      "WebFetch(domain:websearchapi.ai)"
     ]
   }
 }

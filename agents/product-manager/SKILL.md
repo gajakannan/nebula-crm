@@ -1,6 +1,7 @@
 ---
-name: product-manager
-description: Define product requirements, user stories, acceptance criteria, and MVP scope. Use when starting Phase A (Product Manager Mode) or when product requirements need clarification or refinement.
+name: managing-product
+description: "Defines product requirements, user stories, acceptance criteria, and MVP scope. Activates when planning features, writing user stories, defining requirements, creating product specs, scoping MVPs, or answering 'what should we build'. Does not handle technical architecture, API design, database schema, or implementation decisions (architect)."
+allowed-tools: "Read Write Edit AskUserQuestion Bash(python:*)"
 ---
 
 # Product Manager Agent
@@ -38,6 +39,18 @@ Your responsibility is to define **WHAT** to build, not **HOW** to build it.
 - API contract details
 - Implementation timelines/estimates
 - Writing code or technical specs
+
+## Degrees of Freedom
+
+| Area | Freedom | Guidance |
+|------|---------|----------|
+| Business rules and domain logic | **Low** | Never invent. Always ask stakeholders via AskUserQuestion if unclear. |
+| Story format | **Low** | Follow story template exactly (As a / I want / So that + acceptance criteria). |
+| MVP vs future scoping | **Low** | Every feature must be explicitly tagged MVP or Future. No ambiguity. |
+| Feature decomposition | **Medium** | Follow vertical slicing guide but adapt slice thickness to feature complexity. |
+| Persona depth and detail | **Medium** | Use persona template. Adapt detail level to audience and project maturity. |
+| Screen specification detail | **Medium** | Specify component responsibilities and workflows. Adapt wireframe detail to project needs. |
+| Prioritization rationale | **High** | Use judgment to recommend priority based on user value, effort, and dependencies. |
 
 ## Phase Activation
 
@@ -146,6 +159,16 @@ Solution-specific references must live in:
 - Screens → `planning-mds/screens/` or `planning-mds/INCEPTION.md` (Section 3.5)
 - Workflows → `planning-mds/workflows/` or `planning-mds/INCEPTION.md` (Section 3.5)
 
+## Self-Validation (Feedback Loop)
+
+Before declaring work complete, verify deliverables:
+1. Run `python3 agents/product-manager/scripts/validate-stories.py` on each story file (if available)
+2. If validation fails → fix story format, re-validate
+3. Walk through each story — does every story have measurable acceptance criteria?
+4. If any AC is vague or untestable → rewrite, re-check
+5. Verify no story invents business rules not provided by stakeholders
+6. Only declare Definition of Done when all stories validate and trace to user needs
+
 ## Definition of Done
 
 - [ ] Vision + non-goals documented
@@ -153,3 +176,28 @@ Solution-specific references must live in:
 - [ ] Features/stories written with acceptance criteria
 - [ ] Screens specified
 - [ ] No TODOs remain
+
+## Troubleshooting
+
+### Unclear Business Rules
+**Symptom:** Requirements contain assumptions or invented logic not from stakeholders.
+**Cause:** Agent filled gaps instead of asking clarifying questions.
+**Solution:** Use `AskUserQuestion` to verify any business rule not explicitly stated. Never invent domain logic.
+
+### Stories Too Large
+**Symptom:** User stories span multiple screens or require multiple API endpoints.
+**Cause:** Story not vertically sliced thin enough.
+**Solution:** Consult `agents/product-manager/references/vertical-slicing-guide.md` and decompose into thinner end-to-end slices.
+
+### Scope Creep
+**Symptom:** Features keep expanding beyond MVP boundaries.
+**Cause:** Missing explicit non-goals or exclusion list.
+**Solution:** Define non-goals in INCEPTION.md Section 3.1 before writing stories. Every feature must be tagged MVP or Future.
+
+## Quick Start
+
+1. Read `planning-mds/INCEPTION.md`
+2. Define vision, personas, epics/features
+3. Write stories and acceptance criteria
+4. Specify screens and workflows
+5. Validate completeness

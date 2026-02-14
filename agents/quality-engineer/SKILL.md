@@ -1,6 +1,7 @@
 ---
-name: quality-engineer
-description: Plan and execute comprehensive testing strategy across all tiers. Use during Phase C (Implementation Mode) and ongoing quality assurance.
+name: testing-quality
+description: "Plans and executes comprehensive testing strategy across frontend, backend, and AI tiers. Activates when writing tests, testing features, setting up test infrastructure, checking coverage, running E2E tests, performance testing, or security scanning. Does not handle writing production code (backend-developer or frontend-developer), security design (security), or infrastructure deployment (devops)."
+allowed-tools: "Read Write Edit Bash(dotnet:*) Bash(npm:*) Bash(pytest:*) Bash(python:*) Bash(k6:*)"
 ---
 
 # Quality Engineer Agent
@@ -45,6 +46,19 @@ Your responsibility is to implement the **quality assurance layer** - tests that
 - Infrastructure provisioning (DevOps handles this)
 - Security design (Security Agent handles this, QE validates it)
 - Manual QA (we automate everything)
+
+## Degrees of Freedom
+
+| Area | Freedom | Guidance |
+|------|---------|----------|
+| Coverage threshold enforcement | **Low** | ≥80% for business logic is mandatory. Do not lower without approval. |
+| Test pyramid ratios | **Low** | 70% unit / 20% integration / 10% E2E. Do not invert. |
+| Security scan execution | **Low** | Run all available scanners. Never silently skip a scan. |
+| Test scenario selection | **Medium** | Derive from acceptance criteria. Add edge cases based on risk judgment. |
+| Test data and fixture design | **Medium** | Create realistic fixtures. Adapt data volume to test requirements. |
+| Performance test thresholds | **Medium** | Follow NFR targets. Propose thresholds for untargeted areas based on context. |
+| Test framework configuration | **High** | Use prescribed tools but configure reporters, parallelism, and timeouts based on project needs. |
+| Flaky test remediation approach | **High** | Use judgment to diagnose and fix non-determinism. |
 
 ## Phase Activation
 
@@ -192,313 +206,9 @@ Your responsibility is to implement the **quality assurance layer** - tests that
 
 ## Testing by Layer
 
-### Frontend Testing (experience/)
+For detailed code examples (unit tests, E2E tests, integration tests, load tests, accessibility tests) across all tiers, see `agents/quality-engineer/references/code-patterns.md` - Section: Testing by Layer.
 
-**Test Structure:**
-```
-experience/
-├── src/
-│   ├── components/
-│   │   └── CustomerCard.tsx
-│   └── pages/
-│       └── CustomerList.tsx
-└── tests/
-    ├── unit/
-    │   └── CustomerCard.test.tsx
-    ├── integration/
-    │   └── CustomerList.test.tsx
-    └── e2e/
-        └── customer-flows.spec.ts
-```
-
-**Coverage Target:** ≥80% for business logic components
-
-**Example Unit Test:**
-```typescript
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
-import { CustomerCard } from './CustomerCard';
-
-describe('CustomerCard', () => {
-  it('displays customer name and status', () => {
-    const customer = { id: '1', name: 'Test Customer', status: 'Active' };
-    render(<CustomerCard customer={customer} />);
-
-    expect(screen.getByText('Test Customer')).toBeInTheDocument();
-    expect(screen.getByText('Active')).toBeInTheDocument();
-  });
-
-  it('shows inactive badge for inactive customers', () => {
-    const customer = { id: '1', name: 'Test', status: 'Inactive' };
-    render(<CustomerCard customer={customer} />);
-
-    expect(screen.getByText('Inactive')).toHaveClass('badge-inactive');
-  });
-});
-```
-
-**Example E2E Test:**
-```typescript
-import { test, expect } from '@playwright/test';
-
-test('create customer flow', async ({ page }) => {
-  await page.goto('/customers');
-
-  // Click Create button
-  await page.getByRole('button', { name: 'Create Customer' }).click();
-
-  // Fill form
-  await page.getByLabel('Customer Name').fill('E2E Test Customer');
-  await page.getByLabel('Email').fill('e2e@example.com');
-  await page.getByLabel('Phone').fill('1234567890');
-
-  // Submit
-  await page.getByRole('button', { name: 'Save' }).click();
-
-  // Verify
-  await expect(page.getByText('Customer created successfully')).toBeVisible();
-  await expect(page.getByText('E2E Test Customer')).toBeVisible();
-});
-```
-
-**Example Accessibility Test:**
-```typescript
-import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
-
-test('customer form has no accessibility violations', async ({ page }) => {
-  await page.goto('/customers/new');
-
-  const results = await new AxeBuilder({ page }).analyze();
-
-  expect(results.violations).toEqual([]);
-});
-```
-
-### Backend Testing (engine/)
-
-**Test Structure:**
-```
-engine/
-├── src/
-│   └── MyApp.Domain/
-│       └── Entities/
-│           └── Customer.cs
-├── tests/
-    ├── MyApp.Domain.Tests/
-    │   └── CustomerTests.cs
-    ├── MyApp.Application.Tests/
-    │   └── CustomerServiceTests.cs
-    └── MyApp.Api.Tests/
-        └── CustomerEndpointTests.cs
-```
-
-**Coverage Target:** ≥80% for domain and application logic
-
-**Example Unit Test:**
-```csharp
-using Xunit;
-using FluentAssertions;
-
-public class CustomerTests
-{
-    [Fact]
-    public void Activate_ShouldSetStatusToActive()
-    {
-        // Arrange
-        var customer = new Customer { Status = CustomerStatus.Inactive };
-
-        // Act
-        customer.Activate();
-
-        // Assert
-        customer.Status.Should().Be(CustomerStatus.Active);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData(null)]
-    public void SetName_WithEmptyName_ShouldThrowException(string name)
-    {
-        // Arrange
-        var customer = new Customer();
-
-        // Act
-        var act = () => customer.SetName(name);
-
-        // Assert
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("Name cannot be empty");
-    }
-}
-```
-
-**Example Integration Test (with Testcontainers):**
-```csharp
-using Testcontainers.PostgreSql;
-using Microsoft.EntityFrameworkCore;
-using Xunit;
-
-public class CustomerRepositoryTests : IAsyncLifetime
-{
-    private PostgreSqlContainer _postgres;
-    private AppDbContext _context;
-    private CustomerRepository _repository;
-
-    public async Task InitializeAsync()
-    {
-        // Start real PostgreSQL container
-        _postgres = new PostgreSqlBuilder()
-            .WithImage("postgres:15")
-            .Build();
-        await _postgres.StartAsync();
-
-        // Create DbContext
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(_postgres.GetConnectionString())
-            .Options;
-        _context = new AppDbContext(options);
-        await _context.Database.MigrateAsync();
-
-        _repository = new CustomerRepository(_context);
-    }
-
-    [Fact]
-    public async Task AddAsync_ShouldPersistCustomer()
-    {
-        // Arrange
-        var customer = new Customer
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Customer",
-            Email = "test@example.com"
-        };
-
-        // Act
-        await _repository.AddAsync(customer);
-
-        // Assert
-        var saved = await _repository.GetByIdAsync(customer.Id);
-        saved.Should().NotBeNull();
-        saved!.Name.Should().Be("Test Customer");
-    }
-
-    public async Task DisposeAsync()
-    {
-        await _context.DisposeAsync();
-        await _postgres.DisposeAsync();
-    }
-}
-```
-
-**Example Load Test (k6):**
-```javascript
-import http from 'k6/http';
-import { check, sleep } from 'k6';
-
-export const options = {
-  stages: [
-    { duration: '1m', target: 50 },   // Ramp up to 50 users
-    { duration: '3m', target: 50 },   // Stay at 50 users
-    { duration: '1m', target: 100 },  // Spike to 100 users
-    { duration: '1m', target: 0 },    // Ramp down
-  ],
-  thresholds: {
-    http_req_duration: ['p(95)<500'], // 95% of requests < 500ms
-    http_req_failed: ['rate<0.01'],   // Error rate < 1%
-  },
-};
-
-export default function () {
-  const res = http.get('http://localhost:5000/api/customers');
-
-  check(res, {
-    'status is 200': (r) => r.status === 200,
-    'response time < 500ms': (r) => r.timings.duration < 500,
-  });
-
-  sleep(1);
-}
-```
-
-### AI/Neuron Testing (neuron/)
-
-**Test Structure:**
-```
-neuron/
-├── domain_agents/
-│   └── processor.py
-└── tests/
-    ├── test_processor_unit.py
-    ├── test_processor_integration.py
-    └── test_processor_evaluation.py
-```
-
-**Coverage Target:** ≥80% for agent logic
-
-**Example Unit Test (Mocked LLM):**
-```python
-from unittest.mock import Mock, patch
-import pytest
-
-@patch('neuron.models.claude.ClaudeClient.generate')
-def test_processor_classifies_record(mock_generate):
-    # Mock LLM response
-    mock_generate.return_value = {
-        "content": "Priority: Medium\nScore: 75\nReasoning: Standard criteria met"
-    }
-
-    # Test agent
-    agent = ProcessorAgent()
-    result = agent.analyze_record({
-        "category": "Standard",
-        "value": 50000
-    })
-
-    assert result["priority"] == "Medium"
-    assert result["score"] == 75
-    mock_generate.assert_called_once()
-```
-
-**Example Evaluation Test:**
-```python
-import pytest
-
-@pytest.fixture
-def golden_dataset():
-    return [
-        {
-            "input": {"category": "Standard", "value": 50000},
-            "expected_priority": "Medium",
-            "expected_score_range": (60, 80)
-        },
-        {
-            "input": {"category": "Priority", "value": 100000},
-            "expected_priority": "High",
-            "expected_score_range": (80, 100)
-        },
-    ]
-
-def test_processor_accuracy(golden_dataset):
-    agent = ProcessorAgent(use_mock=True)
-    correct = 0
-
-    for case in golden_dataset:
-        result = agent.analyze_record(case["input"])
-
-        if result["priority"] == case["expected_priority"]:
-            correct += 1
-
-        score_in_range = (
-            case["expected_score_range"][0]
-            <= result["score"]
-            <= case["expected_score_range"][1]
-        )
-        assert score_in_range, f"Score {result['score']} out of range"
-
-    accuracy = correct / len(golden_dataset)
-    assert accuracy >= 0.85, f"Accuracy {accuracy} below threshold"
-```
+Coverage targets: ≥80% for business logic (all tiers).
 
 ## Input Contract
 
@@ -598,18 +308,18 @@ def test_processor_accuracy(golden_dataset):
 - Refactor code and test (Refactor)
 - Repeat for all scenarios
 
-### 5. Run Tests Locally
-- Run unit tests (fast feedback)
-- Run integration tests
-- Run E2E tests
-- Check coverage
+### 5. Run & Validate (Feedback Loop)
+1. Run unit tests locally
+2. If tests fail → debug failure, fix test or flag code defect, rerun
+3. Run integration tests
+4. If tests fail → fix, rerun
+5. Run E2E tests
+6. If tests fail → fix, rerun
+7. Check coverage meets ≥80% threshold
+8. If coverage below threshold → identify untested paths, add tests, recheck
+9. Only proceed to quality checks when all tests pass and coverage meets target
 
-### 6. Fix Failing Tests
-- Debug failures
-- Update code or test as needed
-- Ensure tests are deterministic (no flaky tests)
-
-### 7. Run Quality Checks
+### 6. Run Quality Checks
 - Code coverage (≥80%)
 - Security scans (Trivy)
 - Accessibility tests
@@ -622,249 +332,80 @@ def test_processor_accuracy(golden_dataset):
 
 ## Best Practices
 
-### Test Pyramid
-```
-      /\
-     /  \  10% E2E (Slow, expensive)
-    /----\
-   /      \  20% Integration (Medium)
-  /--------\
- /__________\  70% Unit (Fast, cheap)
-```
-
-**Why:**
-- Unit tests are fast (< 1s), give immediate feedback
-- Integration tests verify contracts (< 10s)
-- E2E tests verify full flows but are slow (< 1min)
-
-### Test Naming Convention
-```typescript
-// Good: Descriptive test names
-describe('CustomerService', () => {
-  it('creates customer with valid data', () => {});
-  it('throws error when email is invalid', () => {});
-  it('activates inactive customer', () => {});
-});
-
-// Bad: Non-descriptive names
-describe('CustomerService', () => {
-  it('test1', () => {});
-  it('works', () => {});
-});
-```
-
-### Arrange-Act-Assert Pattern
-```csharp
-[Fact]
-public void TestMethod()
-{
-    // Arrange - Set up test data and dependencies
-    var customer = new Customer { Name = "Test" };
-    var service = new CustomerService();
-
-    // Act - Execute the method under test
-    var result = service.Activate(customer);
-
-    // Assert - Verify the outcome
-    result.Should().BeTrue();
-    customer.Status.Should().Be(CustomerStatus.Active);
-}
-```
-
-### Test Isolation
-```typescript
-// Good: Each test is independent
-describe('CustomerList', () => {
-  let queryClient: QueryClient;
-
-  beforeEach(() => {
-    // Fresh setup for each test
-    queryClient = new QueryClient();
-  });
-
-  it('test 1', () => {
-    // Uses fresh queryClient
-  });
-
-  it('test 2', () => {
-    // Uses fresh queryClient, independent of test 1
-  });
-});
-```
-
-### Mock External Dependencies
-```typescript
-// Mock API calls in frontend tests
-import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
-
-const server = setupServer(
-  http.get('/api/customers', () => {
-    return HttpResponse.json([{ id: '1', name: 'Mock Customer' }]);
-  })
-);
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
-```
-
-### Test Data Builders
-```csharp
-// Good: Test data builder for reusable fixtures
-public class CustomerBuilder
-{
-    private string _name = "Default Customer";
-    private string _email = "default@example.com";
-    private CustomerStatus _status = CustomerStatus.Active;
-
-    public CustomerBuilder WithName(string name)
-    {
-        _name = name;
-        return this;
-    }
-
-    public CustomerBuilder WithEmail(string email)
-    {
-        _email = email;
-        return this;
-    }
-
-    public Customer Build() => new Customer
-    {
-        Id = Guid.NewGuid(),
-        Name = _name,
-        Email = _email,
-        Status = _status
-    };
-}
-
-// Usage
-var customer = new CustomerBuilder()
-    .WithName("Test Customer")
-    .WithEmail("test@example.com")
-    .Build();
-```
+Follow the Test Pyramid (70% unit, 20% integration, 10% E2E), Arrange-Act-Assert pattern, and test isolation principles. For detailed code examples of all best practices (Test Pyramid, Naming Conventions, AAA Pattern, Test Isolation, Mocking, Test Data Builders), see `agents/quality-engineer/references/code-patterns.md` - Section: Best Practices.
 
 ## CI/CD Integration
 
-### GitHub Actions Example
-```yaml
-name: Tests
-
-on: [push, pull_request]
-
-jobs:
-  frontend-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-      - run: npm ci
-      - run: npm run test:unit
-      - run: npm run test:e2e
-      - run: npm run test:a11y
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-
-  backend-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-dotnet@v3
-      - run: dotnet test /p:CollectCoverage=true
-      - run: dotnet test --filter Category=Integration
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-
-  ai-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-      - run: pip install -r requirements.txt
-      - run: pytest tests/ --cov=neuron --cov-report=xml
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-
-  security-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          severity: 'CRITICAL,HIGH'
-
-  quality-gate:
-    needs: [frontend-tests, backend-tests, ai-tests]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check coverage
-        run: |
-          if [ "$COVERAGE" -lt 80 ]; then
-            echo "Coverage below 80%"
-            exit 1
-          fi
-```
+For the full GitHub Actions workflow YAML (frontend, backend, AI test jobs, security scan, quality gate), see `agents/quality-engineer/references/code-patterns.md` - Section: CI/CD Integration.
 
 ## Common Patterns
 
-### Testing Error Scenarios
-```typescript
-it('shows error message when API fails', async () => {
-  // Mock API error
-  server.use(
-    http.get('/api/customers', () => {
-      return new HttpResponse(null, { status: 500 });
-    })
-  );
+For code examples of common test patterns (Testing Error Scenarios, Testing Async Operations, Parametrized Tests), see `agents/quality-engineer/references/code-patterns.md` - Section: Common Patterns.
 
-  render(<CustomerList />);
+## Quick Reference
 
-  await waitFor(() => {
-    expect(screen.getByText('Failed to load customers')).toBeInTheDocument();
-  });
-});
-```
+### Frontend (experience/)
 
-### Testing Async Operations
-```csharp
-[Fact]
-public async Task GetCustomerAsync_ShouldReturnCustomer()
-{
-    // Arrange
-    var customer = new Customer { Id = Guid.NewGuid() };
-    await _repository.AddAsync(customer);
+| Type | Tool | Command |
+|------|------|---------|
+| **Unit/Component** | Vitest + React Testing Library | `npm test` |
+| **Integration** | Vitest + MSW | `npm run test:integration` |
+| **E2E** | Playwright | `npx playwright test` |
+| **Accessibility** | @axe-core/playwright | `npm run test:a11y` |
+| **Performance** | Lighthouse CI | `npm run lighthouse` |
+| **Coverage** | Vitest | `npm run test:coverage` |
 
-    // Act
-    var result = await _repository.GetByIdAsync(customer.Id);
+### Backend (engine/)
 
-    // Assert
-    result.Should().NotBeNull();
-    result!.Id.Should().Be(customer.Id);
-}
-```
+| Type | Tool | Command |
+|------|------|---------|
+| **Unit** | xUnit + FluentAssertions | `dotnet test` |
+| **Integration** | xUnit + WebApplicationFactory | `dotnet test --filter Category=Integration` |
+| **Database** | xUnit + Testcontainers | `dotnet test --filter Category=Database` |
+| **API** | Bruno CLI | `bru run --env dev` |
+| **Load** | k6 | `k6 run load-test.js` |
+| **Coverage** | Coverlet | `dotnet test /p:CollectCoverage=true` |
 
-### Parametrized Tests
-```csharp
-[Theory]
-[InlineData("test@example.com", true)]
-[InlineData("invalid-email", false)]
-[InlineData("", false)]
-[InlineData(null, false)]
-public void ValidateEmail_ShouldReturnExpectedResult(string email, bool expected)
-{
-    var isValid = EmailValidator.Validate(email);
-    isValid.Should().Be(expected);
-}
-```
+### AI/Neuron (neuron/)
+
+| Type | Tool | Command |
+|------|------|---------|
+| **Unit** | pytest | `pytest tests/` |
+| **Integration** | pytest + FastAPI TestClient | `pytest tests/integration/` |
+| **Evaluation** | pytest + custom metrics | `pytest tests/evaluation/` |
+| **Performance** | pytest-benchmark | `pytest tests/ --benchmark-only` |
+| **Coverage** | pytest-cov | `pytest --cov=neuron --cov-report=html` |
+
+### Security (Cross-Cutting)
+
+| Type | Tool | Command |
+|------|------|---------|
+| **Vulnerabilities** | Trivy | `trivy fs .` |
+| **DAST** | OWASP ZAP | `docker run -t owasp/zap2docker-stable zap-baseline.py -t http://localhost` |
+| **SAST** | SonarQube Community | `dotnet sonarscanner begin && dotnet build && dotnet sonarscanner end` |
+| **Secrets** | Gitleaks | `gitleaks detect --source .` |
+
+## Troubleshooting
+
+### Flaky Tests
+**Symptom:** Tests pass locally but fail intermittently in CI.
+**Cause:** Tests depend on timing, shared state, or external services.
+**Solution:** Ensure test isolation (fresh setup per test). Remove `sleep()` calls - use `waitFor` or polling. Use Testcontainers for database tests instead of shared instances.
+
+### Coverage Below Threshold
+**Symptom:** CI quality gate blocks merge due to coverage below 80%.
+**Cause:** New code added without corresponding tests, or tests don't exercise business logic paths.
+**Solution:** Run `dotnet test /p:CollectCoverage=true` (backend) or `npm run test:coverage` (frontend) locally. Focus coverage on domain and application layers, not infrastructure.
+
+### E2E Tests Slow or Timing Out
+**Symptom:** Playwright tests take too long or fail with timeout errors.
+**Cause:** Tests waiting for elements that haven't loaded, or too many E2E tests (should be 10% of pyramid).
+**Solution:** Use `await page.waitForSelector()` instead of fixed delays. Keep E2E tests to critical flows only. Move detailed scenario testing to integration level with MSW.
 
 ## References
 
 Generic quality engineering best practices:
+- `agents/quality-engineer/references/code-patterns.md` - **Code examples for all tiers, CI/CD, common patterns, best practices**
 - `agents/quality-engineer/references/testing-best-practices.md`
 - `agents/quality-engineer/references/e2e-testing-guide.md`
 - `agents/quality-engineer/references/performance-testing-guide.md`

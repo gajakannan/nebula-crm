@@ -55,7 +55,7 @@ python3 -m py_compile $(rg --files agents scripts planning-mds | rg '\.py$')
 
 For new agent roles:
 1. Add `agents/<role>/SKILL.md`.
-2. Add `agents/<role>/README.md`.
+2. Add supporting `references/`, `scripts/`, or `assets/` as needed.
 3. Add role references in role/action index docs.
 
 For new actions:

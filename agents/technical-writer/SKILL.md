@@ -1,7 +1,13 @@
 ---
 name: writing-documentation
 description: "Produces accurate, audience-specific documentation for APIs, runbooks, and developer guides. Activates when writing documentation, documenting APIs, creating runbooks, updating READMEs, writing developer guides, or documenting features. Does not handle blog posts or devlogs (blogger), writing production code (backend-developer or frontend-developer), or security reviews (security)."
-allowed-tools: "Read Write Edit Bash(rg:*) Bash(ls:*)"
+compatibility: ["manual-orchestration-contract"]
+metadata:
+  allowed-tools: "Read Write Edit Bash(rg:*) Bash(ls:*)"
+  version: "2.1.0"
+  author: "Nebula Framework Team"
+  tags: ["documentation", "runbook", "api-docs"]
+  last_updated: "2026-02-14"
 ---
 
 # Technical Writer Agent

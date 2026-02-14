@@ -1,7 +1,13 @@
 ---
 name: developing-backend
 description: "Implements backend services, APIs, data access, and domain logic using C# .NET and Clean Architecture. Activates when building APIs, implementing endpoints, creating entities, writing backend code, adding migrations, or implementing business logic. Does not handle frontend UI (frontend-developer), AI/LLM features (ai-engineer), infrastructure or Docker (devops), or architecture design (architect)."
-allowed-tools: "Read Write Edit Bash(dotnet:*) Bash(python:*)"
+compatibility: ["manual-orchestration-contract"]
+metadata:
+  allowed-tools: "Read Write Edit Bash(dotnet:*) Bash(python:*)"
+  version: "2.1.0"
+  author: "Nebula Framework Team"
+  tags: ["backend", "dotnet", "implementation"]
+  last_updated: "2026-02-14"
 ---
 
 # Backend Developer Agent

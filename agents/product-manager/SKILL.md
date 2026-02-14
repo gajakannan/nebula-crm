@@ -1,7 +1,13 @@
 ---
 name: managing-product
 description: "Defines product requirements, user stories, acceptance criteria, and MVP scope. Activates when planning features, writing user stories, defining requirements, creating product specs, scoping MVPs, or answering 'what should we build'. Does not handle technical architecture, API design, database schema, or implementation decisions (architect)."
-allowed-tools: "Read Write Edit AskUserQuestion Bash(python:*)"
+compatibility: ["manual-orchestration-contract"]
+metadata:
+  allowed-tools: "Read Write Edit AskUserQuestion Bash(python:*)"
+  version: "2.1.0"
+  author: "Nebula Framework Team"
+  tags: ["product", "requirements", "planning"]
+  last_updated: "2026-02-14"
 ---
 
 # Product Manager Agent

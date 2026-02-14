@@ -1,7 +1,13 @@
 ---
 name: reviewing-security
 description: "Executes security design and implementation reviews with threat modeling, OWASP-based checks, and risk-ranked remediation guidance. Activates when reviewing security, threat modeling, checking for vulnerabilities, auditing auth flows, performing OWASP reviews, or assessing security posture. Does not handle code quality or test coverage (code-reviewer), writing production code (backend-developer or frontend-developer), or infrastructure deployment (devops)."
-allowed-tools: "Read Write Edit Bash(python:*) Bash(sh:*)"
+compatibility: ["manual-orchestration-contract"]
+metadata:
+  allowed-tools: "Read Write Edit Bash(python:*) Bash(sh:*)"
+  version: "2.1.0"
+  author: "Nebula Framework Team"
+  tags: ["security", "owasp", "threat-modeling"]
+  last_updated: "2026-02-14"
 ---
 
 # Security Agent

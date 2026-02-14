@@ -1,7 +1,13 @@
 ---
 name: developing-frontend
 description: "Implements frontend UI components, forms, state management, and API integration using React, TypeScript, and Tailwind CSS. Activates when building UI, creating components, implementing screens, adding forms, integrating APIs, or fixing frontend issues. Does not handle backend APIs or business logic (backend-developer), AI features (ai-engineer), infrastructure (devops), or UI/UX design decisions (architect)."
-allowed-tools: "Read Write Edit Bash(npm:*) Bash(npx:*) Bash(python:*)"
+compatibility: ["manual-orchestration-contract"]
+metadata:
+  allowed-tools: "Read Write Edit Bash(npm:*) Bash(npx:*) Bash(python:*)"
+  version: "2.1.0"
+  author: "Nebula Framework Team"
+  tags: ["frontend", "react", "typescript"]
+  last_updated: "2026-02-14"
 ---
 
 # Frontend Developer Agent

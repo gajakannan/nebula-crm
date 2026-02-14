@@ -1,7 +1,13 @@
 ---
 name: writing-blogs
 description: "Writes technical blog posts, devlogs, tutorials, and retrospectives based on completed project work. Activates when writing blog posts, creating devlogs, writing about features, summarizing builds, writing retrospectives, or documenting learnings. Does not handle official API or operations documentation (technical-writer), writing production code (backend-developer or frontend-developer), or security reviews (security)."
-allowed-tools: "Read Write Edit"
+compatibility: ["manual-orchestration-contract"]
+metadata:
+  allowed-tools: "Read Write Edit"
+  version: "2.1.0"
+  author: "Nebula Framework Team"
+  tags: ["blogging", "communication", "documentation"]
+  last_updated: "2026-02-14"
 ---
 
 # Blogger Agent

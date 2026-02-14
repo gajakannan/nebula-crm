@@ -126,6 +126,7 @@ See **[actions/README.md](./actions/README.md)** for complete action flow docume
 The framework is opinionated about delivery practices and provides stack-specific references in some agent guides. In this repo, the default references assume a modern .NET + React + PostgreSQL stack. If you adopt a different stack, keep the agent roles but replace the stack-specific reference guides and examples with your own.
 
 See `agents/TECH-STACK-ADAPTATION.md` for a concise adaptation guide.
+See `agents/SKILL-CHANGELOG.md` for skill definition change history.
 
 ---
 

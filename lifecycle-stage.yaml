@@ -13,12 +13,14 @@ stages:
     description: Framework scaffolding phase before solution implementation starts (active stage for the initial public preview).
     required_gates:
       - boundary_genericness
+      - skill_regression
       - infra_non_strict
 
   planning:
     description: Planning artifacts are being authored; implementation remains placeholder.
     required_gates:
       - boundary_genericness
+      - skill_regression
       - api_contract
       - solution_contract
       - infra_non_strict
@@ -28,6 +30,7 @@ stages:
     description: Application code/runtime is being built; strict operational/security gates apply.
     required_gates:
       - boundary_genericness
+      - skill_regression
       - api_contract
       - solution_contract
       - infra_strict
@@ -37,6 +40,7 @@ stages:
     description: Public release hardening stage with strict gates and review evidence.
     required_gates:
       - boundary_genericness
+      - skill_regression
       - api_contract
       - solution_contract
       - infra_strict
@@ -48,6 +52,12 @@ gates:
     command:
       - python3
       - scripts/validate-genericness.py
+
+  skill_regression:
+    description: Validate skill metadata, structure quality, and routing regressions.
+    command:
+      - python3
+      - scripts/run-skill-regression.py
 
   api_contract:
     description: Validate OpenAPI structural and canonical error-contract rules.

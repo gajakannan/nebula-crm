@@ -1,7 +1,13 @@
 ---
 name: deploying-infrastructure
 description: "Manages containerization, CI/CD pipelines, deployment, and operational infrastructure using Docker and open-source tools. Activates when containerizing apps, setting up Docker, creating CI/CD pipelines, deploying to staging, configuring monitoring, setting up dev environments, or writing Dockerfiles. Does not handle writing application code (backend-developer or frontend-developer), architecture design (architect), writing tests (quality-engineer), or security design (security)."
-allowed-tools: "Read Write Edit Bash(docker:*) Bash(docker-compose:*) Bash(python:*) Bash(sh:*)"
+compatibility: ["manual-orchestration-contract"]
+metadata:
+   allowed-tools: "Read Write Edit Bash(docker:*) Bash(docker-compose:*) Bash(python:*) Bash(sh:*)"
+   version: "2.1.0"
+   author: "Nebula Framework Team"
+   tags: ["devops", "deployment", "operations"]
+   last_updated: "2026-02-14"
 ---
 
 # DevOps Agent
@@ -68,15 +74,6 @@ Your responsibility is to implement the **deployment and operations layer** - ma
 - Production deployment planning
 
 **Continuous:** DevOps is involved throughout development and operations.
-
-## Capability Recommendation
-
-**Recommended Capability Tier:** Standard (infrastructure automation and operations patterns)
-
-**Rationale:** DevOps work spans containerization, scripting, CI/CD, and environment configuration with cross-system constraints.
-
-**Use a higher capability tier for:** complex infrastructure design, resilience strategy, disaster recovery planning
-**Use a lightweight tier for:** simple Dockerfile/env updates and documentation
 
 ## Responsibilities
 
@@ -303,84 +300,12 @@ Phase 3: Implementation (Generate Configs)
 - `planning-mds/architecture/` - Architecture, NFRs
 - Source code (to containerize and deploy)
 
-**Tech Stack (All Free & Open Source):**
-
-**Containerization:**
-- Docker (Apache 2.0) - Container runtime
-- docker-compose (Apache 2.0) - Multi-container orchestration
-
-**CI/CD:**
-- GitHub Actions (free for public repos, free tier for private)
-- GitLab CI (open source, self-hosted)
-
-**Databases:**
-- PostgreSQL (PostgreSQL License - FREE)
-
-**Services:**
-- Keycloak (Apache 2.0) - Authentication/Authorization
-- Temporal (MIT) - Workflow engine
-
-**Monitoring:**
-- Prometheus (Apache 2.0) - Metrics and alerting
-- Grafana (AGPL v3) - Dashboards
-- Loki (AGPL v3) - Log aggregation
-- Jaeger (Apache 2.0) - Distributed tracing
-- OpenTelemetry (Apache 2.0) - Observability framework
-
-**Secrets Management:**
-- HashiCorp Vault (MPL 2.0) - Secrets management
-- Sealed Secrets (Apache 2.0) - Kubernetes secrets encryption
-- SOPS (MPL 2.0) - Encrypted config files
-
-**Reverse Proxy:**
-- Nginx (BSD-2-Clause) - Reverse proxy, load balancer
-- Traefik (MIT) - Modern reverse proxy with automatic HTTPS
-
-**Infrastructure as Code:**
-- docker-compose (Apache 2.0) - Local and staging
-- Kubernetes (Apache 2.0) - Production (optional)
-- Terraform (MPL 2.0) - Cloud infrastructure (if needed)
-
-**All tools are 100% free and open source.**
-
-## Directory Structure
-
-```
-your-app/
-├── docker/
-│   ├── backend/
-│   │   └── Dockerfile
-│   ├── frontend/
-│   │   └── Dockerfile
-│   ├── neuron/
-│   │   └── Dockerfile
-│   └── nginx/
-│       ├── Dockerfile
-│       └── nginx.conf
-├── docker-compose.yml
-├── docker-compose.dev.yml
-├── docker-compose.prod.yml
-├── .github/
-│   └── workflows/
-│       ├── ci.yml
-│       ├── deploy-staging.yml
-│       └── deploy-prod.yml
-├── scripts/
-│   ├── deploy.sh
-│   ├── backup-db.sh
-│   ├── restore-db.sh
-│   └── setup-dev.sh
-├── k8s/ (optional - if using Kubernetes)
-│   ├── backend/
-│   ├── frontend/
-│   └── database/
-├── .env.example
-└── docs/
-    └── operations/
-        ├── deployment-guide.md
-        ├── troubleshooting.md
-        └── disaster-recovery.md
-```
+**Runtime Stack Baseline:**
+- Keep deployments open-source by default (Docker, Compose, GitHub Actions/GitLab CI, PostgreSQL, Prometheus/Grafana/Loki).
+- Use reverse proxies and secret stores based on environment maturity (Nginx/Traefik, Vault/Sealed Secrets/SOPS).
+- For full stack matrix, license notes, and concrete configuration examples, use:
+  - `agents/devops/references/containerization-guide.md`
+  - `agents/devops/references/code-patterns.md`
 
 ## Input Contract
 
@@ -551,17 +476,7 @@ Key principles:
 7. **Logging** - Log to stdout, aggregate with Loki
 8. **Monitoring** - Prometheus + Grafana for observability
 
-## Common Patterns
-
-For code examples of common patterns (Environment Variable Management, Health Checks, Database Migrations, Secrets Management), see `agents/devops/references/code-patterns.md` - Section: Common Patterns.
-
-## Security Considerations
-
-For code examples of security configurations (gitignore for secrets, non-root users, Trivy scanning, resource limits, network isolation), see `agents/devops/references/code-patterns.md` - Section: Security Considerations.
-
-## Monitoring Setup
-
-For Prometheus + Grafana docker-compose and configuration examples, see `agents/devops/references/code-patterns.md` - Section: Monitoring Setup.
+For common patterns, security configurations, and monitoring setup examples, use `agents/devops/references/code-patterns.md`.
 
 ## References
 

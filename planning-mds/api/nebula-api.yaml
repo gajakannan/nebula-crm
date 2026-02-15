@@ -1,30 +1,57 @@
 openapi: 3.0.3
 info:
   title: Nebula API
-  version: 0.2.0
+  version: 0.3.0
   description: |
     Public baseline API contract for the Nebula insurance CRM reference implementation.
+    Version 0.3.0 adds Dashboard (F0) endpoints and Task CRUD.
 servers:
   - url: https://api.nebula.local
 security:
   - bearerAuth: []
+tags:
+  - name: Brokers
+    description: Broker CRUD operations
+  - name: Contacts
+    description: Contact CRUD operations
+  - name: Accounts
+    description: Account operations
+  - name: MGAs
+    description: MGA operations
+  - name: Programs
+    description: Program operations
+  - name: Submissions
+    description: Submission workflow operations
+  - name: Renewals
+    description: Renewal workflow operations
+  - name: Dashboard
+    description: Dashboard widget data endpoints (F0)
+  - name: Tasks
+    description: Task CRUD for My Tasks widget and Task Center
+  - name: Timeline
+    description: Activity timeline event queries
+
 paths:
+  # ──────────────────────────────────────────────────────────────
+  # Broker endpoints (existing)
+  # ──────────────────────────────────────────────────────────────
   /api/brokers:
     get:
       operationId: listBrokers
       summary: List brokers
+      tags: [Brokers]
       parameters:
         - $ref: "#/components/parameters/BrokerSearchQuery"
         - $ref: "#/components/parameters/BrokerStatusFilter"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
       responses:
         "200":
-          description: Broker list
+          description: Paginated broker list
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Broker"
+                $ref: "#/components/schemas/PaginatedBrokerList"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -34,6 +61,7 @@ paths:
     post:
       operationId: createBroker
       summary: Create broker
+      tags: [Brokers]
       requestBody:
         required: true
         content:
@@ -62,6 +90,7 @@ paths:
     get:
       operationId: getBrokerById
       summary: Get broker by id
+      tags: [Brokers]
       responses:
         "200":
           description: Broker details
@@ -80,6 +109,7 @@ paths:
     put:
       operationId: updateBroker
       summary: Update broker
+      tags: [Brokers]
       requestBody:
         required: true
         content:
@@ -104,6 +134,7 @@ paths:
     delete:
       operationId: deleteBroker
       summary: Delete broker
+      tags: [Brokers]
       responses:
         "204":
           description: Broker deleted
@@ -116,10 +147,14 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  # ──────────────────────────────────────────────────────────────
+  # Contact endpoints (existing)
+  # ──────────────────────────────────────────────────────────────
   /api/contacts:
     get:
       operationId: listContacts
       summary: List contacts
+      tags: [Contacts]
       responses:
         "200":
           description: Contact list
@@ -138,6 +173,7 @@ paths:
     post:
       operationId: createContact
       summary: Create contact
+      tags: [Contacts]
       requestBody:
         required: true
         content:
@@ -158,10 +194,14 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  # ──────────────────────────────────────────────────────────────
+  # Account, MGA, Program endpoints (existing)
+  # ──────────────────────────────────────────────────────────────
   /api/accounts:
     get:
       operationId: listAccounts
       summary: List accounts
+      tags: [Accounts]
       responses:
         "200":
           description: Account list
@@ -182,6 +222,7 @@ paths:
     get:
       operationId: listMgas
       summary: List MGAs
+      tags: [MGAs]
       responses:
         "200":
           description: MGA list
@@ -202,6 +243,7 @@ paths:
     get:
       operationId: listPrograms
       summary: List programs
+      tags: [Programs]
       responses:
         "200":
           description: Program list
@@ -218,12 +260,16 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
+  # ──────────────────────────────────────────────────────────────
+  # Workflow transition endpoints (existing)
+  # ──────────────────────────────────────────────────────────────
   /api/submissions/{submissionId}/transitions:
     parameters:
       - $ref: "#/components/parameters/SubmissionId"
     get:
       operationId: listSubmissionTransitions
       summary: List submission transitions
+      tags: [Submissions]
       responses:
         "200":
           description: Submission transition history
@@ -242,6 +288,7 @@ paths:
     post:
       operationId: transitionSubmission
       summary: Transition submission workflow state
+      tags: [Submissions]
       requestBody:
         required: true
         content:
@@ -270,6 +317,7 @@ paths:
     get:
       operationId: listRenewalTransitions
       summary: List renewal transitions
+      tags: [Renewals]
       responses:
         "200":
           description: Renewal transition history
@@ -288,6 +336,7 @@ paths:
     post:
       operationId: transitionRenewal
       summary: Transition renewal workflow state
+      tags: [Renewals]
       requestBody:
         required: true
         content:
@@ -310,12 +359,331 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
 
+  # ──────────────────────────────────────────────────────────────
+  # Dashboard endpoints (NEW — F0)
+  # ──────────────────────────────────────────────────────────────
+  /api/dashboard/kpis:
+    get:
+      operationId: getDashboardKpis
+      summary: Get dashboard KPI metrics
+      description: |
+        Returns aggregated KPI metrics for the dashboard: active broker count,
+        open submission count, renewal rate (trailing 90 days), and average
+        turnaround days (trailing 90 days). All values are ABAC-scoped to the
+        authenticated user's permissions.
+      tags: [Dashboard]
+      responses:
+        "200":
+          description: KPI metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardKpis"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/dashboard/pipeline:
+    get:
+      operationId: getDashboardPipeline
+      summary: Get pipeline summary counts
+      description: |
+        Returns submission and renewal pipeline counts grouped by non-terminal
+        status. Used by the Pipeline Summary (mini-Kanban) widget.
+        All counts are ABAC-scoped.
+      tags: [Dashboard]
+      responses:
+        "200":
+          description: Pipeline summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardPipeline"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/dashboard/pipeline/{entityType}/{status}/items:
+    parameters:
+      - name: entityType
+        in: path
+        required: true
+        description: Entity type for pipeline items.
+        schema:
+          type: string
+          enum: [submission, renewal]
+      - name: status
+        in: path
+        required: true
+        description: Workflow status to filter by.
+        schema:
+          type: string
+    get:
+      operationId: getDashboardPipelineItems
+      summary: Get pipeline mini-cards for a status
+      description: |
+        Returns up to 5 mini-card items for a specific pipeline status, sorted
+        by days-in-status descending (longest stuck first). Lazy-loaded by the
+        frontend on hover/click of a pipeline pill. ABAC-scoped.
+      tags: [Dashboard]
+      responses:
+        "200":
+          description: Pipeline mini-card items
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                  - totalCount
+                properties:
+                  items:
+                    type: array
+                    maxItems: 5
+                    items:
+                      $ref: "#/components/schemas/PipelineMiniCard"
+                  totalCount:
+                    type: integer
+                    description: Total items in this status (for "View all N" link).
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/dashboard/nudges:
+    get:
+      operationId: getDashboardNudges
+      summary: Get nudge cards
+      description: |
+        Returns up to 3 prioritized nudge cards for the authenticated user.
+        Priority order: overdue tasks > stale submissions (>5 days in status) >
+        upcoming renewals (within 14 days). All results are ABAC-scoped and
+        filtered by task ownership.
+      tags: [Dashboard]
+      responses:
+        "200":
+          description: Nudge cards
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - nudges
+                properties:
+                  nudges:
+                    type: array
+                    maxItems: 3
+                    items:
+                      $ref: "#/components/schemas/NudgeCard"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ──────────────────────────────────────────────────────────────
+  # Task endpoints (NEW — F0 + F5)
+  # ──────────────────────────────────────────────────────────────
+  /api/my/tasks:
+    get:
+      operationId: getMyTasks
+      summary: Get tasks assigned to the authenticated user
+      description: |
+        Returns tasks assigned to the current user (matched by Keycloak subject),
+        filtered to Open and InProgress status, sorted by DueDate ascending
+        (soonest first, nulls last). Used by the My Tasks dashboard widget.
+      tags: [Tasks]
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of tasks to return.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        "200":
+          description: User's tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - tasks
+                  - totalCount
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TaskSummary"
+                  totalCount:
+                    type: integer
+                    description: Total open/in-progress tasks (for "View all" link).
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/tasks:
+    post:
+      operationId: createTask
+      summary: Create a task
+      tags: [Tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCreateRequest"
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/tasks/{taskId}:
+    parameters:
+      - $ref: "#/components/parameters/TaskId"
+    get:
+      operationId: getTaskById
+      summary: Get task by id
+      tags: [Tasks]
+      responses:
+        "200":
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      operationId: updateTask
+      summary: Update task
+      tags: [Tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdateRequest"
+      responses:
+        "200":
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteTask
+      summary: Soft delete task
+      tags: [Tasks]
+      responses:
+        "204":
+          description: Task deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ──────────────────────────────────────────────────────────────
+  # Timeline endpoints (NEW — dashboard activity feed)
+  # ──────────────────────────────────────────────────────────────
+  /api/timeline/events:
+    get:
+      operationId: listTimelineEvents
+      summary: List timeline events
+      description: |
+        Returns recent ActivityTimelineEvents filtered by entity type.
+        Used by the Broker Activity Feed dashboard widget and by entity 360 views.
+        All results are ABAC-scoped.
+      tags: [Timeline]
+      parameters:
+        - name: entityType
+          in: query
+          required: true
+          description: Filter events by entity type.
+          schema:
+            type: string
+            enum: [Broker, Account, Submission, Renewal, Task]
+        - name: entityId
+          in: query
+          required: false
+          description: Filter events for a specific entity.
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of events to return.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Timeline events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimelineEvent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   parameters:
     BrokerSearchQuery:
       name: q
@@ -357,6 +725,33 @@ components:
       schema:
         type: string
         format: uuid
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Page number (1-based).
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      required: false
+      description: Items per page.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
   responses:
     BadRequest:
       description: Invalid input
@@ -388,7 +783,9 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ProblemDetails"
+
   schemas:
+    # ── Error Contract ──────────────────────────────────────────
     ProblemDetails:
       type: object
       description: RFC 7807 problem details payload with Nebula-specific extension fields.
@@ -432,6 +829,7 @@ components:
             items:
               type: string
 
+    # ── Broker Schemas ──────────────────────────────────────────
     Broker:
       type: object
       description: Broker profile.
@@ -453,6 +851,19 @@ components:
           type: string
         status:
           type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     BrokerCreateRequest:
       type: object
@@ -494,6 +905,30 @@ components:
         phone:
           type: string
 
+    PaginatedBrokerList:
+      type: object
+      description: Paginated list of brokers.
+      required:
+        - data
+        - page
+        - pageSize
+        - totalCount
+        - totalPages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Broker"
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalCount:
+          type: integer
+        totalPages:
+          type: integer
+
+    # ── Contact Schemas ─────────────────────────────────────────
     Contact:
       type: object
       description: Contact record.
@@ -539,6 +974,7 @@ components:
         phone:
           type: string
 
+    # ── Account / MGA / Program Schemas ─────────────────────────
     Account:
       type: object
       description: Insured account profile.
@@ -590,6 +1026,7 @@ components:
           type: string
           format: uuid
 
+    # ── Workflow Schemas ────────────────────────────────────────
     WorkflowTransitionRequest:
       type: object
       description: Request to transition workflow state.
@@ -626,6 +1063,344 @@ components:
           type: string
         reason:
           type: string
+        occurredAt:
+          type: string
+          format: date-time
+
+    # ── Dashboard Schemas (NEW) ─────────────────────────────────
+    DashboardKpis:
+      type: object
+      description: Aggregated KPI metrics for the dashboard.
+      required:
+        - activeBrokers
+        - openSubmissions
+        - renewalRate
+        - avgTurnaroundDays
+      properties:
+        activeBrokers:
+          type: integer
+          description: Count of brokers with Status=Active, ABAC-scoped.
+          example: 142
+        openSubmissions:
+          type: integer
+          description: Count of submissions in non-terminal status, ABAC-scoped.
+          example: 38
+        renewalRate:
+          type: number
+          format: double
+          nullable: true
+          description: |
+            Percentage of renewals reaching Bound out of all renewals
+            that exited the pipeline in trailing 90 days. Null if no data.
+          example: 72.5
+        avgTurnaroundDays:
+          type: number
+          format: double
+          nullable: true
+          description: |
+            Mean calendar days from Submission.CreatedAt to first terminal
+            state transition, trailing 90 days. Null if no data.
+          example: 4.2
+
+    DashboardPipeline:
+      type: object
+      description: Pipeline summary counts grouped by status.
+      required:
+        - submissions
+        - renewals
+      properties:
+        submissions:
+          type: array
+          description: Submission pipeline status counts (non-terminal only).
+          items:
+            $ref: "#/components/schemas/PipelineStatusCount"
+        renewals:
+          type: array
+          description: Renewal pipeline status counts (non-terminal only).
+          items:
+            $ref: "#/components/schemas/PipelineStatusCount"
+
+    PipelineStatusCount:
+      type: object
+      description: Count of entities in a specific workflow status.
+      required:
+        - status
+        - count
+        - colorGroup
+      properties:
+        status:
+          type: string
+          description: Workflow status label.
+          example: WaitingOnBroker
+        count:
+          type: integer
+          minimum: 0
+          example: 5
+        colorGroup:
+          type: string
+          description: UI color group for the status pill.
+          enum: [intake, triage, waiting, review, decision]
+
+    PipelineMiniCard:
+      type: object
+      description: Compact item card for pipeline popover.
+      required:
+        - entityId
+        - entityName
+        - daysInStatus
+      properties:
+        entityId:
+          type: string
+          format: uuid
+        entityName:
+          type: string
+          description: Account or Broker name.
+          example: Acme Corp
+        amount:
+          type: number
+          format: double
+          nullable: true
+          description: Premium estimate (submissions) or null (renewals).
+          example: 45000
+        daysInStatus:
+          type: integer
+          minimum: 0
+          description: Calendar days since last transition to current status.
+          example: 12
+        assignedUserInitials:
+          type: string
+          maxLength: 2
+          description: Two-character initials of assigned user.
+          example: JM
+        assignedUserDisplayName:
+          type: string
+          description: Full display name (for tooltip).
+          example: John Miller
+
+    NudgeCard:
+      type: object
+      description: A prioritized action prompt for the dashboard.
+      required:
+        - nudgeType
+        - title
+        - description
+        - linkedEntityType
+        - linkedEntityId
+        - linkedEntityName
+        - urgencyValue
+        - ctaLabel
+      properties:
+        nudgeType:
+          type: string
+          enum: [OverdueTask, StaleSubmission, UpcomingRenewal]
+        title:
+          type: string
+          description: Nudge card title.
+          example: Follow up with Acme Insurance
+        description:
+          type: string
+          description: Urgency context.
+          example: 3 days overdue
+        linkedEntityType:
+          type: string
+          description: Type of linked entity for CTA navigation.
+          example: Broker
+        linkedEntityId:
+          type: string
+          format: uuid
+        linkedEntityName:
+          type: string
+          description: Display name for context.
+          example: Acme Insurance
+        urgencyValue:
+          type: integer
+          description: |
+            Days overdue (OverdueTask), days stuck (StaleSubmission),
+            or days until renewal (UpcomingRenewal).
+          example: 3
+        ctaLabel:
+          type: string
+          description: Call-to-action button label.
+          example: Review Now
+
+    # ── Task Schemas (NEW) ──────────────────────────────────────
+    Task:
+      type: object
+      description: Task entity.
+      required:
+        - id
+        - title
+        - status
+        - priority
+        - assignedTo
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [Open, InProgress, Done]
+        priority:
+          type: string
+          enum: [Low, Normal, High, Urgent]
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        assignedTo:
+          type: string
+          description: Keycloak subject of assigned user.
+        linkedEntityType:
+          type: string
+          nullable: true
+        linkedEntityId:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    TaskSummary:
+      type: object
+      description: Compact task representation for dashboard widget.
+      required:
+        - id
+        - title
+        - status
+        - dueDate
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        status:
+          type: string
+          enum: [Open, InProgress]
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        linkedEntityType:
+          type: string
+          nullable: true
+        linkedEntityId:
+          type: string
+          format: uuid
+          nullable: true
+        linkedEntityName:
+          type: string
+          nullable: true
+          description: Resolved display name of linked entity.
+        isOverdue:
+          type: boolean
+          description: True if DueDate < today and status is not Done.
+
+    TaskCreateRequest:
+      type: object
+      description: Payload to create a task.
+      required:
+        - title
+        - assignedTo
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 2000
+        priority:
+          type: string
+          enum: [Low, Normal, High, Urgent]
+          default: Normal
+        dueDate:
+          type: string
+          format: date
+        assignedTo:
+          type: string
+          description: Keycloak subject of user to assign.
+        linkedEntityType:
+          type: string
+        linkedEntityId:
+          type: string
+          format: uuid
+
+    TaskUpdateRequest:
+      type: object
+      description: Payload to update a task.
+      required: []
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 2000
+        status:
+          type: string
+          enum: [Open, InProgress, Done]
+        priority:
+          type: string
+          enum: [Low, Normal, High, Urgent]
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        assignedTo:
+          type: string
+
+    # ── Timeline Schemas (NEW) ──────────────────────────────────
+    TimelineEvent:
+      type: object
+      description: Activity timeline event for the activity feed.
+      required:
+        - id
+        - entityType
+        - entityId
+        - eventType
+        - occurredAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        entityType:
+          type: string
+          description: Type of entity this event relates to.
+          example: Broker
+        entityId:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          description: Machine-readable event type.
+          example: BrokerCreated
+        eventDescription:
+          type: string
+          description: Human-readable event summary.
+          example: New broker added by Sarah Chen
+        entityName:
+          type: string
+          description: Resolved name of the related entity.
+          example: Pacific Reinsurance
+        actorDisplayName:
+          type: string
+          description: Display name of the user who performed the action.
+          example: Sarah Chen
         occurredAt:
           type: string
           format: date-time

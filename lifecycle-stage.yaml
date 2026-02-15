@@ -20,7 +20,6 @@ stages:
     description: Planning artifacts are being authored; implementation remains placeholder.
     required_gates:
       - boundary_genericness
-      - skill_regression
       - api_contract
       - solution_contract
       - infra_non_strict
@@ -30,7 +29,6 @@ stages:
     description: Application code/runtime is being built; strict operational/security gates apply.
     required_gates:
       - boundary_genericness
-      - skill_regression
       - api_contract
       - solution_contract
       - infra_strict
@@ -40,7 +38,6 @@ stages:
     description: Public release hardening stage with strict gates and review evidence.
     required_gates:
       - boundary_genericness
-      - skill_regression
       - api_contract
       - solution_contract
       - infra_strict

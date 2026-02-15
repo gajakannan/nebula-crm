@@ -148,6 +148,7 @@ Status: This repository is currently focused on the agent builder framework. Neb
 **Note:** Features are written as separate markdown files in `planning-mds/features/` directory using the feature template (`agents/templates/feature-template.md`). Each feature includes: business objective, scope, success metrics, and links to related stories.
 
 **MVP Features:**
+- [F0: Dashboard](features/F0-dashboard.md) - Draft ready
 - [F1: Broker & MGA Relationship Management](features/F1-broker-relationship-management.md) - Draft ready
 - F2: Account 360 & Activity Timeline - Planned
 - F3: Submission Intake Workflow - Planned
@@ -158,6 +159,13 @@ Status: This repository is currently focused on the agent builder framework. Neb
 ### 3.4 MVP Features and Stories (vertical-slice friendly)
 
 **Note:** User stories are written as separate markdown files organized by feature in `planning-mds/stories/{feature-name}/` directories using the story template (`agents/templates/story-template.md`). Each story includes: description, acceptance criteria, edge cases, roles, and audit/timeline requirements.
+
+**MVP Stories (Feature F0: Dashboard):**
+- [S1: View Key Metrics Cards](stories/F0-dashboard/S1-view-key-metrics-cards.md) - Draft ready
+- [S2: View Pipeline Summary (Mini-Kanban)](stories/F0-dashboard/S2-view-pipeline-summary.md) - Draft ready
+- [S3: View My Tasks and Reminders](stories/F0-dashboard/S3-view-my-tasks-and-reminders.md) - Draft ready
+- [S4: View Broker Activity Feed](stories/F0-dashboard/S4-view-broker-activity-feed.md) - Draft ready
+- [S5: View Nudge Cards](stories/F0-dashboard/S5-view-nudge-cards.md) - Draft ready
 
 **MVP Stories (Feature F1: Broker Relationship Management):**
 - [S1: Create Broker](stories/F1-broker-relationship-management/S1-create-broker.md) - Draft ready
@@ -175,6 +183,7 @@ Reference examples also live under `planning-mds/examples/stories/`.
 ### 3.5 Screen list (MVP)
 
 - Navigation Shell
+- Dashboard
 - Broker List
 - Broker 360
 - Task Center (optional MVP)
@@ -182,6 +191,7 @@ Reference examples also live under `planning-mds/examples/stories/`.
 
 Screen baseline details:
 - Navigation Shell: authenticated app shell, role-aware navigation, global search entry, notifications placeholder.
+- Dashboard: role-aware landing screen with five widgets — nudge cards (dismissible action prompts for time-sensitive items), KPI metrics cards, pipeline summary (mini-Kanban with status pills and expandable card previews), my tasks & reminders, and broker activity feed. All widgets enforce ABAC scope and degrade gracefully when upstream entities are unavailable.
 - Broker List: sortable/filterable list, quick search, create action, status tags.
 - Broker 360: profile header, contacts, hierarchy/program links, immutable timeline panel.
 - Task Center: assigned tasks, due dates, simple status states, reminder hooks.
@@ -191,11 +201,33 @@ Screen baseline details:
 
 ## 4) Phase B — Architect Spec (Public Baseline)
 
+**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved. Ready for Phase C implementation.
+
 This section defines the build-ready technical baseline for the reference implementation.
+
+**Architecture Decision Records:** See `planning-mds/architecture/decisions/` for detailed ADRs:
+- [ADR-001](architecture/decisions/ADR-001-json-schema-validation.md) — JSON Schema Validation
+- [ADR-Auth](architecture/decisions/ADR-Authentication-Strategy.md) — Authentication Strategy (Keycloak)
+- [ADR-Token](architecture/decisions/ADR-Auth-Token-Storage.md) — Auth Token Storage (Hybrid)
+- [ADR-002](architecture/decisions/ADR-002-dashboard-data-aggregation.md) — Dashboard Data Aggregation (per-widget endpoints)
+- [ADR-003](architecture/decisions/ADR-003-task-entity-nudge-engine.md) — Task Entity & Nudge Engine
+- [ADR-004](architecture/decisions/ADR-004-frontend-dashboard-widget-architecture.md) — Frontend Dashboard Widget Architecture
+
+**Data Model Supplement:** See `planning-mds/architecture/data-model.md` for Task entity, dashboard indexes, and query patterns.
 
 ### 4.1 Service boundaries
 
 - Architecture shape: modular monolith (single deployable) with clean module boundaries and internal APIs.
+- **Dashboard module (F0):**
+  - Owns dashboard-specific read endpoints (KPIs, pipeline summary, nudges).
+  - Reads across BrokerRelationship, Submission, Renewal, TaskManagement, and TimelineAudit modules.
+  - No owned entities — purely a query/aggregation layer.
+  - See [ADR-002](architecture/decisions/ADR-002-dashboard-data-aggregation.md) for per-widget endpoint design.
+- **TaskManagement module (F0 + F5):**
+  - Owns the Task entity (CRUD + status transitions).
+  - Provides `GET /api/my/tasks` for dashboard and Task Center.
+  - All Task mutations generate ActivityTimelineEvent records.
+  - See [ADR-003](architecture/decisions/ADR-003-task-entity-nudge-engine.md) for entity design.
 - BrokerRelationship module:
   - Owns Broker, Contact, MGA, Program relationship mappings.
   - Handles broker/contact CRUD, hierarchy links, broker search.
@@ -210,12 +242,10 @@ This section defines the build-ready technical baseline for the reference implem
   - Tracks outreach and renewal-specific lifecycle.
 - TimelineAudit module:
   - Owns ActivityTimelineEvent and WorkflowTransition append-only records.
-  - Provides timeline query/read APIs.
+  - Provides timeline query/read APIs (including `GET /api/timeline/events` for dashboard activity feed).
 - IdentityAuthorization module:
   - Validates Keycloak tokens and resolves subject attributes.
   - Enforces Casbin ABAC policies at API/application boundaries.
-
-(MVP may be a modular monolith with clean boundaries.)
 
 ### 4.2 Data model (detailed)
 
@@ -247,6 +277,12 @@ Core entities (minimum baseline):
 - Renewal
   - Id (uuid), AccountId, BrokerId, SubmissionId (nullable), CurrentStatus, RenewalDate
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy
+- **Task** (new — required by Dashboard F0 and Task Center F5)
+  - Id (uuid), Title, Description (nullable), Status (Open/InProgress/Done), Priority (Low/Normal/High/Urgent)
+  - DueDate (nullable), AssignedTo (Keycloak subject)
+  - LinkedEntityType (nullable), LinkedEntityId (nullable) — polymorphic link to Broker/Submission/Renewal/Account
+  - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, CompletedAt (nullable), IsDeleted
+  - See [data-model.md](architecture/data-model.md) for full table definition, indexes, and audit requirements
 - UserProfile
   - Subject (Keycloak sub), Email, DisplayName, Department, Region, RolesJson
   - CreatedAt, UpdatedAt
@@ -338,6 +374,20 @@ MVP endpoint pattern examples:
 - POST `/api/submissions/{submissionId}/transitions`
 - GET `/api/renewals/{renewalId}/transitions`
 - POST `/api/renewals/{renewalId}/transitions`
+
+Dashboard endpoints (F0 — per-widget, see [ADR-002](architecture/decisions/ADR-002-dashboard-data-aggregation.md)):
+- GET `/api/dashboard/kpis` — KPI metrics (active brokers, open subs, renewal rate, avg turnaround)
+- GET `/api/dashboard/pipeline` — Pipeline summary counts by status
+- GET `/api/dashboard/pipeline/{entityType}/{status}/items` — Lazy-loaded mini-cards (max 5)
+- GET `/api/dashboard/nudges` — Prioritized nudge cards (max 3)
+- GET `/api/my/tasks` — Tasks assigned to authenticated user
+- GET `/api/timeline/events?entityType=Broker&limit=20` — Broker activity feed
+
+Task CRUD endpoints (F0 + F5):
+- POST `/api/tasks` — Create task
+- GET `/api/tasks/{taskId}` — Get task
+- PUT `/api/tasks/{taskId}` — Update task
+- DELETE `/api/tasks/{taskId}` — Soft delete task
 
 Error contract:
 - All non-success responses return RFC 7807 `ProblemDetails` with `type`, `title`, `status`, plus extension fields `code`, `traceId`, and optional `detail`/`errors`.

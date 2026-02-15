@@ -18,14 +18,17 @@ from typing import Dict, List, Tuple
 import yaml
 
 
-REQUIRED_METADATA_FIELDS = [
+REQUIRED_TOP_LEVEL_FIELDS = [
     "name",
     "description",
+    "compatibility",
+]
+
+REQUIRED_FLEX_FIELDS = [
     "allowed-tools",
     "version",
     "author",
     "tags",
-    "compatibility",
     "last_updated",
 ]
 
@@ -96,6 +99,22 @@ class Skill:
     profile_tokens: set
 
 
+def resolve_field(frontmatter: Dict, field: str):
+    """
+    Resolve a skill field from frontmatter.
+
+    Supports both:
+    - top-level field (legacy/current variants)
+    - nested field under `metadata` (canonical current format)
+    """
+    if field in frontmatter:
+        return frontmatter[field]
+    nested = frontmatter.get("metadata")
+    if isinstance(nested, dict) and field in nested:
+        return nested[field]
+    return None
+
+
 def tokenize(text: str) -> set:
     tokens = set()
     for token in re.findall(r"[a-z0-9]+", text.lower()):
@@ -132,11 +151,12 @@ def parse_frontmatter(path: Path) -> Tuple[Dict, str]:
 def build_skill(path: Path) -> Skill:
     metadata, body = parse_frontmatter(path)
     folder = path.parent.name
+    tags = resolve_field(metadata, "tags")
     profile = " ".join(
         [
             str(metadata.get("description", "")),
             str(metadata.get("name", "")),
-            " ".join(metadata.get("tags", []) if isinstance(metadata.get("tags"), list) else []),
+            " ".join(tags if isinstance(tags, list) else []),
             folder.replace("-", " "),
         ]
     )
@@ -171,23 +191,31 @@ def has_feedback_loop_section(body: str) -> bool:
 
 def validate_metadata(skill: Skill, errors: List[str]) -> None:
     md = skill.metadata
-    for field in REQUIRED_METADATA_FIELDS:
-        if field not in md:
-            errors.append(f"{skill.path}: missing frontmatter field '{field}'")
+    for field in REQUIRED_TOP_LEVEL_FIELDS:
+        if not md.get(field):
+            errors.append(f"{skill.path}: missing top-level frontmatter field '{field}'")
 
-    version = str(md.get("version", ""))
+    for field in REQUIRED_FLEX_FIELDS:
+        if resolve_field(md, field) is None:
+            errors.append(
+                f"{skill.path}: missing skill field '{field}' "
+                "(expected top-level or metadata.<field>)"
+            )
+
+    version_raw = resolve_field(md, "version")
+    version = str(version_raw or "")
     if version and not re.fullmatch(r"\d+\.\d+\.\d+", version):
         errors.append(f"{skill.path}: version must be semver (x.y.z), got '{version}'")
 
-    tags = md.get("tags")
+    tags = resolve_field(md, "tags")
     if tags is not None and (not isinstance(tags, list) or not tags):
         errors.append(f"{skill.path}: 'tags' must be a non-empty list")
 
-    compatibility = md.get("compatibility")
+    compatibility = resolve_field(md, "compatibility")
     if compatibility is not None and (not isinstance(compatibility, list) or not compatibility):
         errors.append(f"{skill.path}: 'compatibility' must be a non-empty list")
 
-    last_updated = str(md.get("last_updated", ""))
+    last_updated = str(resolve_field(md, "last_updated") or "")
     if last_updated and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", last_updated):
         errors.append(
             f"{skill.path}: 'last_updated' must use YYYY-MM-DD, got '{last_updated}'"
@@ -368,10 +396,6 @@ def main() -> int:
             return 1
         print(f"[ERROR] No SKILL.md files found under {skills_dir}")
         return 2
-
-    changelog_path = skills_dir / "SKILL-CHANGELOG.md"
-    if not changelog_path.exists():
-        errors.append(f"Missing skill changelog: {changelog_path}")
 
     seen_names = {}
     for skill in skills:

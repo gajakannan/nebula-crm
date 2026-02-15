@@ -237,6 +237,8 @@ def main():
 
     print(f"Validating genericness of {args.agents_dir}/")
     print("-" * 60)
+    print(f"[Scope]  Scanning only:       {args.agents_dir}/")
+    print("[Scope]  Not scanned:          planning-mds/ (solution-specific content is allowed)\n")
 
     # Extract blocked terms from glossary
     blocked_terms = extract_blocked_terms(args.glossary)
@@ -246,7 +248,8 @@ def main():
         sys.exit(1)
 
     print(f"[Terms]  {len(blocked_terms)} blocked term(s): {', '.join(blocked_terms)}")
-    print(f"[Source] Term list from:    {args.glossary}\n")
+    print(f"[Source] Term list from:      {args.glossary}")
+    print("[Note]   Source file is used only to derive denylist terms for agents/ validation.\n")
 
     # Scan
     violations = scan_directory(args.agents_dir, blocked_terms)

@@ -6,6 +6,568 @@ Use these examples when creating screen specifications for the insurance CRM. Sc
 
 ---
 
+## Screen 0: Dashboard
+
+**Screen ID:** SCR-DASH-001
+**Screen Name:** Dashboard
+**Screen Type:** Widget-based landing page
+**Route:** `/dashboard` (default after login)
+**Parent Navigation:** Main navigation → Dashboard (home icon)
+
+### Purpose
+Provide an at-a-glance operational command center on login. Surfaces the most urgent items, key performance indicators, pipeline health, assigned tasks, and recent broker activity — all scoped to the logged-in user's authorization. This is the first screen every user sees after authentication.
+
+### Target Users
+- **Primary:** Distribution User (intake/triage), Relationship Manager (broker context)
+- **Secondary:** Underwriter (pipeline/submission focus), Program Manager (program-level view)
+- **Admin:** Sees unscoped data across all entities
+
+### Layout & Structure — Full Desktop Wireframe (>1200px)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│  ☰  Nebula          [🔍 Global Search...              ]    🔔 3    👤 Sarah ▾  │
+├──────┬──────────────────────────────────────────────────────────────────────────┤
+│      │                                                                          │
+│ 🏠   │  NEEDS YOUR ATTENTION                                            [Hide] │
+│ Dash │  ┌──────────────────────┐ ┌──────────────────────┐ ┌──────────────────┐ │
+│      │  │ 🔴 Overdue Task    ✕ │ │ 🟠 Stale Sub       ✕ │ │ 🔵 Renewal Due ✕ │ │
+│ 👥   │  │                      │ │                      │ │                  │ │
+│ Brkr │  │ Follow up with Acme  │ │ Sub #2044 stuck in   │ │ Atlas Ins renews │ │
+│      │  │ Insurance — 3 days   │ │ WaitingOnBroker for  │ │ in 8 days, still │ │
+│ 📋   │  │ overdue              │ │ 7 days               │ │ in Created stage │ │
+│ Subs │  │                      │ │                      │ │                  │ │
+│      │  │  [ Review Now  ]     │ │  [ Take Action ]     │ │ [Start Outreach] │ │
+│ 🔄   │  └──────────────────────┘ └──────────────────────┘ └──────────────────┘ │
+│ Rnwl │                                                                          │
+│      │  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐               │
+│ ✅   │  │  Active   │ │   Open    │ │  Renewal  │ │   Avg     │               │
+│ Tasks│  │  Brokers  │ │   Subs    │ │   Rate    │ │ Turnaround│               │
+│      │  │           │ │           │ │           │ │           │               │
+│ ⚙️   │  │    142    │ │    38     │ │   72%     │ │  4.2 d    │               │
+│ Admin│  │           │ │           │ │           │ │           │               │
+│      │  └───────────┘ └───────────┘ └───────────┘ └───────────┘               │
+│      │                                                                          │
+│      │  SUBMISSIONS PIPELINE                                                    │
+│      │  ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐       │
+│      │  │Received│──▶│Triaging│──▶│WaitOn  │──▶│Ready   │──▶│InReview│──...   │
+│      │  │   12   │   │    8   │   │Broker 5│   │ForUW  7│   │    7   │       │
+│      │  └────────┘   └────────┘   └───┬────┘   └────────┘   └────────┘       │
+│      │                                 │ ▼ (expanded on click)                  │
+│      │                    ┌─────────────────────────────┐                       │
+│      │                    │ WaitingOnBroker (5)         │                       │
+│      │                    │ ┌─────────────────────────┐ │                       │
+│      │                    │ │ Acme Corp  $45K   12d JM│ │                       │
+│      │                    │ │ Beta LLC   $22K    9d SC│ │                       │
+│      │                    │ │ Coral Inc  $18K    7d MR│ │                       │
+│      │                    │ │ Delta Co   $15K    6d JM│ │                       │
+│      │                    │ │ Echo Grp   $12K    5d SC│ │                       │
+│      │                    │ ├─────────────────────────┤ │                       │
+│      │                    │ │      View all 5 →       │ │                       │
+│      │                    │ └─────────────────────────┘ │                       │
+│      │                    └─────────────────────────────┘                       │
+│      │                                                                          │
+│      │  RENEWALS PIPELINE                                                       │
+│      │  ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐       │
+│      │  │Created │──▶│ Early  │──▶│Outreach│──▶│InReview│──▶│ Quoted │       │
+│      │  │    4   │   │    6   │   │Started 3│  │    2   │   │    1   │       │
+│      │  └────────┘   └────────┘   └────────┘   └────────┘   └────────┘       │
+│      │                                                                          │
+│      │  ┌──────────────────────────────────┐ ┌────────────────────────────────┐ │
+│      │  │ MY TASKS & REMINDERS             │ │ BROKER ACTIVITY FEED           │ │
+│      │  │                                  │ │                                │ │
+│      │  │ 🔴 Follow up with Acme Ins       │ │ 🟢 Sarah added broker          │ │
+│      │  │    Due: Jan 20 (3d overdue)  [→] │ │   "Pacific Reinsurance"        │ │
+│      │  │                                  │ │    2 hours ago             [→] │ │
+│      │  │ 🟠 Review submission #2044       │ │                                │ │
+│      │  │    Due: Feb 15 (tomorrow)    [→] │ │ 🔵 License updated for         │ │
+│      │  │                                  │ │   "Atlas Insurance Group"       │ │
+│      │  │ ⚪ Renewal outreach — Atlas      │ │    4 hours ago             [→] │ │
+│      │  │    Due: Feb 18 (4 days)      [→] │ │                                │ │
+│      │  │                                  │ │ 🔵 Contact added to            │ │
+│      │  │ ⚪ Prep for broker QBR           │ │   "Meridian Brokers"            │ │
+│      │  │    Due: Feb 20 (6 days)      [→] │ │    yesterday               [→] │ │
+│      │  │                                  │ │                                │ │
+│      │  │ ⚪ Update program terms           │ │ 🟢 New submission via          │ │
+│      │  │    Due: Feb 22 (8 days)      [→] │ │   "Coastal MGA Partners"       │ │
+│      │  │                                  │ │    yesterday               [→] │ │
+│      │  │         View all tasks →         │ │                                │ │
+│      │  └──────────────────────────────────┘ │ 🔵 Broker "Summit Re" status   │ │
+│      │                                       │   changed to Active             │ │
+│      │                                       │    2 days ago              [→] │ │
+│      │                                       │                                │ │
+│      │                                       │ ... (20 items max)             │ │
+│      │                                       └────────────────────────────────┘ │
+│      │                                                                          │
+└──────┴──────────────────────────────────────────────────────────────────────────┘
+```
+
+### Layout — Tablet Wireframe (768px – 1200px)
+
+```
+┌─────────────────────────────────────────────┐
+│  ☰  Nebula    [🔍 Search...  ]  🔔  👤     │
+├─────────────────────────────────────────────┤
+│                                             │
+│ NEEDS YOUR ATTENTION                        │
+│ ┌─────────────────────┐ ┌─────────────────┐│
+│ │ 🔴 Follow up Acme ✕ │ │ 🟠 Sub #2044  ✕ ││
+│ │  3 days overdue      │ │  7 days stuck   ││
+│ │  [ Review Now ]      │ │  [Take Action]  ││
+│ └─────────────────────┘ └─────────────────┘│
+│ ┌─────────────────────┐                    │
+│ │ 🔵 Atlas renewal  ✕ │                    │
+│ │  8 days remaining    │                    │
+│ │  [Start Outreach]   │                    │
+│ └─────────────────────┘                    │
+│                                             │
+│ ┌──────────┐┌──────────┐┌──────────┐┌─────┐│
+│ │ Active   ││  Open    ││ Renewal  ││ Avg ││
+│ │ Brokers  ││  Subs    ││  Rate    ││Turn ││
+│ │   142    ││   38     ││  72%     ││4.2d ││
+│ └──────────┘└──────────┘└──────────┘└─────┘│
+│                                             │
+│ SUBMISSIONS PIPELINE                        │
+│ ┌─────┐┌─────┐┌─────┐┌─────┐┌─────┐┌────┐│
+│ │Rcvd ││Tria ││Wait ││Rdy  ││InRv ││Quot││
+│ │ 12  ││  8  ││  5  ││  7  ││  7  ││ 4  ││
+│ └─────┘└─────┘└─────┘└─────┘└─────┘└────┘│
+│                                             │
+│ RENEWALS PIPELINE                           │
+│ ┌──────┐┌──────┐┌──────┐┌──────┐┌──────┐  │
+│ │Crtd  ││Early ││Outrch││InRev ││Quoted│  │
+│ │  4   ││  6   ││  3   ││  2   ││  1   │  │
+│ └──────┘└──────┘└──────┘└──────┘└──────┘  │
+│                                             │
+│ MY TASKS & REMINDERS                        │
+│ ┌─────────────────────────────────────────┐ │
+│ │ 🔴 Follow up with Acme  Jan 20 (3d) [→]│ │
+│ │ 🟠 Review sub #2044     Feb 15 (1d) [→]│ │
+│ │ ⚪ Renewal — Atlas       Feb 18 (4d) [→]│ │
+│ │          View all tasks →               │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│ BROKER ACTIVITY FEED                        │
+│ ┌─────────────────────────────────────────┐ │
+│ │ 🟢 Pacific Re added        2h ago  [→] │ │
+│ │ 🔵 Atlas license updated   4h ago  [→] │ │
+│ │ 🔵 Meridian contact added  ytd     [→] │ │
+│ │ 🟢 Coastal MGA submission  ytd     [→] │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+### Layout — Mobile Wireframe (<768px)
+
+```
+┌─────────────────────────────┐
+│  ☰  Nebula          🔔  👤 │
+├─────────────────────────────┤
+│                             │
+│ NEEDS YOUR ATTENTION        │
+│ ┌─────────────────────────┐ │
+│ │ 🔴 Follow up Acme     ✕ │ │
+│ │   3 days overdue         │ │
+│ │   [ Review Now ]         │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ 🟠 Sub #2044 stuck    ✕ │ │
+│ │   7 days in WaitBroker   │ │
+│ │   [ Take Action ]        │ │
+│ └─────────────────────────┘ │
+│ ┌─────────────────────────┐ │
+│ │ 🔵 Atlas renewal due  ✕ │ │
+│ │   8 days remaining       │ │
+│ │   [ Start Outreach ]     │ │
+│ └─────────────────────────┘ │
+│                             │
+│ ┌────────────┐┌────────────┐│
+│ │Active Brkrs││ Open Subs  ││
+│ │    142     ││    38      ││
+│ └────────────┘└────────────┘│
+│ ┌────────────┐┌────────────┐│
+│ │Renewal Rate││ Avg Turn   ││
+│ │   72%      ││   4.2 d    ││
+│ └────────────┘└────────────┘│
+│                             │
+│ PIPELINE          [▾ Subs ] │
+│ ┌─────┐┌─────┐┌─────┐      │
+│ │Rcvd ││Tria ││Wait │ >>>  │
+│ │ 12  ││  8  ││  5  │scroll│
+│ └─────┘└─────┘└─────┘      │
+│                             │
+│ MY TASKS          View all →│
+│ ┌─────────────────────────┐ │
+│ │🔴 Follow up Acme    3d  │ │
+│ │🟠 Review #2044      1d  │ │
+│ │⚪ Renewal Atlas      4d  │ │
+│ └─────────────────────────┘ │
+│                             │
+│ ACTIVITY          View all →│
+│ ┌─────────────────────────┐ │
+│ │🟢 Pacific Re added  2h  │ │
+│ │🔵 Atlas updated     4h  │ │
+│ │🔵 Meridian contact  ytd │ │
+│ └─────────────────────────┘ │
+│                             │
+└─────────────────────────────┘
+```
+
+### Widget Specifications
+
+#### Widget 1: Nudge Cards ("Needs Your Attention")
+
+**Position:** Top of content area, above KPI cards
+**Visibility:** Only rendered when at least 1 nudge qualifies; hidden entirely when none exist
+
+**Card Anatomy:**
+```
+┌──────────────────────────────┐
+│ 🔴 [Type Icon]  [Title]   ✕ │   ← Dismiss button (top-right)
+│                              │
+│ [Description — 1-2 lines     │   ← Contextual detail
+│  with urgency indicator]     │
+│                              │
+│  [ CTA Button Label ]        │   ← Primary action button
+└──────────────────────────────┘
+```
+
+**Fields per card:**
+
+| Field | Type | Source | Example |
+|-------|------|--------|---------|
+| Type Icon | Icon + color | NudgeType | 🔴 (overdue), 🟠 (stale), 🔵 (upcoming) |
+| Title | Text, bold | Task/Submission/Renewal name | "Follow up with Acme Insurance" |
+| Description | Text, secondary | Computed urgency string | "3 days overdue" / "7 days in WaitingOnBroker" |
+| Linked Entity | Text, tertiary | EntityName | "Broker: Acme Insurance" |
+| CTA Label | Button text | NudgeType mapping | "Review Now" / "Take Action" / "Start Outreach" |
+| Dismiss (✕) | Icon button | Client-side | Hides card for session |
+
+**Color mapping:**
+
+| Nudge Type | Icon Color | Background Tint | CTA Style |
+|------------|-----------|------------------|-----------|
+| Overdue Task | Red (destructive-500) | Red-50 | Primary/Red |
+| Stale Submission | Amber (warning-500) | Amber-50 | Primary/Amber |
+| Upcoming Renewal | Blue (info-500) | Blue-50 | Primary/Blue |
+
+**Behavior:**
+- Max 3 cards displayed simultaneously
+- Priority fill order: overdue tasks → stale submissions → upcoming renewals
+- Dismiss (✕) hides card for current session; replaced by next eligible if available
+- CTA click navigates to linked entity detail screen
+- If all dismissed or none qualify, entire section collapses with smooth animation
+- "[Hide]" link in section header collapses all nudges for the session
+
+#### Widget 2: KPI Metrics Cards
+
+**Position:** Below nudge cards (or at top if no nudges)
+
+**Card Anatomy:**
+```
+┌───────────────┐
+│  [Label]      │   ← Secondary text, muted
+│               │
+│   [Value]     │   ← Large text, bold, primary color
+│               │
+│  [Unit]       │   ← Small text, muted (e.g., "count", "%", "days")
+└───────────────┘
+```
+
+**Fields per card:**
+
+| Card | Label | Value Source | Unit | Computation |
+|------|-------|-------------|------|-------------|
+| Active Brokers | "Active Brokers" | Broker table | count | COUNT WHERE Status = Active, ABAC-scoped |
+| Open Submissions | "Open Submissions" | Submission table | count | COUNT WHERE CurrentStatus NOT IN (Bound, Declined, Withdrawn), ABAC-scoped |
+| Renewal Rate | "Renewal Rate" | Renewal table | % | (Bound / (Bound + Lost + Lapsed)) * 100, trailing 90 days, ABAC-scoped |
+| Avg Turnaround | "Avg Turnaround" | Submission + WorkflowTransition | days | AVG(first terminal transition OccurredAt - Submission.CreatedAt), trailing 90 days |
+
+**Layout:** 4 cards in a horizontal row, equal width. Responsive: 2x2 grid on tablet, 2x2 on mobile.
+
+**States:**
+- Loading: Skeleton pulse animation per card
+- Data available: Show value
+- No data / insufficient data: Display "—"
+- Query failure: Display "—" and log error; do not block other widgets
+
+#### Widget 3: Pipeline Summary (Mini-Kanban)
+
+**Position:** Below KPI cards, full width
+**Sub-sections:** Submissions Pipeline (top), Renewals Pipeline (below)
+
+**Collapsed pill anatomy:**
+```
+┌────────────┐
+│ [Label]    │   ← Status name, truncated if needed
+│   [Count]  │   ← Bold count badge
+└────────────┘
+```
+
+**Expanded popover anatomy (on hover/click):**
+```
+┌─────────────────────────────────┐
+│ [StatusLabel] ([Count])         │   ← Header
+│ ┌─────────────────────────────┐ │
+│ │ [Name]   [Amount] [Days] [A]│ │   ← Mini-card row
+│ │ [Name]   [Amount] [Days] [A]│ │   ← Entity name, $amount, days-in-status, avatar
+│ │ [Name]   [Amount] [Days] [A]│ │
+│ │ [Name]   [Amount] [Days] [A]│ │
+│ │ [Name]   [Amount] [Days] [A]│ │
+│ ├─────────────────────────────┤ │
+│ │       View all N →          │ │   ← Link to filtered list
+│ └─────────────────────────────┘ │
+└─────────────────────────────────┘
+```
+
+**Pill color mapping:**
+
+| Stage Group | Statuses | Color |
+|-------------|----------|-------|
+| Intake | Received, Created | Slate/Gray |
+| Triage | Triaging, Early | Blue |
+| Waiting | WaitingOnBroker, OutreachStarted | Amber |
+| Review | ReadyForUWReview, InReview | Indigo |
+| Decision | Quoted, BindRequested | Green |
+
+**Mini-card fields:**
+
+| Field | Type | Format | Example |
+|-------|------|--------|---------|
+| Entity Name | Text, bold | Account/Broker name, max 20 chars + ellipsis | "Acme Corp" |
+| Amount | Currency, right-aligned | $NNK (thousands) or $N.NM (millions) | "$45K" |
+| Days in Status | Chip/badge | Nd | "12d" |
+| Assigned User | Avatar circle | 2-char initials | "JM" |
+
+**Behavior:**
+- Pills are horizontally scrollable if they overflow (mobile/tablet)
+- Hover (desktop) or tap (mobile) expands popover below the pill
+- Only one popover open at a time; opening another closes the previous
+- Popover shows top 5 items sorted by DaysInStatus descending
+- Mini-card click → entity detail screen
+- "View all N →" link → filtered list screen
+- Popover repositions to stay within viewport (flip above if near bottom)
+- Mini-card data is lazy-loaded (fetched on expand, not on dashboard load)
+
+#### Widget 4: My Tasks & Reminders
+
+**Position:** Bottom-left (desktop), full-width stacked (tablet/mobile)
+
+**Task row anatomy:**
+```
+│ [●] [Task Title]                [Due Date] [→] │
+│     [Linked Entity Name]        [Relative]      │
+```
+
+**Fields per task row:**
+
+| Field | Type | Format | Example |
+|-------|------|--------|---------|
+| Status indicator | Colored dot | 🔴 overdue, 🟠 due today/tomorrow, ⚪ future | 🔴 |
+| Task Title | Text, bold | Max 40 chars + ellipsis | "Follow up with Acme Insurance" |
+| Linked Entity | Text, secondary | EntityType: EntityName | "Broker: Acme Insurance" |
+| Due Date | Date | MMM DD | "Jan 20" |
+| Relative Due | Text, muted | Relative indicator | "(3d overdue)" / "(tomorrow)" / "(4 days)" |
+| Navigate arrow | Icon button | [→] | Navigates to entity or Task Center |
+
+**Color coding:**
+
+| Condition | Indicator | Row Style |
+|-----------|-----------|-----------|
+| DueDate < today | 🔴 Red dot | Red-50 background, red left border |
+| DueDate = today or tomorrow | 🟠 Amber dot | Amber-50 background |
+| DueDate > tomorrow | ⚪ Gray dot | No highlight |
+| DueDate is null | ⚪ Gray dot | "No due date" in date column |
+
+**Behavior:**
+- Max 10 rows displayed; "View all tasks →" link if more exist
+- Sorted by DueDate ascending (soonest/most overdue first), nulls last
+- Only Open and InProgress tasks shown (Done excluded)
+- Click row or [→] → linked entity detail or Task Center
+- Empty state: "No tasks assigned. You're all caught up." with a subtle checkmark illustration
+
+#### Widget 5: Broker Activity Feed
+
+**Position:** Bottom-right (desktop), below tasks (tablet/mobile)
+
+**Feed item anatomy:**
+```
+│ [●] [Event Description]                        │
+│     [Broker Name]            [Timestamp]   [→]  │
+```
+
+**Fields per feed item:**
+
+| Field | Type | Format | Example |
+|-------|------|--------|---------|
+| Event icon | Colored dot | 🟢 created, 🔵 updated, 🟡 status change | 🟢 |
+| Event Description | Text, bold | Human-readable from EventType + payload | "New broker added" |
+| Actor | Text, inline | "by [DisplayName]" | "by Sarah Chen" |
+| Broker Name | Text, secondary, link-styled | Broker.LegalName | "Pacific Reinsurance" |
+| Timestamp | Text, muted, right-aligned | Relative time | "2 hours ago" |
+| Navigate arrow | Icon button | [→] | Navigates to Broker 360 |
+
+**Event icon mapping:**
+
+| EventType | Icon/Color | Description Template |
+|-----------|-----------|---------------------|
+| BrokerCreated | 🟢 Green | "New broker added by [Actor]" |
+| BrokerUpdated | 🔵 Blue | "Broker updated by [Actor]" |
+| BrokerStatusChanged | 🟡 Yellow | "Status changed to [NewStatus] by [Actor]" |
+| ContactAdded | 🔵 Blue | "Contact added by [Actor]" |
+| ContactUpdated | 🔵 Blue | "Contact updated by [Actor]" |
+| SubmissionCreated | 🟢 Green | "New submission received via [BrokerName]" |
+| LicenseUpdated | 🔵 Blue | "License updated by [Actor]" |
+
+**Behavior:**
+- Max 20 items, sorted by OccurredAt descending
+- Click broker name or [→] → Broker 360 view
+- Actor resolved from UserProfile.DisplayName; shows "Unknown User" if user deactivated
+- Relative timestamps computed client-side; absolute time on hover tooltip
+- Empty state: "No recent broker activity."
+- No pagination or "load more" in MVP
+
+### User Actions (Dashboard-Level)
+
+**1. Interact with Nudge Card**
+- **Trigger:** Click CTA button on nudge card
+- **Permission:** Read access to linked entity (ABAC)
+- **Navigation:** → Entity detail screen (Broker 360, Submission Detail, Renewal Detail, or Task Center)
+
+**2. Dismiss Nudge Card**
+- **Trigger:** Click ✕ on nudge card
+- **Permission:** None (client-side action)
+- **Behavior:** Card slides out, replaced by next eligible nudge (if any); state stored in session
+
+**3. Expand Pipeline Pill**
+- **Trigger:** Hover (desktop) or tap (touch) on a pipeline status pill
+- **Permission:** Read access to submissions/renewals (ABAC)
+- **Behavior:** Lazy-load mini-cards for that status; display popover below pill
+
+**4. Navigate from Pipeline Mini-Card**
+- **Trigger:** Click a mini-card in expanded popover
+- **Permission:** Read access to specific submission/renewal (ABAC)
+- **Navigation:** → Submission Detail or Renewal Detail screen
+
+**5. Navigate from Pipeline "View All"**
+- **Trigger:** Click "View all N →" in popover
+- **Permission:** Read access to list (ABAC)
+- **Navigation:** → Submission List or Renewal List, pre-filtered by status
+
+**6. Navigate from Task Row**
+- **Trigger:** Click task row or [→] arrow
+- **Permission:** Task must be assigned to user
+- **Navigation:** → Linked entity detail or Task Center
+
+**7. Navigate from Activity Feed Item**
+- **Trigger:** Click broker name or [→] arrow
+- **Permission:** Read access to broker (ABAC)
+- **Navigation:** → Broker 360 view for that broker
+
+**8. View All Tasks**
+- **Trigger:** Click "View all tasks →" link
+- **Permission:** Authenticated user
+- **Navigation:** → Task Center screen
+
+### Error States & Messages
+
+**Widget-Level Failures (Isolated):**
+Each widget fails independently. A failed widget must not prevent other widgets from rendering.
+
+| Widget | Failure Display | Log Action |
+|--------|----------------|------------|
+| Nudge Cards | Section not rendered (silent) | Log error with correlation ID |
+| KPI Cards | Individual card shows "—" | Log error per failed metric |
+| Pipeline Summary | "Unable to load pipeline data" in widget area | Log error |
+| My Tasks | "Unable to load tasks" in widget area | Log error |
+| Activity Feed | "Unable to load activity feed" in widget area | Log error |
+
+**Full Page Errors:**
+
+**Authentication Expired:**
+- **Condition:** JWT expired during page load
+- **Message:** "Your session has expired. Please log in again."
+- **Action:** Redirect to Keycloak login
+
+**Network Error:**
+- **Condition:** All API calls fail (network down)
+- **Message:** "Unable to connect to Nebula. Check your connection and try again."
+- **Action:** [Retry] button refreshes all widgets
+
+**Permission Denied:**
+- **Condition:** User lacks dashboard access (edge case — all internal users should have access)
+- **Message:** "You don't have permission to view the dashboard. Contact your administrator."
+
+**Loading State:**
+- **Condition:** Initial page load
+- **Display:** Skeleton layout matching widget structure: 3 card skeletons for nudges, 4 card skeletons for KPIs, pill-shaped skeletons for pipeline, list skeletons for tasks and feed
+- **Duration:** Typically < 1s; skeleton shown until all widget data arrives or 2s timeout
+
+### Responsive Behavior
+
+**Desktop (>1200px):**
+- Left sidebar navigation (240px) + content area
+- Nudge cards: 3 across in one row
+- KPI cards: 4 across in one row
+- Pipeline: full-width horizontal pills, popover below
+- Tasks & Activity Feed: 2-column layout (50/50 split)
+
+**Tablet (768px – 1200px):**
+- Collapsed sidebar (icon-only, 64px) or hamburger menu
+- Nudge cards: 2 across, third wraps to second row
+- KPI cards: 4 across (compressed)
+- Pipeline: abbreviated status labels (e.g., "Rcvd", "Tria", "Wait")
+- Tasks & Activity Feed: stacked vertically (full width each)
+
+**Mobile (<768px):**
+- Bottom tab navigation (no sidebar)
+- Nudge cards: stacked vertically (1 per row)
+- KPI cards: 2x2 grid
+- Pipeline: horizontal scroll with pill overflow (swipe to see all statuses); toggle between Submissions/Renewals via dropdown
+- Tasks: condensed rows (title + due only), max 5 shown
+- Activity Feed: condensed rows (description + time only), max 5 shown
+- Each section has a "View all →" link
+
+### Accessibility
+
+- **Keyboard Navigation:**
+  - Tab order: Nudge cards → KPI cards → Pipeline pills → Tasks → Activity Feed
+  - Enter/Space on pipeline pill opens popover; Escape closes it
+  - Arrow keys navigate within popover mini-cards
+  - Enter on task/activity row navigates to detail
+- **Screen Reader:**
+  - Dashboard page announced as "Dashboard — Nebula CRM"
+  - Each widget section has an aria-label (e.g., "Key Performance Indicators", "Submissions Pipeline")
+  - KPI cards: aria-label="Active Brokers: 142"
+  - Pipeline pills: aria-label="WaitingOnBroker: 5 submissions"
+  - Nudge cards: role="alert" for overdue items, role="status" for informational
+  - Popover: role="dialog", aria-labelledby referencing status label
+- **Focus Indicators:** Visible focus ring (2px blue outline) on all interactive elements
+- **Color Independence:** All status indicators use icons/shapes in addition to color (colorblind-safe)
+- **Motion:** Respect prefers-reduced-motion; disable slide/collapse animations if set
+
+### Performance Requirements
+
+| Metric | Target | Notes |
+|--------|--------|-------|
+| Dashboard full load (all widgets) | p95 < 2s | From authenticated page load to all widgets rendered |
+| KPI card data | p95 < 500ms | Server-side aggregation; may use pre-computed counts |
+| Pipeline pill counts | p95 < 500ms | Grouped COUNT query per entity type |
+| Pipeline popover (mini-cards) | p95 < 300ms | Lazy-loaded on hover/click; indexed query |
+| Tasks widget | p95 < 300ms | Filtered by AssignedTo with DueDate sort |
+| Activity feed | p95 < 300ms | Indexed on (EntityType, OccurredAt DESC) |
+| Nudge card computation | p95 < 500ms | Parallel queries across tasks, submissions, renewals |
+| Nudge dismiss animation | < 200ms | Client-side CSS transition |
+
+### Data Refresh
+
+- **On page load:** All widgets fetch fresh data
+- **No auto-refresh in MVP:** Data is static until page reload or manual navigation back to dashboard
+- **Future:** Consider polling (every 60s) or WebSocket push for real-time updates
+
+---
+
 ## Screen 1: Broker List
 
 **Screen ID:** SCR-BR-001

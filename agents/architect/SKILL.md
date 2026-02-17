@@ -104,6 +104,7 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
    - Ensure all designs follow established patterns
    - Identify when new patterns emerge
    - Update SOLUTION-PATTERNS.md when patterns change
+   - Confirm caching strategy exists (in-memory vs external, cache-aside vs write-through) or create an ADR
 
 10) **Orchestrate implementation kickoff (Phase C)**
    - Create/update `planning-mds/architecture/application-assembly-plan.md`

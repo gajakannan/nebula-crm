@@ -1,48 +1,44 @@
-# OWASP Top 10 Results
+# OWASP Top 10 Review Results
 
-Status: Draft
-Last Updated: 2026-02-08
-Owner: Security
+Status: Final
+Last Updated: 2026-02-17
+Owner: Security + Architect
 
-## Objective
+## Scope
 
-Track OWASP Top 10 coverage status for planning and implementation stages.
-This file is a draft tracker and must be updated with execution evidence as implementation progresses.
+Pre-implementation review based on planning artifacts, API contract, and architecture decisions.
+This is not a code audit and must be re-run during implementation.
 
-## Assessment Scope
+## Assessment Inputs
 
-- Surfaces in scope: API/backend, frontend, AI integration layer, deployment/runtime configuration.
-- Assessment inputs: story requirements, architecture docs, security artifacts, gate outputs.
+- planning-mds/INCEPTION.md
+- planning-mds/api/nebula-api.yaml
+- planning-mds/architecture/*
+- planning-mds/security/*
 
-## OWASP Top 10 Draft Coverage
+## Findings Summary
 
-| Category | Initial Status | Notes |
-|---|---|---|
-| A01 Broken Access Control | In Progress | Authorization matrix not finalized |
-| A02 Cryptographic Failures | In Progress | Encryption requirements drafted |
-| A03 Injection | In Progress | Input validation strategy drafted |
-| A04 Insecure Design | In Progress | Threat model draft exists; mitigation pending |
-| A05 Security Misconfiguration | In Progress | Runtime hardening pending |
-| A06 Vulnerable Components | In Progress | Scan tooling integration pending |
-| A07 Identification/Auth Failures | In Progress | Auth flow design present; controls not verified |
-| A08 Software/Data Integrity Failures | In Progress | CI integrity controls to be defined |
-| A09 Security Logging/Monitoring Failures | In Progress | Logging and audit requirements drafted |
-| A10 SSRF | In Progress | External call constraints for AI/runtime pending |
+| OWASP Category | Risk | Status | Notes |
+|---|---|---|---|
+| A01: Broken Access Control | High | Open | Requires finalized resource-action matrix and policy tests |
+| A02: Cryptographic Failures | Medium | Planned | Encryption-at-rest and in-transit requirements defined |
+| A03: Injection | Medium | Planned | Schema validation + strict input rules required |
+| A04: Insecure Design | Medium | Mitigated | Threat model and ADRs define controls |
+| A05: Security Misconfiguration | Medium | Open | Runtime hardening pending implementation |
+| A06: Vulnerable Components | Medium | Open | Dependency scanning to be enforced in app CI |
+| A07: Identification and Auth Failures | Medium | Planned | Keycloak + token validation strategy defined |
+| A08: Software and Data Integrity | Medium | Planned | CI gating and artifact signing TBD |
+| A09: Security Logging and Monitoring | Medium | Open | Logging/redaction policy to be finalized in implementation |
+| A10: SSRF | Low | N/A | No server-side outbound fetch flows defined yet |
 
-## Findings Summary (Draft)
+## Required Actions Before Implementation
 
-- No execution-backed findings recorded yet.
-- Planning-level controls exist but are not implementation-verified.
-- Strict gate evidence is expected during `implementation` and `release-readiness`.
-
-## Required Evidence For Stage Promotion
-
-- Dependency and container scan outputs.
-- Authz/access-control test evidence.
-- Input validation and negative-path test evidence.
-- Logging/redaction verification evidence.
+- Finalize authorization policy artifacts and tests.
+- Define logging/redaction and monitoring strategy for runtime.
+- Enable dependency and container scans in application runtime CI.
 
 ## Sign-Off
 
-- Security Reviewer: Pending
-- Date: Pending
+Security Reviewer: Pending
+Architect: Pending
+Date: Pending

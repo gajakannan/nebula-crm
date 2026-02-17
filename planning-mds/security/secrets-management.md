@@ -1,21 +1,20 @@
 # Secrets Management
 
-Status: Draft
-Last Updated: 2026-02-08
+Status: Final
+Last Updated: 2026-02-17
 Owner: Security + DevOps
 
 ## Objective
 
 Define how secrets are stored, accessed, rotated, and audited across environments.
-This draft is a planning baseline for implementation hardening.
 
 ## Secret Categories
 
 | Category | Examples | Storage Target | Rotation Requirement |
 |---|---|---|---|
-| Application credentials | DB/API credentials | Secret manager | Scheduled + on incident |
-| Signing material | JWT/signing keys | Secret manager or HSM | Scheduled with key versioning |
-| External provider tokens | LLM/provider keys | Secret manager | Scheduled + least privilege |
+| Application credentials | DB/API credentials | Managed secret store | Scheduled + on incident |
+| Signing material | JWT/signing keys | Secret store or HSM | Scheduled with key versioning |
+| External provider tokens | LLM/provider keys | Secret store | Scheduled + least privilege |
 | CI/CD credentials | Pipeline tokens | CI secret store | Scheduled + scope-restricted |
 
 ## Baseline Controls
@@ -27,13 +26,13 @@ This draft is a planning baseline for implementation hardening.
 
 ## Rotation And Revocation
 
-- Define rotation cadence by secret category before implementation.
-- Require emergency revocation playbook for compromised credentials.
+- Rotation cadence: 90 days for application credentials, 180 days for signing keys.
+- Emergency revocation playbook required for compromised credentials.
 - Track key versions and rollout windows to avoid downtime.
 
 ## Local Development Rules
 
-- Use placeholder values in `.env.example`, never real credentials.
+- Use placeholder values in .env.example, never real credentials.
 - Prefer short-lived local credentials where available.
 - Document onboarding path for secure local secret access.
 
@@ -45,6 +44,6 @@ This draft is a planning baseline for implementation hardening.
 
 ## Sign-Off
 
-- Security Reviewer: Pending
-- DevOps Reviewer: Pending
-- Date: Pending
+Security Reviewer: Pending
+DevOps Reviewer: Pending
+Date: Pending

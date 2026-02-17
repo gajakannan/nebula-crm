@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
   title: Nebula API
-  version: 0.3.0
+  version: 0.3.1
   description: |
     Public baseline API contract for the Nebula insurance CRM reference implementation.
-    Version 0.3.0 adds Dashboard (F0) endpoints and Task CRUD.
+    Version 0.3.1 adds Submission/Renewal detail endpoints.
 servers:
   - url: https://api.nebula.local
 security:
@@ -259,6 +259,55 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+
+  # ──────────────────────────────────────────────────────────────
+  # Submission / Renewal detail endpoints (NEW)
+  # ──────────────────────────────────────────────────────────────
+  /api/submissions/{submissionId}:
+    parameters:
+      - $ref: "#/components/parameters/SubmissionId"
+    get:
+      operationId: getSubmissionById
+      summary: Get submission by id
+      tags: [Submissions]
+      responses:
+        "200":
+          description: Submission details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/renewals/{renewalId}:
+    parameters:
+      - $ref: "#/components/parameters/RenewalId"
+    get:
+      operationId: getRenewalById
+      summary: Get renewal by id
+      tags: [Renewals]
+      responses:
+        "200":
+          description: Renewal details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Renewal"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ──────────────────────────────────────────────────────────────
   # Workflow transition endpoints (existing)
@@ -1025,6 +1074,117 @@ components:
         mgaId:
           type: string
           format: uuid
+
+    # ── Submission / Renewal Schemas ───────────────────────────
+    Submission:
+      type: object
+      description: Submission workflow entity.
+      required:
+        - id
+        - accountId
+        - brokerId
+        - currentStatus
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        brokerId:
+          type: string
+          format: uuid
+        programId:
+          type: string
+          format: uuid
+          nullable: true
+        currentStatus:
+          type: string
+          enum:
+            - Received
+            - Triaging
+            - WaitingOnBroker
+            - ReadyForUWReview
+            - InReview
+            - Quoted
+            - BindRequested
+            - Bound
+            - Declined
+            - Withdrawn
+        effectiveDate:
+          type: string
+          format: date
+          nullable: true
+        premiumEstimate:
+          type: number
+          format: double
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          description: Keycloak subject of creator.
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+          description: Keycloak subject of last updater.
+
+    Renewal:
+      type: object
+      description: Renewal workflow entity.
+      required:
+        - id
+        - accountId
+        - brokerId
+        - currentStatus
+        - renewalDate
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        brokerId:
+          type: string
+          format: uuid
+        submissionId:
+          type: string
+          format: uuid
+          nullable: true
+        currentStatus:
+          type: string
+          enum:
+            - Created
+            - Early
+            - OutreachStarted
+            - InReview
+            - Quoted
+            - Bound
+            - Lost
+            - Lapsed
+        renewalDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          description: Keycloak subject of creator.
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+          description: Keycloak subject of last updater.
 
     # ── Workflow Schemas ────────────────────────────────────────
     WorkflowTransitionRequest:

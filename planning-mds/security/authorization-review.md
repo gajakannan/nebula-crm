@@ -1,50 +1,57 @@
 # Authorization Review
 
-Status: Draft
-Last Updated: 2026-02-08
+Status: Final
+Last Updated: 2026-02-17
 Owner: Security + Architect
 
 ## Objective
 
-Review authorization model assumptions for planning completeness before implementation.
-This draft tracks what must be verified for resource-level access control and least privilege.
+Define the authorization model evidence required before implementation and confirm the baseline ABAC policy scope.
 
 ## Authorization Model Summary
 
-- Model direction: ABAC/RBAC hybrid based on architecture guidance.
-- Decision points:
-  - API endpoint access
-  - Resource ownership/tenant checks
-  - Workflow transition permissions
-- Expected outputs:
-  - Resource-action matrix
-  - Policy test cases
-  - Negative/forbidden path coverage
+- Model: Casbin ABAC with deny-by-default policies.
+- Enforcement points: API endpoints, workflow transitions, and data access queries.
+- Decision context: subject attributes + resource attributes + action.
 
-## Resource-Action Review Checklist
+## Resource-Action Matrix (Baseline)
 
-| Area | Expected Control | Status | Notes |
+| Resource | Actions | Subject Scope | Notes |
 |---|---|---|---|
-| Endpoint access | Explicit policy per endpoint | Draft | Matrix not finalized |
-| Object-level checks | Ownership or scope validation | Draft | Story mapping in progress |
-| Workflow actions | Transition-level authorization | Draft | Need mapping to state rules |
-| Admin operations | Least privilege and break-glass rules | Draft | Policy definitions pending |
-| Auditability | Denied/allowed decisions traceable | Draft | Logging contract pending |
+| Broker | create/read/update/delete | Internal roles only | Restrict by region/department where applicable |
+| Account | create/read/update/delete | Internal roles only | Account ownership and broker scope apply |
+| Contact | create/read/update/delete | Internal roles only | Must be tied to authorized broker/account |
+| Submission | read/transition | Underwriter + internal roles | Transition actions limited by workflow state |
+| Renewal | read/transition | Underwriter + internal roles | Transition actions limited by workflow state |
+| Task | read/update | Assigned user | No cross-user access |
+| TimelineEvent | read | Authorized subjects | Filtered by ABAC scope on entity |
+| Dashboard | read | Authenticated internal users | ABAC scope applied per widget |
 
-## Key Gaps To Resolve
+## Policy Test Catalog (Minimum)
 
-- Missing consolidated resource-action matrix in planning artifacts.
-- No finalized policy test catalog for allow/deny scenarios.
-- No explicit cross-reference between stories and auth policies yet.
+Allow cases:
+- Internal role with broker:create can create a broker.
+- Underwriter can transition a submission from InReview -> Quoted.
+- User can read tasks assigned to their subject id.
 
-## Remediation Plan
+Deny cases:
+- User without broker:create cannot create a broker (403).
+- User cannot read broker outside their ABAC scope (403).
+- Underwriter cannot transition a submission to invalid next state (409).
 
-1. Produce resource-action matrix in architecture artifacts.
-2. Add authorization acceptance criteria to story templates where missing.
-3. Define minimum authorization test evidence for lifecycle promotion.
+## Story Cross-Reference Requirements
+
+- Each story with protected resources must define at least one authorization acceptance criterion.
+- Each protected API endpoint must map to a policy test case.
+
+## Implementation Artifacts Required
+
+- Casbin model and policy files in application runtime (model.conf, policy.csv or equivalent).
+- Automated policy tests covering allow/deny for all protected endpoints.
+- Runtime enforcement in middleware and repository-level scope filters.
 
 ## Sign-Off
 
-- Security Reviewer: Pending
-- Architect: Pending
-- Date: Pending
+Security Reviewer: Pending
+Architect: Pending
+Date: Pending

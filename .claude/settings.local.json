@@ -29,7 +29,8 @@
       "Bash(for d in /c/Users/gajap/sandbox/nebula-crm/agents/*/SKILL.md)",
       "Bash(do wc -l \"$d\")",
       "WebFetch(domain:leehanchung.github.io)",
-      "WebFetch(domain:websearchapi.ai)"
+      "WebFetch(domain:websearchapi.ai)",
+      "Bash(git rm:*)"
     ]
   }
 }

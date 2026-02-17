@@ -1,7 +1,13 @@
 ---
 name: testing-quality
-description: "Plans and executes comprehensive testing strategy across frontend, backend, and AI tiers. Activates when writing tests, testing features, setting up test infrastructure, checking coverage, running E2E tests, performance testing, or security scanning. Does not handle writing production code (backend-developer or frontend-developer), security design (security), or infrastructure deployment (devops)."
-allowed-tools: "Read Write Edit Bash(dotnet:*) Bash(npm:*) Bash(pytest:*) Bash(python:*) Bash(k6:*)"
+description: "Plans and executes comprehensive testing strategy across frontend, backend, and AI tiers. Activates when writing tests, testing features, setting up test infrastructure, checking coverage, running E2E tests, or performance testing. Does not handle writing production code (backend-developer or frontend-developer), vulnerability/security review (security), or infrastructure deployment (devops)."
+compatibility: ["manual-orchestration-contract"]
+metadata:
+  allowed-tools: "Read Write Edit Bash(dotnet:*) Bash(npm:*) Bash(pytest:*) Bash(python:*) Bash(k6:*)"
+  version: "2.1.0"
+  author: "Nebula Framework Team"
+  tags: ["testing", "quality", "automation"]
+  last_updated: "2026-02-14"
 ---
 
 # Quality Engineer Agent
@@ -336,7 +342,7 @@ Follow the Test Pyramid (70% unit, 20% integration, 10% E2E), Arrange-Act-Assert
 
 ## CI/CD Integration
 
-For the full GitHub Actions workflow YAML (frontend, backend, AI test jobs, security scan, quality gate), see `agents/quality-engineer/references/code-patterns.md` - Section: CI/CD Integration.
+For the full GitHub Actions workflow YAML (frontend, backend, AI test jobs, quality gate, and separate security-job integration), see `agents/quality-engineer/references/code-patterns.md` - Section: CI/CD Integration.
 
 ## Common Patterns
 

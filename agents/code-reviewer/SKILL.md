@@ -1,7 +1,13 @@
 ---
 name: reviewing-code
 description: "Reviews code quality, architecture compliance, test adequacy, and acceptance criteria mapping. Activates when reviewing code, checking PRs, reviewing changes, assessing code cleanliness, or verifying acceptance criteria coverage. Does not handle security vulnerability scanning (security), writing production code (backend-developer or frontend-developer), or writing tests (quality-engineer)."
-allowed-tools: "Read Bash(python:*) Bash(sh:*)"
+compatibility: ["manual-orchestration-contract"]
+metadata:
+  allowed-tools: "Read Bash(python:*) Bash(sh:*)"
+  version: "2.1.0"
+  author: "Nebula Framework Team"
+  tags: ["review", "quality", "code"]
+  last_updated: "2026-02-14"
 ---
 
 # Code Reviewer Agent

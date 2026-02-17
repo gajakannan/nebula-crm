@@ -1,0 +1,72 @@
+# F0: Dashboard
+
+**Feature ID:** F0
+**Feature Name:** Dashboard
+**Priority:** Critical
+**Phase:** MVP
+
+## Feature Statement
+
+**As a** Distribution User, Underwriter, or Relationship Manager
+**I want** a unified dashboard view when I log in
+**So that** I can immediately see my pipeline status, pending tasks, recent broker activity, and key performance metrics without navigating to multiple screens.
+
+## Business Objective
+
+- **Goal:** Reduce time-to-context for logged-in users by surfacing actionable information on first screen load.
+- **Metric:** Percentage of users who navigate to a task or record directly from the dashboard within 30 seconds of login.
+- **Baseline:** Users currently rely on spreadsheets and email to track pipeline and tasks (no single view exists).
+- **Target:** 80% of daily-active users interact with at least one dashboard widget per session.
+
+## Problem Statement
+
+- **Current State:** Distribution teams piece together pipeline status from multiple tools, emails, and spreadsheets. No single view shows what needs attention right now.
+- **Desired State:** A role-aware dashboard that surfaces submissions/renewals pipeline, assigned tasks, recent broker activity, and KPI summaries on login.
+- **Impact:** Reduced context-switching, faster response to broker inquiries, fewer missed follow-ups.
+
+## Scope & Boundaries
+
+**In Scope:**
+- Nudge cards (dismissible action prompts for overdue tasks, stale submissions, upcoming renewals — up to 3 at top of dashboard)
+- Key metrics cards (total active brokers, open submissions, renewal rate, avg turnaround)
+- Pipeline summary widget (mini-Kanban: horizontal status pills with counts, expandable to show mini-cards on hover/click)
+- My tasks & reminders widget (tasks assigned to logged-in user, sorted by due date)
+- Broker activity feed widget (recent timeline events across broker relationships)
+- Role-aware content (widgets show data filtered by the user's authorization scope)
+
+**Out of Scope:**
+- Customizable widget layout or drag-and-drop arrangement (Future)
+- Advanced analytics, charts, or trend lines beyond simple counts and rates (Non-goal for MVP)
+- Dashboard for external broker/MGA users (Non-goal for MVP)
+- Real-time push updates / WebSocket live refresh (Future; MVP uses page-load fetch)
+- Export or download of dashboard data
+
+## Success Criteria
+
+- Dashboard loads in < 2 seconds (p95) with all five widgets populated.
+- Each widget displays accurate data consistent with underlying list views.
+- Clicking a pipeline status segment navigates to filtered submission/renewal list.
+- Clicking a task navigates to the task detail or linked entity.
+- Clicking a broker activity item navigates to the Broker 360 view.
+- Empty states render meaningful messages when no data exists for a widget.
+
+## Risks & Assumptions
+
+- **Risk:** Dashboard queries may be slow if pipeline/timeline tables grow large. Mitigation: use materialized counts or indexed queries; enforce pagination on activity feed (max 20 items).
+- **Assumption:** Submission and Renewal entities exist with status fields by the time Dashboard is fully wired. Dashboard can render with partial data (e.g., only broker activity) if other modules are not yet implemented.
+- **Assumption:** Authorization scope filtering reuses existing Casbin ABAC policies; no new policies are needed beyond entity-level read access.
+
+## Dependencies
+
+- Navigation Shell (authenticated app shell must exist)
+- Broker entity and timeline events (for broker activity feed)
+- Submission / Renewal entities (for pipeline summary; can degrade gracefully)
+- Task entity (for my tasks widget; can degrade gracefully)
+
+## Related User Stories
+
+- S1 - View Key Metrics Cards
+- S2 - View Pipeline Summary (Mini-Kanban)
+- S3 - View My Tasks and Reminders
+- S4 - View Broker Activity Feed
+- S5 - View Nudge Cards

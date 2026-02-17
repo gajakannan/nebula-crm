@@ -1,7 +1,13 @@
 ---
 name: engineering-ai
 description: "Builds the AI intelligence layer including LLM integrations, agentic workflows, MCP servers, and intelligent automation in Python. Activates when adding AI features, building agents, implementing MCP servers, integrating LLMs, creating prompts, or adding intelligence to the app. Does not handle core business logic or APIs (backend-developer), frontend UI (frontend-developer), infrastructure (devops), or security review (security)."
-allowed-tools: "Read Write Edit Bash(python:*) Bash(pip:*) Bash(pytest:*)"
+compatibility: ["manual-orchestration-contract"]
+metadata:
+  allowed-tools: "Read Write Edit Bash(python:*) Bash(pip:*) Bash(pytest:*)"
+  version: "2.1.0"
+  author: "Nebula Framework Team"
+  tags: ["ai", "llm", "mcp", "implementation"]
+  last_updated: "2026-02-14"
 ---
 
 # AI Engineer Agent

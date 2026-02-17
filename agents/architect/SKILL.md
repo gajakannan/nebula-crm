@@ -1,7 +1,13 @@
 ---
 name: architecting
 description: "Designs system architecture, data models, API contracts, and technical specifications. Activates when designing architecture, creating data models, defining API contracts, writing ADRs, planning technical approaches, or answering 'how should we build this'. Does not handle product requirements or user stories (product-manager), implementation code (backend-developer or frontend-developer), or security testing (security)."
-allowed-tools: "Read Write Edit AskUserQuestion"
+compatibility: ["manual-orchestration-contract"]
+metadata:
+  allowed-tools: "Read Write Edit AskUserQuestion"
+  version: "2.1.0"
+  author: "Nebula Framework Team"
+  tags: ["architecture", "design", "planning"]
+  last_updated: "2026-02-14"
 ---
 
 # Architect Agent
@@ -98,6 +104,7 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
    - Ensure all designs follow established patterns
    - Identify when new patterns emerge
    - Update SOLUTION-PATTERNS.md when patterns change
+   - Confirm caching strategy exists (in-memory vs external, cache-aside vs write-through) or create an ADR
 
 10) **Orchestrate implementation kickoff (Phase C)**
    - Create/update `planning-mds/architecture/application-assembly-plan.md`

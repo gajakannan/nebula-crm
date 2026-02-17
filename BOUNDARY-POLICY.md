@@ -19,7 +19,7 @@ This policy defines the boundary between generic, reusable agent roles (`agents/
 **Principle:** Everything in `agents/` must be applicable to **any** software project, regardless of domain.
 
 **What belongs in agents/:**
-- ✅ Agent role definitions (SKILL.md, README.md)
+- ✅ Agent role definitions (SKILL.md and supporting references/scripts/assets)
 - ✅ Generic best practices (SOLID, DDD, INVEST, vertical slicing, etc.)
 - ✅ Generic examples from multiple domains (B2B SaaS, e-commerce, healthcare, etc.)
 - ✅ Generic templates (story, feature, persona, ADR, API contract, etc.)

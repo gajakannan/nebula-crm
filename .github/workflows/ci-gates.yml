@@ -18,7 +18,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install gate runner dependencies
         run: |
@@ -35,3 +35,6 @@ jobs:
 
       - name: Run required gates for current lifecycle stage (stage-scoped)
         run: python3 scripts/run-lifecycle-gates.py
+
+      - name: Docker build (builder image)
+        run: docker build -t nebula-builder .

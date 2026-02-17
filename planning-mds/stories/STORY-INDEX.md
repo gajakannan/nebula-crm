@@ -2,7 +2,19 @@
 
 Auto-generated index of all user stories.
 
-**Total Stories:** 2
+**Total Stories:** 7
+
+---
+
+## F0 - Dashboard
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [S1](./F0-dashboard/S1-view-key-metrics-cards.md) | View Key Metrics Cards | High | MVP | Distribution User, Relationship Manager |
+| [S2](./F0-dashboard/S2-view-pipeline-summary.md) | View Pipeline Summary (Mini-Kanban) | High | MVP | Distribution User, Underwriter |
+| [S3](./F0-dashboard/S3-view-my-tasks-and-reminders.md) | View My Tasks and Reminders | High | MVP | Distribution User, Underwriter, Relationship Manager |
+| [S4](./F0-dashboard/S4-view-broker-activity-feed.md) | View Broker Activity Feed | High | MVP | Relationship Manager, Distribution User |
+| [S5](./F0-dashboard/S5-view-nudge-cards.md) | View Nudge Cards | High | MVP | Distribution User, Underwriter, Relationship Manager |
 
 ---
 
@@ -19,7 +31,7 @@ Auto-generated index of all user stories.
 
 | Phase | Count |
 |-------|-------|
-| MVP | 2 |
+| MVP | 7 |
 
 ---
 
@@ -28,7 +40,7 @@ Auto-generated index of all user stories.
 | Priority | Count |
 |----------|-------|
 | Critical | 1 |
-| High | 1 |
+| High | 6 |
 
 ---
 

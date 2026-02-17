@@ -2,7 +2,7 @@
 
 **Purpose:** This document captures architectural decisions, design patterns, and coding conventions specific to the Nebula CRM solution. These patterns ensure consistency across all implementations and serve as institutional memory.
 
-**Last Updated:** 2026-02-01
+**Last Updated:** 2026-02-17
 
 ---
 
@@ -616,6 +616,30 @@ _logger.LogInformation(
 **Decision:** Use global exception handling middleware
 **Rationale:** Consistent error responses, avoid scattered try-catch
 **Applied in:** API layer
+
+### Pattern: In-Memory-First Caching (Cache-Aside Default)
+**Decision:** Use in-memory caching (MemoryCache) for small, low-churn datasets; use external cache (Redis) only when cross-instance consistency or scale requires it.
+**Rationale:** Lower operational complexity during early implementation while preserving an upgrade path for scale.
+**Applied in:** Reference data, dashboard aggregates, request-scoped ABAC resolution.
+
+**When to use in-memory cache:**
+- Data is small and changes infrequently (reference tables).
+- Cache is per-process or per-request (ABAC scope resolution).
+- Cross-instance consistency is not required.
+
+**When to use external cache (Redis):**
+- Multiple app instances must share cache state.
+- Cache entry size or volume exceeds in-memory thresholds.
+- Cache invalidation must be centralized.
+
+**Pattern choice:**
+- **Cache-aside (default):** Read from cache; on miss, load from DB and populate.
+- **Write-through (selective):** Admin-managed reference data updates that require immediate consistency.
+- **Write-behind:** Not used in MVP.
+
+**Security notes:**
+- Avoid caching secrets or raw PII without explicit approval.
+- Include tenant/subject identifiers in cache keys for scoped data.
 
 ### Pattern: OWASP Top 10 Compliance
 **Decision:** Follow OWASP Top 10 security practices

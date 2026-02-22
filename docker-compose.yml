@@ -13,6 +13,27 @@ services:
       - "5432:5432"
     volumes:
       - nebula-db-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: nebula-keycloak
+    command: start-dev --import-realm
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: change_me
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./docker/keycloak/nebula-realm.json:/opt/keycloak/data/import/nebula-realm.json:ro
+    depends_on:
+      - db
 
   api:
     image: ghcr.io/nebula-crm/nebula-api:local
@@ -24,6 +45,7 @@ services:
       - "8080:8080"
     depends_on:
       - db
+      - keycloak
 
 volumes:
   nebula-db-data:

@@ -44,6 +44,6 @@ Define how secrets are stored, accessed, rotated, and audited across environment
 
 ## Sign-Off
 
-Security Reviewer: Pending
-DevOps Reviewer: Pending
-Date: Pending
+Security Reviewer: Security Agent
+DevOps Reviewer: DevOps Agent
+Date: 2026-02-22

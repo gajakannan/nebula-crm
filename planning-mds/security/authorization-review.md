@@ -35,16 +35,16 @@ Each field in the matcher must be supplied by the enforcement point at call time
 | Matcher field | Source in request | Used in | Risk if missing |
 |---|---|---|---|
 | `r.sub.role` | Auth token claim (e.g. Keycloak role) | All policy rows | Enforcer returns DENY (safe-fail) |
-| `r.sub.id` | Auth token subject (user UUID) | Task read condition | `eval()` returns false → safe-fail DENY; must be hydrated for task checks |
+| `r.sub.id` | Auth token subject (user UUID) | Task ownership condition | `eval()` returns false → safe-fail DENY; must be hydrated for task checks |
 | `r.obj.type` | Set by enforcement point to resource name | All policy rows | Enforcer returns DENY (safe-fail) |
-| `r.obj.assignee` | Loaded from DB before enforcer call | Task read condition | Maps to Task.AssignedTo; if null/unset, condition evaluates false → safe-fail DENY; must be hydrated |
+| `r.obj.assignee` | From request on create; from DB on read/update/delete | Task ownership condition | Maps to Task.AssignedTo; if null/unset, condition evaluates false → safe-fail DENY; must be hydrated |
 
 ### 2.3 Condition Validation
 
 | Condition string | Used on | Valid Casbin expression | Evaluation |
 |---|---|---|---|
 | `true` | All resources except task | ✅ | Always passes; scope enforced at query layer |
-| `r.obj.assignee == r.sub.id` | `task, read` | ✅ | Resource-attribute ownership check at policy layer |
+| `r.obj.assignee == r.sub.id` | `task, create/read/update/delete` | ✅ | Resource-attribute ownership check at policy layer |
 
 ### 2.4 Policy Action Coverage vs Matcher
 
@@ -92,7 +92,7 @@ Resources and actions with no policy line are implicitly DENY (no matching rule)
 | `dashboard_kpi` | All internal roles | read | — |
 | `dashboard_pipeline` | All internal roles | read | — |
 | `dashboard_nudge` | All internal roles | read | — |
-| `task` | All internal roles | read | — |
+| `task` | All internal roles | create, read, update, delete | — |
 | `timeline_event` | All internal roles | read | — |
 
 ### 3.2 Coverage by Role
@@ -257,27 +257,62 @@ Legend: ✅ ALLOW · ✗ DENY · ⚠ PENDING (OQ blocks row)
 | DN-07 | ExternalUser | read | ✗ DENY | F0-S5 Data Visibility |
 | DN-08 | Any role | create/update/delete | ✗ DENY | Read-only; dismiss is session-only, not a mutation |
 
-### 4.8 Task — Read Own Assigned Tasks
+### 4.8 Task — Manage Own Tasks
 
 Condition `r.obj.assignee == r.sub.id` enforced at policy layer.
 Enforcement point must hydrate `obj.assignee` from DB before calling enforcer.
 
 | # | Role | Action | obj.assignee == sub.id | Expected | Source |
 |---|---|---|---|---|---|
-| T-01 | DistributionUser | read | true | ✅ ALLOW | F0-S3 AC Checklist |
-| T-02 | DistributionUser | read | false | ✗ DENY | F0-S3 AC Checklist (no cross-user) |
-| T-03 | DistributionManager | read | true | ✅ ALLOW | F0-S3 Role Visibility |
-| T-04 | DistributionManager | read | false | ✗ DENY | F0-S3 Role Visibility |
-| T-05 | Underwriter | read | true | ✅ ALLOW | F0-S3 Role Visibility |
-| T-06 | Underwriter | read | false | ✗ DENY | F0-S3 AC Checklist |
-| T-07 | RelationshipManager | read | true | ✅ ALLOW | F0-S3 Role Visibility |
-| T-08 | RelationshipManager | read | false | ✗ DENY | F0-S3 AC Checklist |
-| T-09 | ProgramManager | read | true | ✅ ALLOW | F0-S3 Role Visibility |
-| T-10 | ProgramManager | read | false | ✗ DENY | F0-S3 AC Checklist |
-| T-11 | Admin | read | true | ✅ ALLOW | F0-S3 Role Visibility (own tasks; cross-user is Future) |
-| T-12 | Admin | read | false | ✗ DENY | F0-S3 Role Visibility |
-| T-13 | ExternalUser | read | — | ✗ DENY | F0-S3 Data Visibility |
-| T-14 | Any role | create/update/delete | — | ✗ DENY | Read-only in dashboard context |
+| T-01 | DistributionUser | create | true | ✅ ALLOW | F5-S1 ACs |
+| T-02 | DistributionUser | create | false | ✗ DENY | F5-S1 ACs (self-assigned only) |
+| T-03 | DistributionUser | read | true | ✅ ALLOW | F0-S3 AC Checklist |
+| T-04 | DistributionUser | read | false | ✗ DENY | F0-S3 AC Checklist (no cross-user) |
+| T-05 | DistributionUser | update | true | ✅ ALLOW | F5-S2 ACs |
+| T-06 | DistributionUser | update | false | ✗ DENY | F5-S2 ACs |
+| T-07 | DistributionUser | delete | true | ✅ ALLOW | F5-S3 ACs |
+| T-08 | DistributionUser | delete | false | ✗ DENY | F5-S3 ACs |
+| T-09 | DistributionManager | create | true | ✅ ALLOW | F5-S1 ACs |
+| T-10 | DistributionManager | create | false | ✗ DENY | F5-S1 ACs |
+| T-11 | DistributionManager | read | true | ✅ ALLOW | F0-S3 Role Visibility |
+| T-12 | DistributionManager | read | false | ✗ DENY | F0-S3 Role Visibility |
+| T-13 | DistributionManager | update | true | ✅ ALLOW | F5-S2 ACs |
+| T-14 | DistributionManager | update | false | ✗ DENY | F5-S2 ACs |
+| T-15 | DistributionManager | delete | true | ✅ ALLOW | F5-S3 ACs |
+| T-16 | DistributionManager | delete | false | ✗ DENY | F5-S3 ACs |
+| T-17 | Underwriter | create | true | ✅ ALLOW | F5-S1 ACs |
+| T-18 | Underwriter | create | false | ✗ DENY | F5-S1 ACs |
+| T-19 | Underwriter | read | true | ✅ ALLOW | F0-S3 Role Visibility |
+| T-20 | Underwriter | read | false | ✗ DENY | F0-S3 AC Checklist |
+| T-21 | Underwriter | update | true | ✅ ALLOW | F5-S2 ACs |
+| T-22 | Underwriter | update | false | ✗ DENY | F5-S2 ACs |
+| T-23 | Underwriter | delete | true | ✅ ALLOW | F5-S3 ACs |
+| T-24 | Underwriter | delete | false | ✗ DENY | F5-S3 ACs |
+| T-25 | RelationshipManager | create | true | ✅ ALLOW | F5-S1 ACs |
+| T-26 | RelationshipManager | create | false | ✗ DENY | F5-S1 ACs |
+| T-27 | RelationshipManager | read | true | ✅ ALLOW | F0-S3 Role Visibility |
+| T-28 | RelationshipManager | read | false | ✗ DENY | F0-S3 AC Checklist |
+| T-29 | RelationshipManager | update | true | ✅ ALLOW | F5-S2 ACs |
+| T-30 | RelationshipManager | update | false | ✗ DENY | F5-S2 ACs |
+| T-31 | RelationshipManager | delete | true | ✅ ALLOW | F5-S3 ACs |
+| T-32 | RelationshipManager | delete | false | ✗ DENY | F5-S3 ACs |
+| T-33 | ProgramManager | create | true | ✅ ALLOW | F5-S1 ACs |
+| T-34 | ProgramManager | create | false | ✗ DENY | F5-S1 ACs |
+| T-35 | ProgramManager | read | true | ✅ ALLOW | F0-S3 Role Visibility |
+| T-36 | ProgramManager | read | false | ✗ DENY | F0-S3 AC Checklist |
+| T-37 | ProgramManager | update | true | ✅ ALLOW | F5-S2 ACs |
+| T-38 | ProgramManager | update | false | ✗ DENY | F5-S2 ACs |
+| T-39 | ProgramManager | delete | true | ✅ ALLOW | F5-S3 ACs |
+| T-40 | ProgramManager | delete | false | ✗ DENY | F5-S3 ACs |
+| T-41 | Admin | create | true | ✅ ALLOW | F5-S1 ACs |
+| T-42 | Admin | create | false | ✗ DENY | F5-S1 ACs |
+| T-43 | Admin | read | true | ✅ ALLOW | F0-S3 Role Visibility (own tasks; cross-user is Future) |
+| T-44 | Admin | read | false | ✗ DENY | F0-S3 Role Visibility |
+| T-45 | Admin | update | true | ✅ ALLOW | F5-S2 ACs |
+| T-46 | Admin | update | false | ✗ DENY | F5-S2 ACs |
+| T-47 | Admin | delete | true | ✅ ALLOW | F5-S3 ACs |
+| T-48 | Admin | delete | false | ✗ DENY | F5-S3 ACs |
+| T-49 | ExternalUser | read | — | ✗ DENY | F0-S3 Data Visibility |
 
 ### 4.9 Activity Timeline Event — Broker Events
 

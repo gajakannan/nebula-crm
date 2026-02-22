@@ -24,6 +24,21 @@ Define baseline data protection requirements for the Nebula reference solution.
 - Field-level masking/redaction for logs and support outputs.
 - Data minimization in prompts/workflows for neuron/ paths.
 
+### PII Masking — Inactive Broker Rule
+
+When `Broker.Status = Inactive`, the API **must** mask PII fields on all broker and contact responses:
+
+| Endpoint | Masked Fields | Sentinel Value |
+|----------|--------------|----------------|
+| `GET /api/brokers` (list) | `email`, `phone` | `null` |
+| `GET /api/brokers/{id}` (detail) | `email`, `phone` | `null` |
+| `GET /api/contacts` (list) | `email`, `phone` (when parent broker is Inactive) | `null` |
+| `GET /api/contacts/{id}` (detail) | `email`, `phone` (when parent broker is Inactive) | `null` |
+
+- Masking is enforced **server-side** before serialization; the frontend never receives raw PII for inactive brokers.
+- Frontend consumers must display `null` on an inactive broker/contact as "Masked", not as missing data.
+- See `nebula-api.yaml` Broker and Contact schema descriptions for the API contract.
+
 ## Retention And Deletion
 
 | Data Type | Retention | Rationale |
@@ -47,6 +62,6 @@ Define baseline data protection requirements for the Nebula reference solution.
 
 ## Sign-Off
 
-Security Reviewer: Pending
-Architect: Pending
-Date: Pending
+Security Reviewer: Security Agent
+Architect: Architect Agent
+Date: 2026-02-22

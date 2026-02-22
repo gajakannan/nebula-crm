@@ -27,7 +27,8 @@
       "format": "date"
     },
     "assignedTo": {
-      "type": "string"
+      "type": "string",
+      "description": "Must match authenticated subject in MVP (self-assigned tasks only)."
     },
     "linkedEntityType": {
       "type": "string"

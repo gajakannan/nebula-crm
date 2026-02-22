@@ -1,8 +1,9 @@
 version: 1
 release_posture:
   mode: public-preview-human-orchestrated
-  summary: 'Phase B approved (2026-02-14). Implementation underway starting with F0
-    (Dashboard). CI enforces strict infra and security gates at this stage.
+  summary: 'Phase B approved (2026-02-14). Implementation underway for F0 (Dashboard)
+    and F1 (Broker Relationship Management). CI enforces strict infra and security
+    gates at this stage.
 
     '
 current_stage: implementation
@@ -21,7 +22,7 @@ implementation_scope:
   - F1-S5
   - F1-S6
   - F1-S7
-  note: "Implementation scope includes F0 dashboard slice and F1 broker relationship\
+  note: "Implementation scope includes F0 dashboard slice, F1 broker relationship\
     \ management stories S1\u2013S7 for Broker 360, contacts, and timeline."
 stages:
   framework-bootstrap:

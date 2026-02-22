@@ -90,40 +90,146 @@ Nudge logic runs **server-side** in a single endpoint (`GET /api/dashboard/nudge
 
 ### Nudge Computation Algorithm
 
+#### Constants
+
+| Name | Value | Notes |
+|------|-------|-------|
+| MAX_NUDGES | 3 | Maximum cards returned |
+| STALE_THRESHOLD_DAYS | 6 | Submissions with DaysInCurrentStatus >= 6 are stale (i.e. > 5 full days) |
+| RENEWAL_WINDOW_DAYS | 14 | Inclusive: today <= RenewalDate <= today + 14 |
+| CANDIDATE_LIMIT | 3 | Max candidates fetched per nudge type |
+
+#### Step 1: Execute three queries in parallel (all ABAC-scoped)
+
+**a. Overdue tasks:**
+```sql
+SELECT t.Id, t.Title, t.DueDate,
+       (@today - t.DueDate) AS DaysOverdue,
+       t.LinkedEntityType, t.LinkedEntityId,
+       COALESCE(b.LegalName, a.Name, sub.Id::text, ren.Id::text) AS LinkedEntityName
+FROM Tasks t
+  LEFT JOIN Brokers b      ON t.LinkedEntityType = 'Broker'     AND t.LinkedEntityId = b.Id AND b.IsDeleted = false
+  LEFT JOIN Accounts a     ON t.LinkedEntityType = 'Account'    AND t.LinkedEntityId = a.Id AND a.IsDeleted = false
+  LEFT JOIN Submissions sub ON t.LinkedEntityType = 'Submission' AND t.LinkedEntityId = sub.Id AND sub.IsDeleted = false
+  LEFT JOIN Renewals ren   ON t.LinkedEntityType = 'Renewal'    AND t.LinkedEntityId = ren.Id AND ren.IsDeleted = false
+WHERE t.AssignedTo = @currentUser
+  AND t.DueDate < @today              -- strictly less than (due today is NOT overdue)
+  AND t.Status != 'Done'
+  AND t.IsDeleted = false
+  AND (t.LinkedEntityId IS NULL       -- unlinked tasks are eligible
+       OR b.Id IS NOT NULL OR a.Id IS NOT NULL OR sub.Id IS NOT NULL OR ren.Id IS NOT NULL)
+                                      -- linked entity must exist and not be soft-deleted
+ORDER BY t.DueDate ASC,               -- most overdue first
+         t.Id ASC                     -- deterministic tie-break
+LIMIT 3
 ```
-1. Execute three queries in parallel (all ABAC-scoped):
-   a. Overdue tasks: SELECT FROM Tasks
-      WHERE AssignedTo = @currentUser
-        AND DueDate < @today
-        AND Status != 'Done'
-        AND IsDeleted = false
-        AND (LinkedEntityId IS NULL OR linked entity is not soft-deleted)
-      ORDER BY DueDate ASC  -- most overdue first
-      LIMIT 3
 
-   b. Stale submissions: SELECT FROM Submissions
-      JOIN WorkflowTransition (latest per entity)
-      WHERE CurrentStatus NOT IN ('Bound','Declined','Withdrawn')
-        AND DaysInCurrentStatus > 5
-        AND ABAC-scoped
-      ORDER BY DaysInCurrentStatus DESC  -- most stale first
-      LIMIT 3
-
-   c. Upcoming renewals: SELECT FROM Renewals
-      WHERE RenewalDate BETWEEN @today AND @today+14
-        AND CurrentStatus IN ('Created','Early')
-        AND ABAC-scoped
-      ORDER BY RenewalDate ASC  -- soonest first
-      LIMIT 3
-
-2. Merge results using priority fill:
-   - Slot 1-3: Fill with overdue tasks first
-   - Remaining slots: Fill with stale submissions
-   - Remaining slots: Fill with upcoming renewals
-   - Stop at 3 total
-
-3. Return NudgeCard[] (max 3)
+**b. Stale submissions:**
+```sql
+SELECT s.Id, s.CurrentStatus,
+       COALESCE(a.Name, b.LegalName) AS EntityName,
+       EXTRACT(DAY FROM (@today - wt_latest.OccurredAt))::int AS DaysInCurrentStatus
+FROM Submissions s
+  LEFT JOIN Accounts a ON s.AccountId = a.Id
+  LEFT JOIN Brokers b ON s.BrokerId = b.Id
+  LEFT JOIN LATERAL (
+    SELECT OccurredAt FROM WorkflowTransition wt
+    WHERE wt.EntityId = s.Id AND wt.WorkflowType = 'Submission'
+    ORDER BY wt.OccurredAt DESC LIMIT 1
+  ) wt_latest ON true
+WHERE s.CurrentStatus NOT IN ('Bound', 'Declined', 'Withdrawn')
+  AND s.IsDeleted = false
+  AND EXTRACT(DAY FROM (@today - wt_latest.OccurredAt)) >= @STALE_THRESHOLD_DAYS
+  -- + ABAC scope filter
+ORDER BY DaysInCurrentStatus DESC,    -- most stale first
+         s.Id ASC                     -- deterministic tie-break
+LIMIT 3
 ```
+
+**c. Upcoming renewals:**
+```sql
+SELECT r.Id, r.CurrentStatus, r.RenewalDate,
+       COALESCE(a.Name, b.LegalName) AS EntityName,
+       (r.RenewalDate - @today) AS DaysUntilRenewal
+FROM Renewals r
+  LEFT JOIN Accounts a ON r.AccountId = a.Id
+  LEFT JOIN Brokers b ON r.BrokerId = b.Id
+WHERE r.RenewalDate >= @today                -- inclusive lower bound (today counts)
+  AND r.RenewalDate <= @today + 14           -- inclusive upper bound (14 days out counts)
+  AND r.CurrentStatus IN ('Created', 'Early')
+  AND r.IsDeleted = false
+  -- + ABAC scope filter
+ORDER BY r.RenewalDate ASC,                  -- soonest first
+         r.Id ASC                            -- deterministic tie-break
+LIMIT 3
+```
+
+#### Step 2: Priority merge (pure function, unit-testable)
+
+```
+function mergeNudges(overdueTasks[], staleSubmissions[], upcomingRenewals[]) → NudgeCard[]:
+    result = []
+
+    // Priority 1: Overdue tasks (highest urgency)
+    for task in overdueTasks:
+        if result.length >= MAX_NUDGES: break
+        result.append(NudgeCard {
+            nudgeType:        "OverdueTask",
+            title:            task.Title,
+            description:      "{task.DaysOverdue} day(s) overdue",
+            linkedEntityType: task.LinkedEntityType ?? "Task",
+            linkedEntityId:   task.LinkedEntityId ?? task.Id,
+            linkedEntityName: task.LinkedEntityName ?? task.Title,
+            urgencyValue:     task.DaysOverdue,
+            ctaLabel:         "Review Now"
+        })
+
+    // Priority 2: Stale submissions
+    for sub in staleSubmissions:
+        if result.length >= MAX_NUDGES: break
+        result.append(NudgeCard {
+            nudgeType:        "StaleSubmission",
+            title:            sub.EntityName,
+            description:      "Stuck in {sub.CurrentStatus} for {sub.DaysInCurrentStatus} days",
+            linkedEntityType: "Submission",
+            linkedEntityId:   sub.Id,
+            linkedEntityName: sub.EntityName,
+            urgencyValue:     sub.DaysInCurrentStatus,
+            ctaLabel:         "Take Action"
+        })
+
+    // Priority 3: Upcoming renewals
+    for ren in upcomingRenewals:
+        if result.length >= MAX_NUDGES: break
+        result.append(NudgeCard {
+            nudgeType:        "UpcomingRenewal",
+            title:            ren.EntityName,
+            description:      "{ren.DaysUntilRenewal} day(s) until renewal",
+            linkedEntityType: "Renewal",
+            linkedEntityId:   ren.Id,
+            linkedEntityName: ren.EntityName,
+            urgencyValue:     ren.DaysUntilRenewal,
+            ctaLabel:         "Start Outreach"
+        })
+
+    return result   // length 0..3
+```
+
+#### Boundary Conditions
+
+| Condition | Behavior |
+|-----------|----------|
+| Task DueDate = today | **Not overdue.** Overdue requires `DueDate < today` (strictly past). |
+| Task DueDate is NULL | **Not eligible.** Tasks without a due date cannot be overdue. |
+| DaysInCurrentStatus = 5 | **Not stale.** Threshold is >= 6 (i.e. more than 5 full days). |
+| No WorkflowTransition exists for submission | **DaysInCurrentStatus = NULL.** Excluded from stale nudges (NULL fails the >= 6 check). |
+| RenewalDate = today | **Eligible.** Lower bound is inclusive. |
+| RenewalDate = today + 14 | **Eligible.** Upper bound is inclusive. |
+| RenewalDate = today + 15 | **Not eligible.** Outside the 14-day window. |
+| Linked entity is soft-deleted | **Task excluded.** Overdue task nudge is skipped; the task still appears in the My Tasks widget (S3) with "[Deleted]" label. |
+| All 3 slots filled by overdue tasks | **Stale/renewal nudges suppressed.** Priority ordering is strict — lower priority types only fill remaining slots. |
+| Two tasks have same DueDate | **Tie-break by Task.Id ascending.** Deterministic — same user always sees the same card. |
+| Zero candidates across all types | **Return empty array.** Frontend hides the "Needs Your Attention" section entirely. |
 
 ### Nudge Response Shape
 
@@ -146,13 +252,15 @@ Nudge logic runs **server-side** in a single endpoint (`GET /api/dashboard/nudge
 
 ### DaysInCurrentStatus Computation
 
-`DaysInCurrentStatus` is computed as:
+`DaysInCurrentStatus` is computed at query time (not stored) as:
 
 ```sql
-EXTRACT(DAY FROM (CURRENT_DATE - MAX(wt.OccurredAt)))
+EXTRACT(DAY FROM (CURRENT_DATE - wt_latest.OccurredAt))::int
 ```
 
-where `wt` is the most recent WorkflowTransition for the entity. This is computed at query time (not stored), using the existing index on `WorkflowTransition(EntityId, OccurredAt DESC)`.
+where `wt_latest` is the most recent WorkflowTransition for the entity, resolved via `LEFT JOIN LATERAL ... ORDER BY OccurredAt DESC LIMIT 1`. Uses the existing index on `WorkflowTransition(EntityId, OccurredAt DESC)`.
+
+**Edge case:** If no WorkflowTransition exists for an entity (e.g., newly created submission with no transitions yet), `DaysInCurrentStatus` is NULL. NULL values are excluded from stale submission nudges (NULL fails the `>= 6` comparison). For pipeline mini-cards (S2), NULL renders as "0" days in status.
 
 ---
 

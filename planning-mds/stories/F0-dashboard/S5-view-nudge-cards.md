@@ -101,7 +101,9 @@ Inspired by Copper CRM's "Keep Things Moving" pattern, nudge cards are prominent
 - Task entity with AssignedTo, DueDate, Status fields (for overdue task nudges)
 - Submission entity with CurrentStatus, DaysInStatus computation (for stale submission nudges)
 - Renewal entity with RenewalDate, CurrentStatus (for upcoming renewal nudges)
-- Entity detail screens (for CTA navigation)
+- Broker 360 (F1-S3) for Broker-linked overdue task CTA — **available**
+- ~~Submission Detail (for "Take Action" CTA)~~ — Not in F0/F1 scope; CTA hidden per MVP Navigation Constraints
+- ~~Renewal Detail (for "Start Outreach" CTA)~~ — Not in F0/F1 scope; CTA hidden per MVP Navigation Constraints
 
 **Related Stories:**
 - S3 — My Tasks & Reminders (tasks widget; nudges are the high-urgency subset)
@@ -130,12 +132,19 @@ Inspired by Copper CRM's "Keep Things Moving" pattern, nudge cards are prominent
 
 ## Questions & Assumptions
 
-**Assumptions (to be validated):**
+**Assumptions:**
 - Session-scoped dismiss is acceptable for MVP (card reappears on next page load if condition persists)
-- "Stale" threshold is 5 days in current status (configurable in future, hardcoded for MVP)
-- "Upcoming renewal" threshold is 14 days before RenewalDate
+- "Stale" threshold is > 5 days in current status, i.e. 6+ days (configurable in future, hardcoded for MVP)
+- "Upcoming renewal" window is RenewalDate between today and today + 14 days (inclusive both ends)
 - Maximum 3 nudge cards prevents visual overload
 - Priority ordering (overdue > stale > upcoming) matches user expectations
+
+**MVP Navigation Constraints (confirmed):**
+- CTA "Review Now" for Broker-linked overdue tasks navigates to Broker 360 (F1-S3 in scope).
+- CTA "Review Now" for non-Broker-linked tasks: CTA button hidden (card still displays title, description, urgency).
+- CTA "Take Action" (Submission Detail): CTA button hidden until F3 exists.
+- CTA "Start Outreach" (Renewal Detail): CTA button hidden until F4 exists.
+- See [feature-assembly-plan.md — MVP Navigation Constraints](../../architecture/feature-assembly-plan.md) for full degradation rules.
 
 ## Definition of Done
 

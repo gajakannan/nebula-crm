@@ -162,21 +162,40 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 
 ---
 
-### 2.6 Task — Read Own Assigned Tasks
+### 2.6 Task — Manage Own Tasks
 
 | Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
 |------|--------|----------|------------------------------|----------------------|
-| DistributionUser | read | **ALLOW** | Own tasks only (task assigned to the authenticated user). Done tasks excluded. | F0-S3 AC Checklist, Role Visibility |
+| DistributionUser | create | **ALLOW** | Self-assigned tasks only. `AssignedTo` must match authenticated subject. | F5-S1 ACs |
+| DistributionUser | read | **ALLOW** | Own tasks only (task assigned to the authenticated user). Dashboard list excludes Done. | F0-S3 AC Checklist, Role Visibility |
+| DistributionUser | update | **ALLOW** | Own tasks only. `AssignedTo` must match authenticated subject. | F5-S2 ACs |
+| DistributionUser | delete | **ALLOW** | Own tasks only. Soft delete only. | F5-S3 ACs |
+| DistributionManager | create | **ALLOW** | Self-assigned tasks only. `AssignedTo` must match authenticated subject. | F5-S1 ACs |
 | DistributionManager | read | **ALLOW** | Own tasks only for the dashboard widget. Viewing other users' tasks is Future (not MVP). | F0-S3 Role Visibility |
-| Underwriter | read | **ALLOW** | Own tasks only. Done tasks excluded. | F0-S3 Role Visibility |
-| RelationshipManager | read | **ALLOW** | Own tasks only. Done tasks excluded. | F0-S3 Role Visibility |
-| ProgramManager | read | **ALLOW** | Own tasks only. Done tasks excluded. | F0-S3 Role Visibility |
+| DistributionManager | update | **ALLOW** | Own tasks only. `AssignedTo` must match authenticated subject. | F5-S2 ACs |
+| DistributionManager | delete | **ALLOW** | Own tasks only. Soft delete only. | F5-S3 ACs |
+| Underwriter | create | **ALLOW** | Self-assigned tasks only. `AssignedTo` must match authenticated subject. | F5-S1 ACs |
+| Underwriter | read | **ALLOW** | Own tasks only. Dashboard list excludes Done. | F0-S3 Role Visibility |
+| Underwriter | update | **ALLOW** | Own tasks only. `AssignedTo` must match authenticated subject. | F5-S2 ACs |
+| Underwriter | delete | **ALLOW** | Own tasks only. Soft delete only. | F5-S3 ACs |
+| RelationshipManager | create | **ALLOW** | Self-assigned tasks only. `AssignedTo` must match authenticated subject. | F5-S1 ACs |
+| RelationshipManager | read | **ALLOW** | Own tasks only. Dashboard list excludes Done. | F0-S3 Role Visibility |
+| RelationshipManager | update | **ALLOW** | Own tasks only. `AssignedTo` must match authenticated subject. | F5-S2 ACs |
+| RelationshipManager | delete | **ALLOW** | Own tasks only. Soft delete only. | F5-S3 ACs |
+| ProgramManager | create | **ALLOW** | Self-assigned tasks only. `AssignedTo` must match authenticated subject. | F5-S1 ACs |
+| ProgramManager | read | **ALLOW** | Own tasks only. Dashboard list excludes Done. | F0-S3 Role Visibility |
+| ProgramManager | update | **ALLOW** | Own tasks only. `AssignedTo` must match authenticated subject. | F5-S2 ACs |
+| ProgramManager | delete | **ALLOW** | Own tasks only. Soft delete only. | F5-S3 ACs |
+| Admin | create | **ALLOW** | Self-assigned tasks only in MVP. `AssignedTo` must match authenticated subject. | F5-S1 ACs |
 | Admin | read | **ALLOW** | Own tasks only for the dashboard widget. Viewing other users' tasks is explicitly Future (not MVP). | F0-S3 Role Visibility |
-| ExternalUser | read | **DENY** | Task data is InternalOnly. | F0-S3 Data Visibility |
+| Admin | update | **ALLOW** | Own tasks only. `AssignedTo` must match authenticated subject. | F5-S2 ACs |
+| Admin | delete | **ALLOW** | Own tasks only. Soft delete only. | F5-S3 ACs |
+| ExternalUser | all | **DENY** | Task data is InternalOnly. | F0-S3 Data Visibility |
 
 **Constraints applying to all ALLOW decisions on Task:**
-- Only tasks in status Open or InProgress are returned. Done tasks are excluded from the dashboard widget view. (F0-S3 Validation Rules)
+- A user may only create/update/delete tasks where `AssignedTo` equals their authenticated subject. No cross-user assignment in MVP. (F5-S1/S2/S3)
 - A user may only read tasks where they are the assigned user. No cross-user task visibility in MVP. (F0-S3 AC Checklist, Non-Functional)
+- Dashboard list excludes Done tasks; `GET /api/tasks/{taskId}` may return any status for own tasks. (F0-S3 Validation Rules)
 - If a linked entity on a task has been soft-deleted, the task is still displayed but the entity name must show as "[Deleted]". (F0-S3 edge cases)
 - Read-only in dashboard context. No create, update, or delete from the dashboard widget in MVP. (F0-S3 out of scope)
 

@@ -104,6 +104,20 @@ public async Task<Broker> UpdateBrokerAsync(Guid id, UpdateBrokerDto dto)
 }
 ```
 
+### Pattern: EventDescription is Pre-Rendered on Write
+**Decision:** The `EventDescription` field on `ActivityTimelineEvent` is pre-rendered at write time, not computed at query time
+**Rationale:** Keeps the activity feed query simple (no template resolution), ensures historical descriptions remain stable even if templates change later
+**Applied in:** All timeline event creation
+**Templates:** Defined in `planning-mds/schemas/activity-event-payloads.schema.json` under `descriptionTemplate` per event type
+
+**Example:** For `BrokerCreated`, the template is `"New broker \"{legalName}\" added"`. The service resolves placeholders from the event payload and stores the result:
+```csharp
+var description = $"New broker \"{dto.LegalName}\" added";
+event.EventDescription = description; // stored alongside EventPayloadJson
+```
+
+**Important:** Both `EventDescription` (human-readable) and `EventPayloadJson` (structured data) are stored. The payload is the source of truth for programmatic use; the description is for display only.
+
 ### Pattern: Workflow Transitions are Append-Only
 **Decision:** WorkflowTransition table is append-only (immutable history)
 **Rationale:** Audit compliance, state machine integrity
@@ -155,6 +169,7 @@ renewals use the sub-resource pattern.
 **Decision:** All API errors return RFC 7807 ProblemDetails format
 **Rationale:** Standard, machine-readable error format
 **Applied in:** All API error responses
+**Error codes:** See `planning-mds/architecture/error-codes.md` for the authoritative list.
 
 **Example:**
 ```csharp
@@ -176,6 +191,27 @@ return Problem(
 GET /api/brokers?page=1&pageSize=20
 GET /api/submissions?page=2&pageSize=50
 ```
+
+### Pattern: Nullable Field Conventions
+**Decision:** Use each specification's native nullable syntax — do not mix them
+**Rationale:** OpenAPI 3.0.x and JSON Schema Draft-07 express nullability differently. Mixing conventions causes codegen and validator mismatches.
+
+**Rules:**
+- **OpenAPI 3.0.3** (`nebula-api.yaml`): Use `nullable: true` alongside the type.
+  ```yaml
+  email:
+    type: string
+    format: email
+    nullable: true
+  ```
+- **JSON Schema Draft-07** (`planning-mds/schemas/*.json`): Use type arrays.
+  ```json
+  "email": { "type": ["string", "null"], "format": "email" }
+  ```
+- **C# DTOs:** Map nullable fields to `string?` (nullable reference types).
+- **TypeScript:** Map to `string | null`.
+
+**Note:** Both conventions are semantically equivalent. The difference is purely syntactical per spec version. OpenAPI 3.1+ aligns with JSON Schema, but Nebula MVP uses OpenAPI 3.0.3.
 
 ---
 
@@ -424,6 +460,47 @@ public DateTime? DeletedAt { get; set; }
 public string? DeletedBy { get; set; } // Keycloak subject (sub claim)
 ```
 
+### Pattern: Optimistic Concurrency Control
+**Decision:** All mutable entities include a `RowVersion` column (EF Core concurrency token) for optimistic locking
+**Rationale:** Multi-user CRM requires safe concurrent edits; optimistic locking detects conflicts without database-level locks
+**Applied in:** Brokers, Contacts, Submissions, Renewals, Tasks, Accounts
+
+**Implementation:**
+```csharp
+// Domain entity
+public class BaseEntity
+{
+    // ... existing fields ...
+    [Timestamp]
+    public uint RowVersion { get; set; } // PostgreSQL xmin
+}
+```
+
+**EF Core configuration (PostgreSQL xmin):**
+```csharp
+modelBuilder.Entity<Broker>()
+    .UseXminAsConcurrencyToken();
+```
+
+**API pattern:** PUT endpoints accept `If-Match` header with the `RowVersion` value. On conflict, return HTTP 409 with ProblemDetails (`code=concurrency_conflict`).
+
+```csharp
+// In update handler
+try
+{
+    await _repository.UpdateAsync(entity);
+}
+catch (DbUpdateConcurrencyException)
+{
+    return Problem(
+        title: "Concurrency conflict",
+        detail: "The resource was modified by another user. Please refresh and retry.",
+        statusCode: 409,
+        extensions: new Dictionary<string, object?> { ["code"] = "concurrency_conflict" }
+    );
+}
+```
+
 ### Pattern: Use GUIDs for Primary Keys
 **Decision:** All primary keys are GUIDs (not integers)
 **Rationale:** Distributed systems, no conflicts, security (non-sequential)
@@ -515,7 +592,7 @@ public async Task CreateBroker_WithValidData_ReturnsCreated()
 **Example:**
 ```csharp
 private PostgreSqlContainer _postgresContainer = new PostgreSqlBuilder()
-    .WithImage("postgres:15")
+    .WithImage("postgres:16")
     .Build();
 
 await _postgresContainer.StartAsync();
@@ -575,7 +652,7 @@ test('broker form has no a11y violations', async ({ page }) => {
 ### Pattern: State Machines for Business Workflows
 **Decision:** Model workflows as explicit state machines
 **Rationale:** Clear transitions, validation, audit trail
-**Applied in:** Submission (8 states), Renewal (6 states)
+**Applied in:** Submission (10 states), Renewal (8 states)
 
 **Example:**
 ```csharp
@@ -588,7 +665,9 @@ public enum SubmissionStatus
     InReview,
     Quoted,
     BindRequested,
-    Bound
+    Bound,       // Terminal
+    Declined,    // Terminal
+    Withdrawn    // Terminal
 }
 
 // Valid transitions defined
@@ -647,11 +726,89 @@ _logger.LogInformation(
 - Avoid caching secrets or raw PII without explicit approval.
 - Include tenant/subject identifiers in cache keys for scoped data.
 
+### Pattern: UserProfile Create-on-First-Login
+**Decision:** Create or update a `UserProfile` row on every authenticated API request (upsert by `Subject`)
+**Rationale:** Dashboard queries (pipeline mini-cards, activity feed) JOIN `UserProfile` for display names and initials. Profiles must exist before data can be displayed correctly. Syncing from Keycloak claims at request time avoids a separate admin sync job.
+**Applied in:** Authentication middleware / JWT pipeline
+**Fields synced from JWT claims:** `Email`, `DisplayName` (from `name` or `given_name`+`family_name`), `Department`, `Regions` (from custom claim `regions`)
+
+**Implementation approach:**
+```csharp
+// Middleware or filter that runs after JWT validation
+public class UserProfileSyncFilter : IEndpointFilter
+{
+    public async ValueTask<object?> InvokeAsync(
+        EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    {
+        var user = context.HttpContext.User;
+        var subject = user.FindFirstValue("sub");
+        if (subject is not null)
+        {
+            await _userProfileService.UpsertFromClaimsAsync(subject, user.Claims);
+        }
+        return await next(context);
+    }
+}
+```
+
+**Performance note:** Use a short-lived in-memory cache (e.g., 5 minutes) keyed by `Subject` to avoid a DB upsert on every request. Invalidate on profile-relevant claim changes.
+
 ### Pattern: OWASP Top 10 Compliance
 **Decision:** Follow OWASP Top 10 security practices
 **Rationale:** Industry standard security baseline
 **Applied in:** All code
 **Checks:** Input validation, SQL injection prevention, XSS prevention, CSRF protection, etc.
+
+### Pattern: Rate Limiting
+**Decision:** Use ASP.NET Core built-in rate limiting middleware (`Microsoft.AspNetCore.RateLimiting`)
+**Rationale:** Protect against abuse and DoS without external infrastructure in MVP
+**Applied in:** All API endpoints
+
+**Default limits:**
+- **Global:** Fixed window, 100 requests/minute per authenticated user (keyed by `sub` claim)
+- **Anonymous:** Fixed window, 20 requests/minute per IP (login, health endpoints only)
+- **Dashboard endpoints:** Sliding window, 30 requests/minute per user (prevents aggressive polling)
+
+**Configuration:**
+```csharp
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddFixedWindowLimiter("authenticated", opt =>
+    {
+        opt.PermitLimit = 100;
+        opt.Window = TimeSpan.FromMinutes(1);
+    });
+
+    options.AddFixedWindowLimiter("anonymous", opt =>
+    {
+        opt.PermitLimit = 20;
+        opt.Window = TimeSpan.FromMinutes(1);
+    });
+});
+```
+
+**Response on limit exceeded:** HTTP 429 with `Retry-After` header and RFC 7807 ProblemDetails body.
+
+### Pattern: Correlation ID / Request Tracing
+**Decision:** Propagate a correlation ID (`X-Request-Id` header) through every request and include it in logs and error responses as `traceId`
+**Rationale:** Enables end-to-end request tracing across logs, error responses, and future distributed services
+**Applied in:** All API requests, all log entries, ProblemDetails responses
+
+**Implementation:**
+- ASP.NET Core's `Activity` provides a built-in `TraceId`. Use this as the correlation ID.
+- Serilog enricher `Enrich.FromLogContext()` + `Enrich.WithProperty("TraceId", ...)` attaches it to every log entry.
+- If an incoming request has `X-Request-Id`, use it as the parent; otherwise generate one.
+- The `traceId` field in ProblemDetails is populated from `Activity.Current?.Id`.
+
+```csharp
+// In global exception handler / ProblemDetails factory
+var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+problemDetails.Extensions["traceId"] = traceId;
+```
+
+**Frontend:** The SPA should log the `traceId` from error responses to help correlate user-reported issues with server logs.
 
 ---
 

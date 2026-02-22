@@ -91,8 +91,9 @@ Follow-up tasks and reminders are currently tracked in personal calendars, stick
 
 **Depends On:**
 - Task entity with AssignedTo, DueDate, Status fields
-- Task Center screen (for "View all" navigation)
-- Entity detail screens (Broker 360, etc.) for click-through
+- ~~Task Center screen (for "View all" navigation)~~ — Not in F0/F1 scope; link hidden per MVP Navigation Constraints
+- Broker 360 (F1-S3) for Broker-linked task click-through — **available**
+- ~~Submission/Renewal/Account detail screens~~ — Not in F0/F1 scope; entity names render as plain text per MVP Navigation Constraints
 
 **Related Stories:**
 - F5 — Task Center + Reminders (full task management feature)
@@ -100,7 +101,7 @@ Follow-up tasks and reminders are currently tracked in personal calendars, stick
 
 ## Out of Scope
 
-- Creating or editing tasks from the dashboard widget
+- Creating or editing tasks from the dashboard widget (Task Center/API only in MVP)
 - Snooze or dismiss functionality
 - Task notifications (push/email)
 - Viewing other users' tasks
@@ -115,10 +116,17 @@ Follow-up tasks and reminders are currently tracked in personal calendars, stick
 
 ## Questions & Assumptions
 
-**Assumptions (to be validated):**
+**Assumptions:**
 - Tasks have an AssignedTo field that matches Keycloak Subject
 - "Done" tasks are excluded from the widget (only Open and InProgress shown)
-- Task entity exists or will be created as part of F5 (Task Center); Dashboard can degrade gracefully if Task entity is not yet implemented
+- Task entity is created as part of F0/F1 foundation (see data-model.md); write endpoints deferred to F5
+
+**MVP Navigation Constraints (confirmed):**
+- Broker 360 click-through works (F1-S3 in scope).
+- Task rows linked to Submission, Renewal, or Account render the entity name as plain text (not clickable) until those detail screens exist.
+- Task rows with no linked entity are informational only (no navigation).
+- "View all tasks" link is hidden until Task Center (F5) exists.
+- See [feature-assembly-plan.md — MVP Navigation Constraints](../../architecture/feature-assembly-plan.md) for full degradation rules.
 
 ## Definition of Done
 

@@ -55,7 +55,9 @@ Provide a sequenced, cross‑role plan to assemble the Nebula CRM implementation
 ### 3) Contract‑First API Implementation
 
 **Backend**
-- Implement endpoints defined in `planning-mds/api/nebula-api.yaml`.
+- Implement only endpoints defined in `planning-mds/api/nebula-api.yaml` that are in scope for F0 and F1.
+- For out-of-scope endpoints and schemas (see `planning-mds/schemas/README.md`), do not register routes; callers should receive HTTP 404.
+- Until F5 is activated, task write endpoints (`POST /api/tasks`, `PUT /api/tasks/{taskId}`, `DELETE /api/tasks/{taskId}`) are treated as out-of-scope and must return 404.
 - Enforce schema validation on request payloads.
 - Ensure policy checks for every endpoint (ABAC + role action).
 

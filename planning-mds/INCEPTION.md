@@ -109,7 +109,7 @@ Architecture constraints:
 
 ## 3) Phase A — Product Manager Spec (Current Baseline)
 
-Status: This repository is currently focused on the agent builder framework, and the Nebula CRM reference implementation is **in Phase C implementation** for F0 (Dashboard) and F1 (Broker Relationship Management). Phase A remains the baseline spec and Phase B is approved.
+Status: This repository is currently focused on the agent builder framework, and the Nebula CRM reference implementation is **in Phase C implementation** for F0 (Dashboard) and F1 (Broker Relationship Management). Task write endpoints exist in the contract but are not registered (404) until F5 is activated. Phase A remains the baseline spec and Phase B is approved.
 
 ### 3.1 Vision + Non-Goals
 
@@ -150,11 +150,12 @@ Status: This repository is currently focused on the agent builder framework, and
 **MVP Features:**
 - [F0: Dashboard](features/F0-dashboard.md) - Draft ready
 - [F1: Broker & MGA Relationship Management](features/F1-broker-relationship-management.md) - Draft ready
+- [F5: Task Center + Reminders](features/F5-task-center.md) - MVP (API-only)
 - F2: Account 360 & Activity Timeline - Planned
 - F3: Submission Intake Workflow - Planned
 - F4: Renewal Pipeline - Planned
-- F5: Task Center + Reminders - Planned
 - F6: Broker Insights - Planned
+- [F7: Task Center UI + Manager Assignment](features/F7-task-center-ui-and-assignment.md) - Planned
 
 ### 3.4 MVP Features and Stories (vertical-slice friendly)
 
@@ -175,6 +176,11 @@ Status: This repository is currently focused on the agent builder framework, and
 - [S5: Delete Broker](stories/F1-broker-relationship-management/S5-delete-broker.md) - Draft ready
 - [S6: Manage Broker Contacts](stories/F1-broker-relationship-management/S6-manage-broker-contacts.md) - Draft ready
 - [S7: View Broker Activity Timeline](stories/F1-broker-relationship-management/S7-view-broker-activity-timeline.md) - Draft ready
+
+**MVP Stories (Feature F5: Task Center + Reminders — API-only):**
+- [S1: Create Task](stories/F5-task-center/S1-create-task.md) - Draft ready
+- [S2: Update Task](stories/F5-task-center/S2-update-task.md) - Draft ready
+- [S3: Delete Task](stories/F5-task-center/S3-delete-task.md) - Draft ready
 
 **Story Index:** See `planning-mds/stories/STORY-INDEX.md` for auto-generated summary of all stories (if generated).
 
@@ -256,27 +262,30 @@ Define tables/fields for:
 
 Core entities (minimum baseline):
 - Account
-  - Id (uuid), Name, Industry, PrimaryState, Status
+  - Id (uuid), Name, Industry, PrimaryState, Region, Status
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
 - Broker
-  - Id (uuid), LegalName, LicenseNumber, State, Status
+  - Id (uuid), LegalName, LicenseNumber, State, Status, ManagedBySubject (nullable)
   - MgaId (nullable), PrimaryProgramId (nullable)
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
+- BrokerRegion (new — multi-region broker scope)
+  - BrokerId (uuid), Region (string)
+  - Composite PK (BrokerId, Region)
 - MGA
   - Id (uuid), Name, ExternalCode, Status
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
 - Program
-  - Id (uuid), Name, ProgramCode, MgaId
+  - Id (uuid), Name, ProgramCode, MgaId, ManagedBySubject (nullable)
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
 - Contact
   - Id (uuid), BrokerId (nullable), AccountId (nullable), FullName, Email, Phone, Role
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
 - Submission
-  - Id (uuid), AccountId, BrokerId, ProgramId (nullable), CurrentStatus, EffectiveDate, PremiumEstimate
-  - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy
+  - Id (uuid), AccountId, BrokerId, ProgramId (nullable), CurrentStatus, EffectiveDate, PremiumEstimate, AssignedTo (Keycloak subject)
+  - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
 - Renewal
-  - Id (uuid), AccountId, BrokerId, SubmissionId (nullable), CurrentStatus, RenewalDate
-  - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy
+  - Id (uuid), AccountId, BrokerId, SubmissionId (nullable), CurrentStatus, RenewalDate, AssignedTo (Keycloak subject)
+  - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
 - **Task** (new — required by Dashboard F0 and Task Center F5)
   - Id (uuid), Title, Description (nullable), Status (Open/InProgress/Done), Priority (Low/Normal/High/Urgent)
   - DueDate (nullable), AssignedTo (Keycloak subject)
@@ -284,7 +293,7 @@ Core entities (minimum baseline):
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, CompletedAt (nullable), IsDeleted
   - See [data-model.md](architecture/data-model.md) for full table definition, indexes, and audit requirements
 - UserProfile
-  - Subject (Keycloak sub), Email, DisplayName, Department, Region, RolesJson
+  - Subject (Keycloak sub), Email, DisplayName, Department, RegionsJson, RolesJson
   - CreatedAt, UpdatedAt
 - UserPreference
   - Id (uuid), Subject, PreferenceKey, PreferenceValueJson
@@ -296,6 +305,7 @@ Core entities (minimum baseline):
 
 Reference tables and seed strategy:
 - ReferenceState, ReferenceIndustry, ReferenceTaskStatus, ReferenceSubmissionStatus, ReferenceRenewalStatus
+- See [data-model.md Section 1.2](architecture/data-model.md) for complete seed definitions including status descriptions, terminal flags, and display metadata.
 - Deterministic EF seed/migration scripts with idempotent upsert semantics.
 - Runtime writes to reference tables are restricted to admin-only actions.
 
@@ -323,6 +333,7 @@ Transition rules and validations:
 - Invalid transition pairs return HTTP 409 with `ProblemDetails` (`code=invalid_transition`).
 - Missing required checklist/data preconditions return HTTP 409 with `ProblemDetails` (`code=missing_transition_prerequisite`).
 - Subject must have permission for the requested transition action (otherwise HTTP 403).
+- Submission/renewal creation must validate region alignment: `Account.Region` must be included in the broker's `BrokerRegion` set; otherwise return HTTP 400 with `ProblemDetails` (`code=region_mismatch`).
 - Every successful transition appends:
   - one WorkflowTransition record
   - one ActivityTimelineEvent record
@@ -334,10 +345,10 @@ Define subject attributes (from UserProfile), resource attributes, actions.
 Define minimal policies for Phase 0 and Phase 1.
 
 Subject attributes (from JWT + UserProfile):
-- subjectId, roles, department, region, internalUser flag
+- subjectId, roles, department, regions, internalUser flag
 
 Resource attributes:
-- resourceType, ownerAccountId, brokerId, programId, internalOnly flag, workflowState
+- resourceType, ownerAccountId, brokerId, programId, accountRegion, internalOnly flag, workflowState
 
 Actions (examples):
 - broker:create, broker:read, broker:update, broker:delete

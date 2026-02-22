@@ -200,22 +200,40 @@ p, ProgramManager,      dashboard_nudge, read, true
 p, Admin,               dashboard_nudge, read, true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §2.8 Task — Read Own Assigned Tasks
+# §2.8 Task — Manage Own Tasks
 # Ownership enforced at policy layer (resource-attribute check).
-# Enforcement point MUST hydrate r.obj.assignee before calling the enforcer.
+# Enforcement point MUST hydrate r.obj.assignee before calling the enforcer (request on create; DB on read/update/delete).
 # Mapping: r.obj.assignee == Task.AssignedTo (domain field).
 # Read-only in dashboard context. No create/update/delete from widget (F0-S3 out of scope).
-# Status filter (Open/InProgress only; Done excluded) enforced at query layer (F0-S3 Validation Rules).
+# Status filter (Open/InProgress only; Done excluded) enforced at query layer for /api/my/tasks.
 # Admin: own tasks only in MVP; cross-user task view is explicitly Future (F0-S3 Role Visibility).
 # DistributionManager: own tasks only for dashboard widget.
 # ─────────────────────────────────────────────────────────────────────────────
 
-p, DistributionUser,    task, read, r.obj.assignee == r.sub.id
-p, DistributionManager, task, read, r.obj.assignee == r.sub.id
-p, Underwriter,         task, read, r.obj.assignee == r.sub.id
-p, RelationshipManager, task, read, r.obj.assignee == r.sub.id
-p, ProgramManager,      task, read, r.obj.assignee == r.sub.id
-p, Admin,               task, read, r.obj.assignee == r.sub.id
+p, DistributionUser,    task, create, r.obj.assignee == r.sub.id
+p, DistributionUser,    task, read,   r.obj.assignee == r.sub.id
+p, DistributionUser,    task, update, r.obj.assignee == r.sub.id
+p, DistributionUser,    task, delete, r.obj.assignee == r.sub.id
+p, DistributionManager, task, create, r.obj.assignee == r.sub.id
+p, DistributionManager, task, read,   r.obj.assignee == r.sub.id
+p, DistributionManager, task, update, r.obj.assignee == r.sub.id
+p, DistributionManager, task, delete, r.obj.assignee == r.sub.id
+p, Underwriter,         task, create, r.obj.assignee == r.sub.id
+p, Underwriter,         task, read,   r.obj.assignee == r.sub.id
+p, Underwriter,         task, update, r.obj.assignee == r.sub.id
+p, Underwriter,         task, delete, r.obj.assignee == r.sub.id
+p, RelationshipManager, task, create, r.obj.assignee == r.sub.id
+p, RelationshipManager, task, read,   r.obj.assignee == r.sub.id
+p, RelationshipManager, task, update, r.obj.assignee == r.sub.id
+p, RelationshipManager, task, delete, r.obj.assignee == r.sub.id
+p, ProgramManager,      task, create, r.obj.assignee == r.sub.id
+p, ProgramManager,      task, read,   r.obj.assignee == r.sub.id
+p, ProgramManager,      task, update, r.obj.assignee == r.sub.id
+p, ProgramManager,      task, delete, r.obj.assignee == r.sub.id
+p, Admin,               task, create, r.obj.assignee == r.sub.id
+p, Admin,               task, read,   r.obj.assignee == r.sub.id
+p, Admin,               task, update, r.obj.assignee == r.sub.id
+p, Admin,               task, delete, r.obj.assignee == r.sub.id
 
 # ─────────────────────────────────────────────────────────────────────────────
 # §2.9 Activity Timeline Event — Broker Events

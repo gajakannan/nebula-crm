@@ -31,7 +31,8 @@
       "WebFetch(domain:leehanchung.github.io)",
       "WebFetch(domain:websearchapi.ai)",
       "Bash(git rm:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(echo Compose valid:*)"
     ]
   }
 }

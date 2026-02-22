@@ -59,7 +59,7 @@ Define the build order, role handoffs, and integration checkpoints for F0 (Dashb
 4. Implement Contact CRUD endpoints per OpenAPI (list/create/read/update/delete).
 5. Enforce required email/phone and validation rules; return ProblemDetails on validation error.
 6. Emit ActivityTimelineEvent for broker/contact create/update/delete.
-7. Mask broker/contact email/phone on Broker 360 responses when broker status is Inactive (return `null` as masking sentinel; see Broker schema description in `nebula-api.yaml`).
+7. Mask broker/contact email/phone on **all** broker and contact API responses (`GET /api/brokers`, `GET /api/brokers/{id}`, `GET /api/contacts`, `GET /api/contacts/{id}`) when `Broker.Status = Inactive`. Return `null` as the masking sentinel; see Broker and Contact schema descriptions in `nebula-api.yaml`.
 
 ### Frontend Assembly Steps
 1. Broker List screen with search, filters, and status badges.
@@ -70,10 +70,57 @@ Define the build order, role handoffs, and integration checkpoints for F0 (Dashb
 ### QA/Integration
 - Verify license immutability enforcement.
 - Verify delete guard when active submissions/renewals exist.
-- Verify masking behavior for inactive brokers.
+- Verify masking behavior for inactive brokers on both list and detail endpoints (brokers and contacts).
 - Verify ABAC scope on broker/contact reads and mutations.
 
 **Checkpoint F1‑A:** Broker 360 flow complete end‑to‑end.
+
+---
+
+## MVP Navigation Constraints
+
+Several F0 dashboard widgets reference click-through navigation to screens that are not in F0/F1 scope. The table below defines which targets are available and how unavailable targets degrade.
+
+### Target Screen Availability
+
+| Target Screen | In Scope? | Source | Notes |
+|---------------|-----------|--------|-------|
+| Broker 360 | Yes | F1-S3 | Fully available for click-through |
+| Submission Detail | No | Future (F3) | Not in F0/F1 MVP |
+| Renewal Detail | No | Future (F4) | Not in F0/F1 MVP |
+| Submission List | No | Future (F3) | Not in F0/F1 MVP |
+| Renewal List | No | Future (F4) | Not in F0/F1 MVP |
+| Task Center | No | Future (F5) | Not in F0/F1 MVP |
+
+### Degradation Rules
+
+When a navigation target is unavailable, the frontend must degrade gracefully:
+
+1. **Links to unavailable screens render as plain text** — no `<a>` tag, no click handler, no pointer cursor. The entity name or label is still displayed for context but is not interactive.
+2. **CTA buttons for unavailable targets are hidden** — if a nudge card's CTA would navigate to an unavailable screen, the CTA button is omitted; the card still displays its title, description, and urgency indicator.
+3. **"View all" links to unavailable screens are hidden** — do not render "View all N" when the target list screen does not exist.
+4. **No disabled/greyed-out links** — avoid confusing users with interactive-looking elements that do nothing. Omit rather than disable.
+5. **No route stubs or placeholder pages** — do not create empty `/submissions` or `/renewals` routes. Routes are added when their feature is implemented.
+
+### Per-Story Impact
+
+| Story | Element | Target | Degradation |
+|-------|---------|--------|-------------|
+| S2 | Mini-card click | Submission/Renewal Detail | Render entity name as plain text (not clickable) |
+| S2 | "View all N" link | Submission/Renewal List | Hide the link entirely |
+| S3 | Task row click (Broker) | Broker 360 | Works — F1-S3 in scope |
+| S3 | Task row click (Submission/Renewal/Account) | Detail screens | Render entity name as plain text (not clickable) |
+| S3 | Task row click (no linked entity) | Task Center | No navigation; row is informational only |
+| S3 | "View all tasks" link | Task Center | Hide the link entirely |
+| S4 | Feed item click | Broker 360 | Works — F1-S3 in scope |
+| S5 | CTA "Review Now" (Broker-linked task) | Broker 360 | Works — F1-S3 in scope |
+| S5 | CTA "Review Now" (non-Broker task) | Task Center / Detail | Hide CTA button |
+| S5 | CTA "Take Action" | Submission Detail | Hide CTA button |
+| S5 | CTA "Start Outreach" | Renewal Detail | Hide CTA button |
+
+### Implementation Note
+
+Navigation availability should be driven by a route registry check (e.g., `canNavigateTo(entityType)`) rather than hardcoded booleans. When F3/F4/F5 features are implemented and their routes registered, dashboard click-through will automatically activate without modifying F0 code.
 
 ---
 

@@ -109,10 +109,11 @@ Broker relationships are the lifeblood of commercial P&C distribution. Currently
 
 ## Questions & Assumptions
 
-**Assumptions (to be validated):**
-- EventDescription is derived from EventType + EventPayloadJson at query time (or stored as a pre-rendered string)
+**Assumptions (confirmed):**
+- EventDescription is pre-rendered at write time and stored alongside EventPayloadJson. Description templates are defined in [activity-event-payloads.schema.json](../../schemas/activity-event-payloads.schema.json). The feed query reads the stored string — no query-time template resolution needed.
 - Relative timestamps (e.g., "2 hours ago") are computed client-side from OccurredAt
 - 20 items is sufficient for the feed widget; users wanting full history use Broker 360 timeline
+- Contact events (ContactCreated, ContactUpdated, ContactDeleted) use EntityType="Broker" so they appear in the broker activity feed. The Contact's ID is in the event payload, not the EntityId field.
 
 ## Definition of Done
 

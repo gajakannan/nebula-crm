@@ -51,11 +51,89 @@ See [ADR-003](decisions/ADR-003-task-entity-nudge-engine.md) for design rational
 | TaskReopened | Status Done → Open/InProgress | previousCompletedAt |
 | TaskDeleted | IsDeleted → true | — |
 
+See [activity-event-payloads.schema.json](../schemas/activity-event-payloads.schema.json) for full payload JSON Schema definitions, description templates, and the complete event type registry across all entities.
+
 ### Seed Data
 
 - **ReferenceTaskStatus** is seeded with: `Open`, `InProgress`, `Done` (deterministic upsert, admin-only writes).
 - **No production seed data** for Tasks. Tasks are user-created.
 - **Dev/test seed:** Generate 20 tasks per test user using Faker, with varied DueDate spread (past, today, future) to exercise nudge and tasks widget edge cases.
+
+---
+
+## 1.1 MVP Scope Fields (Assignment + Region)
+
+These fields are required to implement MVP ABAC scoping and dashboard assigned-user display without introducing full assignment tables.
+
+- **Accounts:** `Region` (string, required)
+- **Brokers:** `ManagedBySubject` (nullable, Keycloak subject)
+- **BrokerRegion:** `BrokerId` + `Region` (multi-region broker scope)
+- **Programs:** `ManagedBySubject` (nullable, Keycloak subject)
+- **Submissions:** `AssignedTo` (Keycloak subject), `IsDeleted` (boolean, default false)
+- **Renewals:** `AssignedTo` (Keycloak subject), `IsDeleted` (boolean, default false)
+
+**Validation rule (MVP):**
+- Submission/renewal creation must validate region alignment: `Account.Region` must be included in the broker's `BrokerRegion` set; otherwise return HTTP 400 with `ProblemDetails` (`code=region_mismatch`).
+
+---
+
+## 1.2 Reference Data — Workflow Statuses
+
+INCEPTION.md Section 4.2 (line 306) declares `ReferenceSubmissionStatus` and `ReferenceRenewalStatus` as reference tables. This section defines their complete seed values. For allowed transitions between statuses, see INCEPTION.md Section 4.3.
+
+### Reference Table Schema
+
+Both tables share the same structure:
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| Code | varchar(30) | PK, NOT NULL | Status identifier (used in `CurrentStatus` fields) |
+| DisplayName | varchar(50) | NOT NULL | Human-readable label for UI |
+| Description | varchar(255) | NOT NULL | Tooltip/help text |
+| IsTerminal | boolean | NOT NULL | `true` = workflow end state; excluded from pipeline views and open counts |
+| DisplayOrder | smallint | NOT NULL, UNIQUE | Determines pill ordering in pipeline UI |
+| ColorGroup | varchar(20) | NULL | Pipeline pill color category; NULL for terminal statuses |
+
+**ColorGroup values:** `intake`, `triage`, `waiting`, `review`, `decision`. Terminal statuses have no color group (they are excluded from pipeline display).
+
+### ReferenceSubmissionStatus (10 values)
+
+| Code | DisplayName | Description | IsTerminal | DisplayOrder | ColorGroup |
+|------|-------------|-------------|------------|--------------|------------|
+| Received | Received | Initial state when submission is created | false | 1 | intake |
+| Triaging | Triaging | Initial triage and data validation | false | 2 | triage |
+| WaitingOnBroker | Waiting on Broker | Awaiting additional information from broker | false | 3 | waiting |
+| ReadyForUWReview | Ready for UW Review | All data received, queued for underwriter | false | 4 | review |
+| InReview | In Review | Under active underwriter review | false | 5 | review |
+| Quoted | Quoted | Quote issued, awaiting broker response | false | 6 | decision |
+| BindRequested | Bind Requested | Broker accepted quote, bind in progress | false | 7 | decision |
+| Bound | Bound | Policy bound and issued | true | 8 | — |
+| Declined | Declined | Submission declined by underwriter | true | 9 | — |
+| Withdrawn | Withdrawn | Broker withdrew submission | true | 10 | — |
+
+### ReferenceRenewalStatus (8 values)
+
+| Code | DisplayName | Description | IsTerminal | DisplayOrder | ColorGroup |
+|------|-------------|-------------|------------|--------------|------------|
+| Created | Created | Renewal record created from expiring policy | false | 1 | intake |
+| Early | Early | In early renewal window (90-120 days out) | false | 2 | intake |
+| OutreachStarted | Outreach Started | Active broker/account outreach begun | false | 3 | waiting |
+| InReview | In Review | Under underwriter review for renewal terms | false | 4 | review |
+| Quoted | Quoted | Renewal quote issued | false | 5 | decision |
+| Bound | Bound | Policy renewed and bound | true | 6 | — |
+| Lost | Lost | Lost to competitor | true | 7 | — |
+| Lapsed | Lapsed | Policy expired without renewal | true | 8 | — |
+
+### Allowed Transitions
+
+For the complete allowed transition matrix (which `FromState → ToState` pairs are valid), see [INCEPTION.md Section 4.3](../INCEPTION.md#43-workflow-rules). Invalid pairs return HTTP 409 (`code=invalid_transition`). Every successful transition appends one `WorkflowTransition` record and one `ActivityTimelineEvent` record.
+
+### Seed Strategy
+
+- Seeded in **Migration 004** alongside `ReferenceTaskStatus` using deterministic idempotent upsert.
+- Runtime writes restricted to admin-only actions (per INCEPTION.md constraint).
+- Dashboard queries use `IsTerminal` to filter: pipeline views show only `WHERE IsTerminal = false`; KPI "open submissions" counts exclude terminal; renewal rate computes over terminal statuses in trailing 90 days.
+- Frontend pipeline pills use `DisplayOrder` for ordering and `ColorGroup` for color-coding.
 
 ---
 
@@ -114,7 +192,7 @@ FROM Submissions s
     ORDER BY wt.OccurredAt DESC
     LIMIT 1
   ) wt_latest ON true
-  LEFT JOIN UserProfile up ON up.Subject = s.UpdatedBy
+  LEFT JOIN UserProfile up ON up.Subject = s.AssignedTo
 WHERE s.CurrentStatus = @status
   -- + ABAC scope filter
 ORDER BY DaysInStatus DESC
@@ -150,10 +228,16 @@ These indexes are required for dashboard query performance. They do not change a
 | Table | Index Name | Columns | Type | Dashboard Use |
 |-------|-----------|---------|------|--------------|
 | Submissions | `IX_Submissions_CurrentStatus` | (CurrentStatus) WHERE CurrentStatus NOT IN terminal | Partial B-tree | KPI open count, pipeline grouping |
+| Submissions | `IX_Submissions_AssignedTo_CurrentStatus` | (AssignedTo, CurrentStatus) | B-tree | Assigned-scope pipeline + KPI counts |
 | Renewals | `IX_Renewals_CurrentStatus` | (CurrentStatus) | B-tree | KPI renewal rate, pipeline grouping |
+| Renewals | `IX_Renewals_AssignedTo_CurrentStatus` | (AssignedTo, CurrentStatus) | B-tree | Assigned-scope pipeline + KPI counts |
 | Renewals | `IX_Renewals_RenewalDate_Status` | (RenewalDate, CurrentStatus) | B-tree | Nudge: upcoming renewals |
 | WorkflowTransition | `IX_WT_EntityId_OccurredAt` | (EntityId, OccurredAt DESC) | B-tree | DaysInStatus computation, avg turnaround |
 | ActivityTimelineEvent | `IX_ATE_EntityType_OccurredAt` | (EntityType, OccurredAt DESC) | B-tree | Broker activity feed |
+| Brokers | `IX_Brokers_ManagedBySubject` | (ManagedBySubject) | B-tree | RelationshipManager scope |
+| Programs | `IX_Programs_ManagedBySubject` | (ManagedBySubject) | B-tree | ProgramManager scope |
+| BrokerRegions | `IX_BrokerRegions_Region_BrokerId` | (Region, BrokerId) | B-tree | Region-scoped broker visibility |
+| Accounts | `IX_Accounts_Region` | (Region) | B-tree | Region-scoped account/submission visibility |
 
 ---
 
@@ -191,9 +275,10 @@ These indexes are required for dashboard query performance. They do not change a
 
 ### EF Core Migration Order (Dashboard-First)
 
-1. **Migration 001:** Create `Tasks` table with all columns and indexes
-2. **Migration 002:** Add dashboard-specific indexes to existing tables (Submissions, Renewals, WorkflowTransition, ActivityTimelineEvent)
-3. **Migration 003:** Seed reference data for `ReferenceTaskStatus` (Open, InProgress, Done).
+1. **Migration 001:** Add MVP scope fields to existing tables (Brokers, Programs, Submissions, Renewals).
+2. **Migration 002:** Create `Tasks` table with all columns and indexes.
+3. **Migration 003:** Add dashboard-specific indexes to existing tables (Submissions, Renewals, WorkflowTransition, ActivityTimelineEvent, Brokers, Programs).
+4. **Migration 004:** Seed reference data for `ReferenceTaskStatus` (Open, InProgress, Done), `ReferenceSubmissionStatus` (10 values), and `ReferenceRenewalStatus` (8 values). See Section 1.2 for complete seed definitions.
 
 **Decision:** Task Status uses `ReferenceTaskStatus` to align with INCEPTION.md reference-table strategy. Task Priority remains a CHECK constraint because it is not admin-configurable in MVP. If Priority becomes configurable later, add `ReferenceTaskPriority` via ADR.
 

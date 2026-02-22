@@ -27,7 +27,8 @@
       "format": "date"
     },
     "assignedTo": {
-      "type": "string"
+      "type": "string",
+      "description": "If provided, must match authenticated subject in MVP."
     }
   },
   "additionalProperties": false

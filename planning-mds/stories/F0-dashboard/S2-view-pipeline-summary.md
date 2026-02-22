@@ -24,7 +24,15 @@ Pipeline visibility is critical for distribution and underwriting teams. A tradi
 - **Then** the Pipeline Summary widget displays two rows:
   - **Submissions row:** Horizontal sequence of status pills, one per non-terminal status (Received, Triaging, WaitingOnBroker, ReadyForUWReview, InReview, Quoted, BindRequested), each showing the status label and count badge. Scoped to user's authorization.
   - **Renewals row:** Horizontal sequence of status pills, one per non-terminal status (Created, Early, OutreachStarted, InReview, Quoted), each showing the status label and count badge. Scoped to user's authorization.
-  - Pills are color-coded by workflow stage (e.g., blue for early stages, amber for waiting/blocked, green for near-completion).
+  - Pills are color-coded by workflow stage using the `ColorGroup` value from the reference status tables (see [data-model.md — Workflow Statuses](../../architecture/data-model.md)):
+
+    | ColorGroup | Tailwind Color | Hex (bg/text) | Meaning | Statuses |
+    |------------|---------------|---------------|---------|----------|
+    | `intake` | slate | `bg-slate-100 text-slate-700` | New / just arrived | Received, Created, Early |
+    | `triage` | blue | `bg-blue-100 text-blue-700` | Being sorted / assessed | Triaging |
+    | `waiting` | amber | `bg-amber-100 text-amber-700` | Blocked on external action | WaitingOnBroker, OutreachStarted |
+    | `review` | violet | `bg-violet-100 text-violet-700` | Under active review | ReadyForUWReview, InReview |
+    | `decision` | emerald | `bg-emerald-100 text-emerald-700` | Near completion | Quoted, BindRequested |
   - A connecting line or arrow between pills conveys left-to-right flow.
 
 **Expanded State (hover/click on a pill):**
@@ -71,7 +79,7 @@ Pipeline visibility is critical for distribution and underwriting teams. A tradi
 - StatusLabel: string (e.g., "InReview")
 - Count: non-negative integer
 - EntityType: "Submission" | "Renewal"
-- ColorCode: string (mapped from status stage grouping)
+- ColorGroup: string (one of `intake`, `triage`, `waiting`, `review`, `decision` — maps to Tailwind classes per the color mapping table in Acceptance Criteria)
 
 **Required Fields (per mini-card, loaded on expand):**
 - EntityId: uuid
@@ -113,8 +121,8 @@ Pipeline visibility is critical for distribution and underwriting teams. A tradi
 - Renewal entity with CurrentStatus field and workflow status values
 - WorkflowTransition entity (for computing DaysInStatus)
 - UserProfile entity (for assigned user initials)
-- Submission List / Renewal List screens (for "View all" navigation)
-- Submission / Renewal detail screens (for mini-card click-through)
+- ~~Submission List / Renewal List screens (for "View all" navigation)~~ — Not in F0/F1 scope; links hidden per MVP Navigation Constraints
+- ~~Submission / Renewal detail screens (for mini-card click-through)~~ — Not in F0/F1 scope; entity names render as plain text per MVP Navigation Constraints
 
 **Related Stories:**
 - S1 — KPI Cards (complementary high-level metrics)
@@ -138,16 +146,21 @@ Pipeline visibility is critical for distribution and underwriting teams. A tradi
 - Expanded popover: appears below the pill, shadowed card with mini-card list
 - Mini-card: compact single row — entity name (bold), amount (right-aligned), days-in-status chip (e.g., "12d"), user avatar circle
 - Responsive: on narrow viewports, pills wrap to multiple rows; popover becomes full-width overlay
-- Color palette: map to 3 groups — early (blue/slate), blocked/waiting (amber/orange), near-completion (green/teal)
+- Color palette: 5 `ColorGroup` categories — `intake` (slate), `triage` (blue), `waiting` (amber), `review` (violet), `decision` (emerald); see mapping table in Acceptance Criteria above
 
 ## Questions & Assumptions
 
-**Assumptions (to be validated):**
+**Assumptions:**
 - Only non-terminal statuses are shown (terminal statuses are excluded)
-- If Renewal List screen does not exist yet, "View all" link for renewals is a no-op
 - Mini-cards are lazy-loaded on hover/click (not pre-fetched) to keep initial dashboard load fast
 - 5 mini-cards per popover is sufficient; users needing more use the "View all" link
 - DaysInStatus is computed from the most recent WorkflowTransition for that entity
+
+**MVP Navigation Constraints (confirmed):**
+- Submission List, Renewal List, Submission Detail, and Renewal Detail screens are not in F0/F1 scope.
+- "View all N" links are hidden (not rendered) until target list screens exist.
+- Mini-card entity names render as plain text (not clickable) until target detail screens exist.
+- See [feature-assembly-plan.md — MVP Navigation Constraints](../../architecture/feature-assembly-plan.md) for full degradation rules.
 
 ## Definition of Done
 

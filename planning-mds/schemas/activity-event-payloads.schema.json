@@ -1,0 +1,211 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nebula.local/schemas/activity-event-payloads.schema.json",
+  "title": "ActivityTimelineEvent Payload Definitions",
+  "description": "Defines the EventPayloadJson shape for each EventType stored in ActivityTimelineEvent. All payloads are serialized as JSON into the EventPayloadJson (jsonb) column. The EventType string determines which payload shape applies.",
+
+  "definitions": {
+
+    "BrokerCreated": {
+      "description": "Emitted when a new broker record is created (F1-S1).",
+      "type": "object",
+      "required": ["legalName", "licenseNumber", "state"],
+      "properties": {
+        "legalName":     { "type": "string" },
+        "licenseNumber": { "type": "string" },
+        "state":         { "type": "string" },
+        "email":         { "type": ["string", "null"] },
+        "phone":         { "type": ["string", "null"] }
+      },
+      "additionalProperties": false,
+      "descriptionTemplate": "New broker \"{legalName}\" added"
+    },
+
+    "BrokerUpdated": {
+      "description": "Emitted when broker fields are modified, excluding status-only changes (F1-S4). The changedFields object contains only the fields that changed, with before/after values.",
+      "type": "object",
+      "required": ["changedFields"],
+      "properties": {
+        "changedFields": {
+          "type": "object",
+          "description": "Map of field name to { from, to } pairs for each changed field.",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {
+              "from": {},
+              "to": {}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "descriptionTemplate": "Broker updated ({changedFieldNames})"
+    },
+
+    "BrokerStatusChanged": {
+      "description": "Emitted when broker status specifically changes (e.g., Active → Inactive). This is a refinement of BrokerUpdated — when the status field changes, emit BrokerStatusChanged instead of BrokerUpdated for clearer feed descriptions (F1-S4).",
+      "type": "object",
+      "required": ["fromStatus", "toStatus"],
+      "properties": {
+        "fromStatus": { "type": "string", "enum": ["Active", "Inactive", "Pending"] },
+        "toStatus":   { "type": "string", "enum": ["Active", "Inactive", "Pending"] }
+      },
+      "additionalProperties": false,
+      "descriptionTemplate": "Broker status changed from {fromStatus} to {toStatus}"
+    },
+
+    "BrokerDeleted": {
+      "description": "Emitted when a broker is soft-deleted (F1-S5). Payload is empty — the event itself records the actor and timestamp.",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "descriptionTemplate": "Broker deactivated"
+    },
+
+    "ContactCreated": {
+      "description": "Emitted when a contact is added to a broker (F1-S6).",
+      "type": "object",
+      "required": ["contactId", "fullName", "brokerId"],
+      "properties": {
+        "contactId": { "type": "string", "format": "uuid" },
+        "fullName":  { "type": "string" },
+        "brokerId":  { "type": "string", "format": "uuid" },
+        "email":     { "type": ["string", "null"] },
+        "phone":     { "type": ["string", "null"] },
+        "role":      { "type": ["string", "null"] }
+      },
+      "additionalProperties": false,
+      "descriptionTemplate": "Contact \"{fullName}\" added"
+    },
+
+    "ContactUpdated": {
+      "description": "Emitted when a contact's fields are modified (F1-S6).",
+      "type": "object",
+      "required": ["contactId", "fullName", "changedFields"],
+      "properties": {
+        "contactId": { "type": "string", "format": "uuid" },
+        "fullName":  { "type": "string" },
+        "changedFields": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {
+              "from": {},
+              "to": {}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "descriptionTemplate": "Contact \"{fullName}\" updated"
+    },
+
+    "ContactDeleted": {
+      "description": "Emitted when a contact is soft-deleted from a broker (F1-S6).",
+      "type": "object",
+      "required": ["contactId", "fullName"],
+      "properties": {
+        "contactId": { "type": "string", "format": "uuid" },
+        "fullName":  { "type": "string" }
+      },
+      "additionalProperties": false,
+      "descriptionTemplate": "Contact \"{fullName}\" removed"
+    },
+
+    "TaskCreated": {
+      "description": "Emitted when a task is created (F5-S1, referenced by F0-S3/S5).",
+      "type": "object",
+      "required": ["title", "assignedTo"],
+      "properties": {
+        "title":            { "type": "string" },
+        "assignedTo":       { "type": "string" },
+        "dueDate":          { "type": ["string", "null"], "format": "date" },
+        "linkedEntityType": { "type": ["string", "null"] },
+        "linkedEntityId":   { "type": ["string", "null"], "format": "uuid" }
+      },
+      "additionalProperties": false,
+      "descriptionTemplate": "Task \"{title}\" created"
+    },
+
+    "TaskUpdated": {
+      "description": "Emitted when task fields are modified (excluding status transitions to/from Done) (F5-S2).",
+      "type": "object",
+      "required": ["changedFields"],
+      "properties": {
+        "changedFields": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["from", "to"],
+            "properties": {
+              "from": {},
+              "to": {}
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "descriptionTemplate": "Task updated ({changedFieldNames})"
+    },
+
+    "TaskCompleted": {
+      "description": "Emitted when task status transitions to Done (F5-S2).",
+      "type": "object",
+      "required": ["completedAt"],
+      "properties": {
+        "completedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false,
+      "descriptionTemplate": "Task completed"
+    },
+
+    "TaskReopened": {
+      "description": "Emitted when task status transitions from Done back to Open or InProgress (F5-S2).",
+      "type": "object",
+      "required": ["previousCompletedAt"],
+      "properties": {
+        "previousCompletedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false,
+      "descriptionTemplate": "Task reopened"
+    },
+
+    "TaskDeleted": {
+      "description": "Emitted when a task is soft-deleted (F5-S3). Payload is empty.",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "descriptionTemplate": "Task deleted"
+    }
+  },
+
+  "eventTypeRegistry": {
+    "description": "Canonical list of all EventType values, their EntityType, and which feature/story emits them.",
+    "types": [
+      { "eventType": "BrokerCreated",       "entityType": "Broker",  "emittedBy": "F1-S1" },
+      { "eventType": "BrokerUpdated",       "entityType": "Broker",  "emittedBy": "F1-S4" },
+      { "eventType": "BrokerStatusChanged", "entityType": "Broker",  "emittedBy": "F1-S4" },
+      { "eventType": "BrokerDeleted",       "entityType": "Broker",  "emittedBy": "F1-S5" },
+      { "eventType": "ContactCreated",      "entityType": "Broker",  "emittedBy": "F1-S6" },
+      { "eventType": "ContactUpdated",      "entityType": "Broker",  "emittedBy": "F1-S6" },
+      { "eventType": "ContactDeleted",      "entityType": "Broker",  "emittedBy": "F1-S6" },
+      { "eventType": "TaskCreated",         "entityType": "Task",    "emittedBy": "F5-S1" },
+      { "eventType": "TaskUpdated",         "entityType": "Task",    "emittedBy": "F5-S2" },
+      { "eventType": "TaskCompleted",       "entityType": "Task",    "emittedBy": "F5-S2" },
+      { "eventType": "TaskReopened",        "entityType": "Task",    "emittedBy": "F5-S2" },
+      { "eventType": "TaskDeleted",         "entityType": "Task",    "emittedBy": "F5-S3" }
+    ]
+  },
+
+  "implementationNotes": {
+    "descriptionGeneration": "The descriptionTemplate field on each definition shows how to derive the human-readable eventDescription for the activity feed (F0-S4, F1-S7). Templates use {fieldName} placeholders resolved from the payload at query time. The backend service that creates timeline events should pre-render the eventDescription string and store it alongside EventPayloadJson — this avoids query-time template resolution and keeps the feed query simple.",
+    "changedFieldsPattern": "For update events (BrokerUpdated, ContactUpdated, TaskUpdated), the changedFields object captures before/after values. Only include fields that actually changed — do not include unchanged fields. The changedFieldNames placeholder in descriptionTemplate is a comma-joined list of the keys in changedFields (e.g., 'legalName, state').",
+    "contactEventsEntityType": "Contact events use EntityType='Broker' (not 'Contact') because they appear in the Broker Activity Feed (F0-S4) and Broker 360 Timeline (F1-S7). The EntityId is the Broker's ID, not the Contact's ID. The Contact's ID is stored in the payload.",
+    "extensibility": "When new entity types are added (Submission, Renewal, Account), add their event definitions to this schema. Follow the same pattern: required fields for context, changedFields for updates, empty payload for deletes."
+  }
+}

@@ -2,7 +2,7 @@
 
 Auto-generated index of all user stories.
 
-**Total Stories:** 12
+**Total Stories:** 15
 
 ---
 
@@ -32,11 +32,21 @@ Auto-generated index of all user stories.
 
 ---
 
+## F5 - Task Center + Reminders (API-only)
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [S1](./F5-task-center/S1-create-task.md) | Create Task | High | MVP | Internal user |
+| [S2](./F5-task-center/S2-update-task.md) | Update Task | High | MVP | Internal user |
+| [S3](./F5-task-center/S3-delete-task.md) | Delete Task | Medium | MVP | Internal user |
+
+---
+
 ## Summary by Phase
 
 | Phase | Count |
 |-------|-------|
-| MVP | 12 |
+| MVP | 15 |
 
 ---
 
@@ -45,8 +55,8 @@ Auto-generated index of all user stories.
 | Priority | Count |
 |----------|-------|
 | Critical | 1 |
-| High | 10 |
-| Medium | 1 |
+| High | 12 |
+| Medium | 2 |
 
 ---
 

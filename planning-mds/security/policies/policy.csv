@@ -31,11 +31,8 @@
 # ExternalUser — no policy lines; implicit DENY on all resources (InternalOnly rule, §3).
 #
 # Open Questions (see authorization-matrix.md §4) — rows omitted until resolved:
-#   OQ-3: ProgramManager broker:create, update, delete
-#   OQ-4: DistributionUser + RelationshipManager broker:delete  (pending F1-S5)
-#   OQ-5: DistributionUser + RelationshipManager contact:delete (pending F1-S6)
-#   OQ-6: ProgramManager contact:read, create, update, delete
-#   OQ-7: RelationshipManager + ProgramManager submission/renewal transition
+#   OQ-1: ProgramManager broker:create, update, delete
+# Resolved: OQ-4 (RelationshipManager broker:delete → DENY), OQ-5 (DistributionUser/RelationshipManager contact:delete → DENY)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # §2.1 Broker
@@ -44,23 +41,25 @@
 # DistributionUser scope: assigned opportunities only. DistributionManager: region-scoped.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# DistributionUser — create, read, search, update. delete NOT YET SPECIFIED (OQ-4).
+# DistributionUser — create, read, search, update, delete.
 p, DistributionUser, broker, create, true
 p, DistributionUser, broker, read,   true
 p, DistributionUser, broker, search, true
 p, DistributionUser, broker, update, true
+p, DistributionUser, broker, delete, true
 
-# DistributionManager — create, read, search, update. delete NOT YET SPECIFIED (OQ-4).
+# DistributionManager — create, read, search, update, delete.
 p, DistributionManager, broker, create, true
 p, DistributionManager, broker, read,   true
 p, DistributionManager, broker, search, true
 p, DistributionManager, broker, update, true
+p, DistributionManager, broker, delete, true
 
 # Underwriter — read by ID only (submission review context). No search, no write.
 # Source: INCEPTION §4.4.
 p, Underwriter,      broker, read,   true
 
-# RelationshipManager — create, read, search, update. delete NOT YET SPECIFIED (OQ-4).
+# RelationshipManager — create, read, search, update. delete DENY (resolved — authorization-matrix.md §2.1).
 p, RelationshipManager, broker, create, true
 p, RelationshipManager, broker, read,   true
 p, RelationshipManager, broker, search, true
@@ -85,25 +84,27 @@ p, Admin,            broker, delete, true
 # DistributionUser scope: assigned opportunities only. DistributionManager: region-scoped.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# DistributionUser — create, read, update. delete NOT YET SPECIFIED (OQ-5).
+# DistributionUser — create, read, update. delete DENY (resolved — authorization-matrix.md §2.2).
 p, DistributionUser, contact, create, true
 p, DistributionUser, contact, read,   true
 p, DistributionUser, contact, update, true
 
-# DistributionManager — create, read, update. delete NOT YET SPECIFIED (OQ-5).
+# DistributionManager — create, read, update, delete.
 p, DistributionManager, contact, create, true
 p, DistributionManager, contact, read,   true
 p, DistributionManager, contact, update, true
+p, DistributionManager, contact, delete, true
 
 # Underwriter — read only. No write. Source: INCEPTION §4.4.
 p, Underwriter,      contact, read,   true
 
-# RelationshipManager — create, read, update. delete NOT YET SPECIFIED (OQ-5).
+# RelationshipManager — create, read, update. delete DENY (resolved — authorization-matrix.md §2.2).
 p, RelationshipManager, contact, create, true
 p, RelationshipManager, contact, read,   true
 p, RelationshipManager, contact, update, true
 
-# ProgramManager — all contact permissions NOT YET SPECIFIED (OQ-6).
+# ProgramManager — read only (program-scoped). No write permissions in MVP.
+p, ProgramManager, contact, read,   true
 
 # Admin — full unscoped access. Source: INCEPTION §4.4.
 p, Admin,            contact, create, true

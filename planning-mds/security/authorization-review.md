@@ -68,13 +68,13 @@ Resources and actions with no policy line are implicitly DENY (no matching rule)
 | `timeline_event` | `create` | DENY | Append-only rule — INCEPTION §1.4 non-negotiables |
 | `timeline_event` | `update` | DENY | Append-only rule |
 | `timeline_event` | `delete` | DENY | Append-only rule |
-| `broker` | `delete` | DistributionUser, DistributionManager, RelationshipManager | OQ-4 pending; safe-fail DENY until resolved |
-| `broker` | `create`, `update`, `delete` | ProgramManager | OQ-3 pending; safe-fail DENY until resolved |
+| `broker` | `delete` | RelationshipManager | MVP decision: delete reserved for Distribution roles and Admin |
+| `broker` | `create`, `update`, `delete` | ProgramManager | MVP decision: ProgramManager is read-only for brokers |
 | `broker` | `search` | Underwriter, ProgramManager | Matrix grants read-only by ID; no list access |
-| `contact` | `delete` | DistributionUser, DistributionManager, RelationshipManager | OQ-5 pending |
-| `contact` | all | ProgramManager | OQ-6 pending |
-| `submission` | `transition` | RelationshipManager, ProgramManager | OQ-7 pending |
-| `renewal` | `transition` | RelationshipManager, ProgramManager | OQ-7 pending |
+| `contact` | `delete` | DistributionUser, RelationshipManager | MVP decision: delete reserved for DistributionManager and Admin |
+| `contact` | `create`, `update`, `delete` | ProgramManager | MVP decision: ProgramManager is read-only for contacts |
+| `submission` | `transition` | RelationshipManager, ProgramManager | MVP decision: read-only; transitions denied |
+| `renewal` | `transition` | RelationshipManager, ProgramManager | MVP decision: read-only; transitions denied |
 | All resources | all | ExternalUser | InternalOnly rule — §3 of matrix |
 
 ---
@@ -85,10 +85,10 @@ Resources and actions with no policy line are implicitly DENY (no matching rule)
 
 | Resource | Roles with policy lines | Actions covered | Pending (OQ) |
 |---|---|---|---|
-| `broker` | DistributionUser, DistributionManager, Underwriter, RelationshipManager, ProgramManager, Admin | create, read, search, update, delete (partial) | OQ-3, OQ-4 |
-| `contact` | DistributionUser, DistributionManager, Underwriter, RelationshipManager, Admin | create, read, update, delete (partial) | OQ-5, OQ-6 |
-| `submission` | DistributionUser, DistributionManager, Underwriter, RelationshipManager, ProgramManager, Admin | read, transition (partial) | OQ-7 |
-| `renewal` | DistributionUser, DistributionManager, Underwriter, RelationshipManager, ProgramManager, Admin | read, transition (partial) | OQ-7 |
+| `broker` | DistributionUser, DistributionManager, Underwriter, RelationshipManager, ProgramManager, Admin | create, read, search, update, delete (partial) | — |
+| `contact` | DistributionUser, DistributionManager, Underwriter, RelationshipManager, ProgramManager, Admin | create, read, update, delete (partial) | — |
+| `submission` | DistributionUser, DistributionManager, Underwriter, RelationshipManager, ProgramManager, Admin | read, transition (partial) | — |
+| `renewal` | DistributionUser, DistributionManager, Underwriter, RelationshipManager, ProgramManager, Admin | read, transition (partial) | — |
 | `dashboard_kpi` | All internal roles | read | — |
 | `dashboard_pipeline` | All internal roles | read | — |
 | `dashboard_nudge` | All internal roles | read | — |
@@ -99,11 +99,11 @@ Resources and actions with no policy line are implicitly DENY (no matching rule)
 
 | Role | Resources with policy | Notes |
 |---|---|---|
-| DistributionUser | broker, contact, submission, renewal, dashboard_kpi, dashboard_pipeline, dashboard_nudge, task, timeline_event | delete rows pending OQ-4, OQ-5 |
-| DistributionManager | broker, contact, submission, renewal, dashboard_kpi, dashboard_pipeline, dashboard_nudge, task, timeline_event | delete rows pending OQ-4, OQ-5 |
+| DistributionUser | broker, contact, submission, renewal, dashboard_kpi, dashboard_pipeline, dashboard_nudge, task, timeline_event | contact delete denied in MVP |
+| DistributionManager | broker, contact, submission, renewal, dashboard_kpi, dashboard_pipeline, dashboard_nudge, task, timeline_event | — |
 | Underwriter | broker (read only), contact (read only), submission, renewal, dashboard_kpi, dashboard_pipeline, dashboard_nudge, task, timeline_event | No broker:search — intentional |
-| RelationshipManager | broker, contact, submission, renewal, dashboard_kpi, dashboard_pipeline, dashboard_nudge, task, timeline_event | transition rows pending OQ-7 |
-| ProgramManager | broker (read only), submission, renewal, dashboard_kpi, dashboard_pipeline, dashboard_nudge, task, timeline_event | OQ-3 (broker write), OQ-6 (all contact), OQ-7 (transition) pending |
+| RelationshipManager | broker, contact, submission, renewal, dashboard_kpi, dashboard_pipeline, dashboard_nudge, task, timeline_event | broker delete denied; submission/renewal transitions denied |
+| ProgramManager | broker (read only), contact (read only), submission, renewal, dashboard_kpi, dashboard_pipeline, dashboard_nudge, task, timeline_event | transitions denied |
 | Admin | broker, contact, submission, renewal, dashboard_kpi, dashboard_pipeline, dashboard_nudge, task, timeline_event | Full coverage; unscoped |
 | ExternalUser | None | Implicit DENY all — InternalOnly MVP rule |
 
@@ -124,12 +124,12 @@ Legend: ✅ ALLOW · ✗ DENY · ⚠ PENDING (OQ blocks row)
 | B-02 | DistributionUser | read | ✅ ALLOW | F1-S2; INCEPTION §4.4 |
 | B-03 | DistributionUser | search | ✅ ALLOW | F1-S2 AC1–AC4 |
 | B-04 | DistributionUser | update | ✅ ALLOW | INCEPTION §4.4 |
-| B-05 | DistributionUser | delete | ⚠ PENDING | OQ-4; no policy line → current DENY |
+| B-05 | DistributionUser | delete | ✅ ALLOW | F1-S5 ACs |
 | B-06 | DistributionManager | create | ✅ ALLOW | F1-S1; user requirement |
 | B-07 | DistributionManager | read | ✅ ALLOW | F1-S2; user requirement |
 | B-08 | DistributionManager | search | ✅ ALLOW | F1-S2; user requirement |
 | B-09 | DistributionManager | update | ✅ ALLOW | INCEPTION §4.4 |
-| B-10 | DistributionManager | delete | ⚠ PENDING | OQ-4 |
+| B-10 | DistributionManager | delete | ✅ ALLOW | F1-S5 ACs; user requirement |
 | B-11 | Underwriter | create | ✗ DENY | INCEPTION §4.4 |
 | B-12 | Underwriter | read | ✅ ALLOW | INCEPTION §4.4 |
 | B-13 | Underwriter | search | ✗ DENY | No policy line; read-only context |
@@ -139,12 +139,12 @@ Legend: ✅ ALLOW · ✗ DENY · ⚠ PENDING (OQ blocks row)
 | B-17 | RelationshipManager | read | ✅ ALLOW | F1-S2; INCEPTION §4.4 |
 | B-18 | RelationshipManager | search | ✅ ALLOW | F1-S2 Role Visibility |
 | B-19 | RelationshipManager | update | ✅ ALLOW | INCEPTION §4.4 |
-| B-20 | RelationshipManager | delete | ⚠ PENDING | OQ-4 |
-| B-21 | ProgramManager | create | ⚠ PENDING | OQ-3; no policy line → current DENY |
+| B-20 | RelationshipManager | delete | ✗ DENY | MVP decision: delete reserved for Distribution roles and Admin |
+| B-21 | ProgramManager | create | ✗ DENY | MVP decision: ProgramManager is read-only for brokers |
 | B-22 | ProgramManager | read | ✅ ALLOW | F0-S4 Role Visibility |
 | B-23 | ProgramManager | search | ✗ DENY | No policy line; search not specified |
-| B-24 | ProgramManager | update | ⚠ PENDING | OQ-3; no policy line → current DENY |
-| B-25 | ProgramManager | delete | ⚠ PENDING | OQ-3; no policy line → current DENY |
+| B-24 | ProgramManager | update | ✗ DENY | MVP decision: ProgramManager is read-only for brokers |
+| B-25 | ProgramManager | delete | ✗ DENY | MVP decision: ProgramManager is read-only for brokers |
 | B-26 | Admin | create | ✅ ALLOW | INCEPTION §4.4 |
 | B-27 | Admin | read | ✅ ALLOW | INCEPTION §4.4 |
 | B-28 | Admin | search | ✅ ALLOW | F1-S2 Role Visibility |
@@ -159,11 +159,11 @@ Legend: ✅ ALLOW · ✗ DENY · ⚠ PENDING (OQ blocks row)
 | C-01 | DistributionUser | create | ✅ ALLOW | INCEPTION §4.4 |
 | C-02 | DistributionUser | read | ✅ ALLOW | INCEPTION §4.4 |
 | C-03 | DistributionUser | update | ✅ ALLOW | INCEPTION §4.4 |
-| C-04 | DistributionUser | delete | ⚠ PENDING | OQ-5 |
+| C-04 | DistributionUser | delete | ✗ DENY | MVP decision: delete reserved for DistributionManager and Admin |
 | C-05 | DistributionManager | create | ✅ ALLOW | INCEPTION §4.4 |
 | C-06 | DistributionManager | read | ✅ ALLOW | INCEPTION §4.4 |
 | C-07 | DistributionManager | update | ✅ ALLOW | INCEPTION §4.4 |
-| C-08 | DistributionManager | delete | ⚠ PENDING | OQ-5 |
+| C-08 | DistributionManager | delete | ✅ ALLOW | F1-S6 ACs; user requirement |
 | C-09 | Underwriter | create | ✗ DENY | INCEPTION §4.4 |
 | C-10 | Underwriter | read | ✅ ALLOW | INCEPTION §4.4 |
 | C-11 | Underwriter | update | ✗ DENY | INCEPTION §4.4 |
@@ -171,11 +171,11 @@ Legend: ✅ ALLOW · ✗ DENY · ⚠ PENDING (OQ blocks row)
 | C-13 | RelationshipManager | create | ✅ ALLOW | INCEPTION §4.4 |
 | C-14 | RelationshipManager | read | ✅ ALLOW | INCEPTION §4.4 |
 | C-15 | RelationshipManager | update | ✅ ALLOW | INCEPTION §4.4 |
-| C-16 | RelationshipManager | delete | ⚠ PENDING | OQ-5 |
-| C-17 | ProgramManager | create | ⚠ PENDING | OQ-6 |
-| C-18 | ProgramManager | read | ⚠ PENDING | OQ-6 |
-| C-19 | ProgramManager | update | ⚠ PENDING | OQ-6 |
-| C-20 | ProgramManager | delete | ⚠ PENDING | OQ-6 |
+| C-16 | RelationshipManager | delete | ✗ DENY | MVP decision: delete reserved for DistributionManager and Admin |
+| C-17 | ProgramManager | create | ✗ DENY | MVP decision: contact read-only for ProgramManager |
+| C-18 | ProgramManager | read | ✅ ALLOW | MVP decision: contact read-only for ProgramManager |
+| C-19 | ProgramManager | update | ✗ DENY | MVP decision: contact read-only for ProgramManager |
+| C-20 | ProgramManager | delete | ✗ DENY | MVP decision: contact read-only for ProgramManager |
 | C-21 | Admin | create | ✅ ALLOW | INCEPTION §4.4 |
 | C-22 | Admin | read | ✅ ALLOW | INCEPTION §4.4 |
 | C-23 | Admin | update | ✅ ALLOW | INCEPTION §4.4 |
@@ -193,9 +193,9 @@ Legend: ✅ ALLOW · ✗ DENY · ⚠ PENDING (OQ blocks row)
 | S-05 | Underwriter | read | ✅ ALLOW | INCEPTION §4.4 |
 | S-06 | Underwriter | transition | ✅ ALLOW | INCEPTION §4.4 |
 | S-07 | RelationshipManager | read | ✅ ALLOW | F0-S2 Role Visibility |
-| S-08 | RelationshipManager | transition | ⚠ PENDING | OQ-7 |
+| S-08 | RelationshipManager | transition | ✗ DENY | MVP decision: read-only; no transitions |
 | S-09 | ProgramManager | read | ✅ ALLOW | F0-S2 Role Visibility |
-| S-10 | ProgramManager | transition | ⚠ PENDING | OQ-7 |
+| S-10 | ProgramManager | transition | ✗ DENY | MVP decision: read-only; no transitions |
 | S-11 | Admin | read | ✅ ALLOW | INCEPTION §4.4 |
 | S-12 | Admin | transition | ✅ ALLOW | INCEPTION §4.4 |
 | S-13 | ExternalUser | read | ✗ DENY | InternalOnly |
@@ -211,9 +211,9 @@ Legend: ✅ ALLOW · ✗ DENY · ⚠ PENDING (OQ blocks row)
 | R-05 | Underwriter | read | ✅ ALLOW | INCEPTION §4.4 |
 | R-06 | Underwriter | transition | ✅ ALLOW | INCEPTION §4.4 |
 | R-07 | RelationshipManager | read | ✅ ALLOW | F0-S2 Role Visibility |
-| R-08 | RelationshipManager | transition | ⚠ PENDING | OQ-7 |
+| R-08 | RelationshipManager | transition | ✗ DENY | MVP decision: read-only; no transitions |
 | R-09 | ProgramManager | read | ✅ ALLOW | F0-S2 Role Visibility |
-| R-10 | ProgramManager | transition | ⚠ PENDING | OQ-7 |
+| R-10 | ProgramManager | transition | ✗ DENY | MVP decision: read-only; no transitions |
 | R-11 | Admin | read | ✅ ALLOW | INCEPTION §4.4 |
 | R-12 | Admin | transition | ✅ ALLOW | INCEPTION §4.4 |
 | R-13 | ExternalUser | read | ✗ DENY | InternalOnly |

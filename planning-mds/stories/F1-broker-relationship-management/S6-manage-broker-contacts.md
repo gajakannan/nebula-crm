@@ -1,0 +1,105 @@
+# Story: Manage Broker Contacts
+
+**Story ID:** S6
+**Epic/Feature:** F1 - Broker Relationship Management
+**Title:** Create, update, and remove broker contacts
+**Priority:** High
+**Phase:** MVP
+
+## User Story
+
+**As a** Relationship Manager
+**I want** to manage contacts for a broker
+**So that** the team has accurate people and communication details
+
+## Context & Background
+
+Broker contacts are essential for submissions, follow-ups, and relationship management. Contact data must be accurate and tied to the correct broker.
+
+## Acceptance Criteria
+
+- **Given** I have `contact:create` permission and the broker is within scope
+- **When** I add a contact with valid fields
+- **Then** the contact appears in Broker 360 and a timeline event is recorded
+
+- **Given** I have `contact:update` permission
+- **When** I edit a contact and save
+- **Then** the contact is updated and a timeline event is recorded
+
+- **Given** I have `contact:delete` permission
+- **When** I delete a contact
+- **Then** the contact is removed from active lists (soft delete) and a timeline event is recorded
+
+- **Given** required fields are missing or invalid
+- **When** I submit the contact form
+- **Then** I see validation errors and no changes are saved
+
+- **Given** I am not authorized to manage contacts for this broker
+- **When** I attempt to create, update, or delete a contact
+- **Then** access is denied with a 403 response
+
+- Edge case: contact is associated to a different broker → validation error
+
+## Data Requirements
+
+**Required Fields:**
+- BrokerId: broker to associate the contact to
+- FullName
+- Email
+- Phone
+
+**Optional Fields:**
+- Role
+
+**Validation Rules:**
+- Contact must be linked to a valid BrokerId
+- Email must be RFC-compliant
+- Phone must be normalized to US format
+- Soft delete retains historical timeline events
+
+## Role-Based Visibility
+
+**Roles that can manage contacts:**
+- DistributionUser — create/update contacts within scope
+- DistributionManager — create/update/delete contacts within region
+- RelationshipManager — create/update contacts within scope
+- Admin — full access
+
+**Delete is restricted to:**
+- DistributionManager and Admin only
+
+**Data Visibility:**
+- InternalOnly content; no external access in MVP
+
+## Non-Functional Expectations
+
+- Performance: contact create/update p95 < 500ms (excluding auth provider latency)
+- Security: server-side authorization required for all contact mutations
+- Reliability: contact changes are atomic and audit logged
+
+## Dependencies
+
+**Depends On:**
+- S1 - Create Broker
+- S3 - Read Broker (Broker 360 View)
+
+**Related Stories:**
+- S7 - View Broker Activity Timeline
+
+## Out of Scope
+
+- Bulk contact import
+- External broker self-service contact updates
+
+## Questions & Assumptions
+
+**Assumptions (to be validated):**
+- Contact delete is a soft delete
+
+## Definition of Done
+
+- [ ] Acceptance criteria met
+- [ ] Edge cases handled
+- [ ] Permissions enforced
+- [ ] Audit/timeline logged for contact changes
+- [ ] Tests pass

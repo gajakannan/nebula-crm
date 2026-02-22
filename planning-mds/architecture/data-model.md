@@ -2,7 +2,7 @@
 
 **Purpose:** This document supplements INCEPTION.md Section 4.2 with detailed data model specifications required by the Dashboard (F0) feature. It adds the **Task** entity (new) and documents **dashboard-specific indexes and query patterns**.
 
-**Last Updated:** 2026-02-14
+**Last Updated:** 2026-02-22
 
 ---
 
@@ -19,7 +19,7 @@ See [ADR-003](decisions/ADR-003-task-entity-nudge-engine.md) for design rational
 | Id | uuid | PK, NOT NULL | gen_random_uuid() | Unique identifier |
 | Title | varchar(255) | NOT NULL | — | Task title displayed in widgets |
 | Description | varchar(2000) | NULL | — | Optional longer description |
-| Status | varchar(20) | NOT NULL, CHECK IN ('Open','InProgress','Done') | 'Open' | Current task state |
+| Status | varchar(20) | NOT NULL, FK -> ReferenceTaskStatus.Code | 'Open' | Current task state |
 | Priority | varchar(20) | NOT NULL, CHECK IN ('Low','Normal','High','Urgent') | 'Normal' | Task priority level |
 | DueDate | date | NULL | — | Optional due date |
 | AssignedTo | varchar(255) | NOT NULL | — | Keycloak subject (sub claim) of assigned user |
@@ -53,7 +53,8 @@ See [ADR-003](decisions/ADR-003-task-entity-nudge-engine.md) for design rational
 
 ### Seed Data
 
-- **No production seed data.** Tasks are user-created.
+- **ReferenceTaskStatus** is seeded with: `Open`, `InProgress`, `Done` (deterministic upsert, admin-only writes).
+- **No production seed data** for Tasks. Tasks are user-created.
 - **Dev/test seed:** Generate 20 tasks per test user using Faker, with varied DueDate spread (past, today, future) to exercise nudge and tasks widget edge cases.
 
 ---
@@ -98,17 +99,24 @@ SELECT
   s.Id,
   COALESCE(a.Name, b.LegalName) AS EntityName,
   s.PremiumEstimate AS Amount,
-  EXTRACT(DAY FROM (CURRENT_DATE - MAX(wt.OccurredAt))) AS DaysInStatus,
+  EXTRACT(DAY FROM (CURRENT_DATE - wt_latest.OccurredAt)) AS DaysInStatus,
   up.DisplayName AS AssignedUserDisplayName,
   SUBSTRING(up.DisplayName, 1, 2) AS AssignedUserInitials
 FROM Submissions s
   LEFT JOIN Accounts a ON s.AccountId = a.Id
   LEFT JOIN Brokers b ON s.BrokerId = b.Id
-  LEFT JOIN WorkflowTransition wt ON wt.EntityId = s.Id AND wt.WorkflowType = 'Submission'
+  LEFT JOIN LATERAL (
+    SELECT OccurredAt
+    FROM WorkflowTransition wt
+    WHERE wt.EntityId = s.Id
+      AND wt.WorkflowType = 'Submission'
+      AND wt.ToState = s.CurrentStatus
+    ORDER BY wt.OccurredAt DESC
+    LIMIT 1
+  ) wt_latest ON true
   LEFT JOIN UserProfile up ON up.Subject = s.UpdatedBy
 WHERE s.CurrentStatus = @status
   -- + ABAC scope filter
-GROUP BY s.Id, a.Name, b.LegalName, s.PremiumEstimate, up.DisplayName
 ORDER BY DaysInStatus DESC
 LIMIT 5
 ```
@@ -185,9 +193,9 @@ These indexes are required for dashboard query performance. They do not change a
 
 1. **Migration 001:** Create `Tasks` table with all columns and indexes
 2. **Migration 002:** Add dashboard-specific indexes to existing tables (Submissions, Renewals, WorkflowTransition, ActivityTimelineEvent)
-3. **Migration 003:** Seed reference data for TaskStatus and TaskPriority (if using reference tables instead of CHECK constraints — TBD based on INCEPTION.md pattern of reference tables for configurable data)
+3. **Migration 003:** Seed reference data for `ReferenceTaskStatus` (Open, InProgress, Done).
 
-**Decision:** Task Status and Priority use CHECK constraints (not reference tables) because they are not admin-configurable in MVP. If future requirements allow custom task statuses, migrate to reference tables at that time.
+**Decision:** Task Status uses `ReferenceTaskStatus` to align with INCEPTION.md reference-table strategy. Task Priority remains a CHECK constraint because it is not admin-configurable in MVP. If Priority becomes configurable later, add `ReferenceTaskPriority` via ADR.
 
 ---
 

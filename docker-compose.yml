@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: nebula-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: nebula
+    ports:
+      - "5432:5432"
+    volumes:
+      - nebula-db-data:/var/lib/postgresql/data
+
+  api:
+    image: ghcr.io/nebula-crm/nebula-api:local
+    container_name: nebula-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  nebula-db-data:

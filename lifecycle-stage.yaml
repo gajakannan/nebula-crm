@@ -1,101 +1,107 @@
 version: 1
-
 release_posture:
   mode: public-preview-human-orchestrated
-  summary: >
-    Initial public release scope is framework validation with human orchestration.
-    CI success reflects required gates for current_stage only; strict implementation/release gates are expected later.
+  summary: 'Phase B approved (2026-02-14). Implementation underway starting with F0
+    (Dashboard). CI enforces strict infra and security gates at this stage.
 
-current_stage: framework-bootstrap
-
+    '
+current_stage: implementation
+implementation_scope:
+  active_feature: F0-dashboard, F1-broker-relationship-management
+  active_stories:
+  - F0-S1
+  - F0-S2
+  - F0-S3
+  - F0-S4
+  - F0-S5
+  - F1-S1
+  - F1-S2
+  - F1-S3
+  - F1-S4
+  - F1-S5
+  - F1-S6
+  - F1-S7
+  note: "Implementation scope includes F0 dashboard slice and F1 broker relationship\
+    \ management stories S1\u2013S7 for Broker 360, contacts, and timeline."
 stages:
   framework-bootstrap:
-    description: Framework scaffolding phase before solution implementation starts (active stage for the initial public preview).
+    description: Framework scaffolding phase before solution implementation starts
+      (active stage for the initial public preview).
     required_gates:
-      - boundary_genericness
-      - skill_regression
-      - infra_non_strict
-
+    - boundary_genericness
+    - skill_regression
+    - infra_non_strict
   planning:
     description: Planning artifacts are being authored; implementation remains placeholder.
     required_gates:
-      - boundary_genericness
-      - api_contract
-      - solution_contract
-      - infra_non_strict
-      - security_planning_light
-
+    - boundary_genericness
+    - api_contract
+    - solution_contract
+    - infra_non_strict
+    - security_planning_light
   implementation:
-    description: Application code/runtime is being built; strict operational/security gates apply.
+    description: Application code/runtime is being built; strict operational/security
+      gates apply.
     required_gates:
-      - boundary_genericness
-      - api_contract
-      - solution_contract
-      - infra_strict
-      - security_planning_strict
-
+    - boundary_genericness
+    - api_contract
+    - solution_contract
+    - infra_strict
+    - security_planning_strict
   release-readiness:
     description: Public release hardening stage with strict gates and review evidence.
     required_gates:
-      - boundary_genericness
-      - api_contract
-      - solution_contract
-      - infra_strict
-      - security_planning_strict
-
+    - boundary_genericness
+    - api_contract
+    - solution_contract
+    - infra_strict
+    - security_planning_strict
 gates:
   boundary_genericness:
     description: Prevent solution-specific leakage into generic framework agents.
     command:
-      - python3
-      - scripts/validate-genericness.py
-
+    - python3
+    - scripts/validate-genericness.py
   skill_regression:
     description: Validate skill metadata, structure quality, and routing regressions.
     command:
-      - python3
-      - scripts/run-skill-regression.py
-
+    - python3
+    - scripts/run-skill-regression.py
   api_contract:
     description: Validate OpenAPI structural and canonical error-contract rules.
     command:
-      - python3
-      - agents/architect/scripts/validate-api-contract.py
-      - planning-mds/api/nebula-api.yaml
-
+    - python3
+    - agents/architect/scripts/validate-api-contract.py
+    - planning-mds/api/nebula-api.yaml
   solution_contract:
     description: Validate solution-specific story/API contract alignment.
     command:
-      - python3
-      - planning-mds/testing/validate-nebula-api-contract.py
-      - planning-mds/api/nebula-api.yaml
-
+    - python3
+    - planning-mds/testing/validate-nebula-api-contract.py
+    - planning-mds/api/nebula-api.yaml
   infra_non_strict:
     description: Informational infrastructure baseline checks during bootstrap/planning.
     command:
-      - python3
-      - agents/devops/scripts/validate-infrastructure.py
-      - .
-
+    - python3
+    - agents/devops/scripts/validate-infrastructure.py
+    - .
   infra_strict:
     description: Strict infrastructure gate for implementation/release stages.
     command:
-      - python3
-      - agents/devops/scripts/validate-infrastructure.py
-      - .
-      - --strict
-
+    - python3
+    - agents/devops/scripts/validate-infrastructure.py
+    - .
+    - --strict
   security_planning_light:
     description: Ensure required security planning artifacts exist.
     command:
-      - python3
-      - agents/security/scripts/security-audit.py
-      - planning-mds/security
-
+    - python3
+    - agents/security/scripts/security-audit.py
+    - planning-mds/security
   security_planning_strict:
     description: Enforce non-draft security artifacts and dated review evidence.
     command:
-      - python3
-      - agents/security/scripts/security-audit.py
-      - planning-mds/security
-      - --strict
+    - python3
+    - agents/security/scripts/security-audit.py
+    - planning-mds/security
+    - --strict

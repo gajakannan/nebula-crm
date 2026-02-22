@@ -134,6 +134,7 @@ paths:
     delete:
       operationId: deleteBroker
       summary: Delete broker
+      description: Soft delete broker. Returns 409 if active submissions or renewals exist.
       tags: [Brokers]
       responses:
         "204":
@@ -146,6 +147,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   # ──────────────────────────────────────────────────────────────
   # Contact endpoints (existing)
@@ -154,16 +157,29 @@ paths:
     get:
       operationId: listContacts
       summary: List contacts
+      description: >
+        Returns a paginated list of contacts, optionally filtered by brokerId.
+        This endpoint uses a query-parameter filter (not a sub-resource URL) because
+        contacts may belong to different brokers and a flat list with filters is
+        more flexible for cross-broker search in future phases.
       tags: [Contacts]
+      parameters:
+        - name: brokerId
+          in: query
+          required: false
+          description: Filter contacts for a specific broker.
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
       responses:
         "200":
-          description: Contact list
+          description: Paginated contact list
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Contact"
+                $ref: "#/components/schemas/PaginatedContactList"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -193,6 +209,69 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+
+  /api/contacts/{contactId}:
+    parameters:
+      - $ref: "#/components/parameters/ContactId"
+    get:
+      operationId: getContactById
+      summary: Get contact by id
+      tags: [Contacts]
+      responses:
+        "200":
+          description: Contact details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      operationId: updateContact
+      summary: Update contact
+      tags: [Contacts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactUpdateRequest"
+      responses:
+        "200":
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contact"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteContact
+      summary: Delete contact
+      tags: [Contacts]
+      responses:
+        "204":
+          description: Contact deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   # ──────────────────────────────────────────────────────────────
   # Account, MGA, Program endpoints (existing)
@@ -738,7 +817,7 @@ components:
       name: q
       in: query
       required: false
-      description: Case-insensitive search query. Leading and trailing spaces are trimmed.
+      description: Case-insensitive broker name search. License number search is exact match only. Leading/trailing spaces are trimmed.
       schema:
         type: string
         minLength: 1
@@ -755,6 +834,13 @@ components:
           - Inactive
     BrokerId:
       name: brokerId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ContactId:
+      name: contactId
       in: path
       required: true
       schema:
@@ -881,7 +967,10 @@ components:
     # ── Broker Schemas ──────────────────────────────────────────
     Broker:
       type: object
-      description: Broker profile.
+      description: >
+        Broker profile. If Status=Inactive, email and phone fields are returned
+        as null (masking sentinel). The frontend should display these as "Masked"
+        or equivalent placeholder text rather than treating them as absent data.
       required:
         - id
         - legalName
@@ -900,13 +989,24 @@ components:
           type: string
         status:
           type: string
+          enum:
+            - Active
+            - Inactive
+            - Pending
         email:
           type: string
           format: email
           nullable: true
+          description: >
+            Returned as null when Status=Inactive (masking sentinel).
+            Consumers must treat null on an inactive broker as "masked", not "missing".
         phone:
           type: string
+          pattern: "^\\+?[1-9]\\d{7,14}$"
           nullable: true
+          description: >
+            Returned as null when Status=Inactive (masking sentinel).
+            Consumers must treat null on an inactive broker as "masked", not "missing".
         createdAt:
           type: string
           format: date-time
@@ -924,19 +1024,26 @@ components:
       properties:
         legalName:
           type: string
+          minLength: 1
+          maxLength: 255
         licenseNumber:
           type: string
+          minLength: 1
+          maxLength: 50
         state:
           type: string
+          pattern: "^[A-Z]{2}$"
+          description: Two-letter US state code (e.g. CA, NY).
         email:
           type: string
           format: email
         phone:
           type: string
+          pattern: "^\\+?[1-9]\\d{7,14}$"
 
     BrokerUpdateRequest:
       type: object
-      description: Payload to update a broker.
+      description: Payload to update a broker. License number is immutable after creation.
       required:
         - legalName
         - state
@@ -944,15 +1051,24 @@ components:
       properties:
         legalName:
           type: string
+          minLength: 1
+          maxLength: 255
         state:
           type: string
+          pattern: "^[A-Z]{2}$"
+          description: Two-letter US state code (e.g. CA, NY).
         status:
           type: string
+          enum:
+            - Active
+            - Inactive
+            - Pending
         email:
           type: string
           format: email
         phone:
           type: string
+          pattern: "^\\+?[1-9]\\d{7,14}$"
 
     PaginatedBrokerList:
       type: object
@@ -985,6 +1101,7 @@ components:
         - id
         - fullName
         - email
+        - phone
       properties:
         id:
           type: string
@@ -1003,6 +1120,9 @@ components:
           format: email
         phone:
           type: string
+          pattern: "^\\+?[1-9]\\d{7,14}$"
+        role:
+          type: string
 
     ContactCreateRequest:
       type: object
@@ -1011,6 +1131,7 @@ components:
         - brokerId
         - fullName
         - email
+        - phone
       properties:
         brokerId:
           type: string
@@ -1022,6 +1143,50 @@ components:
           format: email
         phone:
           type: string
+          pattern: "^\\+?[1-9]\\d{7,14}$"
+        role:
+          type: string
+
+    ContactUpdateRequest:
+      type: object
+      description: Payload to update a contact.
+      required:
+        - fullName
+        - email
+        - phone
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        role:
+          type: string
+
+    PaginatedContactList:
+      type: object
+      description: Paginated list of contacts.
+      required:
+        - data
+        - page
+        - pageSize
+        - totalCount
+        - totalPages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Contact"
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalCount:
+          type: integer
+        totalPages:
+          type: integer
 
     # ── Account / MGA / Program Schemas ─────────────────────────
     Account:

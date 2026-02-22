@@ -1,10 +1,10 @@
 # Authorization Matrix (Requirements)
 
 Owner: Product Manager
-Status: Draft
-Last Updated: 2026-02-17
+Status: Final
+Last Updated: 2026-02-21
 
-Sources used: INCEPTION.md §1.2, §3.1, §3.2, §4.4; F0-S1, F0-S2, F0-S3, F0-S4, F0-S5; F1-S1, F1-S2.
+Sources used: INCEPTION.md §1.2, §3.1, §3.2, §4.3, §4.4; F0-S1, F0-S2, F0-S3, F0-S4, F0-S5; F1-S1 through F1-S7.
 No requirements invented. Gaps are marked "Not yet specified" with a reference to the blocking story.
 
 ---
@@ -13,7 +13,8 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 
 | Role | Description | Source |
 |------|-------------|--------|
-| DistributionUser | Internal Distribution & Marketing user. Primary submission intake and broker management role. F1 stories refer to this role as "DistributionManager" — treated as the same role pending clarification (see Open Question 7). | INCEPTION §1.2, §3.2; F1-S1, F1-S2, F0-S1–S5 |
+| DistributionUser | Internal Distribution & Marketing user. Works assigned opportunities only. | INCEPTION §1.2, §3.2; user requirement for assigned opportunities |
+| DistributionManager | Internal Distribution manager. Can see and act on all opportunities within their region. | User requirement for manager access |
 | Underwriter | Internal underwriter. Reviews triaged submissions and provides quote/bind decisions. Read-only access to broker and account context. | INCEPTION §1.2, §3.2, §4.4; F0-S2, F0-S3 |
 | RelationshipManager | Internal broker relationship manager. Maintains broker/account relationships and timeline context. | INCEPTION §1.2, §3.2; F1-S2, F0-S4 |
 | ProgramManager | Internal MGA/program manager. Oversees MGA program-level relationships. | INCEPTION §1.2, §3.2; F0-S1, F0-S4 |
@@ -28,22 +29,26 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 
 | Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
 |------|--------|----------|------------------------------|----------------------|
-| DistributionUser | create | **ALLOW** | Must hold broker:create permission. License number must be globally unique (assumption — see Open Question 1). | F1-S1 AC1, AC3; INCEPTION §4.4 |
-| DistributionUser | read / search | **ALLOW** | Full name and license search. InternalOnly metadata (inactive flags) visible. Results scoped to authorized entities. | F1-S2 AC1–AC4, Role Visibility; INCEPTION §4.4 |
+| DistributionUser | create | **ALLOW** | Must hold broker:create permission. License number must be globally unique. | F1-S1 AC1, AC3; INCEPTION §4.4 |
+| DistributionUser | read / search | **ALLOW** | Full name search; license search is exact match only. InternalOnly metadata (inactive flags) visible. Results scoped to authorized entities. | F1-S2 AC1–AC4, Role Visibility; INCEPTION §4.4 |
 | DistributionUser | update | **ALLOW** | Internal distribution role may update broker profile. | INCEPTION §4.4 |
-| DistributionUser | delete | **Not yet specified** | Pending F1-S5 (not yet written). | — |
+| DistributionUser | delete | **ALLOW** | Scoped to authorized entities. Delete blocked if active submissions or renewals exist. | F1-S5 ACs |
+| DistributionManager | create | **ALLOW** | Same as DistributionUser; manager can act across all opportunities. | F1-S1; user requirement |
+| DistributionManager | read / search | **ALLOW** | Scoped to region; no team/user restrictions within region. License search is exact match only. | F1-S2 Role Visibility; user requirement |
+| DistributionManager | update | **ALLOW** | Scoped to region; no team/user restrictions within region. | INCEPTION §4.4; user requirement |
+| DistributionManager | delete | **ALLOW** | Scoped to region; no team/user restrictions within region. Delete blocked if active submissions or renewals exist. | F1-S5 ACs; user requirement |
 | Underwriter | create | **DENY** | Read-only access to broker context. | INCEPTION §4.4 |
 | Underwriter | read | **ALLOW** | Read access to broker context for submission review. No write access. | INCEPTION §4.4 |
 | Underwriter | update | **DENY** | Read-only access to broker context. | INCEPTION §4.4 |
 | Underwriter | delete | **DENY** | Read-only access. | INCEPTION §4.4 |
 | RelationshipManager | create | **ALLOW** | Internal relationship role may create brokers. | INCEPTION §4.4 |
-| RelationshipManager | read / search | **ALLOW** | Full broker search. Results scoped to authorized entities. | F1-S2 Role Visibility; INCEPTION §4.4 |
+| RelationshipManager | read / search | **ALLOW** | Full broker search. License search is exact match only. Results scoped to authorized entities. | F1-S2 Role Visibility; INCEPTION §4.4 |
 | RelationshipManager | update | **ALLOW** | Internal relationship role may update broker profile. | INCEPTION §4.4 |
-| RelationshipManager | delete | **Not yet specified** | Pending F1-S5 (not yet written). | — |
-| ProgramManager | create | **Not yet specified** | Not addressed in F0/F1 stories or INCEPTION §4.4. | — |
-| ProgramManager | read | **ALLOW** | Implied by broker activity feed scoped to their programs. | F0-S4 Role Visibility |
-| ProgramManager | update | **Not yet specified** | Not addressed in available stories. | — |
-| ProgramManager | delete | **Not yet specified** | Not addressed in available stories. | — |
+| RelationshipManager | delete | **DENY** | Delete reserved for Distribution roles and Admin in MVP. | F1-S5 ACs |
+| ProgramManager | create | **DENY** | Program managers are read-only for broker records in MVP. | INCEPTION §4.4 |
+| ProgramManager | read | **ALLOW** | Implied by broker activity feed scoped to their programs. License search is exact match only. | F0-S4 Role Visibility |
+| ProgramManager | update | **DENY** | Program managers are read-only for broker records in MVP. | INCEPTION §4.4 |
+| ProgramManager | delete | **DENY** | Program managers are read-only for broker records in MVP. | INCEPTION §4.4 |
 | Admin | create | **ALLOW** | Full unscoped access. | F1-S1 Role Visibility; INCEPTION §4.4 |
 | Admin | read / search | **ALLOW** | Full unscoped access. | F1-S2 Role Visibility; INCEPTION §4.4 |
 | Admin | update | **ALLOW** | Full unscoped access. | INCEPTION §4.4 |
@@ -54,6 +59,7 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 - Duplicate license number on create must return a deterministic conflict error; the record must not be created. (F1-S1 edge case)
 - All read results must be limited to entities the user is authorized to access; no cross-scope reads. (F1-S2 AC4)
 - Broker records are InternalOnly in MVP; no content is visible to ExternalUser. (F1-S1, F1-S2 Data Visibility)
+- Broker delete is blocked if active submissions or renewals exist. (F1-S5 ACs)
 
 ---
 
@@ -64,7 +70,11 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 | DistributionUser | create | **ALLOW** | Internal distribution role may create contacts. | INCEPTION §4.4 |
 | DistributionUser | read | **ALLOW** | Full contact read scoped to authorized entities. | INCEPTION §4.4 |
 | DistributionUser | update | **ALLOW** | Internal distribution role may update contacts. | INCEPTION §4.4 |
-| DistributionUser | delete | **Not yet specified** | Pending F1-S6 (not yet written). | — |
+| DistributionUser | delete | **DENY** | Delete reserved for DistributionManager and Admin in MVP. | F1-S6 ACs |
+| DistributionManager | create | **ALLOW** | Same as DistributionUser; manager can act across all opportunities. | INCEPTION §4.4; user requirement |
+| DistributionManager | read | **ALLOW** | Scoped to region; no team/user restrictions within region. | INCEPTION §4.4; user requirement |
+| DistributionManager | update | **ALLOW** | Scoped to region; no team/user restrictions within region. | INCEPTION §4.4; user requirement |
+| DistributionManager | delete | **ALLOW** | Scoped to region; no team/user restrictions within region. | F1-S6 ACs; user requirement |
 | Underwriter | create | **DENY** | Read-only access to contact context. | INCEPTION §4.4 |
 | Underwriter | read | **ALLOW** | Read access to contact context. No write. | INCEPTION §4.4 |
 | Underwriter | update | **DENY** | Read-only access. | INCEPTION §4.4 |
@@ -72,11 +82,11 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 | RelationshipManager | create | **ALLOW** | Internal relationship role may create contacts. | INCEPTION §4.4 |
 | RelationshipManager | read | **ALLOW** | Full contact read scoped to authorized entities. | INCEPTION §4.4 |
 | RelationshipManager | update | **ALLOW** | Internal relationship role may update contacts. | INCEPTION §4.4 |
-| RelationshipManager | delete | **Not yet specified** | Pending F1-S6 (not yet written). | — |
-| ProgramManager | create | **Not yet specified** | Not addressed in available stories or INCEPTION §4.4. | — |
-| ProgramManager | read | **Not yet specified** | Not addressed in available stories. | — |
-| ProgramManager | update | **Not yet specified** | Not addressed in available stories. | — |
-| ProgramManager | delete | **Not yet specified** | Not addressed in available stories. | — |
+| RelationshipManager | delete | **DENY** | Delete reserved for DistributionManager and Admin in MVP. | F1-S6 ACs |
+| ProgramManager | create | **DENY** | Contact management is not within ProgramManager scope in MVP. | INCEPTION §4.4 |
+| ProgramManager | read | **ALLOW** | Read-only for program context; no mutations. | INCEPTION §4.4 |
+| ProgramManager | update | **DENY** | Contact management is not within ProgramManager scope in MVP. | INCEPTION §4.4 |
+| ProgramManager | delete | **DENY** | Contact management is not within ProgramManager scope in MVP. | INCEPTION §4.4 |
 | Admin | create | **ALLOW** | Full unscoped access. | INCEPTION §4.4 |
 | Admin | read | **ALLOW** | Full unscoped access. | INCEPTION §4.4 |
 | Admin | update | **ALLOW** | Full unscoped access. | INCEPTION §4.4 |
@@ -92,7 +102,8 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 
 | Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
 |------|--------|----------|------------------------------|----------------------|
-| DistributionUser | read | **ALLOW** | Counts scoped to the user's authorized department and/or region. | F0-S1 Role Visibility, AC Checklist |
+| DistributionUser | read | **ALLOW** | Counts scoped to the user's assigned opportunities only. | F0-S1 Role Visibility; user requirement |
+| DistributionManager | read | **ALLOW** | Scoped to region; no team/user restrictions within region. | F0-S1 Role Visibility; user requirement |
 | Underwriter | read | **ALLOW** | Counts scoped to submissions assigned to or accessible by the user. | F0-S1 Role Visibility |
 | RelationshipManager | read | **ALLOW** | Counts scoped to the user's managed broker relationships. | F0-S1 Role Visibility |
 | ProgramManager | read | **ALLOW** | Counts scoped to the user's programs. | F0-S1 Role Visibility |
@@ -111,7 +122,8 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 
 | Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
 |------|--------|----------|------------------------------|----------------------|
-| DistributionUser | read | **ALLOW** | Submissions and renewals scoped to user's department/region. Mini-card expansion uses the same scope. | F0-S2 Role Visibility, AC Checklist |
+| DistributionUser | read | **ALLOW** | Submissions and renewals scoped to user's assigned opportunities only. | F0-S2 Role Visibility; user requirement |
+| DistributionManager | read | **ALLOW** | Scoped to region; no team/user restrictions within region. | F0-S2 Role Visibility; user requirement |
 | Underwriter | read | **ALLOW** | Submissions assigned to or accessible by the user. | F0-S2 Role Visibility |
 | RelationshipManager | read | **ALLOW** | Submissions and renewals linked to managed broker relationships. | F0-S2 Role Visibility |
 | ProgramManager | read | **ALLOW** | Submissions and renewals within the user's programs. | F0-S2 Role Visibility |
@@ -131,7 +143,8 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 
 | Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
 |------|--------|----------|------------------------------|----------------------|
-| DistributionUser | read | **ALLOW** | Own overdue tasks + submissions and renewals within ABAC scope. | F0-S5 Role Visibility, Nudge Selection Rules |
+| DistributionUser | read | **ALLOW** | Own overdue tasks + submissions and renewals within assigned opportunities only. | F0-S5 Role Visibility; user requirement |
+| DistributionManager | read | **ALLOW** | Own overdue tasks + submissions and renewals within region. | F0-S5 Role Visibility; user requirement |
 | Underwriter | read | **ALLOW** | Own overdue tasks + submissions and renewals within ABAC scope. | F0-S5 Role Visibility |
 | RelationshipManager | read | **ALLOW** | Own overdue tasks + submissions and renewals within ABAC scope. | F0-S5 Role Visibility |
 | ProgramManager | read | **ALLOW** | Own overdue tasks + submissions and renewals within ABAC scope. | F0-S5 Role Visibility |
@@ -154,6 +167,7 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 | Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
 |------|--------|----------|------------------------------|----------------------|
 | DistributionUser | read | **ALLOW** | Own tasks only (task assigned to the authenticated user). Done tasks excluded. | F0-S3 AC Checklist, Role Visibility |
+| DistributionManager | read | **ALLOW** | Own tasks only for the dashboard widget. Viewing other users' tasks is Future (not MVP). | F0-S3 Role Visibility |
 | Underwriter | read | **ALLOW** | Own tasks only. Done tasks excluded. | F0-S3 Role Visibility |
 | RelationshipManager | read | **ALLOW** | Own tasks only. Done tasks excluded. | F0-S3 Role Visibility |
 | ProgramManager | read | **ALLOW** | Own tasks only. Done tasks excluded. | F0-S3 Role Visibility |
@@ -172,7 +186,8 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 
 | Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
 |------|--------|----------|------------------------------|----------------------|
-| DistributionUser | read | **ALLOW** | Events for brokers within the user's authorized scope (department/region). | F0-S4 Role Visibility, AC Checklist |
+| DistributionUser | read | **ALLOW** | Events for brokers within the user's authorized scope (assigned opportunities only). | F0-S4 Role Visibility; user requirement |
+| DistributionManager | read | **ALLOW** | Broker events within region; no team/user restrictions within region. | F0-S4 Role Visibility; user requirement |
 | Underwriter | read | **ALLOW** | Events for brokers linked to submissions accessible by the user. | F0-S4 Role Visibility |
 | RelationshipManager | read | **ALLOW** | Events for brokers the user manages. | F0-S4 Role Visibility |
 | ProgramManager | read | **ALLOW** | Events for brokers within the user's programs. | F0-S4 Role Visibility |
@@ -188,6 +203,58 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 
 ---
 
+### 2.8 Submission — Read / Transition
+
+| Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
+|------|--------|----------|------------------------------|----------------------|
+| DistributionUser | read | **ALLOW** | Submissions assigned to the user only. Applies to `GET /api/submissions/{submissionId}`. | F0-S2; user requirement |
+| DistributionUser | transition | **ALLOW** | Only for assigned submissions and only for valid transitions. Applies to `POST /api/submissions/{submissionId}/transitions`. | INCEPTION §4.3; user requirement |
+| DistributionManager | read | **ALLOW** | All submissions within region. Applies to `GET /api/submissions/{submissionId}`. | F0-S2; user requirement |
+| DistributionManager | transition | **ALLOW** | Submissions within region; valid transitions only. Applies to `POST /api/submissions/{submissionId}/transitions`. | INCEPTION §4.3; user requirement |
+| Underwriter | read | **ALLOW** | Submissions assigned to or accessible by the user. Applies to `GET /api/submissions/{submissionId}`. | INCEPTION §4.4 |
+| Underwriter | transition | **ALLOW** | Underwriters can transition within underwriting stages. Applies to `POST /api/submissions/{submissionId}/transitions`. | INCEPTION §4.4; §4.3 |
+| RelationshipManager | read | **ALLOW** | Submissions linked to managed broker relationships. Applies to `GET /api/submissions/{submissionId}`. | F0-S2 Role Visibility |
+| RelationshipManager | transition | **DENY** | Read-only access; no submission transitions in MVP. Applies to `POST /api/submissions/{submissionId}/transitions`. | INCEPTION §4.4 |
+| ProgramManager | read | **ALLOW** | Submissions within the user's programs. Applies to `GET /api/submissions/{submissionId}`. | F0-S2 Role Visibility |
+| ProgramManager | transition | **DENY** | Read-only access; no submission transitions in MVP. Applies to `POST /api/submissions/{submissionId}/transitions`. | INCEPTION §4.4 |
+| Admin | read | **ALLOW** | Unscoped access. Applies to `GET /api/submissions/{submissionId}`. | INCEPTION §4.4 |
+| Admin | transition | **ALLOW** | Unscoped; valid transitions only. Applies to `POST /api/submissions/{submissionId}/transitions`. | INCEPTION §4.4; §4.3 |
+| ExternalUser | all | **DENY** | No external portal in MVP. | INCEPTION §3.1 non-goals |
+
+**Constraints applying to all ALLOW decisions on Submission:**
+- Applies to `POST /api/submissions/{submissionId}/transitions` only.
+- Invalid transition pairs return HTTP 409 with ProblemDetails code invalid_transition. (INCEPTION §4.3)
+- Missing transition prerequisites return HTTP 409 with ProblemDetails code missing_transition_prerequisite. (INCEPTION §4.3)
+- Every successful transition appends a WorkflowTransition and ActivityTimelineEvent record. (INCEPTION §4.3)
+
+---
+
+### 2.9 Renewal — Read / Transition
+
+| Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
+|------|--------|----------|------------------------------|----------------------|
+| DistributionUser | read | **ALLOW** | Renewals assigned to the user only. Applies to `GET /api/renewals/{renewalId}`. | F0-S2; user requirement |
+| DistributionUser | transition | **ALLOW** | Only for assigned renewals and only for valid transitions. Applies to `POST /api/renewals/{renewalId}/transitions`. | INCEPTION §4.3; user requirement |
+| DistributionManager | read | **ALLOW** | All renewals within region. Applies to `GET /api/renewals/{renewalId}`. | F0-S2; user requirement |
+| DistributionManager | transition | **ALLOW** | Renewals within region; valid transitions only. Applies to `POST /api/renewals/{renewalId}/transitions`. | INCEPTION §4.3; user requirement |
+| Underwriter | read | **ALLOW** | Renewals assigned to or accessible by the user. Applies to `GET /api/renewals/{renewalId}`. | INCEPTION §4.4 |
+| Underwriter | transition | **ALLOW** | Underwriters can transition within underwriting stages. Applies to `POST /api/renewals/{renewalId}/transitions`. | INCEPTION §4.4; §4.3 |
+| RelationshipManager | read | **ALLOW** | Renewals linked to managed broker relationships. Applies to `GET /api/renewals/{renewalId}`. | F0-S2 Role Visibility |
+| RelationshipManager | transition | **DENY** | Read-only access; no renewal transitions in MVP. Applies to `POST /api/renewals/{renewalId}/transitions`. | INCEPTION §4.4 |
+| ProgramManager | read | **ALLOW** | Renewals within the user's programs. Applies to `GET /api/renewals/{renewalId}`. | F0-S2 Role Visibility |
+| ProgramManager | transition | **DENY** | Read-only access; no renewal transitions in MVP. Applies to `POST /api/renewals/{renewalId}/transitions`. | INCEPTION §4.4 |
+| Admin | read | **ALLOW** | Unscoped access. Applies to `GET /api/renewals/{renewalId}`. | INCEPTION §4.4 |
+| Admin | transition | **ALLOW** | Unscoped; valid transitions only. Applies to `POST /api/renewals/{renewalId}/transitions`. | INCEPTION §4.4; §4.3 |
+| ExternalUser | all | **DENY** | No external portal in MVP. | INCEPTION §3.1 non-goals |
+
+**Constraints applying to all ALLOW decisions on Renewal:**
+- Applies to `POST /api/renewals/{renewalId}/transitions` only.
+- Invalid transition pairs return HTTP 409 with ProblemDetails code invalid_transition. (INCEPTION §4.3)
+- Missing transition prerequisites return HTTP 409 with ProblemDetails code missing_transition_prerequisite. (INCEPTION §4.3)
+- Every successful transition appends a WorkflowTransition and ActivityTimelineEvent record. (INCEPTION §4.3)
+
+---
+
 ## 3. InternalOnly Content Rule
 
 All resources in this matrix are classified **InternalOnly** for MVP. No data is accessible to ExternalUser under any circumstances. This rule applies universally to all resources above.
@@ -198,12 +265,4 @@ Sources: INCEPTION §1.2 (external users are Future only), §3.1 non-goals ("No 
 
 ## 4. Open Questions
 
-| # | Question | Source | Blocking |
-|---|----------|--------|---------|
-| 1 | Is broker license uniqueness **global** or **state-scoped**? Current assumption is global. | F1-S1 Open Questions | Affects duplicate-detection constraint on broker:create for DistributionUser and Admin |
-| 2 | Should **partial license number search** be enabled in MVP? Current assumption is exact license match only. | F1-S2 Open Questions | Affects broker:read/search scope for DistributionUser, RelationshipManager, Admin |
-| 3 | What are broker:create, update, and delete permissions for **ProgramManager**? | Not addressed in F0/F1 stories or INCEPTION §4.4 | ProgramManager broker rows currently "Not yet specified" |
-| 4 | What are broker:**delete** permissions for **DistributionUser** and **RelationshipManager**? | F1-S5 not yet written | Delete rows for both roles currently "Not yet specified" |
-| 5 | What are contact:**delete** permissions for **DistributionUser** and **RelationshipManager**? | F1-S6 not yet written | Contact delete rows for both roles currently "Not yet specified" |
-| 6 | What are contact read and write permissions for **ProgramManager**? | Not addressed in available stories or INCEPTION §4.4 | All contact rows for ProgramManager currently "Not yet specified" |
-| 7 | Are **DistributionUser** and **DistributionManager** the same role? F1 stories use "DistributionManager"; F0 stories and INCEPTION use "Distribution User". If they are different permission levels (e.g., a Manager sub-role with create/update; a User sub-role with read-only), the broker:create and broker:update rows must be split. | F1-S1/S2 Role Visibility vs F0-S1–S5 Role Visibility | Affects broker:create and broker:update allow/deny decisions |
+None.

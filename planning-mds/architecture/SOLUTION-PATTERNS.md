@@ -142,8 +142,14 @@ POST   /api/brokers           - Create broker
 GET    /api/brokers/{id}      - Get broker detail
 PUT    /api/brokers/{id}      - Update broker
 DELETE /api/brokers/{id}      - Delete broker
-GET    /api/brokers/{id}/submissions - Get broker's submissions
 ```
+
+**Sub-resource vs query-parameter convention:**
+Use flat collection endpoints with query-parameter filters (e.g. `GET /api/contacts?brokerId=...`)
+when the child entity may be queried across parents or independently. Use sub-resource URLs
+(e.g. `GET /api/brokers/{id}/submissions`) only when the child is always accessed in the context
+of a single parent. For Nebula MVP, contacts use the query-parameter pattern; submissions and
+renewals use the sub-resource pattern.
 
 ### Pattern: RFC 7807 ProblemDetails for Errors
 **Decision:** All API errors return RFC 7807 ProblemDetails format
@@ -400,9 +406,9 @@ public class BaseEntity
 {
     public Guid Id { get; set; }
     public DateTime CreatedAt { get; set; }
-    public Guid CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = default!; // Keycloak subject (sub claim)
     public DateTime? UpdatedAt { get; set; }
-    public Guid? UpdatedBy { get; set; }
+    public string? UpdatedBy { get; set; } // Keycloak subject (sub claim)
 }
 ```
 
@@ -415,7 +421,7 @@ public class BaseEntity
 ```csharp
 public bool IsDeleted { get; set; }
 public DateTime? DeletedAt { get; set; }
-public Guid? DeletedBy { get; set; }
+public string? DeletedBy { get; set; } // Keycloak subject (sub claim)
 ```
 
 ### Pattern: Use GUIDs for Primary Keys

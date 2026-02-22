@@ -13,6 +13,8 @@
 # Resources and actions:
 #   broker          read, search, create, update, delete
 #   contact         read, create, update, delete
+#   submission      read, transition
+#   renewal         read, transition
 #   dashboard_kpi   read
 #   dashboard_pipeline  read
 #   dashboard_nudge read
@@ -22,36 +24,42 @@
 #   Note on broker "read" vs "search":
 #     read   — fetch a single broker by ID (e.g. GET /brokers/{id})
 #     search — list/search brokers by name or license (e.g. GET /brokers?q=...)
-#     The matrix grants both to DistributionUser, RelationshipManager, Admin.
+#     The matrix grants both to DistributionUser, DistributionManager, RelationshipManager, Admin.
 #     Underwriter receives read only — no list/search access.
 #
-# Roles: DistributionUser, Underwriter, RelationshipManager, ProgramManager, Admin
+# Roles: DistributionUser, DistributionManager, Underwriter, RelationshipManager, ProgramManager, Admin
 # ExternalUser — no policy lines; implicit DENY on all resources (InternalOnly rule, §3).
 #
 # Open Questions (see authorization-matrix.md §4) — rows omitted until resolved:
-#   OQ-3: ProgramManager broker:create, update, delete
-#   OQ-4: DistributionUser + RelationshipManager broker:delete  (pending F1-S5)
-#   OQ-5: DistributionUser + RelationshipManager contact:delete (pending F1-S6)
-#   OQ-6: ProgramManager contact:read, create, update, delete
-#   OQ-7: DistributionUser vs DistributionManager naming — using DistributionUser pending PM clarification
+#   OQ-1: ProgramManager broker:create, update, delete
+# Resolved: OQ-4 (RelationshipManager broker:delete → DENY), OQ-5 (DistributionUser/RelationshipManager contact:delete → DENY)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # §2.1 Broker
 # Scope constraint (all ALLOW reads): results limited to authorized entities.
 # Enforced at query layer. Source: F1-S2 AC4; INCEPTION §4.4.
+# DistributionUser scope: assigned opportunities only. DistributionManager: region-scoped.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# DistributionUser — create, read, search, update. delete NOT YET SPECIFIED (OQ-4).
+# DistributionUser — create, read, search, update, delete.
 p, DistributionUser, broker, create, true
 p, DistributionUser, broker, read,   true
 p, DistributionUser, broker, search, true
 p, DistributionUser, broker, update, true
+p, DistributionUser, broker, delete, true
+
+# DistributionManager — create, read, search, update, delete.
+p, DistributionManager, broker, create, true
+p, DistributionManager, broker, read,   true
+p, DistributionManager, broker, search, true
+p, DistributionManager, broker, update, true
+p, DistributionManager, broker, delete, true
 
 # Underwriter — read by ID only (submission review context). No search, no write.
 # Source: INCEPTION §4.4.
 p, Underwriter,      broker, read,   true
 
-# RelationshipManager — create, read, search, update. delete NOT YET SPECIFIED (OQ-4).
+# RelationshipManager — create, read, search, update. delete DENY (resolved — authorization-matrix.md §2.1).
 p, RelationshipManager, broker, create, true
 p, RelationshipManager, broker, read,   true
 p, RelationshipManager, broker, search, true
@@ -73,22 +81,30 @@ p, Admin,            broker, delete, true
 # §2.2 Contact
 # Scope constraint (all ALLOW reads): results limited to authorized entities.
 # Enforced at query layer. Source: INCEPTION §4.4.
+# DistributionUser scope: assigned opportunities only. DistributionManager: region-scoped.
 # ─────────────────────────────────────────────────────────────────────────────
 
-# DistributionUser — create, read, update. delete NOT YET SPECIFIED (OQ-5).
+# DistributionUser — create, read, update. delete DENY (resolved — authorization-matrix.md §2.2).
 p, DistributionUser, contact, create, true
 p, DistributionUser, contact, read,   true
 p, DistributionUser, contact, update, true
 
+# DistributionManager — create, read, update, delete.
+p, DistributionManager, contact, create, true
+p, DistributionManager, contact, read,   true
+p, DistributionManager, contact, update, true
+p, DistributionManager, contact, delete, true
+
 # Underwriter — read only. No write. Source: INCEPTION §4.4.
 p, Underwriter,      contact, read,   true
 
-# RelationshipManager — create, read, update. delete NOT YET SPECIFIED (OQ-5).
+# RelationshipManager — create, read, update. delete DENY (resolved — authorization-matrix.md §2.2).
 p, RelationshipManager, contact, create, true
 p, RelationshipManager, contact, read,   true
 p, RelationshipManager, contact, update, true
 
-# ProgramManager — all contact permissions NOT YET SPECIFIED (OQ-6).
+# ProgramManager — read only (program-scoped). No write permissions in MVP.
+p, ProgramManager, contact, read,   true
 
 # Admin — full unscoped access. Source: INCEPTION §4.4.
 p, Admin,            contact, create, true
@@ -97,79 +113,126 @@ p, Admin,            contact, update, true
 p, Admin,            contact, delete, true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §2.3 Dashboard — KPI Cards
+# §2.3 Submission — Read / Transition
+# Transitions must follow workflow rules (INCEPTION §4.3).
+# DistributionUser scope: assigned opportunities only. DistributionManager: region-scoped.
+# ─────────────────────────────────────────────────────────────────────────────
+
+p, DistributionUser,    submission, read,       true
+p, DistributionUser,    submission, transition, true
+p, DistributionManager, submission, read,       true
+p, DistributionManager, submission, transition, true
+p, Underwriter,         submission, read,       true
+p, Underwriter,         submission, transition, true
+p, RelationshipManager, submission, read,       true
+p, ProgramManager,      submission, read,       true
+p, Admin,               submission, read,       true
+p, Admin,               submission, transition, true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# §2.4 Renewal — Read / Transition
+# Transitions must follow workflow rules (INCEPTION §4.3).
+# DistributionUser scope: assigned opportunities only. DistributionManager: region-scoped.
+# ─────────────────────────────────────────────────────────────────────────────
+
+p, DistributionUser,    renewal, read,       true
+p, DistributionUser,    renewal, transition, true
+p, DistributionManager, renewal, read,       true
+p, DistributionManager, renewal, transition, true
+p, Underwriter,         renewal, read,       true
+p, Underwriter,         renewal, transition, true
+p, RelationshipManager, renewal, read,       true
+p, ProgramManager,      renewal, read,       true
+p, Admin,               renewal, read,       true
+p, Admin,               renewal, transition, true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# §2.5 Dashboard — KPI Cards
 # Read-only. No mutations from this view (F0-S1 AC Checklist).
 # Scope enforced at query layer per role:
-#   DistributionUser   → department and/or region
-#   Underwriter        → submissions assigned to or accessible by user
+#   DistributionUser    → assigned opportunities only
+#   DistributionManager → region-scoped
+#   Underwriter         → submissions assigned to or accessible by user
 #   RelationshipManager → managed broker relationships
-#   ProgramManager     → user's programs
-#   Admin              → unscoped
+#   ProgramManager      → user's programs
+#   Admin               → unscoped
 # Source: F0-S1 Role Visibility.
 # ─────────────────────────────────────────────────────────────────────────────
+
 p, DistributionUser,    dashboard_kpi, read, true
+p, DistributionManager, dashboard_kpi, read, true
 p, Underwriter,         dashboard_kpi, read, true
 p, RelationshipManager, dashboard_kpi, read, true
 p, ProgramManager,      dashboard_kpi, read, true
 p, Admin,               dashboard_kpi, read, true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §2.4 Dashboard — Pipeline Summary
+# §2.6 Dashboard — Pipeline Summary
 # Read-only. No mutations from this view (F0-S2 AC Checklist).
 # Non-terminal status filter enforced at query layer (F0-S2 Validation Rules).
-# Scope enforced at query layer per role (same scoping as §2.3).
+# Scope enforced at query layer per role (same scoping as §2.5).
 # Source: F0-S2 Role Visibility.
 # ─────────────────────────────────────────────────────────────────────────────
+
 p, DistributionUser,    dashboard_pipeline, read, true
+p, DistributionManager, dashboard_pipeline, read, true
 p, Underwriter,         dashboard_pipeline, read, true
 p, RelationshipManager, dashboard_pipeline, read, true
 p, ProgramManager,      dashboard_pipeline, read, true
 p, Admin,               dashboard_pipeline, read, true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §2.5 Dashboard — Nudge Cards
+# §2.7 Dashboard — Nudge Cards
 # Read-only. No persisted mutations in MVP (F0-S5 AC Checklist).
 # Session-dismiss only; dismiss does not require audit.
 # Query-layer filters (all enforced in nudge service, not here):
-#   Overdue task nudges   → tasks where assignee == authenticated user AND soft-deleted = false
-#   Stale submission nudges → submissions within user's ABAC scope AND soft-deleted = false
-#   Upcoming renewal nudges → renewals within user's ABAC scope
+#   Overdue task nudges    → tasks where assignee == authenticated user AND soft-deleted = false
+#   Stale submission nudges → submissions within user's scope AND soft-deleted = false
+#   Upcoming renewal nudges → renewals within user's scope
 # Source: F0-S5 Role Visibility, Nudge Selection Rules.
 # ─────────────────────────────────────────────────────────────────────────────
+
 p, DistributionUser,    dashboard_nudge, read, true
+p, DistributionManager, dashboard_nudge, read, true
 p, Underwriter,         dashboard_nudge, read, true
 p, RelationshipManager, dashboard_nudge, read, true
 p, ProgramManager,      dashboard_nudge, read, true
 p, Admin,               dashboard_nudge, read, true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §2.6 Task — Read Own Assigned Tasks
+# §2.8 Task — Read Own Assigned Tasks
 # Ownership enforced at policy layer (resource-attribute check).
 # Enforcement point MUST hydrate r.obj.assignee before calling the enforcer.
+# Mapping: r.obj.assignee == Task.AssignedTo (domain field).
 # Read-only in dashboard context. No create/update/delete from widget (F0-S3 out of scope).
 # Status filter (Open/InProgress only; Done excluded) enforced at query layer (F0-S3 Validation Rules).
 # Admin: own tasks only in MVP; cross-user task view is explicitly Future (F0-S3 Role Visibility).
-# Source: F0-S3 AC Checklist, Role Visibility.
+# DistributionManager: own tasks only for dashboard widget.
 # ─────────────────────────────────────────────────────────────────────────────
+
 p, DistributionUser,    task, read, r.obj.assignee == r.sub.id
+p, DistributionManager, task, read, r.obj.assignee == r.sub.id
 p, Underwriter,         task, read, r.obj.assignee == r.sub.id
 p, RelationshipManager, task, read, r.obj.assignee == r.sub.id
 p, ProgramManager,      task, read, r.obj.assignee == r.sub.id
 p, Admin,               task, read, r.obj.assignee == r.sub.id
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §2.7 Activity Timeline Event — Broker Events
+# §2.9 Activity Timeline Event — Broker Events
 # Read-only. No create/update/delete for any role (append-only, INCEPTION §1.4).
 # EntityType = Broker filter enforced at query layer (F0-S4 Validation Rules).
 # Scope enforced at query layer per role:
-#   DistributionUser   → brokers within authorized department/region
-#   Underwriter        → brokers linked to submissions accessible by user
+#   DistributionUser    → assigned opportunities only
+#   DistributionManager → region-scoped
+#   Underwriter         → brokers linked to submissions accessible by user
 #   RelationshipManager → brokers the user manages
-#   ProgramManager     → brokers within user's programs
-#   Admin              → unscoped
+#   ProgramManager      → brokers within user's programs
+#   Admin               → unscoped
 # Source: F0-S4 Role Visibility, AC Checklist.
 # ─────────────────────────────────────────────────────────────────────────────
+
 p, DistributionUser,    timeline_event, read, true
+p, DistributionManager, timeline_event, read, true
 p, Underwriter,         timeline_event, read, true
 p, RelationshipManager, timeline_event, read, true
 p, ProgramManager,      timeline_event, read, true

@@ -184,8 +184,8 @@ The Task entity belongs to a new **TaskManagement** module within the modular mo
 Nebula.Domain/
   TaskManagement/
     Task.cs                    # Domain entity
-    TaskStatus.cs              # Enum: Open, InProgress, Done
-    TaskPriority.cs            # Enum: Low, Normal, High, Urgent
+    TaskStatus.cs              # Value object/constants aligned to ReferenceTaskStatus seed values
+    TaskPriority.cs            # Enum: Low, Normal, High, Urgent (CHECK constraint)
 
 Nebula.Application/
   TaskManagement/
@@ -205,4 +205,4 @@ Nebula.Application/
 
 ---
 
-**Last Updated:** 2026-02-14
+**Last Updated:** 2026-02-22

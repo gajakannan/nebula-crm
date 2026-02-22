@@ -1,10 +1,10 @@
 # Nebula Design Tokens - Dark & Light Themes
 
-**Version:** 2.0
-**Last Updated:** 2026-01-30
+**Version:** 2.1
+**Last Updated:** 2026-02-21
 **Applies To:** Frontend Developer
 
-**Inspiration:** Modern developer tools (Turborepo, Vercel, Linear) with dual theme support, gradient accents, and subtle hover glows.
+**Inspiration:** Dark, glassy analytics UI with neon magenta/violet gradients and soft ambient glow (reference: `planning-mds/screens/WhatsApp Image 2026-02-21 at 4.15.15 PM.jpeg`).
 
 ---
 
@@ -13,12 +13,11 @@
 This document defines the design tokens (colors, spacing, typography, shadows, etc.) for Nebula's **dual-theme UI** with dark mode and light mode support. Both themes feature gradient accent borders and subtle glow effects on hover.
 
 **Design Philosophy:**
-- Dark and light theme parity
-- Gradient accent borders for visual interest
-- Subtle glow effects on hover
-- Terminal/code aesthetics (dark mode)
-- Clean, professional aesthetics (light mode)
-- High contrast for readability in both modes
+- Dark-first with light-mode parity
+- Glassy surfaces with soft edge glow
+- Neon magenta/violet gradients for key data
+- Subdued body text, high-contrast data emphasis
+- Rounded cards with layered depth
 - Smooth theme transitions
 
 ---
@@ -30,40 +29,40 @@ This document defines the design tokens (colors, spacing, typography, shadows, e
 ```css
 .dark {
   /* Backgrounds */
-  --background: 0 0% 4%;                /* #0a0a0a - Almost black */
-  --background-elevated: 0 0% 7%;       /* #111113 - Slightly lighter for cards */
-  --background-panel: 222 47% 11%;      /* #0f1419 - Panel/terminal background */
+  --background: 228 22% 6%;             /* #0b0f18 - Graphite */
+  --background-elevated: 228 20% 9%;    /* #121726 - Raised cards */
+  --background-panel: 228 22% 12%;      /* #171d2e - Panels */
 
   /* Foreground (Text) */
-  --foreground: 0 0% 98%;               /* #fafafa - Primary text */
-  --muted-foreground: 0 0% 64%;         /* #a3a3a3 - Secondary text */
-  --subtle-foreground: 0 0% 45%;        /* #737373 - Tertiary text */
+  --foreground: 210 20% 96%;            /* #f1f3f7 - Primary text */
+  --muted-foreground: 215 15% 70%;      /* #aeb6c7 - Secondary text */
+  --subtle-foreground: 215 12% 55%;     /* #7c8597 - Tertiary text */
 
   /* UI Elements */
-  --card: 0 0% 7%;
-  --card-foreground: 0 0% 98%;
+  --card: 228 20% 9%;
+  --card-foreground: 210 20% 96%;
 
-  --popover: 0 0% 7%;
-  --popover-foreground: 0 0% 98%;
+  --popover: 228 20% 9%;
+  --popover-foreground: 210 20% 96%;
 
   /* Borders */
-  --border: 0 0% 15%;                   /* #27272a */
-  --input: 0 0% 15%;
+  --border: 228 16% 18%;                /* #262c3b */
+  --input: 228 16% 18%;
 
   /* Primary */
-  --primary: 217 91% 60%;               /* #0070f3 - Blue */
+  --primary: 268 83% 70%;               /* #8b5cf6 - Violet */
   --primary-foreground: 0 0% 100%;
 
   /* Secondary */
-  --secondary: 0 0% 15%;
-  --secondary-foreground: 0 0% 98%;
+  --secondary: 228 16% 14%;
+  --secondary-foreground: 210 20% 96%;
 
   /* Muted */
-  --muted: 0 0% 15%;
-  --muted-foreground: 0 0% 64%;
+  --muted: 228 16% 14%;
+  --muted-foreground: 215 15% 70%;
 
   /* Accent */
-  --accent: 191 100% 50%;               /* #00d8ff - Cyan */
+  --accent: 300 84% 60%;                /* #d946ef - Fuchsia */
   --accent-foreground: 0 0% 100%;
 
   /* Destructive */
@@ -71,7 +70,7 @@ This document defines the design tokens (colors, spacing, typography, shadows, e
   --destructive-foreground: 0 0% 98%;
 
   /* Focus Ring */
-  --ring: 217 91% 60%;                  /* Blue for focus */
+  --ring: 268 83% 70%;                  /* Violet focus */
 
   /* Radius */
   --radius: 0.75rem;                    /* 12px */
@@ -83,48 +82,48 @@ This document defines the design tokens (colors, spacing, typography, shadows, e
 ```css
 .light {
   /* Backgrounds */
-  --background: 0 0% 100%;              /* #ffffff - Pure white */
-  --background-elevated: 0 0% 98%;      /* #fafafa - Slightly darker for cards */
-  --background-panel: 220 13% 98%;      /* #f7f8f9 - Panel background */
+  --background: 225 30% 98%;            /* #f4f6fb - Cool white */
+  --background-elevated: 225 22% 96%;   /* #edf0f7 - Raised cards */
+  --background-panel: 225 20% 94%;      /* #e7ecf4 - Panels */
 
   /* Foreground (Text) */
-  --foreground: 0 0% 9%;                /* #171717 - Primary text */
-  --muted-foreground: 0 0% 45%;         /* #737373 - Secondary text */
-  --subtle-foreground: 0 0% 64%;        /* #a3a3a3 - Tertiary text */
+  --foreground: 230 32% 12%;            /* #141824 - Primary text */
+  --muted-foreground: 225 12% 45%;      /* #6b7280 - Secondary text */
+  --subtle-foreground: 225 10% 62%;     /* #98a2b3 - Tertiary text */
 
   /* UI Elements */
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 9%;
+  --card-foreground: 230 32% 12%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 9%;
+  --popover-foreground: 230 32% 12%;
 
   /* Borders */
-  --border: 0 0% 90%;                   /* #e5e5e5 */
-  --input: 0 0% 90%;
+  --border: 220 16% 86%;                /* #d6dbe7 */
+  --input: 220 16% 86%;
 
   /* Primary */
-  --primary: 217 91% 60%;               /* #0070f3 - Same blue */
+  --primary: 268 83% 70%;               /* #8b5cf6 - Same violet */
   --primary-foreground: 0 0% 100%;
 
   /* Secondary */
-  --secondary: 0 0% 96%;                /* #f5f5f5 */
-  --secondary-foreground: 0 0% 9%;
+  --secondary: 225 20% 92%;
+  --secondary-foreground: 230 32% 12%;
 
   /* Muted */
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 45%;
+  --muted: 225 20% 92%;
+  --muted-foreground: 225 12% 45%;
 
   /* Accent */
-  --accent: 191 100% 50%;               /* #00d8ff - Same cyan */
-  --accent-foreground: 0 0% 9%;
+  --accent: 300 84% 60%;                /* #d946ef - Same fuchsia */
+  --accent-foreground: 0 0% 100%;
 
   /* Destructive */
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
 
   /* Focus Ring */
-  --ring: 217 91% 60%;
+  --ring: 268 83% 70%;
 
   /* Radius */
   --radius: 0.75rem;
@@ -136,16 +135,16 @@ This document defines the design tokens (colors, spacing, typography, shadows, e
 ```css
 :root {
   /* Accent colors (theme-independent) */
-  --accent-blue: 217 91% 60%;          /* #0070f3 */
-  --accent-cyan: 191 100% 50%;         /* #00d8ff */
-  --accent-purple: 271 81% 71%;        /* #a855f7 */
-  --accent-pink: 330 81% 60%;          /* #ec4899 */
-  --accent-orange: 25 95% 53%;         /* #f97316 */
+  --accent-violet: 268 83% 70%;         /* #8b5cf6 */
+  --accent-fuchsia: 300 84% 60%;        /* #d946ef */
+  --accent-purple: 276 80% 62%;         /* #9333ea */
+  --accent-pink: 330 81% 60%;           /* #ec4899 */
+  --accent-orange: 25 95% 53%;          /* #f97316 */
 
   /* RGB values for gradients and glows */
-  --rgb-blue: 0 112 243;
-  --rgb-cyan: 0 216 255;
-  --rgb-purple: 168 85 247;
+  --rgb-violet: 139 92 246;
+  --rgb-fuchsia: 217 70 239;
+  --rgb-purple: 147 51 234;
   --rgb-pink: 236 72 153;
   --rgb-orange: 249 115 22;
 
@@ -153,7 +152,7 @@ This document defines the design tokens (colors, spacing, typography, shadows, e
   --success: 142 71% 45%;              /* #22c55e */
   --warning: 45 93% 47%;               /* #eab308 */
   --error: 0 84% 60%;                  /* #ef4444 */
-  --info: 217 91% 60%;                 /* #3b82f6 */
+  --info: 268 83% 70%;                 /* #8b5cf6 */
 }
 ```
 
@@ -169,16 +168,16 @@ This document defines the design tokens (colors, spacing, typography, shadows, e
 @layer base {
   :root {
     /* Accent colors (theme-independent) */
-    --accent-blue: 217 91% 60%;
-    --accent-cyan: 191 100% 50%;
-    --accent-purple: 271 81% 71%;
+    --accent-violet: 268 83% 70%;
+    --accent-fuchsia: 300 84% 60%;
+    --accent-purple: 276 80% 62%;
     --accent-pink: 330 81% 60%;
     --accent-orange: 25 95% 53%;
 
     /* RGB values for gradients */
-    --rgb-blue: 0 112 243;
-    --rgb-cyan: 0 216 255;
-    --rgb-purple: 168 85 247;
+    --rgb-violet: 139 92 246;
+    --rgb-fuchsia: 217 70 239;
+    --rgb-purple: 147 51 234;
     --rgb-pink: 236 72 153;
     --rgb-orange: 249 115 22;
 
@@ -187,64 +186,68 @@ This document defines the design tokens (colors, spacing, typography, shadows, e
 
   /* Light Theme (Default) */
   .light {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
+    --background: 225 30% 98%;
+    --background-elevated: 225 22% 96%;
+    --background-panel: 225 20% 94%;
+    --foreground: 230 32% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 230 32% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 230 32% 12%;
 
-    --primary: 217 91% 60%;
+    --primary: 268 83% 70%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 225 20% 92%;
+    --secondary-foreground: 230 32% 12%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 225 20% 92%;
+    --muted-foreground: 225 12% 45%;
 
-    --accent: 191 100% 50%;
-    --accent-foreground: 0 0% 9%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 217 91% 60%;
-  }
-
-  /* Dark Theme */
-  .dark {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 98%;
-
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 64%;
-
-    --accent: 191 100% 50%;
+    --accent: 300 84% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 217 91% 60%;
+    --border: 220 16% 86%;
+    --input: 220 16% 86%;
+    --ring: 268 83% 70%;
+  }
+
+  /* Dark Theme */
+  .dark {
+    --background: 228 22% 6%;
+    --background-elevated: 228 20% 9%;
+    --background-panel: 228 22% 12%;
+    --foreground: 210 20% 96%;
+
+    --card: 228 20% 9%;
+    --card-foreground: 210 20% 96%;
+
+    --popover: 228 20% 9%;
+    --popover-foreground: 210 20% 96%;
+
+    --primary: 268 83% 70%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 228 16% 14%;
+    --secondary-foreground: 210 20% 96%;
+
+    --muted: 228 16% 14%;
+    --muted-foreground: 215 15% 70%;
+
+    --accent: 300 84% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 228 16% 18%;
+    --input: 228 16% 18%;
+    --ring: 268 83% 70%;
   }
 
   * {
@@ -260,55 +263,64 @@ This document defines the design tokens (colors, spacing, typography, shadows, e
 @layer utilities {
   /* Gradient text */
   .gradient-text {
-    @apply bg-gradient-to-r from-[hsl(var(--accent-blue))] to-[hsl(var(--accent-purple))] bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-[hsl(var(--accent-violet))] to-[hsl(var(--accent-fuchsia))] bg-clip-text text-transparent;
   }
 
-  .gradient-text-cyan {
-    @apply bg-gradient-to-r from-[hsl(var(--accent-cyan))] to-[hsl(var(--primary))] bg-clip-text text-transparent;
+  .gradient-text-fuchsia {
+    @apply bg-gradient-to-r from-[hsl(var(--accent-fuchsia))] to-[hsl(var(--accent-pink))] bg-clip-text text-transparent;
   }
 
   /* Terminal styles (dark mode only) */
   .dark .terminal-bg {
-    @apply bg-[#0f1419] font-mono text-sm;
+    @apply bg-[#141a26] font-mono text-sm;
   }
 
   .light .terminal-bg {
-    @apply bg-[#f7f8f9] font-mono text-sm border border-border;
+    @apply bg-[#eef1f7] font-mono text-sm border border-border;
+  }
+
+  /* Glass surfaces */
+  .dark .glass-card {
+    @apply bg-background/60 backdrop-blur-xl border border-white/5 shadow-[0_12px_40px_rgba(0,0,0,0.45)];
+  }
+
+  .light .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-black/5 shadow-[0_10px_28px_rgba(15,23,42,0.12)];
   }
 
   /* Glow effects - Intensity varies by theme */
-  .dark .glow-blue-hover {
-    @apply hover:shadow-[0_0_20px_rgba(0,112,243,0.4),0_0_40px_rgba(0,112,243,0.2)] transition-shadow duration-300;
+  .dark .glow-violet-hover {
+    @apply hover:shadow-[0_0_20px_rgba(139,92,246,0.4),0_0_40px_rgba(139,92,246,0.2)] transition-shadow duration-300;
   }
 
-  .light .glow-blue-hover {
-    @apply hover:shadow-[0_0_15px_rgba(0,112,243,0.2),0_0_30px_rgba(0,112,243,0.1)] transition-shadow duration-300;
+  .light .glow-violet-hover {
+    @apply hover:shadow-[0_0_15px_rgba(139,92,246,0.2),0_0_30px_rgba(139,92,246,0.1)] transition-shadow duration-300;
   }
 
-  .dark .glow-cyan-hover {
-    @apply hover:shadow-[0_0_20px_rgba(0,216,255,0.4),0_0_40px_rgba(0,216,255,0.2)] transition-shadow duration-300;
+  .dark .glow-fuchsia-hover {
+    @apply hover:shadow-[0_0_20px_rgba(217,70,239,0.4),0_0_40px_rgba(217,70,239,0.2)] transition-shadow duration-300;
   }
 
-  .light .glow-cyan-hover {
-    @apply hover:shadow-[0_0_15px_rgba(0,216,255,0.2),0_0_30px_rgba(0,216,255,0.1)] transition-shadow duration-300;
+  .light .glow-fuchsia-hover {
+    @apply hover:shadow-[0_0_15px_rgba(217,70,239,0.2),0_0_30px_rgba(217,70,239,0.1)] transition-shadow duration-300;
   }
 
   .dark .glow-purple-hover {
-    @apply hover:shadow-[0_0_20px_rgba(168,85,247,0.4),0_0_40px_rgba(168,85,247,0.2)] transition-shadow duration-300;
+    @apply hover:shadow-[0_0_20px_rgba(147,51,234,0.4),0_0_40px_rgba(147,51,234,0.2)] transition-shadow duration-300;
   }
 
   .light .glow-purple-hover {
-    @apply hover:shadow-[0_0_15px_rgba(168,85,247,0.2),0_0_30px_rgba(168,85,247,0.1)] transition-shadow duration-300;
+    @apply hover:shadow-[0_0_15px_rgba(147,51,234,0.2),0_0_30px_rgba(147,51,234,0.1)] transition-shadow duration-300;
   }
 
   /* Gradient border utilities */
-  .gradient-border-blue-purple::before {
+  .gradient-border-violet-fuchsia::before {
     content: '';
     position: absolute;
     inset: -1px;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, rgb(var(--rgb-blue)) 0%, rgb(var(--rgb-purple)) 100%);
+    background: linear-gradient(135deg, rgb(var(--rgb-violet)) 0%, rgb(var(--rgb-fuchsia)) 100%);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -316,7 +328,7 @@ This document defines the design tokens (colors, spacing, typography, shadows, e
     transition: opacity 0.3s;
   }
 
-  .gradient-border-blue-purple:hover::before {
+  .gradient-border-violet-fuchsia:hover::before {
     opacity: 1;
   }
 
@@ -403,8 +415,8 @@ module.exports = {
           foreground: 'hsl(var(--card-foreground))',
         },
         // Theme-independent accent colors
-        'accent-blue': 'hsl(var(--accent-blue))',
-        'accent-cyan': 'hsl(var(--accent-cyan))',
+        'accent-violet': 'hsl(var(--accent-violet))',
+        'accent-fuchsia': 'hsl(var(--accent-fuchsia))',
         'accent-purple': 'hsl(var(--accent-purple))',
         'accent-pink': 'hsl(var(--accent-pink))',
         'accent-orange': 'hsl(var(--accent-orange))',
@@ -415,10 +427,10 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)',
       },
       backgroundImage: {
-        'gradient-blue-purple': 'linear-gradient(135deg, rgb(var(--rgb-blue)) 0%, rgb(var(--rgb-purple)) 100%)',
-        'gradient-blue-cyan': 'linear-gradient(135deg, rgb(var(--rgb-blue)) 0%, rgb(var(--rgb-cyan)) 100%)',
+        'gradient-violet-purple': 'linear-gradient(135deg, rgb(var(--rgb-violet)) 0%, rgb(var(--rgb-purple)) 100%)',
+        'gradient-violet-fuchsia': 'linear-gradient(135deg, rgb(var(--rgb-violet)) 0%, rgb(var(--rgb-fuchsia)) 100%)',
         'gradient-purple-pink': 'linear-gradient(135deg, rgb(var(--rgb-purple)) 0%, rgb(var(--rgb-pink)) 100%)',
-        'gradient-cyan-blue': 'linear-gradient(135deg, rgb(var(--rgb-cyan)) 0%, rgb(var(--rgb-blue)) 100%)',
+        'gradient-fuchsia-violet': 'linear-gradient(135deg, rgb(var(--rgb-fuchsia)) 0%, rgb(var(--rgb-violet)) 100%)',
       },
       keyframes: {
         'gradient-shift': {
@@ -430,7 +442,7 @@ module.exports = {
         'gradient-shift': 'gradient-shift 3s ease infinite',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Sora', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
     },
@@ -537,7 +549,7 @@ interface TerminalCardProps {
   title?: string;
   icon?: React.ReactNode;
   children: React.ReactNode;
-  variant?: 'blue-purple' | 'blue-cyan' | 'purple-pink' | 'cyan-blue';
+  variant?: 'violet-purple' | 'violet-fuchsia' | 'purple-pink' | 'fuchsia-violet';
   className?: string;
 }
 
@@ -545,21 +557,21 @@ export function TerminalCard({
   title,
   icon,
   children,
-  variant = 'blue-purple',
+  variant = 'violet-purple',
   className,
 }: TerminalCardProps) {
   const gradients = {
-    'blue-purple': 'from-accent-blue to-accent-purple',
-    'blue-cyan': 'from-accent-blue to-accent-cyan',
+    'violet-purple': 'from-accent-violet to-accent-purple',
+    'violet-fuchsia': 'from-accent-violet to-accent-fuchsia',
     'purple-pink': 'from-accent-purple to-accent-pink',
-    'cyan-blue': 'from-accent-cyan via-blue-500 to-accent-blue',
+    'fuchsia-violet': 'from-accent-fuchsia via-accent-purple to-accent-violet',
   };
 
   const glows = {
-    'blue-purple': 'glow-blue-hover',
-    'blue-cyan': 'glow-cyan-hover',
+    'violet-purple': 'glow-violet-hover',
+    'violet-fuchsia': 'glow-fuchsia-hover',
     'purple-pink': 'glow-purple-hover',
-    'cyan-blue': 'glow-cyan-hover',
+    'fuchsia-violet': 'glow-fuchsia-hover',
   };
 
   return (
@@ -615,26 +627,26 @@ import { cn } from '@/lib/utils';
 
 interface GradientCardProps {
   children: React.ReactNode;
-  variant?: 'blue-purple' | 'blue-cyan' | 'purple-pink';
+  variant?: 'violet-purple' | 'violet-fuchsia' | 'purple-pink';
   className?: string;
   withGlow?: boolean;
 }
 
 export function GradientCard({
   children,
-  variant = 'blue-purple',
+  variant = 'violet-purple',
   className,
   withGlow = true,
 }: GradientCardProps) {
   const gradients = {
-    'blue-purple': 'from-accent-blue via-accent-purple to-accent-pink',
-    'blue-cyan': 'from-accent-blue to-accent-cyan',
+    'violet-purple': 'from-accent-violet via-accent-purple to-accent-pink',
+    'violet-fuchsia': 'from-accent-violet to-accent-fuchsia',
     'purple-pink': 'from-accent-purple to-accent-pink',
   };
 
   const glows = {
-    'blue-purple': 'glow-blue-hover',
-    'blue-cyan': 'glow-cyan-hover',
+    'violet-purple': 'glow-violet-hover',
+    'violet-fuchsia': 'glow-fuchsia-hover',
     'purple-pink': 'glow-purple-hover',
   };
 
@@ -704,7 +716,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="relative group">
         {/* Gradient glow on focus */}
-        <div className="absolute -inset-[1px] rounded-lg bg-gradient-to-r from-accent-blue to-accent-cyan opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
+        <div className="absolute -inset-[1px] rounded-lg bg-gradient-to-r from-accent-violet to-accent-fuchsia opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 blur-sm" />
 
         <input
           type={type}
@@ -713,8 +725,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             'bg-background px-3 py-2 text-sm ring-offset-background',
             'file:border-0 file:bg-transparent file:text-sm file:font-medium',
             'placeholder:text-muted-foreground',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue focus-visible:ring-offset-2',
-            'focus-visible:border-accent-blue/50',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-violet focus-visible:ring-offset-2',
+            'focus-visible:border-accent-violet/50',
             'disabled:cursor-not-allowed disabled:opacity-50',
             'transition-colors',
             className
@@ -750,8 +762,8 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
 
         // Gradient variants with glow on hover
-        gradient: 'bg-gradient-to-r from-accent-blue to-accent-purple text-white glow-blue-hover',
-        'gradient-cyan': 'bg-gradient-to-r from-accent-cyan to-blue-500 text-white glow-cyan-hover',
+        gradient: 'bg-gradient-to-r from-accent-violet to-accent-fuchsia text-white glow-violet-hover',
+        'gradient-fuchsia': 'bg-gradient-to-r from-accent-fuchsia to-accent-pink text-white glow-fuchsia-hover',
         'gradient-purple': 'bg-gradient-to-r from-accent-purple to-accent-pink text-white glow-purple-hover',
       },
       size: {
@@ -800,14 +812,14 @@ import { LucideIcon } from 'lucide-react';
 
 interface IconBadgeProps {
   icon: LucideIcon;
-  variant?: 'blue' | 'cyan' | 'purple' | 'orange';
+  variant?: 'violet' | 'fuchsia' | 'purple' | 'orange';
   size?: 'sm' | 'md' | 'lg';
   withGlow?: boolean;
 }
 
 export function IconBadge({
   icon: Icon,
-  variant = 'blue',
+  variant = 'violet',
   size = 'md',
   withGlow = true,
 }: IconBadgeProps) {
@@ -824,15 +836,15 @@ export function IconBadge({
   };
 
   const variants = {
-    blue: 'bg-accent-blue/10 border-accent-blue/30 text-accent-blue',
-    cyan: 'bg-accent-cyan/10 border-accent-cyan/30 text-accent-cyan',
+    violet: 'bg-accent-violet/10 border-accent-violet/30 text-accent-violet',
+    fuchsia: 'bg-accent-fuchsia/10 border-accent-fuchsia/30 text-accent-fuchsia',
     purple: 'bg-accent-purple/10 border-accent-purple/30 text-accent-purple',
     orange: 'bg-accent-orange/10 border-accent-orange/30 text-accent-orange',
   };
 
   const glows = {
-    blue: 'glow-blue-hover',
-    cyan: 'glow-cyan-hover',
+    violet: 'glow-violet-hover',
+    fuchsia: 'glow-fuchsia-hover',
     purple: 'glow-purple-hover',
     orange: 'hover:shadow-[0_0_15px_rgba(249,115,22,0.3)]',
   };
@@ -885,8 +897,8 @@ export default function Dashboard() {
         <div className="grid gap-6 md:grid-cols-3">
           <TerminalCard
             title="apps/web"
-            icon={<IconBadge icon={Package} variant="blue" size="sm" withGlow={false} />}
-            variant="blue-purple"
+            icon={<IconBadge icon={Package} variant="violet" size="sm" withGlow={false} />}
+            variant="violet-purple"
           >
             <div className="space-y-2 text-foreground/90">
               <div className="text-sm">npm run lint && npm run build</div>
@@ -896,8 +908,8 @@ export default function Dashboard() {
 
           <TerminalCard
             title="packages/shared"
-            icon={<IconBadge icon={FileText} variant="cyan" size="sm" withGlow={false} />}
-            variant="blue-cyan"
+            icon={<IconBadge icon={FileText} variant="fuchsia" size="sm" withGlow={false} />}
+            variant="violet-fuchsia"
           >
             <div className="space-y-2 text-foreground/90">
               <div className="text-sm">npm run test && npm run build</div>
@@ -919,14 +931,14 @@ export default function Dashboard() {
 
         {/* Content Cards */}
         <div className="grid gap-6 md:grid-cols-2">
-          <GradientCard variant="blue-purple">
+          <GradientCard variant="violet-purple">
             <h3 className="text-lg font-semibold mb-2">Recent Submissions</h3>
             <p className="text-sm text-muted-foreground">
               Track and manage insurance submissions with real-time updates.
             </p>
           </GradientCard>
 
-          <GradientCard variant="blue-cyan">
+          <GradientCard variant="violet-fuchsia">
             <h3 className="text-lg font-semibold mb-2">Broker Network</h3>
             <p className="text-sm text-muted-foreground">
               Manage relationships with brokers and MGAs across all regions.
@@ -949,7 +961,7 @@ import { GradientCard } from '@/components/gradient-card';
 
 export function BrokerForm() {
   return (
-    <GradientCard variant="blue-purple">
+    <GradientCard variant="violet-purple">
       <h2 className="text-xl font-semibold mb-6">Create Broker</h2>
 
       <form className="space-y-6">
@@ -1006,13 +1018,13 @@ The glow effects are **more intense in dark mode** (better visibility) and **sub
 
 ```css
 /* Dark mode - brighter glow */
-.dark .glow-blue-hover {
-  @apply hover:shadow-[0_0_20px_rgba(0,112,243,0.4),0_0_40px_rgba(0,112,243,0.2)];
+.dark .glow-violet-hover {
+  @apply hover:shadow-[0_0_20px_rgba(139,92,246,0.4),0_0_40px_rgba(139,92,246,0.2)];
 }
 
 /* Light mode - subtle glow */
-.light .glow-blue-hover {
-  @apply hover:shadow-[0_0_15px_rgba(0,112,243,0.2),0_0_30px_rgba(0,112,243,0.1)];
+.light .glow-violet-hover {
+  @apply hover:shadow-[0_0_15px_rgba(139,92,246,0.2),0_0_30px_rgba(139,92,246,0.1)];
 }
 ```
 
@@ -1021,12 +1033,12 @@ The glow effects are **more intense in dark mode** (better visibility) and **sub
 ```tsx
 // Dark mode uses subtle borders
 .dark {
-  --border: 0 0% 15%;  /* Dark gray */
+  --border: 228 16% 18%;  /* Deep graphite */
 }
 
 // Light mode uses visible but not harsh borders
 .light {
-  --border: 0 0% 90%;  /* Light gray */
+  --border: 220 16% 86%;  /* Soft cool gray */
 }
 ```
 
@@ -1044,8 +1056,8 @@ The glow effects are **more intense in dark mode** (better visibility) and **sub
 
 ❌ **BAD:** Every element
 ```tsx
-<div className="glow-blue-hover">
-  <p className="glow-cyan-hover">Too much!</p>
+<div className="glow-violet-hover">
+  <p className="glow-fuchsia-hover">Too much!</p>
 </div>
 ```
 
@@ -1053,10 +1065,10 @@ The glow effects are **more intense in dark mode** (better visibility) and **sub
 
 ```tsx
 // ✅ GOOD - Coordinated colors
-<TerminalCard variant="blue-purple"> {/* Uses blue glow */}
+<TerminalCard variant="violet-purple"> {/* Uses violet glow */}
 
 // ❌ BAD - Mismatched
-<TerminalCard variant="blue-purple" className="glow-cyan-hover">
+<TerminalCard variant="violet-purple" className="glow-fuchsia-hover">
 ```
 
 ### 3. Ensure Readability in Both Themes
@@ -1092,15 +1104,10 @@ This ensures all color changes animate smoothly when switching themes.
 
 ### Color Contrast
 
-Both themes meet WCAG AA standards:
-
-**Dark Theme:**
-- Foreground (#fafafa) on Background (#0a0a0a): 19:1 ratio ✅
-- Muted text (#a3a3a3) on Background: 8.5:1 ratio ✅
-
-**Light Theme:**
-- Foreground (#171717) on Background (#ffffff): 16:1 ratio ✅
-- Muted text (#737373) on Background: 4.7:1 ratio ✅
+Target WCAG AA for all text/background combinations. Verify after applying tokens:
+- Foreground vs background
+- Muted text vs background
+- CTA text vs gradient backgrounds
 
 ### Focus Indicators
 

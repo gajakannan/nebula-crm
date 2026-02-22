@@ -109,7 +109,7 @@ Architecture constraints:
 
 ## 3) Phase A — Product Manager Spec (Current Baseline)
 
-Status: This repository is currently focused on the agent builder framework. Nebula application implementation is planned but not started. The following Phase A content is the baseline specification for the reference app.
+Status: This repository is currently focused on the agent builder framework, and the Nebula CRM reference implementation is **in Phase C implementation** for F0 (Dashboard) and F1 (Broker Relationship Management). Phase A remains the baseline spec and Phase B is approved.
 
 ### 3.1 Vision + Non-Goals
 
@@ -170,11 +170,11 @@ Status: This repository is currently focused on the agent builder framework. Neb
 **MVP Stories (Feature F1: Broker Relationship Management):**
 - [S1: Create Broker](stories/F1-broker-relationship-management/S1-create-broker.md) - Draft ready
 - [S2: Search Brokers](stories/F1-broker-relationship-management/S2-search-brokers.md) - Draft ready
-- S3: Read Broker (Broker 360 View) - Planned
-- S4: Update Broker - Planned
-- S5: Delete Broker - Planned
-- S6: Manage Broker Contacts - Planned
-- S7: View Broker Activity Timeline - Planned
+- [S3: Read Broker (Broker 360 View)](stories/F1-broker-relationship-management/S3-read-broker.md) - Draft ready
+- [S4: Update Broker](stories/F1-broker-relationship-management/S4-update-broker.md) - Draft ready
+- [S5: Delete Broker](stories/F1-broker-relationship-management/S5-delete-broker.md) - Draft ready
+- [S6: Manage Broker Contacts](stories/F1-broker-relationship-management/S6-manage-broker-contacts.md) - Draft ready
+- [S7: View Broker Activity Timeline](stories/F1-broker-relationship-management/S7-view-broker-activity-timeline.md) - Draft ready
 
 **Story Index:** See `planning-mds/stories/STORY-INDEX.md` for auto-generated summary of all stories (if generated).
 
@@ -201,7 +201,7 @@ Screen baseline details:
 
 ## 4) Phase B — Architect Spec (Public Baseline)
 
-**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved. Ready for Phase C implementation.
+**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is in progress for F0/F1; keep planning artifacts current during implementation.
 
 This section defines the build-ready technical baseline for the reference implementation.
 
@@ -429,7 +429,9 @@ Implementation should proceed in staged increments. Start Phase 0 foundation whe
 
 ### Phase 0 Foundation — required components
 
-Must include Postgres + Keycloak + Casbin + Temporal in docker-compose.
+Must include Postgres + Keycloak + Casbin in docker-compose. Temporal is included as infrastructure-only
+(server + worker containers); no F0/F1 story uses Temporal workflows — it is provisioned now so that
+Submission/Renewal workflow orchestration (F3/F4) can adopt it without docker-compose changes later.
 Backend: Clean Architecture scaffold + auth + ABAC wiring + error contract + timeline append-only.
 Frontend: authenticated shell.
 Tests: auth test + timeline append test.
@@ -444,7 +446,7 @@ No scope creep in Phase 0:
 
 Definition of Done for Phase 0:
 
-- [ ] docker-compose includes Postgres, Keycloak, Casbin policy source, Temporal dependencies
+- [ ] docker-compose includes Postgres, Keycloak, Casbin policy source, Temporal (infrastructure-only; no app code depends on it in F0/F1)
 - [ ] backend scaffolded with clean architecture boundaries and auth/ABAC wiring
 - [ ] frontend authenticated shell with protected routes
 - [ ] consistent error contract implemented across API endpoints

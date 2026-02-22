@@ -49,7 +49,7 @@ This story establishes the first auditable broker lifecycle event in the CRM.
 - Phone: normalized US format
 
 **Validation Rules:**
-- LicenseNumber must be unique
+- LicenseNumber must be globally unique (MVP)
 - Email and Phone must be normalized before persistence
 
 ## Role-Based Visibility
@@ -85,11 +85,8 @@ This story establishes the first auditable broker lifecycle event in the CRM.
 
 ## Questions & Assumptions
 
-**Open Questions:**
-- [ ] Should license uniqueness be global or state-scoped?
-
 **Assumptions (to be validated):**
-- MVP treats license number as globally unique
+- None
 
 ## Definition of Done
 

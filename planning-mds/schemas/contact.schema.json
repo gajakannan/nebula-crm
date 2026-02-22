@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nebula.local/schemas/contact.schema.json",
+  "title": "Contact",
+  "description": "Contact record.",
+  "type": "object",
+  "required": [
+    "id",
+    "fullName",
+    "email",
+    "phone"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "brokerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "accountId": {
+      "type": ["string", "null"],
+      "format": "uuid"
+    },
+    "fullName": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "phone": {
+      "type": "string",
+      "pattern": "^\\+?[1-9]\\d{7,14}$"
+    },
+    "role": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

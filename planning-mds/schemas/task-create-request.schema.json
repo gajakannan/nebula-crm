@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nebula.local/schemas/task-create-request.schema.json",
+  "title": "TaskCreateRequest",
+  "description": "Validation rules for creating a task.",
+  "type": "object",
+  "required": [
+    "title",
+    "assignedTo"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["Low", "Normal", "High", "Urgent"],
+      "default": "Normal"
+    },
+    "dueDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "assignedTo": {
+      "type": "string"
+    },
+    "linkedEntityType": {
+      "type": "string"
+    },
+    "linkedEntityId": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "additionalProperties": false
+}

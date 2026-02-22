@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://nebula.local/schemas/broker-search-query.schema.json",
   "title": "BrokerSearchQuery",
-  "description": "Validation rules for broker search query semantics.",
+  "description": "Validation rules for broker search query semantics. Broker name search is case-insensitive; license number search is exact match only.",
   "type": "object",
   "required": [
     "q"

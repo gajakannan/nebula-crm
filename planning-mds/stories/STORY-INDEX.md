@@ -2,19 +2,19 @@
 
 Auto-generated index of all user stories.
 
-**Total Stories:** 7
+**Total Stories:** 12
 
 ---
 
-## F0 - Dashboard
+## F0 — Dashboard
 
 | Story ID | Title | Priority | Phase | Persona |
 |----------|-------|----------|-------|---------|
-| [S1](./F0-dashboard/S1-view-key-metrics-cards.md) | View Key Metrics Cards | High | MVP | Distribution User, Relationship Manager |
-| [S2](./F0-dashboard/S2-view-pipeline-summary.md) | View Pipeline Summary (Mini-Kanban) | High | MVP | Distribution User, Underwriter |
-| [S3](./F0-dashboard/S3-view-my-tasks-and-reminders.md) | View My Tasks and Reminders | High | MVP | Distribution User, Underwriter, Relationship Manager |
-| [S4](./F0-dashboard/S4-view-broker-activity-feed.md) | View Broker Activity Feed | High | MVP | Relationship Manager, Distribution User |
-| [S5](./F0-dashboard/S5-view-nudge-cards.md) | View Nudge Cards | High | MVP | Distribution User, Underwriter, Relationship Manager |
+| [S1](./F0-dashboard/S1-view-key-metrics-cards.md) | View Key Metrics Cards | High | MVP | Distribution User or Relationship Manager |
+| [S2](./F0-dashboard/S2-view-pipeline-summary.md) | View Pipeline Summary (Mini-Kanban) | High | MVP | Distribution User or Underwriter |
+| [S3](./F0-dashboard/S3-view-my-tasks-and-reminders.md) | View My Tasks and Reminders | High | MVP | Distribution User, Underwriter, or Relationship Manager |
+| [S4](./F0-dashboard/S4-view-broker-activity-feed.md) | View Broker Activity Feed | High | MVP | Relationship Manager or Distribution User |
+| [S5](./F0-dashboard/S5-view-nudge-cards.md) | View Nudge Cards | High | MVP | Distribution User, Underwriter, or Relationship Manager |
 
 ---
 
@@ -24,6 +24,11 @@ Auto-generated index of all user stories.
 |----------|-------|----------|-------|---------|
 | [S1](./F1-broker-relationship-management/S1-create-broker.md) | Create a new broker record | Critical | MVP | Distribution Manager |
 | [S2](./F1-broker-relationship-management/S2-search-brokers.md) | Search brokers by name or license number | High | MVP | Distribution Manager |
+| [S3](./F1-broker-relationship-management/S3-read-broker.md) | View broker details in Broker 360 | High | MVP | Distribution Manager |
+| [S4](./F1-broker-relationship-management/S4-update-broker.md) | Update broker profile information | High | MVP | Distribution Manager |
+| [S5](./F1-broker-relationship-management/S5-delete-broker.md) | Deactivate (soft delete) a broker | Medium | MVP | Distribution User |
+| [S6](./F1-broker-relationship-management/S6-manage-broker-contacts.md) | Create, update, and remove broker contacts | High | MVP | Relationship Manager |
+| [S7](./F1-broker-relationship-management/S7-view-broker-activity-timeline.md) | View broker activity timeline in Broker 360 | High | MVP | Relationship Manager or Distribution Manager |
 
 ---
 
@@ -31,7 +36,7 @@ Auto-generated index of all user stories.
 
 | Phase | Count |
 |-------|-------|
-| MVP | 7 |
+| MVP | 12 |
 
 ---
 
@@ -40,7 +45,8 @@ Auto-generated index of all user stories.
 | Priority | Count |
 |----------|-------|
 | Critical | 1 |
-| High | 6 |
+| High | 10 |
+| Medium | 1 |
 
 ---
 

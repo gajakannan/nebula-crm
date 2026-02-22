@@ -48,6 +48,7 @@ As broker volume grows, list-only browsing becomes inefficient. Search is needed
 **Validation Rules:**
 - Query must be sanitized before persistence/logging
 - Query length must not exceed 100 chars
+- License number search is exact match only in MVP (no partial license search)
 
 ## Role-Based Visibility
 
@@ -82,9 +83,6 @@ As broker volume grows, list-only browsing becomes inefficient. Search is needed
 - External broker self-service search
 
 ## Questions & Assumptions
-
-**Open Questions:**
-- [ ] Should partial license search be enabled in MVP?
 
 **Assumptions (to be validated):**
 - Name search is case-insensitive substring match

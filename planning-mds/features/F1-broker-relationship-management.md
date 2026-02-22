@@ -56,9 +56,11 @@
 
 - S1 - Create Broker
 - S2 - Search Brokers
-- S3 - Read Broker (Broker 360 View) [Planned]
-- S4 - Update Broker [Planned]
-- S5 - Delete Broker [Planned]
+- S3 - Read Broker (Broker 360 View)
+- S4 - Update Broker
+- S5 - Delete Broker
+- S6 - Manage Broker Contacts
+- S7 - View Broker Activity Timeline
 
 ## Rollout & Enablement
 

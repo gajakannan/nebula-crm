@@ -1,7 +1,7 @@
 # Application Assembly Plan (Phase C)
 
 **Owner:** Architect
-**Status:** Draft
+**Status:** Approved
 **Last Updated:** 2026-02-21
 
 ## Purpose
@@ -13,6 +13,7 @@ Provide a sequenced, cross‑role plan to assemble the Nebula CRM implementation
 - Modules: BrokerRelationship, Submission, Renewal, TaskManagement, TimelineAudit, IdentityAuthorization, Dashboard
 - Features in scope: F0, F1 (MVP)
 - Out of scope: External portal, analytics/insights beyond F0/F1, deployment hardening
+- **F5 Task Write Endpoints:** Out of scope for this implementation pass. Task write endpoints (`POST /api/tasks`, `PUT /api/tasks/{taskId}`, `DELETE /api/tasks/{taskId}`) are not registered and return HTTP 404. Dashboard (F0) only reads tasks. Test data for the My Tasks and Nudge widgets will be provided via a dev seed migration. The story index lists F5-S1/S2/S3 as MVP priority for future activation, not for this pass.
 
 ## Required Inputs (Must Exist)
 

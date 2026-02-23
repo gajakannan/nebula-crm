@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16
@@ -10,10 +8,15 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: nebula
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - nebula-db-data:/var/lib/postgresql/data
       - ./docker/postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
@@ -33,19 +36,61 @@ services:
     volumes:
       - ./docker/keycloak/nebula-realm.json:/opt/keycloak/data/import/nebula-realm.json:ro
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+  # Temporal — infrastructure-only for F0/F1.
+  # No application code depends on Temporal in this implementation pass.
+  # Provisioned now so F3/F4 workflow orchestration can adopt it without
+  # docker-compose changes later. See INCEPTION.md §5, Phase 0 DOD.
+  temporal:
+    image: temporalio/auto-setup:1.25
+    container_name: nebula-temporal
+    restart: unless-stopped
+    environment:
+      DB: postgres12_pgx
+      DB_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PWD: postgres
+      POSTGRES_SEEDS: db
+      SKIP_DYNAMIC_CONFIG_UPDATE: "true"
+    ports:
+      - "7233:7233"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  temporal-ui:
+    image: temporalio/ui:2.31.2
+    container_name: nebula-temporal-ui
+    restart: unless-stopped
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8082:8080"
+    depends_on:
+      - temporal
 
   api:
-    image: ghcr.io/nebula-crm/nebula-api:local
+    build:
+      context: ./engine
+      dockerfile: Dockerfile
     container_name: nebula-api
     restart: unless-stopped
-    env_file:
-      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=nebula;Username=postgres;Password=postgres
+      Authentication__Authority: http://keycloak:8080/realms/nebula
+      Authentication__Audience: nebula-api
     ports:
       - "8080:8080"
     depends_on:
-      - db
-      - keycloak
+      db:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
 
 volumes:
   nebula-db-data:

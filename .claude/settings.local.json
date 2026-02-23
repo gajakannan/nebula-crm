@@ -32,7 +32,15 @@
       "WebFetch(domain:websearchapi.ai)",
       "Bash(git rm:*)",
       "Bash(git:*)",
-      "Bash(echo Compose valid:*)"
+      "Bash(echo Compose valid:*)",
+      "Bash(dotnet:*)",
+      "Bash(winget install:*)",
+      "Bash(export:*)",
+      "Bash(rm -f /c/Users/gajap/sandbox/nebula-crm/experience/.gitkeep && cd /c/Users/gajap/sandbox/nebula-crm/experience && npm create vite@latest . -- --template react-ts 2>&1)",
+      "Bash(cd /c/Users/gajap/sandbox/nebula-crm && npm create vite@latest experience -- --template react-ts 2>&1)",
+      "Bash(pnpm:*)",
+      "Bash(cd /c/Users/gajap/sandbox/nebula-crm && docker compose up -d db 2>&1)",
+      "Bash(docker exec:*)"
     ]
   }
 }

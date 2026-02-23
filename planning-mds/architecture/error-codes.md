@@ -17,6 +17,8 @@
 | `active_submissions_exist` | 409 | Broker delete blocked due to active submissions/renewals. | `planning-mds/architecture/feature-assembly-plan.md` |
 | `region_mismatch` | 400 | Account.Region not in BrokerRegion set on submission/renewal creation. | `planning-mds/INCEPTION.md` |
 | `concurrency_conflict` | 409 | Resource was modified by another user since last read. Client should refresh and retry. | `planning-mds/architecture/SOLUTION-PATTERNS.md` |
+| `duplicate_license` | 409 | Broker with the given license number already exists. Record must not be created. | F1-S1 edge case |
+| `validation_error` | 400 | Request payload failed schema validation. Response includes `errors` map. | `planning-mds/architecture/SOLUTION-PATTERNS.md` §3 |
 
 ## Notes
 

@@ -1,7 +1,7 @@
 # Feature Assembly Plan (F0 + F1)
 
 **Owner:** Architect
-**Status:** Draft
+**Status:** Approved
 **Last Updated:** 2026-02-21
 
 ## Goal
@@ -121,6 +121,20 @@ When a navigation target is unavailable, the frontend must degrade gracefully:
 ### Implementation Note
 
 Navigation availability should be driven by a route registry check (e.g., `canNavigateTo(entityType)`) rather than hardcoded booleans. When F3/F4/F5 features are implemented and their routes registered, dashboard click-through will automatically activate without modifying F0 code.
+
+---
+
+## F5 Scope Decision (Task Write Endpoints)
+
+**Decision:** F5 task write endpoints are **out of scope** for the F0/F1 implementation pass.
+
+**Rationale:** F0 dashboard widgets (My Tasks, Nudge Cards) only *read* task data. No F0 or F1 story requires creating, updating, or deleting tasks via API. Task data for dashboard testing will be provided via a dev seed migration alongside Submission and Renewal seed data.
+
+**Impact:**
+- `POST /api/tasks`, `PUT /api/tasks/{taskId}`, `DELETE /api/tasks/{taskId}` — routes not registered, return 404.
+- `GET /api/my/tasks`, `GET /api/tasks/{taskId}` — implemented as part of F0.
+- Task entity, table, and indexes — created in Phase 1 (Data Model + Migrations) since F0 queries depend on them.
+- F5-S1/S2/S3 stories remain in the story index at MVP priority for future activation.
 
 ---
 

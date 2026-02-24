@@ -1,5 +1,42 @@
 @import "tailwindcss";
 
+/* Theme Custom Properties — dark default */
+:root {
+  --surface-bg: #09090b;
+  --surface-card: rgba(24, 24, 27, 0.60);
+  --surface-card-hover: rgba(24, 24, 27, 0.70);
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --surface-highlight: rgba(255, 255, 255, 0.04);
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --sidebar-bg: rgba(9, 9, 11, 0.95);
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-hover: rgba(255, 255, 255, 0.05);
+  --sidebar-active-bg: rgba(139, 92, 246, 0.10);
+  --sidebar-active-text: #8b5cf6;
+  --bg-glow-1: rgba(139, 92, 246, 0.04);
+  --bg-glow-2: rgba(217, 70, 239, 0.03);
+}
+
+[data-theme="light"] {
+  --surface-bg: #fafafa;
+  --surface-card: rgba(255, 255, 255, 0.80);
+  --surface-card-hover: rgba(255, 255, 255, 0.90);
+  --surface-border: rgba(0, 0, 0, 0.08);
+  --surface-highlight: rgba(255, 255, 255, 0.60);
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --sidebar-bg: rgba(250, 250, 250, 0.95);
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-hover: rgba(0, 0, 0, 0.04);
+  --sidebar-active-bg: rgba(139, 92, 246, 0.08);
+  --sidebar-active-text: #7c3aed;
+  --bg-glow-1: rgba(139, 92, 246, 0.03);
+  --bg-glow-2: rgba(217, 70, 239, 0.02);
+}
+
 /* Nebula CRM Design Tokens */
 @theme {
   /* Brand Colors */
@@ -21,6 +58,15 @@
   --color-pipeline-review: #8b5cf6;
   --color-pipeline-decision: #10b981;
 
+  /* Glass Tokens — wired to CSS vars */
+  --color-glass-border: var(--surface-border);
+  --color-glass-bg: var(--surface-card);
+  --color-glass-bg-hover: var(--surface-card-hover);
+
+  /* Glow Tokens */
+  --color-glow-violet: rgba(139, 92, 246, 0.15);
+  --color-glow-fuchsia: rgba(217, 70, 239, 0.10);
+
   /* Typography */
   --font-sans: 'Sora', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -31,6 +77,165 @@
 
 /* Base styles */
 body {
-  @apply bg-zinc-950 text-zinc-50 antialiased;
+  background-color: var(--surface-bg);
+  color: var(--text-primary);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 20% 80%, var(--bg-glow-1) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, var(--bg-glow-2) 0%, transparent 60%);
+}
+
+/* Glass Card Utility */
+.glass-card {
+  background: var(--surface-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--surface-border);
+  box-shadow:
+    inset 0 1px 0 0 var(--surface-highlight),
+    0 0 0 0 transparent;
+  transition: box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.glass-card:hover {
+  background: var(--surface-card-hover);
+  box-shadow:
+    inset 0 1px 0 0 var(--surface-highlight),
+    0 0 20px 0 var(--color-glow-violet);
+}
+
+/* Gradient Accent Top — 2px violet->fuchsia->pink line */
+.gradient-accent-top {
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-accent-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #8b5cf6, #d946ef, #ec4899);
+  border-radius: 1px 1px 0 0;
+}
+
+/* Gradient Accent Left — 2px violet->fuchsia line on left edge */
+.gradient-accent-left {
+  position: relative;
+}
+
+.gradient-accent-left::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: linear-gradient(180deg, #8b5cf6, #d946ef);
+  border-radius: 1px;
+}
+
+/* Skeleton Glow Animation */
+.skeleton-glow {
+  background: linear-gradient(
+    90deg,
+    rgba(63, 63, 70, 0.4) 0%,
+    rgba(113, 113, 122, 0.3) 40%,
+    rgba(139, 92, 246, 0.12) 50%,
+    rgba(113, 113, 122, 0.3) 60%,
+    rgba(63, 63, 70, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.8s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--sidebar-border);
+  transition: width 200ms ease;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: background 150ms ease, color 150ms ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.sidebar-item:hover {
+  background: var(--sidebar-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-item-active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.1);
+}
+
+.sidebar-item-active:hover {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+}
+
+/* Sidebar content offset — pushes main content right on desktop */
+.lg-sidebar-offset {
+  min-height: 100vh;
+}
+
+@media (min-width: 1024px) {
+  .lg-sidebar-offset {
+    margin-left: var(--sidebar-width, 16rem);
+    transition: margin-left 200ms ease;
+  }
+}
+
+/* Mobile slide-in animation */
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 200ms ease-out;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .lg-sidebar-offset,
+  .animate-slide-in-left {
+    transition: none;
+    animation: none;
+  }
 }

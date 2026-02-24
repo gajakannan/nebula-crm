@@ -1,0 +1,134 @@
+using Nebula.Application.Common;
+using Nebula.Application.DTOs;
+using Nebula.Application.Interfaces;
+using Nebula.Domain.Entities;
+
+namespace Nebula.Application.Services;
+
+public class ContactService(
+    IContactRepository contactRepo,
+    IBrokerRepository brokerRepo,
+    ITimelineRepository timelineRepo)
+{
+    public async Task<ContactDto?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        var contact = await contactRepo.GetByIdAsync(id, ct);
+        if (contact is null) return null;
+        return MaskPii(MapToDto(contact), contact.Broker?.Status);
+    }
+
+    public async Task<PaginatedResult<ContactDto>> ListAsync(
+        Guid? brokerId, int page, int pageSize, CancellationToken ct = default)
+    {
+        var result = await contactRepo.ListAsync(brokerId, page, pageSize, ct);
+        var mapped = result.Data.Select(c => MaskPii(MapToDto(c), c.Broker?.Status)).ToList();
+        return new PaginatedResult<ContactDto>(mapped, result.Page, result.PageSize, result.TotalCount);
+    }
+
+    public async Task<(ContactDto? Dto, string? ErrorCode)> CreateAsync(
+        ContactCreateDto dto, ICurrentUserService user, CancellationToken ct = default)
+    {
+        var broker = await brokerRepo.GetByIdAsync(dto.BrokerId, ct);
+        if (broker is null) return (null, "not_found");
+
+        var now = DateTime.UtcNow;
+        var contact = new Contact
+        {
+            BrokerId = dto.BrokerId,
+            FullName = dto.FullName,
+            Email = dto.Email,
+            Phone = dto.Phone,
+            Role = dto.Role ?? "Primary",
+            CreatedAt = now,
+            UpdatedAt = now,
+            CreatedBy = user.Subject,
+            UpdatedBy = user.Subject,
+        };
+
+        await contactRepo.AddAsync(contact, ct);
+
+        await timelineRepo.AddEventAsync(new ActivityTimelineEvent
+        {
+            EntityType = "Broker",
+            EntityId = dto.BrokerId,
+            EventType = "ContactCreated",
+            EventDescription = $"Contact \"{contact.FullName}\" added to broker \"{broker.LegalName}\"",
+            ActorSubject = user.Subject,
+            ActorDisplayName = user.DisplayName,
+            OccurredAt = now,
+        }, ct);
+
+        return (MaskPii(MapToDto(contact), broker.Status), null);
+    }
+
+    public async Task<(ContactDto? Dto, string? ErrorCode)> UpdateAsync(
+        Guid id, ContactUpdateDto dto, uint rowVersion, ICurrentUserService user, CancellationToken ct = default)
+    {
+        var contact = await contactRepo.GetByIdAsync(id, ct);
+        if (contact is null) return (null, "not_found");
+
+        var now = DateTime.UtcNow;
+        contact.FullName = dto.FullName;
+        contact.Email = dto.Email;
+        contact.Phone = dto.Phone;
+        contact.Role = dto.Role ?? contact.Role;
+        contact.UpdatedAt = now;
+        contact.UpdatedBy = user.Subject;
+        contact.RowVersion = rowVersion;
+
+        await contactRepo.UpdateAsync(contact, ct);
+
+        if (contact.BrokerId.HasValue)
+        {
+            await timelineRepo.AddEventAsync(new ActivityTimelineEvent
+            {
+                EntityType = "Broker",
+                EntityId = contact.BrokerId.Value,
+                EventType = "ContactUpdated",
+                EventDescription = $"Contact \"{contact.FullName}\" updated",
+                ActorSubject = user.Subject,
+                ActorDisplayName = user.DisplayName,
+                OccurredAt = now,
+            }, ct);
+        }
+
+        return (MaskPii(MapToDto(contact), contact.Broker?.Status), null);
+    }
+
+    public async Task<string?> DeleteAsync(Guid id, ICurrentUserService user, CancellationToken ct = default)
+    {
+        var contact = await contactRepo.GetByIdAsync(id, ct);
+        if (contact is null) return "not_found";
+
+        var now = DateTime.UtcNow;
+        contact.IsDeleted = true;
+        contact.DeletedAt = now;
+        contact.DeletedBy = user.Subject;
+        contact.UpdatedAt = now;
+        contact.UpdatedBy = user.Subject;
+
+        await contactRepo.UpdateAsync(contact, ct);
+
+        if (contact.BrokerId.HasValue)
+        {
+            await timelineRepo.AddEventAsync(new ActivityTimelineEvent
+            {
+                EntityType = "Broker",
+                EntityId = contact.BrokerId.Value,
+                EventType = "ContactDeleted",
+                EventDescription = $"Contact \"{contact.FullName}\" deleted",
+                ActorSubject = user.Subject,
+                ActorDisplayName = user.DisplayName,
+                OccurredAt = now,
+            }, ct);
+        }
+
+        return null;
+    }
+
+    private static ContactDto MapToDto(Contact c) => new(
+        c.Id, c.BrokerId, c.AccountId, c.FullName, c.Email, c.Phone, c.Role);
+
+    private static ContactDto MaskPii(ContactDto dto, string? brokerStatus) =>
+        brokerStatus == "Inactive" ? dto with { Email = null, Phone = null } : dto;
+}

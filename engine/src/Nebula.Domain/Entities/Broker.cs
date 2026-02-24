@@ -6,6 +6,8 @@ public class Broker : BaseEntity
     public string LicenseNumber { get; set; } = default!;
     public string State { get; set; } = default!;
     public string Status { get; set; } = default!;
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
     public string? ManagedBySubject { get; set; }
     public Guid? MgaId { get; set; }
     public Guid? PrimaryProgramId { get; set; }

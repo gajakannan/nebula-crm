@@ -16,6 +16,8 @@ public class BrokerConfiguration : IEntityTypeConfiguration<Broker>
         builder.Property(e => e.LicenseNumber).IsRequired().HasMaxLength(50);
         builder.Property(e => e.State).IsRequired().HasMaxLength(2);
         builder.Property(e => e.Status).IsRequired().HasMaxLength(20);
+        builder.Property(e => e.Email).HasMaxLength(255);
+        builder.Property(e => e.Phone).HasMaxLength(30);
         builder.Property(e => e.ManagedBySubject).HasMaxLength(255);
         builder.Property(e => e.CreatedBy).IsRequired().HasMaxLength(255);
         builder.Property(e => e.UpdatedBy).IsRequired().HasMaxLength(255);

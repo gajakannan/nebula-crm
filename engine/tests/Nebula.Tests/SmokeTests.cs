@@ -33,7 +33,7 @@ public class SmokeTests
     [InlineData(typeof(Account), new[] { "Name", "Industry", "PrimaryState", "Region", "Status" })]
     [InlineData(typeof(MGA), new[] { "Name", "ExternalCode", "Status" })]
     [InlineData(typeof(Nebula.Domain.Entities.Program), new[] { "Name", "ProgramCode", "MgaId", "ManagedBySubject" })]
-    [InlineData(typeof(Broker), new[] { "LegalName", "LicenseNumber", "State", "Status", "ManagedBySubject", "MgaId", "PrimaryProgramId" })]
+    [InlineData(typeof(Broker), new[] { "LegalName", "LicenseNumber", "State", "Status", "Email", "Phone", "ManagedBySubject", "MgaId", "PrimaryProgramId" })]
     [InlineData(typeof(Contact), new[] { "BrokerId", "AccountId", "FullName", "Email", "Phone", "Role" })]
     [InlineData(typeof(Submission), new[] { "AccountId", "BrokerId", "ProgramId", "CurrentStatus", "EffectiveDate", "PremiumEstimate", "AssignedTo" })]
     [InlineData(typeof(Renewal), new[] { "AccountId", "BrokerId", "SubmissionId", "CurrentStatus", "RenewalDate", "AssignedTo" })]

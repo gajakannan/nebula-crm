@@ -1,3 +1,5 @@
+import { getDevToken } from './dev-auth'
+
 const API_BASE = '/api'
 
 interface ProblemDetails {
@@ -29,10 +31,12 @@ export class ApiError extends Error {
 }
 
 async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = await getDevToken()
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
       ...options?.headers,
     },
     credentials: 'include',
@@ -46,12 +50,30 @@ async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   return response.json()
 }
 
+async function fetchApiNoBody(path: string, options?: RequestInit): Promise<void> {
+  const token = await getDevToken()
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...options?.headers,
+    },
+    credentials: 'include',
+  })
+
+  if (!response.ok) {
+    const problem = await response.json().catch(() => null)
+    throw new ApiError(response.status, problem)
+  }
+}
+
 export const api = {
   get: <T>(path: string) => fetchApi<T>(path),
   post: <T>(path: string, body: unknown) =>
     fetchApi<T>(path, { method: 'POST', body: JSON.stringify(body) }),
-  put: <T>(path: string, body: unknown) =>
-    fetchApi<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
-  delete: <T>(path: string) =>
-    fetchApi<T>(path, { method: 'DELETE' }),
+  put: <T>(path: string, body: unknown, headers?: Record<string, string>) =>
+    fetchApi<T>(path, { method: 'PUT', body: JSON.stringify(body), headers }),
+  delete: (path: string) =>
+    fetchApiNoBody(path, { method: 'DELETE' }),
 }

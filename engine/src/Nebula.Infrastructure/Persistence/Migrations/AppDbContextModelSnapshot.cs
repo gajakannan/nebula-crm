@@ -164,6 +164,10 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("Email")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -185,6 +189,10 @@ namespace Nebula.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("MgaId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<Guid?>("PrimaryProgramId")
                         .HasColumnType("uuid");

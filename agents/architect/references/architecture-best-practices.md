@@ -951,6 +951,44 @@ if (customer.Status == CustomerStatus.Active)
 
 ---
 
+## Frontend UI Governance Addendum (Theme-Safe Architecture)
+
+Architects should define frontend visual quality constraints as enforceable rules, not only preferences.
+
+### Required Constraints for Theme-Aware UI
+
+- Use semantic theme tokens/classes for UI text, surfaces, and borders (for example `text-text-primary`, `bg-surface-card`, `border-surface-border`).
+- Prohibit raw palette utility classes for app UI (`zinc/slate/gray/neutral/stone`) unless an exception is explicitly documented for a visual effect.
+- Require dark and light theme verification for styling changes in acceptance criteria, test plans, or assembly checkpoints.
+- Require automated enforcement where possible (static guard for class usage plus visual/theme smoke tests for critical pages).
+
+### Handoff Guidance to Frontend and QA
+
+- Identify theme-sensitive screens/components (cards, forms, overlays, data-dense widgets).
+- Define the minimum visual smoke scope per feature (for example dashboard + affected CRUD screens).
+- Ensure CI includes fast style-policy checks and artifacted browser tests for regression diagnosis.
+
+### Frontend Module Boundary Governance (Vertical Slices)
+
+Architects should define frontend module boundaries early enough that implementation agents do not spread feature code across unrelated global folders.
+
+**Required guidance for frontend-heavy features**
+- Specify the feature slice name(s) in the assembly plan (for example `features/opportunities`, `features/brokers`).
+- State what code must remain feature-local vs what may be shared.
+- Prefer co-location of feature components, hooks, API modules, feature DTO/types, and tests.
+- Reserve shared/global folders for primitives, app shell, and truly cross-feature utilities.
+
+**Handoff example (good)**
+- `experience/src/features/opportunities/components/*` for Sankey/pills/popovers
+- `experience/src/features/opportunities/hooks/*` for flow/items query hooks
+- `experience/src/features/opportunities/types/*` for feature DTOs not shared elsewhere
+- `experience/src/components/ui/*` only for reusable primitives
+
+**Anti-pattern to call out explicitly**
+- Adding new feature-only hooks/types/components to global `src/hooks`, `src/types`, or `src/components` because it is faster in the moment. This increases cognitive drift and weakens ownership boundaries.
+
+---
+
 ## Version History
 
 **Version 2.0** - 2026-02-03 - Replaced all solution-specific entities with standard generic set (customers/orders). Replaced Nebula bounded contexts with generic examples. See `BOUNDARY-POLICY.md` → "Standard Example Entities" for the convention.

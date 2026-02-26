@@ -522,22 +522,22 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
-  /api/dashboard/pipeline:
+  /api/dashboard/opportunities:
     get:
-      operationId: getDashboardPipeline
-      summary: Get pipeline summary counts
+      operationId: getDashboardOpportunities
+      summary: Get opportunities summary counts
       description: |
-        Returns submission and renewal pipeline counts grouped by non-terminal
-        status. Used by the Pipeline Summary (mini-Kanban) widget.
+        Returns submission and renewal opportunity-stage counts grouped by
+        non-terminal status. Used by the Opportunities summary widget.
         All counts are ABAC-scoped.
       tags: [Dashboard]
       responses:
         "200":
-          description: Pipeline summary
+          description: Opportunities summary
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DashboardPipeline"
+                $ref: "#/components/schemas/DashboardOpportunities"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -545,12 +545,52 @@ paths:
         "403":
           $ref: "#/components/responses/Forbidden"
 
-  /api/dashboard/pipeline/{entityType}/{status}/items:
+  /api/dashboard/opportunities/flow:
+    get:
+      operationId: getDashboardOpportunityFlow
+      summary: Get opportunity transition flow (Sankey data)
+      description: |
+        Returns node/link transition counts derived from WorkflowTransitions for
+        submissions or renewals over a trailing time window. Used by the
+        dashboard Sankey visualization to show real branching and terminal exits.
+      tags: [Dashboard]
+      parameters:
+        - name: entityType
+          in: query
+          required: true
+          description: Entity type to aggregate.
+          schema:
+            type: string
+            enum: [submission, renewal]
+        - name: periodDays
+          in: query
+          required: false
+          description: Trailing time window in days (capped server-side).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 730
+            default: 180
+      responses:
+        "200":
+          description: Opportunity flow graph for Sankey visualization
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpportunityFlow"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/dashboard/opportunities/{entityType}/{status}/items:
     parameters:
       - name: entityType
         in: path
         required: true
-        description: Entity type for pipeline items.
+        description: Entity type for opportunity items.
         schema:
           type: string
           enum: [submission, renewal]
@@ -561,16 +601,16 @@ paths:
         schema:
           type: string
     get:
-      operationId: getDashboardPipelineItems
-      summary: Get pipeline mini-cards for a status
+      operationId: getDashboardOpportunityItems
+      summary: Get opportunity mini-cards for a status
       description: |
-        Returns up to 5 mini-card items for a specific pipeline status, sorted
+        Returns up to 5 mini-card items for a specific opportunity stage, sorted
         by days-in-status descending (longest stuck first). Lazy-loaded by the
-        frontend on hover/click of a pipeline pill. ABAC-scoped.
+        frontend on hover/click of an opportunity stage pill. ABAC-scoped.
       tags: [Dashboard]
       responses:
         "200":
-          description: Pipeline mini-card items
+          description: Opportunity mini-card items
           content:
             application/json:
               schema:
@@ -583,7 +623,7 @@ paths:
                     type: array
                     maxItems: 5
                     items:
-                      $ref: "#/components/schemas/PipelineMiniCard"
+                      $ref: "#/components/schemas/OpportunityMiniCard"
                   totalCount:
                     type: integer
                     description: Total items in this status (for "View all N" link).
@@ -1446,7 +1486,7 @@ components:
           nullable: true
           description: |
             Percentage of renewals reaching Bound out of all renewals
-            that exited the pipeline in trailing 90 days. Null if no data.
+            that exited the opportunities funnel in trailing 90 days. Null if no data.
           example: 72.5
         avgTurnaroundDays:
           type: number
@@ -1457,25 +1497,25 @@ components:
             state transition, trailing 90 days. Null if no data.
           example: 4.2
 
-    DashboardPipeline:
+    DashboardOpportunities:
       type: object
-      description: Pipeline summary counts grouped by status.
+      description: Opportunities summary counts grouped by status.
       required:
         - submissions
         - renewals
       properties:
         submissions:
           type: array
-          description: Submission pipeline status counts (non-terminal only).
+          description: Submission opportunity-stage counts (non-terminal only).
           items:
-            $ref: "#/components/schemas/PipelineStatusCount"
+            $ref: "#/components/schemas/OpportunityStatusCount"
         renewals:
           type: array
-          description: Renewal pipeline status counts (non-terminal only).
+          description: Renewal opportunity-stage counts (non-terminal only).
           items:
-            $ref: "#/components/schemas/PipelineStatusCount"
+            $ref: "#/components/schemas/OpportunityStatusCount"
 
-    PipelineStatusCount:
+    OpportunityStatusCount:
       type: object
       description: Count of entities in a specific workflow status.
       required:
@@ -1493,12 +1533,106 @@ components:
           example: 5
         colorGroup:
           type: string
-          description: UI color group for the status pill.
+          description: UI color group for the opportunity stage pill.
           enum: [intake, triage, waiting, review, decision]
 
-    PipelineMiniCard:
+    OpportunityFlow:
       type: object
-      description: Compact item card for pipeline popover.
+      description: Transition flow graph for an opportunity Sankey widget.
+      required:
+        - entityType
+        - periodDays
+        - windowStartUtc
+        - windowEndUtc
+        - nodes
+        - links
+      properties:
+        entityType:
+          type: string
+          enum: [submission, renewal]
+        periodDays:
+          type: integer
+          minimum: 1
+          maximum: 730
+          example: 180
+        windowStartUtc:
+          type: string
+          format: date-time
+        windowEndUtc:
+          type: string
+          format: date-time
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpportunityFlowNode"
+        links:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpportunityFlowLink"
+
+    OpportunityFlowNode:
+      type: object
+      description: Sankey node representing a workflow status.
+      required:
+        - status
+        - label
+        - isTerminal
+        - displayOrder
+        - colorGroup
+        - currentCount
+        - inflowCount
+        - outflowCount
+      properties:
+        status:
+          type: string
+          example: WaitingOnBroker
+        label:
+          type: string
+          example: Waiting on Broker
+        isTerminal:
+          type: boolean
+          example: false
+        displayOrder:
+          type: integer
+          example: 5
+        colorGroup:
+          type: string
+          enum: [intake, triage, waiting, review, decision]
+        currentCount:
+          type: integer
+          minimum: 0
+          example: 17
+        inflowCount:
+          type: integer
+          minimum: 0
+          example: 25
+        outflowCount:
+          type: integer
+          minimum: 0
+          example: 23
+
+    OpportunityFlowLink:
+      type: object
+      description: Sankey link between workflow statuses with aggregated transition count.
+      required:
+        - sourceStatus
+        - targetStatus
+        - count
+      properties:
+        sourceStatus:
+          type: string
+          example: InReview
+        targetStatus:
+          type: string
+          example: Declined
+        count:
+          type: integer
+          minimum: 1
+          example: 12
+
+    OpportunityMiniCard:
+      type: object
+      description: Compact item card for the opportunities popover.
       required:
         - entityId
         - entityName

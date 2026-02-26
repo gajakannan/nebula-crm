@@ -1,0 +1,71 @@
+name: Frontend UI Guardrails
+
+on:
+  pull_request:
+    paths:
+      - 'experience/**'
+      - '.github/workflows/frontend-ui.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'experience/**'
+      - '.github/workflows/frontend-ui.yml'
+  workflow_dispatch:
+
+jobs:
+  frontend-ui:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: experience
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: experience/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (TS/TSX)
+        run: pnpm lint
+
+      - name: Lint (CSS)
+        run: pnpm lint:css
+
+      - name: Lint (Theme Tokens)
+        run: pnpm lint:theme
+
+      - name: Lint (Effects Tokens)
+        run: pnpm lint:effects
+
+      - name: Build frontend
+        run: pnpm build
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Theme visual smoke tests
+        run: pnpm test:visual:theme
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-ui-playwright-artifacts
+          path: |
+            experience/playwright-report
+            experience/test-results
+          if-no-files-found: ignore

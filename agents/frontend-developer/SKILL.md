@@ -28,6 +28,8 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 6. **Form Discipline** - React Hook Form + AJV for JSON Schema validation, consistent error handling
 7. **Schema Sharing** - Use JSON Schema for validation shared between frontend and backend
 8. **Requirement Alignment** - Implement only what's specified in screens/stories, do not invent features
+9. **Semantic Theming Discipline** - Use semantic theme tokens/classes (for example `text-text-primary`, `bg-surface-card`) and avoid raw palette utilities in app UI (`zinc/slate/gray/...`) so light/dark themes remain consistent
+10. **Vertical Slice Ownership** - Prefer feature-local organization in `experience/src/features/*` (components, hooks, API calls, types, tests) to reduce cognitive drift; keep only true primitives/utilities in shared locations
 
 ## Scope & Boundaries
 
@@ -58,7 +60,7 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 | API integration contracts | **Low** | Call endpoints exactly per OpenAPI spec. Do not invent endpoints. |
 | JSON Schema form validation | **Low** | Use schemas from `planning-mds/schemas/` as-is. Do not modify validation rules. |
 | Component composition | **Medium** | Follow atomic design principles but adapt component granularity to complexity. |
-| Styling and visual polish | **Medium** | Use Tailwind + shadcn/ui. Adapt spacing, sizing, and visual details to context. |
+| Styling and visual polish | **Medium** | Use Tailwind + shadcn/ui with semantic theme token classes (`text-text-*`, `bg-surface-*`, `border-surface-*`). Do not use raw palette utility classes for app UI text/surfaces/borders unless explicitly approved for a visual effect. |
 | State management approach | **Medium** | Follow prescribed patterns (TanStack Query for server, React Hook Form for forms) but choose hook structure. |
 | Performance optimization | **High** | Use judgment on when to memoize, code-split, or lazy load based on measured need. |
 | Accessibility implementation | **Medium** | WCAG 2.1 AA is mandatory. Choose specific ARIA patterns based on component type. |
@@ -89,6 +91,7 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 - Implement layouts using Tailwind CSS utility classes
 - Use shadcn/ui components for consistency
 - Ensure responsive design (mobile-first approach)
+- Verify theme behavior in both dark and light mode for any styling changes
 
 ### 2. Component Development
 - Create reusable components following atomic design principles
@@ -96,6 +99,9 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 - Add JSDoc comments for complex components
 - Use composition over inheritance
 - Follow naming conventions (PascalCase for components)
+- Prefer styling changes in shared primitives under `experience/src/components/ui/` before duplicating color classes in feature components
+- Route text/surface/border colors through theme token classes or CSS variables in `experience/src/index.css`
+- Co-locate feature-specific components with their feature slice (`features/<feature>/components`) instead of adding to global `components/` by default
 
 ### 3. Form Management
 
@@ -128,6 +134,7 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 - Implement proper caching and invalidation strategies
 - Add retry logic for transient failures
 - Use mutations for POST/PUT/DELETE operations
+- Prefer feature-local query hooks and API modules (`features/<feature>/api`, `features/<feature>/hooks`) over expanding global `hooks/` or `services/` for feature-specific behavior
 
 ### 5. State Management
 - Server state → TanStack Query (cache, refetch, invalidation)
@@ -172,9 +179,10 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 - Unit tests for components (Vitest + React Testing Library)
 - Integration tests for user flows
 - Accessibility tests (jest-axe)
-- Visual regression tests (optional, Playwright)
+- Visual/theme smoke tests (Playwright) for key pages when changing styling/theme behavior
 - Test user interactions (click, type, submit)
 - Mock API calls in tests
+- Validate theme constraints with `pnpm --dir experience lint:theme`
 
 ## Tools & Permissions
 
@@ -186,6 +194,9 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 - `planning-mds/stories/` - User stories with acceptance criteria
 - `planning-mds/api/` - OpenAPI contracts for API endpoints
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Frontend patterns
+- `experience/src/index.css` - Theme tokens and semantic color mappings
+- `experience/scripts/check-theme-semantic-classes.mjs` - Theme guard (blocks raw palette classes in app UI)
+- `experience/tests/visual/theme-smoke.spec.ts` - Light/dark visual smoke coverage examples
 
 **Tech Stack:**
 - **Framework:** React 18 + TypeScript
@@ -241,6 +252,22 @@ experience/
 ├── tailwind.config.js
 └── tsconfig.json
 ```
+
+### Frontend Module Boundary Rule (Important for `experience/src`)
+
+- Treat `experience/src` as **feature-first** for business/UI behavior:
+  - `features/<feature>/components`
+  - `features/<feature>/hooks`
+  - `features/<feature>/api`
+  - `features/<feature>/types`
+  - `features/<feature>/lib`
+  - `features/<feature>/tests`
+- Keep these shared/global only when reused across multiple features:
+  - `components/ui` (primitives only)
+  - app shell/layout/routing/providers
+  - generic utilities (`api`, auth, formatting, theme tokens)
+- Avoid adding feature-specific code to global `components/`, `hooks/`, `types/`, or `lib/` unless it is demonstrably cross-feature.
+- When touching a feature with drifted files (spread across globals), prefer **incremental co-location** in the same PR rather than adding more spread.
 
 ## Input Contract
 
@@ -304,11 +331,14 @@ experience/
 - [ ] API integration complete (TanStack Query)
 - [ ] Loading/error/empty states handled
 - [ ] Responsive design (mobile, tablet, desktop)
+- [ ] Light and dark theme states verified for UI changes
 - [ ] Accessibility tested (keyboard nav, screen reader)
 - [ ] TypeScript types complete (no `any` types)
 - [ ] Unit tests passing (≥80% coverage for business logic)
 - [ ] No console errors or warnings
 - [ ] Code follows established patterns in SOLUTION-PATTERNS.md
+- [ ] `pnpm --dir experience lint:theme` passes (no raw palette classes)
+- [ ] Feature-specific UI/hooks/types/API code is co-located in a feature slice (or a documented shared reuse reason exists)
 - [ ] Environment variables documented
 - [ ] README includes setup and run instructions
 

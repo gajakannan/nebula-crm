@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'gradient';
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: 'bg-zinc-800 text-zinc-300',
+  default: 'border border-surface-border bg-surface-highlight text-text-secondary',
   success: 'bg-status-success/15 text-status-success',
   warning: 'bg-status-warning/15 text-status-warning',
   error: 'bg-status-error/15 text-status-error',

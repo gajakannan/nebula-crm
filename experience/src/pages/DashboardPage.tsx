@@ -1,30 +1,28 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { NudgeCardsSection } from '@/components/dashboard/NudgeCardsSection';
-import { KpiCardsRow } from '@/components/dashboard/KpiCardsRow';
-import { PipelineSummary } from '@/components/dashboard/PipelineSummary';
-import { MyTasksWidget } from '@/components/dashboard/MyTasksWidget';
-import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
+import { NudgeCardsSection } from '@/features/nudges';
+import { KpiCardsRow } from '@/features/kpis';
+import { OpportunitiesSummary } from '@/features/opportunities';
+import { MyTasksWidget } from '@/features/tasks';
+import { ActivityFeed } from '@/features/timeline';
 
 export default function DashboardPage() {
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Dashboard">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Dashboard</h1>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>Your pipeline at a glance</p>
-        </div>
+        <p className="text-sm text-text-muted">Your opportunities at a glance</p>
         <NudgeCardsSection />
         <KpiCardsRow />
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
-            <PipelineSummary />
-            <MyTasksWidget />
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_17.5rem] xl:items-stretch 2xl:grid-cols-[minmax(0,1fr)_18.5rem]">
+          <div className="xl:h-full xl:min-h-0">
+            <OpportunitiesSummary />
           </div>
-          <div>
+          <div className="xl:h-full xl:min-h-0">
             <ActivityFeed />
           </div>
         </div>
+
+        <MyTasksWidget />
       </div>
     </DashboardLayout>
   );

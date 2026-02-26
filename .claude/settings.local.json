@@ -41,7 +41,8 @@
       "Bash(pnpm:*)",
       "Bash(cd /c/Users/gajap/sandbox/nebula-crm && docker compose up -d db 2>&1)",
       "Bash(docker exec:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(cd:*)"
     ]
   }
 }

@@ -5,18 +5,20 @@ import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { Tabs } from '@/components/ui/Tabs';
-import { BrokerProfileHeader } from '@/components/broker/BrokerProfileHeader';
-import { BrokerProfileTab } from '@/components/broker/BrokerProfileTab';
-import { BrokerContactsTab } from '@/components/broker/BrokerContactsTab';
-import { BrokerTimelineTab } from '@/components/broker/BrokerTimelineTab';
-import { EditBrokerModal } from '@/components/broker/EditBrokerModal';
-import { DeactivateAction } from '@/components/broker/DeactivateAction';
-import { DeleteBrokerAction } from '@/components/broker/DeleteBrokerAction';
-import { ContactFormModal } from '@/components/broker/ContactFormModal';
-import { DeleteContactAction } from '@/components/broker/DeleteContactAction';
-import { useBroker } from '@/hooks/useBroker';
+import {
+  BrokerContactsTab,
+  BrokerProfileHeader,
+  BrokerProfileTab,
+  BrokerTimelineTab,
+  ContactFormModal,
+  DeactivateAction,
+  DeleteBrokerAction,
+  DeleteContactAction,
+  EditBrokerModal,
+  useBroker,
+} from '@/features/brokers';
 import { ApiError } from '@/services/api';
-import type { ContactDto } from '@/types';
+import type { ContactDto } from '@/features/brokers';
 
 const TABS = ['Profile', 'Contacts', 'Timeline'];
 
@@ -50,7 +52,7 @@ export default function BrokerDetailPage() {
       return (
         <DashboardLayout>
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-sm text-zinc-400">Broker not found.</p>
+            <p className="text-sm text-text-secondary">Broker not found.</p>
             <Link
               to="/brokers"
               className="mt-3 text-sm text-nebula-violet hover:underline"
@@ -66,7 +68,7 @@ export default function BrokerDetailPage() {
       return (
         <DashboardLayout>
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-text-secondary">
               You don't have permission to view this broker.
             </p>
             <Link
@@ -94,7 +96,7 @@ export default function BrokerDetailPage() {
       <div className="space-y-6">
         <Link
           to="/brokers"
-          className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300"
+          className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-text-secondary"
         >
           <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />

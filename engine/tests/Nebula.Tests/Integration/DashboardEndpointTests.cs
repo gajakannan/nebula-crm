@@ -22,15 +22,28 @@ public class DashboardEndpointTests(CustomWebApplicationFactory factory) : IClas
     }
 
     [Fact]
-    public async Task GetPipeline_Returns200WithCorrectShape()
+    public async Task GetOpportunities_Returns200WithCorrectShape()
     {
-        var response = await _client.GetAsync("/api/dashboard/pipeline");
+        var response = await _client.GetAsync("/api/dashboard/opportunities");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var pipeline = await response.Content.ReadFromJsonAsync<DashboardPipelineDto>();
-        pipeline.Should().NotBeNull();
-        pipeline!.Submissions.Should().NotBeNull();
-        pipeline.Renewals.Should().NotBeNull();
+        var opportunities = await response.Content.ReadFromJsonAsync<DashboardOpportunitiesDto>();
+        opportunities.Should().NotBeNull();
+        opportunities!.Submissions.Should().NotBeNull();
+        opportunities.Renewals.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetOpportunityFlow_Returns200WithCorrectShape()
+    {
+        var response = await _client.GetAsync("/api/dashboard/opportunities/flow?entityType=submission&periodDays=180");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var flow = await response.Content.ReadFromJsonAsync<OpportunityFlowDto>();
+        flow.Should().NotBeNull();
+        flow!.EntityType.Should().Be("submission");
+        flow.Nodes.Should().NotBeNull();
+        flow.Links.Should().NotBeNull();
     }
 
     [Fact]

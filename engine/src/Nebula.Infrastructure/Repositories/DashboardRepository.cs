@@ -7,20 +7,26 @@ namespace Nebula.Infrastructure.Repositories;
 
 public class DashboardRepository(AppDbContext db) : IDashboardRepository
 {
-    private static readonly string[] TerminalSubmissionStatuses = ["Bound", "Declined", "Withdrawn"];
-    private static readonly string[] TerminalRenewalStatuses = ["Bound", "Lost", "Lapsed"];
-
     public async Task<DashboardKpisDto> GetKpisAsync(CancellationToken ct = default)
     {
+        var terminalSubmissionStatuses = await db.ReferenceSubmissionStatuses
+            .Where(s => s.IsTerminal)
+            .Select(s => s.Code)
+            .ToListAsync(ct);
+        var terminalRenewalStatuses = await db.ReferenceRenewalStatuses
+            .Where(s => s.IsTerminal)
+            .Select(s => s.Code)
+            .ToListAsync(ct);
+
         var activeBrokers = await db.Brokers.CountAsync(b => b.Status == "Active", ct);
         var openSubmissions = await db.Submissions
-            .CountAsync(s => !TerminalSubmissionStatuses.Contains(s.CurrentStatus), ct);
+            .CountAsync(s => !terminalSubmissionStatuses.Contains(s.CurrentStatus), ct);
 
         var ninetyDaysAgo = DateTime.UtcNow.AddDays(-90);
 
-        // Renewal rate: % of renewals reaching Bound out of all that exited pipeline in 90 days
+        // Renewal rate: % of renewals reaching Bound out of all that exited opportunities in 90 days
         var exitedRenewals = await db.Renewals
-            .Where(r => TerminalRenewalStatuses.Contains(r.CurrentStatus) && r.UpdatedAt >= ninetyDaysAgo)
+            .Where(r => terminalRenewalStatuses.Contains(r.CurrentStatus) && r.UpdatedAt >= ninetyDaysAgo)
             .ToListAsync(ct);
 
         double? renewalRate = exitedRenewals.Count > 0
@@ -29,7 +35,8 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
 
         // Avg turnaround: mean days from Submission.CreatedAt to first terminal transition
         var terminalTransitions = await db.WorkflowTransitions
-            .Where(wt => wt.WorkflowType == "Submission" && TerminalSubmissionStatuses.Contains(wt.ToState)
+            .Where(wt => wt.WorkflowType == "Submission"
+                && terminalSubmissionStatuses.Contains(wt.ToState)
                 && wt.OccurredAt >= ninetyDaysAgo)
             .GroupBy(wt => wt.EntityId)
             .Select(g => new { EntityId = g.Key, FirstTerminal = g.Min(wt => wt.OccurredAt) })
@@ -55,43 +62,159 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         return new DashboardKpisDto(activeBrokers, openSubmissions, renewalRate, avgTurnaroundDays);
     }
 
-    public async Task<DashboardPipelineDto> GetPipelineAsync(CancellationToken ct = default)
+    public async Task<DashboardOpportunitiesDto> GetOpportunitiesAsync(CancellationToken ct = default)
     {
         var submissionStatuses = await db.ReferenceSubmissionStatuses
             .Where(s => !s.IsTerminal)
             .OrderBy(s => s.DisplayOrder)
+            .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
+            .ToListAsync(ct);
+
+        var submissionTerminalStatuses = await db.ReferenceSubmissionStatuses
+            .Where(s => s.IsTerminal)
+            .Select(s => s.Code)
             .ToListAsync(ct);
 
         var submissionCounts = await db.Submissions
-            .Where(s => !TerminalSubmissionStatuses.Contains(s.CurrentStatus))
+            .Where(s => !submissionTerminalStatuses.Contains(s.CurrentStatus))
             .GroupBy(s => s.CurrentStatus)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.Status, g => g.Count, ct);
 
-        var submissionPipeline = submissionStatuses.Select(s =>
-            new PipelineStatusCountDto(s.Code, submissionCounts.GetValueOrDefault(s.Code, 0), s.ColorGroup ?? "intake"))
+        var submissionOpportunities = submissionStatuses
+            .Select(s => new OpportunityStatusCountDto(
+                s.Code,
+                submissionCounts.GetValueOrDefault(s.Code, 0),
+                s.ColorGroup ?? "intake"))
             .ToList();
 
         var renewalStatuses = await db.ReferenceRenewalStatuses
             .Where(s => !s.IsTerminal)
             .OrderBy(s => s.DisplayOrder)
+            .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
+            .ToListAsync(ct);
+
+        var renewalTerminalStatuses = await db.ReferenceRenewalStatuses
+            .Where(s => s.IsTerminal)
+            .Select(s => s.Code)
             .ToListAsync(ct);
 
         var renewalCounts = await db.Renewals
-            .Where(r => !TerminalRenewalStatuses.Contains(r.CurrentStatus))
+            .Where(r => !renewalTerminalStatuses.Contains(r.CurrentStatus))
             .GroupBy(r => r.CurrentStatus)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.Status, g => g.Count, ct);
 
-        var renewalPipeline = renewalStatuses.Select(s =>
-            new PipelineStatusCountDto(s.Code, renewalCounts.GetValueOrDefault(s.Code, 0), s.ColorGroup ?? "intake"))
+        var renewalOpportunities = renewalStatuses
+            .Select(s => new OpportunityStatusCountDto(
+                s.Code,
+                renewalCounts.GetValueOrDefault(s.Code, 0),
+                s.ColorGroup ?? "intake"))
             .ToList();
 
-        return new DashboardPipelineDto(submissionPipeline, renewalPipeline);
+        return new DashboardOpportunitiesDto(submissionOpportunities, renewalOpportunities);
     }
 
-    public async Task<PipelineItemsDto> GetPipelineItemsAsync(
-        string entityType, string status, CancellationToken ct = default)
+    public async Task<OpportunityFlowDto> GetOpportunityFlowAsync(
+        string entityType,
+        int periodDays,
+        CancellationToken ct = default)
+    {
+        if (periodDays <= 0) periodDays = 180;
+        if (periodDays > 730) periodDays = 730;
+
+        var normalizedEntityType = entityType.Trim().ToLowerInvariant();
+        var windowEnd = DateTime.UtcNow;
+        var windowStart = windowEnd.AddDays(-periodDays);
+
+        string workflowType;
+        List<StatusMeta> statuses;
+        Dictionary<string, int> currentCounts;
+
+        if (normalizedEntityType == "submission")
+        {
+            statuses = await db.ReferenceSubmissionStatuses
+                .OrderBy(s => s.DisplayOrder)
+                .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
+                .ToListAsync(ct);
+
+            currentCounts = await db.Submissions
+                .GroupBy(s => s.CurrentStatus)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(g => g.Status, g => g.Count, ct);
+
+            workflowType = "Submission";
+        }
+        else if (normalizedEntityType == "renewal")
+        {
+            statuses = await db.ReferenceRenewalStatuses
+                .OrderBy(s => s.DisplayOrder)
+                .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
+                .ToListAsync(ct);
+
+            currentCounts = await db.Renewals
+                .GroupBy(r => r.CurrentStatus)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(g => g.Status, g => g.Count, ct);
+
+            workflowType = "Renewal";
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException(nameof(entityType), "entityType must be 'submission' or 'renewal'.");
+        }
+
+        var linkRows = await db.WorkflowTransitions
+            .Where(wt => wt.WorkflowType == workflowType
+                && wt.OccurredAt >= windowStart
+                && wt.OccurredAt <= windowEnd
+                && wt.FromState != wt.ToState)
+            .GroupBy(wt => new { wt.FromState, wt.ToState })
+            .Select(g => new OpportunityFlowLinkDto(g.Key.FromState, g.Key.ToState, g.Count()))
+            .ToListAsync(ct);
+
+        var inflowByStatus = linkRows
+            .GroupBy(l => l.TargetStatus)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Count));
+        var outflowByStatus = linkRows
+            .GroupBy(l => l.SourceStatus)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Count));
+
+        var knownStatuses = statuses.Select(s => s.Code).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var unknownStatuses = linkRows
+            .SelectMany(l => new[] { l.SourceStatus, l.TargetStatus })
+            .Where(s => !knownStatuses.Contains(s))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(s => s)
+            .Select((status, index) => new StatusMeta(status, status, false, (short)(1000 + index), "decision"))
+            .ToList();
+
+        var allStatuses = statuses.Concat(unknownStatuses).ToList();
+
+        var nodes = allStatuses.Select(s => new OpportunityFlowNodeDto(
+            s.Code,
+            s.DisplayName,
+            s.IsTerminal,
+            s.DisplayOrder,
+            s.ColorGroup ?? (s.IsTerminal ? "decision" : "intake"),
+            currentCounts.GetValueOrDefault(s.Code, 0),
+            inflowByStatus.GetValueOrDefault(s.Code, 0),
+            outflowByStatus.GetValueOrDefault(s.Code, 0)))
+            .ToList();
+
+        return new OpportunityFlowDto(
+            normalizedEntityType,
+            periodDays,
+            windowStart,
+            windowEnd,
+            nodes,
+            linkRows.OrderByDescending(l => l.Count).ThenBy(l => l.SourceStatus).ThenBy(l => l.TargetStatus).ToList());
+    }
+
+    public async Task<OpportunityItemsDto> GetOpportunityItemsAsync(
+        string entityType,
+        string status,
+        CancellationToken ct = default)
     {
         if (entityType == "submission")
         {
@@ -121,12 +244,12 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
                     : (int)(DateTime.UtcNow - s.CreatedAt).TotalDays;
 
                 users.TryGetValue(s.AssignedTo, out var user);
-                var initials = user?.DisplayName is { } dn ? string.Concat(dn.Split(' ').Select(w => w[..1])).ToUpper()[..Math.Min(2, string.Concat(dn.Split(' ').Select(w => w[..1])).Length)] : null;
+                var initials = GetInitials(user?.DisplayName);
 
-                return new PipelineMiniCardDto(s.Id, s.Account.Name, (double)s.PremiumEstimate, daysInStatus, initials, user?.DisplayName);
+                return new OpportunityMiniCardDto(s.Id, s.Account.Name, (double)s.PremiumEstimate, daysInStatus, initials, user?.DisplayName);
             }).OrderByDescending(c => c.DaysInStatus).ToList();
 
-            return new PipelineItemsDto(miniCards, totalCount);
+            return new OpportunityItemsDto(miniCards, totalCount);
         }
         else // renewal
         {
@@ -156,12 +279,12 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
                     : (int)(DateTime.UtcNow - r.CreatedAt).TotalDays;
 
                 users.TryGetValue(r.AssignedTo, out var user);
-                var initials = user?.DisplayName is { } dn ? string.Concat(dn.Split(' ').Select(w => w[..1])).ToUpper()[..Math.Min(2, string.Concat(dn.Split(' ').Select(w => w[..1])).Length)] : null;
+                var initials = GetInitials(user?.DisplayName);
 
-                return new PipelineMiniCardDto(r.Id, r.Account.Name, null, daysInStatus, initials, user?.DisplayName);
+                return new OpportunityMiniCardDto(r.Id, r.Account.Name, null, daysInStatus, initials, user?.DisplayName);
             }).OrderByDescending(c => c.DaysInStatus).ToList();
 
-            return new PipelineItemsDto(miniCards, totalCount);
+            return new OpportunityItemsDto(miniCards, totalCount);
         }
     }
 
@@ -169,6 +292,15 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
     {
         var nudges = new List<NudgeCardDto>();
         var today = DateTime.UtcNow.Date;
+
+        var terminalSubmissionStatuses = await db.ReferenceSubmissionStatuses
+            .Where(s => s.IsTerminal)
+            .Select(s => s.Code)
+            .ToListAsync(ct);
+        var terminalRenewalStatuses = await db.ReferenceRenewalStatuses
+            .Where(s => s.IsTerminal)
+            .Select(s => s.Code)
+            .ToListAsync(ct);
 
         // Priority 1: Overdue tasks
         var overdueTasks = await db.Tasks
@@ -194,7 +326,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         var fiveDaysAgo = DateTime.UtcNow.AddDays(-5);
         var staleSubmissions = await db.Submissions
             .Include(s => s.Account)
-            .Where(s => !TerminalSubmissionStatuses.Contains(s.CurrentStatus) && s.UpdatedAt < fiveDaysAgo)
+            .Where(s => !terminalSubmissionStatuses.Contains(s.CurrentStatus) && s.UpdatedAt < fiveDaysAgo)
             .OrderBy(s => s.UpdatedAt)
             .Take(3 - nudges.Count)
             .ToListAsync(ct);
@@ -214,7 +346,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         var fourteenDaysFromNow = today.AddDays(14);
         var upcomingRenewals = await db.Renewals
             .Include(r => r.Account)
-            .Where(r => !TerminalRenewalStatuses.Contains(r.CurrentStatus)
+            .Where(r => !terminalRenewalStatuses.Contains(r.CurrentStatus)
                 && r.RenewalDate >= today && r.RenewalDate <= fourteenDaysFromNow)
             .OrderBy(r => r.RenewalDate)
             .Take(3 - nudges.Count)
@@ -231,4 +363,28 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
 
         return nudges.Take(3).ToList();
     }
+
+    private static string? GetInitials(string? displayName)
+    {
+        if (string.IsNullOrWhiteSpace(displayName)) return null;
+
+        var initials = string.Concat(displayName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => part[0]))
+            .ToUpperInvariant();
+
+        return initials.Length switch
+        {
+            0 => null,
+            <= 2 => initials,
+            _ => initials[..2],
+        };
+    }
+
+    private sealed record StatusMeta(
+        string Code,
+        string DisplayName,
+        bool IsTerminal,
+        short DisplayOrder,
+        string? ColorGroup);
 }

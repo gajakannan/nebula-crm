@@ -4,21 +4,22 @@ import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 
 interface DashboardLayoutProps {
+  title?: string;
   children: React.ReactNode;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export function DashboardLayout({ title, children }: DashboardLayoutProps) {
   const sidebarValue = useSidebarProvider();
 
   return (
     <SidebarContext.Provider value={sidebarValue}>
       <Sidebar />
-      <ContentArea>{children}</ContentArea>
+      <ContentArea title={title}>{children}</ContentArea>
     </SidebarContext.Provider>
   );
 }
 
-function ContentArea({ children }: { children: React.ReactNode }) {
+function ContentArea({ title, children }: { title?: string; children: React.ReactNode }) {
   const { collapsed } = useSidebar();
 
   return (
@@ -26,10 +27,17 @@ function ContentArea({ children }: { children: React.ReactNode }) {
       className="lg-sidebar-offset"
       style={{ '--sidebar-width': collapsed ? '4rem' : '16rem' } as React.CSSProperties}
     >
-      <TopBar />
-      <main className="px-4 py-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
+      <div className="content-inset">
+        <TopBar title={title} />
+        <main className="px-4 py-6 sm:px-6 lg:px-8">
+          {title && (
+            <h1 className="mb-4 text-xl font-semibold text-text-primary lg:hidden">
+              {title}
+            </h1>
+          )}
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

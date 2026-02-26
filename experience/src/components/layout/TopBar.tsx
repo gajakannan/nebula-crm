@@ -1,28 +1,68 @@
-import { Menu } from 'lucide-react';
+import { useState } from 'react';
+import { Menu, Sun, Moon, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
+import { useTheme } from '@/hooks/useTheme';
+import { NotificationDropdown } from './NotificationDropdown';
 
-export function TopBar() {
-  const { openMobile } = useSidebar();
+interface TopBarProps {
+  title?: string;
+}
+
+export function TopBar({ title }: TopBarProps) {
+  const { collapsed, toggleCollapsed, openMobile } = useSidebar();
+  const { theme, toggleTheme } = useTheme();
+  const [notifOpen, setNotifOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b px-4 backdrop-blur-xl lg:hidden"
-      style={{
-        borderColor: 'var(--sidebar-border)',
-        background: 'var(--sidebar-bg)',
-      }}
-    >
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-surface-border bg-surface-bg px-4 lg:rounded-t-xl">
       <button
         onClick={openMobile}
         aria-label="Open navigation menu"
-        className="flex h-9 w-9 items-center justify-center rounded-md transition-colors"
-        style={{ color: 'var(--text-secondary)' }}
+        className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary transition-colors lg:hidden"
       >
         <Menu size={20} />
       </button>
-      <span className="text-lg font-bold tracking-tight text-nebula-violet drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]">
+      <span className="fx-logo-glow text-lg font-bold tracking-tight text-nebula-violet lg:hidden">
         Nebula
       </span>
-      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>CRM</span>
+      <span className="text-sm text-text-muted lg:hidden">CRM</span>
+
+      {/* Collapse toggle + separator + title (desktop only) */}
+      <button
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-expanded={!collapsed}
+        className="hidden lg:flex h-8 w-8 items-center justify-center rounded-md text-text-muted transition-colors hover:text-text-secondary"
+      >
+        {collapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
+      </button>
+      {title && (
+        <>
+          <div className="hidden lg:block h-5 w-px bg-sidebar-border" />
+          <h1 className="hidden text-xl font-semibold text-text-primary lg:block">
+            {title}
+          </h1>
+        </>
+      )}
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Right-side controls */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="flex h-9 w-9 items-center justify-center rounded-md text-text-secondary transition-colors"
+        >
+          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+        <NotificationDropdown
+          open={notifOpen}
+          onToggle={() => setNotifOpen((p) => !p)}
+          onClose={() => setNotifOpen(false)}
+        />
+      </div>
     </header>
   );
 }

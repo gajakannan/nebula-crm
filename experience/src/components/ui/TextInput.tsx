@@ -10,18 +10,18 @@ export function TextInput({ label, error, className, id, ...props }: TextInputPr
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={inputId} className="block text-xs font-medium text-zinc-400">
+      <label htmlFor={inputId} className="block text-xs font-medium text-text-secondary">
         {label}
         {props.required && <span className="ml-0.5 text-status-error">*</span>}
       </label>
       <input
         id={inputId}
         className={cn(
-          'w-full rounded-lg border bg-zinc-950 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 transition-colors',
+          'w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-primary placeholder:text-text-muted transition-colors',
           'focus:outline-none focus:ring-1',
           error
             ? 'border-status-error focus:ring-status-error'
-            : 'border-zinc-700 focus:border-nebula-violet focus:ring-nebula-violet',
+            : 'focus:border-nebula-violet focus:ring-nebula-violet',
           className,
         )}
         {...props}

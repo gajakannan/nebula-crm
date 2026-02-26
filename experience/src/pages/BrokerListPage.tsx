@@ -4,10 +4,9 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { BrokerStatusBadge } from '@/components/broker/BrokerStatusBadge';
-import { useBrokers } from '@/hooks/useBrokers';
+import { BrokerStatusBadge, useBrokers } from '@/features/brokers';
 import { useDebounce } from '@/hooks/useDebounce';
-import type { BrokerDto, BrokerStatus } from '@/types';
+import type { BrokerDto, BrokerStatus } from '@/features/brokers';
 
 const STATUS_OPTIONS = ['All', 'Active', 'Inactive', 'Pending'] as const;
 
@@ -24,10 +23,9 @@ export default function BrokerListPage() {
   });
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Brokers">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-zinc-200">Brokers</h1>
+        <div className="flex items-center justify-end">
           <Link
             to="/brokers/new"
             className="rounded-lg bg-nebula-violet px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-nebula-violet/90"
@@ -50,7 +48,7 @@ export default function BrokerListPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:border-nebula-violet focus:outline-none focus:ring-1 focus:ring-nebula-violet"
+              className="flex-1 rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-nebula-violet focus:outline-none focus:ring-1 focus:ring-nebula-violet"
             />
             <select
               value={statusFilter}
@@ -58,7 +56,7 @@ export default function BrokerListPage() {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-200 focus:border-nebula-violet focus:outline-none focus:ring-1 focus:ring-nebula-violet"
+              className="rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-primary focus:border-nebula-violet focus:outline-none focus:ring-1 focus:ring-nebula-violet"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>
@@ -76,7 +74,7 @@ export default function BrokerListPage() {
             />
           )}
           {data && data.data.length === 0 && (
-            <div className="py-8 text-center text-sm text-zinc-500">
+            <div className="py-8 text-center text-sm text-text-muted">
               No brokers found.
               {(debouncedSearch || statusFilter !== 'All') && (
                 <button
@@ -98,7 +96,7 @@ export default function BrokerListPage() {
               <div className="hidden md:block">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-zinc-800 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
+                    <tr className="border-b border-surface-border text-left text-xs font-medium uppercase tracking-wider text-text-muted">
                       <th className="pb-3 pr-4">Name</th>
                       <th className="pb-3 pr-4">License</th>
                       <th className="pb-3 pr-4">State</th>
@@ -107,7 +105,7 @@ export default function BrokerListPage() {
                       <th className="pb-3">Phone</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800">
+                  <tbody className="divide-y divide-surface-border">
                     {data.data.map((broker) => (
                       <BrokerRow key={broker.id} broker={broker} />
                     ))}
@@ -124,21 +122,21 @@ export default function BrokerListPage() {
 
               {/* Pagination */}
               {data.totalPages > 1 && (
-                <div className="mt-4 flex items-center justify-between border-t border-zinc-800 pt-4">
+                <div className="mt-4 flex items-center justify-between border-t border-surface-border pt-4">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
-                    className="rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-700 disabled:opacity-50 disabled:hover:bg-zinc-800"
+                    className="rounded-lg border border-surface-border bg-surface-card px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-card-hover hover:text-text-primary disabled:opacity-50"
                   >
                     Previous
                   </button>
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-xs text-text-muted">
                     Page {data.page} of {data.totalPages}
                   </span>
                   <button
                     onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
                     disabled={page >= data.totalPages}
-                    className="rounded-lg bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-700 disabled:opacity-50 disabled:hover:bg-zinc-800"
+                    className="rounded-lg border border-surface-border bg-surface-card px-3 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-card-hover hover:text-text-primary disabled:opacity-50"
                   >
                     Next
                   </button>
@@ -154,11 +152,11 @@ export default function BrokerListPage() {
 
 function BrokerRow({ broker }: { broker: BrokerDto }) {
   return (
-    <tr className="text-zinc-300">
+    <tr className="text-text-secondary">
       <td className="py-3 pr-4">
         <Link
           to={`/brokers/${broker.id}`}
-          className="font-medium text-zinc-200 hover:text-nebula-violet"
+          className="font-medium text-text-primary hover:text-nebula-violet"
         >
           {broker.legalName}
         </Link>
@@ -182,16 +180,16 @@ function BrokerMobileCard({ broker }: { broker: BrokerDto }) {
   return (
     <Link
       to={`/brokers/${broker.id}`}
-      className="block rounded-lg border border-zinc-800 p-4 transition-colors hover:border-zinc-700"
+      className="block rounded-lg border border-surface-border p-4 transition-colors hover:bg-surface-highlight"
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="font-medium text-zinc-200">{broker.legalName}</p>
-          <p className="mt-0.5 font-mono text-xs text-zinc-500">{broker.licenseNumber}</p>
+          <p className="font-medium text-text-primary">{broker.legalName}</p>
+          <p className="mt-0.5 font-mono text-xs text-text-muted">{broker.licenseNumber}</p>
         </div>
         <BrokerStatusBadge status={broker.status} />
       </div>
-      <div className="mt-2 flex gap-4 text-xs text-zinc-400">
+      <div className="mt-2 flex gap-4 text-xs text-text-secondary">
         <span>{broker.state}</span>
         <MaskedField value={broker.email} status={broker.status} />
       </div>
@@ -201,8 +199,8 @@ function BrokerMobileCard({ broker }: { broker: BrokerDto }) {
 
 function MaskedField({ value, status }: { value: string | null; status: BrokerStatus }) {
   if (value) return <span>{value}</span>;
-  if (status === 'Inactive') return <span className="text-zinc-600 italic">Masked</span>;
-  return <span className="text-zinc-600">—</span>;
+  if (status === 'Inactive') return <span className="text-text-muted italic">Masked</span>;
+  return <span className="text-text-muted">—</span>;
 }
 
 function BrokerListSkeleton() {

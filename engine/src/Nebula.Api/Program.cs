@@ -7,7 +7,6 @@ using System.Threading.RateLimiting;
 using FluentValidation;
 using Nebula.Infrastructure;
 using Nebula.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using Nebula.Application.Common;
 using Nebula.Application.Services;
 using Nebula.Application.Validators;

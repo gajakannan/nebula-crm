@@ -836,6 +836,29 @@ it('should not show edit button for regular users', () => {
 
 ---
 
+## Theme and Visual Regression Checks
+
+### Light/Dark Theme Verification (Required for Styling Changes)
+
+- Verify affected screens/components in both dark and light mode whenever UI styling changes.
+- Confirm semantic theme token classes are used for app UI text/surfaces/borders instead of raw palette utility classes.
+- Treat low-contrast regressions as failures for labels, content text, and interactive controls.
+
+### Playwright Theme Smoke Tests (Recommended Pattern)
+
+- Capture screenshots for a small set of critical pages in both themes (for example dashboard, list page, create/edit form).
+- Mock auth/API responses for deterministic rendering.
+- Disable animations/transitions for screenshot stability.
+- Add at least one targeted readability/contrast assertion for high-risk UI areas (KPIs, forms, badges, overlays).
+
+### CI Integration
+
+- Run visual/theme smoke tests on frontend changes.
+- Upload Playwright artifacts (`playwright-report`, `test-results`) for failure diagnosis.
+- Pair browser tests with a fast static policy check (for example `lint:theme`) that blocks raw palette classes.
+
+---
+
 ## References
 
 - [React Testing Library Docs](https://testing-library.com/react)
@@ -843,3 +866,4 @@ it('should not show edit button for regular users', () => {
 - [Common Testing Mistakes](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)
 - [Testing Library Guiding Principles](https://testing-library.com/docs/guiding-principles/)
 - [MSW (Mock Service Worker)](https://mswjs.io)
+- [Playwright Visual Comparisons](https://playwright.dev/docs/test-snapshots)

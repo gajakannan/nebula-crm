@@ -12,24 +12,24 @@ export function Select({ label, error, options, placeholder, className, id, ...p
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={selectId} className="block text-xs font-medium text-zinc-400">
+      <label htmlFor={selectId} className="block text-xs font-medium text-text-secondary">
         {label}
         {props.required && <span className="ml-0.5 text-status-error">*</span>}
       </label>
       <select
         id={selectId}
         className={cn(
-          'w-full rounded-lg border bg-zinc-950 px-3 py-2 text-sm text-zinc-200 transition-colors',
+          'w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-primary transition-colors',
           'focus:outline-none focus:ring-1',
           error
             ? 'border-status-error focus:ring-status-error'
-            : 'border-zinc-700 focus:border-nebula-violet focus:ring-nebula-violet',
+            : 'focus:border-nebula-violet focus:ring-nebula-violet',
           className,
         )}
         {...props}
       >
         {placeholder && (
-          <option value="" className="text-zinc-600">
+          <option value="" className="text-text-muted">
             {placeholder}
           </option>
         )}

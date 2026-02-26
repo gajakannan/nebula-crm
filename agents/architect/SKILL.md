@@ -99,6 +99,8 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
 
 8) **Specify NFRs**
    - Define measurable performance, security, scalability requirements
+   - For frontend-facing work, define UI quality constraints that are testable (theme parity, contrast expectations, responsive breakpoints)
+   - For frontend-facing work, define module-boundary constraints (feature slices vs shared layers) to prevent codebase sprawl
 
 9) **Validate against SOLUTION-PATTERNS.md**
    - Ensure all designs follow established patterns
@@ -111,6 +113,8 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
    - Create/update `planning-mds/architecture/feature-assembly-plan.md` for slice work
    - Define backend/frontend/AI/QA/DevOps handoffs and sequencing
    - Set integration checkpoints and completion criteria
+   - Include frontend guardrails when applicable: semantic theme token usage, no raw palette UI classes, `lint:theme`, and light/dark visual smoke coverage for key screens
+   - For frontend-heavy work, specify the target feature-slice placement for new code (`features/<feature>/*`) and what may remain shared
 
 ## Capability Recommendation
 
@@ -205,9 +209,20 @@ Your architecture specifications will be consumed by **Phase C Implementation Ag
   - JSON Schemas (form validation rules in `planning-mds/schemas/`)
   - Authorization model (what users can see/do)
   - UI/UX patterns and guidelines
+  - UI quality constraints (theme token usage rules, light/dark verification scope, visual smoke test targets)
+  - Module boundary expectations (what is feature-local vs shared in `experience/src`)
 - **What they'll build:** React components, forms, routing, API integration, state management
 - **Tech Stack:** React 18, TypeScript, Tailwind, shadcn/ui, AJV, RJSF
 - **Reference:** `agents/frontend-developer/SKILL.md`
+
+**Frontend UI Governance (when frontend scope exists)**
+- Specify semantic UI color token usage (text/surface/border) in screen specs or assembly plan notes.
+- Explicitly prohibit raw palette utility classes for app UI surfaces/text unless a visual-effect exception is documented.
+- Require light/dark theme verification in acceptance criteria or test plan notes for visual changes.
+- Identify at least one critical page per affected feature for Playwright visual/theme smoke coverage.
+- Prefer vertical-slice organization for feature code in `experience/src/features/<feature>/` (components, hooks, api, types, tests).
+- Reserve shared/global folders for primitives, app shell, and utilities reused by multiple features.
+- Call out co-location expectations in the assembly plan when refactoring drifted frontend areas (avoid adding new feature code to global buckets by default).
 
 **3. AI Engineer**
 - **Needs from you:**

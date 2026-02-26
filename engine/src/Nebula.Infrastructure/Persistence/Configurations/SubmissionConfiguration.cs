@@ -44,8 +44,7 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
         builder.HasQueryFilter(e => !e.IsDeleted);
 
         builder.HasIndex(e => e.CurrentStatus)
-            .HasDatabaseName("IX_Submissions_CurrentStatus")
-            .HasFilter("\"CurrentStatus\" NOT IN ('Bound', 'Declined', 'Withdrawn')");
+            .HasDatabaseName("IX_Submissions_CurrentStatus");
 
         builder.HasIndex(e => new { e.AssignedTo, e.CurrentStatus })
             .HasDatabaseName("IX_Submissions_AssignedTo_CurrentStatus");

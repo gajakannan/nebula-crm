@@ -510,11 +510,29 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
+                            Code = "DataReview",
+                            ColorGroup = "triage",
+                            Description = "Coverage and account data review before outreach",
+                            DisplayName = "Data Review",
+                            DisplayOrder = (short)3,
+                            IsTerminal = false
+                        },
+                        new
+                        {
                             Code = "OutreachStarted",
                             ColorGroup = "waiting",
                             Description = "Active broker/account outreach begun",
                             DisplayName = "Outreach Started",
-                            DisplayOrder = (short)3,
+                            DisplayOrder = (short)4,
+                            IsTerminal = false
+                        },
+                        new
+                        {
+                            Code = "WaitingOnBroker",
+                            ColorGroup = "waiting",
+                            Description = "Awaiting broker response or required renewal information",
+                            DisplayName = "Waiting on Broker",
+                            DisplayOrder = (short)5,
                             IsTerminal = false
                         },
                         new
@@ -523,7 +541,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "review",
                             Description = "Under underwriter review for renewal terms",
                             DisplayName = "In Review",
-                            DisplayOrder = (short)4,
+                            DisplayOrder = (short)6,
                             IsTerminal = false
                         },
                         new
@@ -532,7 +550,25 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "decision",
                             Description = "Renewal quote issued",
                             DisplayName = "Quoted",
-                            DisplayOrder = (short)5,
+                            DisplayOrder = (short)7,
+                            IsTerminal = false
+                        },
+                        new
+                        {
+                            Code = "Negotiation",
+                            ColorGroup = "decision",
+                            Description = "Actively negotiating renewal terms",
+                            DisplayName = "Negotiation",
+                            DisplayOrder = (short)8,
+                            IsTerminal = false
+                        },
+                        new
+                        {
+                            Code = "BindRequested",
+                            ColorGroup = "decision",
+                            Description = "Renewal bind requested",
+                            DisplayName = "Bind Requested",
+                            DisplayOrder = (short)9,
                             IsTerminal = false
                         },
                         new
@@ -540,7 +576,15 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             Code = "Bound",
                             Description = "Policy renewed and bound",
                             DisplayName = "Bound",
-                            DisplayOrder = (short)6,
+                            DisplayOrder = (short)10,
+                            IsTerminal = true
+                        },
+                        new
+                        {
+                            Code = "NotRenewed",
+                            Description = "Renewal closed without binding",
+                            DisplayName = "Not Renewed",
+                            DisplayOrder = (short)11,
                             IsTerminal = true
                         },
                         new
@@ -548,7 +592,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             Code = "Lost",
                             Description = "Lost to competitor",
                             DisplayName = "Lost",
-                            DisplayOrder = (short)7,
+                            DisplayOrder = (short)12,
                             IsTerminal = true
                         },
                         new
@@ -556,7 +600,23 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             Code = "Lapsed",
                             Description = "Policy expired without renewal",
                             DisplayName = "Lapsed",
-                            DisplayOrder = (short)8,
+                            DisplayOrder = (short)13,
+                            IsTerminal = true
+                        },
+                        new
+                        {
+                            Code = "Withdrawn",
+                            Description = "Renewal withdrawn by broker or insured",
+                            DisplayName = "Withdrawn",
+                            DisplayOrder = (short)14,
+                            IsTerminal = true
+                        },
+                        new
+                        {
+                            Code = "Expired",
+                            Description = "Renewal workflow expired before completion",
+                            DisplayName = "Expired",
+                            DisplayOrder = (short)15,
                             IsTerminal = true
                         });
                 });
@@ -624,11 +684,20 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
+                            Code = "WaitingOnDocuments",
+                            ColorGroup = "waiting",
+                            Description = "Awaiting required underwriting documents",
+                            DisplayName = "Waiting on Documents",
+                            DisplayOrder = (short)4,
+                            IsTerminal = false
+                        },
+                        new
+                        {
                             Code = "ReadyForUWReview",
                             ColorGroup = "review",
                             Description = "All data received, queued for underwriter",
                             DisplayName = "Ready for UW Review",
-                            DisplayOrder = (short)4,
+                            DisplayOrder = (short)5,
                             IsTerminal = false
                         },
                         new
@@ -637,7 +706,16 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "review",
                             Description = "Under active underwriter review",
                             DisplayName = "In Review",
-                            DisplayOrder = (short)5,
+                            DisplayOrder = (short)6,
+                            IsTerminal = false
+                        },
+                        new
+                        {
+                            Code = "QuotePreparation",
+                            ColorGroup = "decision",
+                            Description = "Preparing quote terms for broker",
+                            DisplayName = "Quote Preparation",
+                            DisplayOrder = (short)7,
                             IsTerminal = false
                         },
                         new
@@ -646,7 +724,16 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "decision",
                             Description = "Quote issued, awaiting broker response",
                             DisplayName = "Quoted",
-                            DisplayOrder = (short)6,
+                            DisplayOrder = (short)8,
+                            IsTerminal = false
+                        },
+                        new
+                        {
+                            Code = "RequoteRequested",
+                            ColorGroup = "decision",
+                            Description = "Broker requested revised quote terms",
+                            DisplayName = "Requote Requested",
+                            DisplayOrder = (short)9,
                             IsTerminal = false
                         },
                         new
@@ -655,7 +742,16 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "decision",
                             Description = "Broker accepted quote, bind in progress",
                             DisplayName = "Bind Requested",
-                            DisplayOrder = (short)7,
+                            DisplayOrder = (short)10,
+                            IsTerminal = false
+                        },
+                        new
+                        {
+                            Code = "Binding",
+                            ColorGroup = "decision",
+                            Description = "Binding and issuance processing in progress",
+                            DisplayName = "Binding",
+                            DisplayOrder = (short)11,
                             IsTerminal = false
                         },
                         new
@@ -663,7 +759,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             Code = "Bound",
                             Description = "Policy bound and issued",
                             DisplayName = "Bound",
-                            DisplayOrder = (short)8,
+                            DisplayOrder = (short)12,
                             IsTerminal = true
                         },
                         new
@@ -671,15 +767,39 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             Code = "Declined",
                             Description = "Submission declined by underwriter",
                             DisplayName = "Declined",
-                            DisplayOrder = (short)9,
+                            DisplayOrder = (short)13,
                             IsTerminal = true
                         },
                         new
                         {
                             Code = "Withdrawn",
-                            Description = "Broker withdrew submission",
+                            Description = "Broker or insured withdrew submission",
                             DisplayName = "Withdrawn",
-                            DisplayOrder = (short)10,
+                            DisplayOrder = (short)14,
+                            IsTerminal = true
+                        },
+                        new
+                        {
+                            Code = "NotQuoted",
+                            Description = "Submission closed without quote issued",
+                            DisplayName = "Not Quoted",
+                            DisplayOrder = (short)15,
+                            IsTerminal = true
+                        },
+                        new
+                        {
+                            Code = "Lost",
+                            Description = "Opportunity lost to another market or strategy change",
+                            DisplayName = "Lost",
+                            DisplayOrder = (short)16,
+                            IsTerminal = true
+                        },
+                        new
+                        {
+                            Code = "Expired",
+                            Description = "Submission expired before disposition completed",
+                            DisplayName = "Expired",
+                            DisplayOrder = (short)17,
                             IsTerminal = true
                         });
                 });
@@ -882,8 +1002,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                     b.HasIndex("BrokerId");
 
                     b.HasIndex("CurrentStatus")
-                        .HasDatabaseName("IX_Submissions_CurrentStatus")
-                        .HasFilter("\"CurrentStatus\" NOT IN ('Bound', 'Declined', 'Withdrawn')");
+                        .HasDatabaseName("IX_Submissions_CurrentStatus");
 
                     b.HasIndex("ProgramId");
 

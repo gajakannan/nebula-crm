@@ -73,7 +73,15 @@ PRs should include:
 
 Keep changes focused and avoid unrelated edits in the same PR.
 
-## 8) Branch and Commit Conventions
+## 8) Frontend Theming (experience/)
+
+- Use semantic theme classes/tokens in UI code (for example `text-text-primary`, `text-text-secondary`, `text-text-muted`, `bg-surface-card`, `border-surface-border`).
+- Do not use raw palette utility classes for app UI text/surfaces/borders (for example `text-zinc-*`, `bg-zinc-*`, `border-zinc-*`) except documented visual-effect exceptions.
+- Prefer updating shared primitives in `experience/src/components/ui/` over duplicating inline styles in feature components/pages.
+- Run `pnpm --dir experience lint:theme` when touching frontend UI.
+- When changing visual styling in `experience/`, verify both dark and light theme states.
+
+## 9) Branch and Commit Conventions
 
 - Branch names should be descriptive and scoped (for example: `docs/vendor-neutral-language`, `fix/dockerignore-security`).
 - Use small, focused commits by concern (docs, templates, actions, scripts).

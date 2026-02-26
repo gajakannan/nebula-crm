@@ -10,7 +10,7 @@ interface TabsProps {
 export function Tabs({ tabs, activeTab, onTabChange, children }: TabsProps) {
   return (
     <div>
-      <div className="flex gap-1 overflow-x-auto border-b border-zinc-800">
+      <div className="flex gap-1 overflow-x-auto border-b border-surface-border">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -18,8 +18,8 @@ export function Tabs({ tabs, activeTab, onTabChange, children }: TabsProps) {
             className={cn(
               'whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors',
               tab === activeTab
-                ? 'border-b-2 border-nebula-violet text-zinc-200'
-                : 'text-zinc-500 hover:text-zinc-300',
+                ? 'border-b-2 border-nebula-violet text-text-primary'
+                : 'text-text-muted hover:text-text-secondary',
             )}
           >
             {tab}

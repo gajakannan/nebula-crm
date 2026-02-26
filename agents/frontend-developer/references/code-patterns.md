@@ -671,3 +671,63 @@ describe('CustomerForm accessibility', () => {
   });
 });
 ```
+
+### Semantic Theme Token Styling (Required for App UI)
+
+- Prefer semantic theme classes mapped from the app theme (for example `text-text-primary`, `text-text-secondary`, `text-text-muted`, `bg-surface-card`, `border-surface-border`).
+- Do not use raw palette utility classes for app UI text/surfaces/borders (`text-zinc-*`, `bg-zinc-*`, `border-zinc-*`, and similar `slate/gray/neutral/stone`) unless a visual-effect exception is explicitly documented.
+- Apply color/styling fixes in shared primitives (`components/ui/*`) first when the pattern is reused across screens.
+- Route color semantics through theme tokens or CSS variables so dark/light mode behavior stays consistent.
+
+**Avoid (theme-bypassing):**
+```tsx
+<p className="text-zinc-400">Status</p>
+<input className="border-zinc-700 bg-zinc-950 text-zinc-200" />
+```
+
+**Prefer (theme-aware):**
+```tsx
+<p className="text-text-secondary">Status</p>
+<input className="border-surface-border bg-surface-card text-text-primary" />
+```
+
+### Feature-First Vertical Slice Organization (Preferred in `experience/src`)
+
+- Co-locate feature-specific UI behavior to reduce cognitive drift and ownership ambiguity.
+- Default placement for new feature work:
+  - `features/<feature>/components`
+  - `features/<feature>/hooks`
+  - `features/<feature>/api`
+  - `features/<feature>/types`
+  - `features/<feature>/lib`
+  - `features/<feature>/tests`
+- Keep only cross-feature code in shared/global folders:
+  - UI primitives (`components/ui`)
+  - app shell/layout/routing/providers
+  - generic infrastructure utilities (auth, API client base, formatting, theme tokens)
+
+**Avoid (feature code spilled into globals):**
+```ts
+// Global hook for one dashboard widget only
+src/hooks/useOpportunityFlow.ts
+
+// Global type used only by one feature
+src/types/opportunities.ts
+
+// Global component tied to one domain screen
+src/components/OpportunityChart.tsx
+```
+
+**Prefer (co-located feature slice):**
+```text
+src/features/opportunities/
+  api/opportunity-flow.ts
+  hooks/useOpportunityFlow.ts
+  types/opportunity-flow.ts
+  components/OpportunityChart.tsx
+  components/OpportunityPopover.tsx
+```
+
+**Refactor rule of thumb**
+- If code is used by exactly one feature, move it into that feature slice when touched.
+- If a second feature starts depending on it, promote it to shared/global with a clear name and ownership reason.

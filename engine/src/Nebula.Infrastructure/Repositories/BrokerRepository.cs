@@ -52,8 +52,14 @@ public class BrokerRepository(AppDbContext db) : IBrokerRepository
 
     public async Task<bool> HasActiveSubmissionsOrRenewalsAsync(Guid brokerId, CancellationToken ct = default)
     {
-        string[] terminalSubmission = ["Bound", "Declined", "Withdrawn"];
-        string[] terminalRenewal = ["Bound", "Lost", "Lapsed"];
+        var terminalSubmission = await db.ReferenceSubmissionStatuses
+            .Where(s => s.IsTerminal)
+            .Select(s => s.Code)
+            .ToListAsync(ct);
+        var terminalRenewal = await db.ReferenceRenewalStatuses
+            .Where(s => s.IsTerminal)
+            .Select(s => s.Code)
+            .ToListAsync(ct);
 
         var hasSubmissions = await db.Submissions
             .AnyAsync(s => s.BrokerId == brokerId && !terminalSubmission.Contains(s.CurrentStatus), ct);

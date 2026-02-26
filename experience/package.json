@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint:css": "stylelint \"src/**/*.css\"",
+    "lint:theme": "node ./scripts/check-theme-semantic-classes.mjs",
+    "lint:effects": "node ./scripts/check-no-hardcoded-effects.mjs",
+    "test:visual:theme": "playwright test tests/visual/theme-smoke.spec.ts",
+    "test:visual:theme:update": "playwright test tests/visual/theme-smoke.spec.ts --update-snapshots"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.0",
@@ -20,6 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^25.3.0",
     "@types/react": "^18.3.18",
@@ -29,6 +35,9 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
+    "stylelint": "^17.4.0",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-config-tailwindcss": "^1.0.1",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.18.2",

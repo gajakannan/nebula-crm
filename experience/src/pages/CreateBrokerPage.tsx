@@ -4,11 +4,10 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { TextInput } from '@/components/ui/TextInput';
 import { Select } from '@/components/ui/Select';
-import { useCreateBroker } from '@/hooks/useCreateBroker';
-import { validateBrokerCreate } from '@/lib/validation';
+import { useCreateBroker, validateBrokerCreate } from '@/features/brokers';
 import { ApiError } from '@/services/api';
 import { US_STATES } from '@/lib/us-states';
-import type { BrokerCreateDto } from '@/types';
+import type { BrokerCreateDto } from '@/features/brokers';
 
 export default function CreateBrokerPage() {
   const navigate = useNavigate();
@@ -62,19 +61,17 @@ export default function CreateBrokerPage() {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="New Broker">
       <div className="space-y-6">
         <Link
           to="/brokers"
-          className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300"
+          className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-text-secondary"
         >
           <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
           Brokers
         </Link>
-
-        <h1 className="text-lg font-semibold text-zinc-200">New Broker</h1>
 
         <Card className="max-w-lg">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -131,7 +128,7 @@ export default function CreateBrokerPage() {
               </button>
               <Link
                 to="/brokers"
-                className="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-700"
+                className="rounded-lg border border-surface-border bg-surface-card px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-card-hover hover:text-text-primary"
               >
                 Cancel
               </Link>

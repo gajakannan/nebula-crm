@@ -254,12 +254,7 @@ export function OpportunityChart({ label, entityType, statuses, periodDays }: Op
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-text-muted">{label}</h3>
-          <span className="rounded-full border border-border-muted px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-text-muted">
-            {periodDays}d flow
-          </span>
-        </div>
+        <h3 className="text-xs font-medium uppercase tracking-wider text-text-muted">{label}</h3>
         <span className="text-xs text-text-muted">{totalOpen} open</span>
       </div>
 

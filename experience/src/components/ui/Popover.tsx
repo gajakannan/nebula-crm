@@ -123,7 +123,7 @@ export function Popover({ trigger, children, className }: PopoverProps) {
             role="dialog"
             aria-modal="false"
             className={cn(
-              'fixed z-50 glass-card rounded-xl p-4 shadow-2xl',
+              'fixed z-50 glass-card popover-glass rounded-xl p-4 shadow-2xl',
               className,
             )}
             style={{

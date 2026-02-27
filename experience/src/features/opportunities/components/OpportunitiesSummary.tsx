@@ -31,8 +31,8 @@ export function OpportunitiesSummary() {
                 onClick={() => setPeriodDays(days)}
                 className={
                   active
-                    ? 'rounded-md bg-surface-raised px-2.5 py-1 text-xs font-medium text-text-primary shadow-sm'
-                    : 'rounded-md px-2.5 py-1 text-xs text-text-muted hover:text-text-secondary'
+                    ? 'rounded-full border border-nebula-violet/45 bg-nebula-violet/15 px-2.5 py-1 text-xs font-semibold text-nebula-violet shadow-sm'
+                    : 'rounded-full px-2.5 py-1 text-xs text-text-muted hover:text-text-secondary'
                 }
               >
                 {days}d

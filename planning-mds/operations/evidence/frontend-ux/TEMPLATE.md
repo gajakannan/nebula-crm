@@ -16,6 +16,8 @@
 - [ ] `pnpm --dir experience lint:theme`
 - [ ] `pnpm --dir experience build`
 - [ ] `pnpm --dir experience test`
+- [ ] Command unavailable: `pnpm --dir experience test` - include reason in notes
+- [ ] Equivalent command used for `pnpm --dir experience test`: `pnpm --dir experience <script>`
 - [ ] `pnpm --dir experience test:visual:theme`
 
 ## Light/Dark Screenshots

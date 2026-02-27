@@ -130,6 +130,22 @@ def has_checked_plain_item(content: str, value: str) -> bool:
     return re.search(pattern, content) is not None
 
 
+def has_checked_unavailable_item(content: str, command: str) -> bool:
+    pattern = (
+        rf"(?mi)^\s*-\s*\[[xX]\]\s*Command unavailable:\s*`{re.escape(command)}`"
+        rf"(?:\s*[-:]\s*.*)?$"
+    )
+    return re.search(pattern, content) is not None
+
+
+def has_checked_equivalent_item(content: str, command: str) -> bool:
+    pattern = (
+        rf"(?mi)^\s*-\s*\[[xX]\]\s*Equivalent command used for\s*"
+        rf"`{re.escape(command)}`\s*:\s*`[^`]+`\s*$"
+    )
+    return re.search(pattern, content) is not None
+
+
 def validate_evidence_file(path: Path) -> List[str]:
     if not path.exists():
         return [f"Evidence file not found in repository: {path}"]
@@ -151,8 +167,24 @@ def validate_evidence_file(path: Path) -> List[str]:
         errors.append("Missing metadata line '- Scope: ...'")
 
     for command in REQUIRED_COMMAND_CHECKBOXES:
-        if not has_checked_backtick_item(content, command):
-            errors.append(f"Missing checked command evidence: `{command}`")
+        has_direct = has_checked_backtick_item(content, command)
+        has_unavailable = has_checked_unavailable_item(content, command)
+        has_equivalent = has_checked_equivalent_item(content, command)
+
+        if has_direct or has_unavailable:
+            continue
+
+        if has_equivalent:
+            errors.append(
+                f"Equivalent command recorded for `{command}` but missing "
+                f"`Command unavailable: `{command}`` marker"
+            )
+            continue
+
+        errors.append(
+            f"Missing command evidence for `{command}` "
+            f"(checked command, or checked unavailable marker)"
+        )
 
     for item in REQUIRED_CHECKLIST_CHECKBOXES:
         if not has_checked_plain_item(content, item):

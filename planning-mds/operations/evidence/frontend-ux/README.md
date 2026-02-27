@@ -19,6 +19,9 @@ Use this directory for UX audit evidence files tied to frontend UI changes.
   - `pnpm --dir experience build`
   - `pnpm --dir experience test`
   - `pnpm --dir experience test:visual:theme`
+  - If a command is unavailable, include:
+    - `Command unavailable: \`<command>\``
+    - `Equivalent command used for \`<command>\`: \`<replacement>\``
 - Light and dark screenshot evidence
 - UX checklist evidence from `agents/frontend-developer/references/ux-audit-ruleset.md`
 - Deferred items (if any) with owner and due date

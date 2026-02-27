@@ -118,7 +118,7 @@ planning-mds/features/
 
 - **Feature IDs:** 4-digit zero-padded — `F0001`, `F0002`, ..., `F9999`
 - **Story IDs:** Scoped to feature — `F0001-S0001`, `F0001-S0002`, ...
-- **Folder slug:** Lowercase kebab-case — `F0001-dashboard`, `F0002-broker-management`
+- **Folder slug:** Lowercase kebab-case — `F0001-dashboard`, `F0002-account-management`
 - **Story filename:** `F{NNNN}-S{NNNN}-{slug}.md`
 
 ### Per-Feature Documents

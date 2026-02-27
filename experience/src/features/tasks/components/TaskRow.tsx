@@ -2,6 +2,7 @@ import type { TaskSummaryDto } from '../types';
 import { Badge } from '@/components/ui/Badge';
 import { getEntityPath } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface TaskRowProps {
   task: TaskSummaryDto;
@@ -41,9 +42,9 @@ export function TaskRow({ task }: TaskRowProps) {
         {task.linkedEntityName && (
           <p className="mt-0.5 text-xs text-text-muted">
             {linkedPath ? (
-              <a href={linkedPath} className="hover:text-nebula-violet">
+              <Link to={linkedPath} className="hover:text-nebula-violet">
                 {task.linkedEntityName}
-              </a>
+              </Link>
             ) : (
               task.linkedEntityName
             )}

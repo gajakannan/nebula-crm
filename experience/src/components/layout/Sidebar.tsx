@@ -54,7 +54,7 @@ export function Sidebar() {
       {/* Navigation */}
       <div className="px-2 pt-4">
         {!collapsed && (
-          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+          <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-widest text-text-muted">
             Navigation
           </p>
         )}
@@ -149,7 +149,7 @@ export function Sidebar() {
 
               {/* Navigation */}
               <div className="px-2 pt-4">
-                <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+                <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-widest text-text-muted">
                   Navigation
                 </p>
                 <nav aria-label="Main navigation" className="space-y-1">

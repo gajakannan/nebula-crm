@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ export function Popover({ trigger, children, className }: PopoverProps) {
   const triggerRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
+  const contentId = useId();
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -63,15 +64,33 @@ export function Popover({ trigger, children, className }: PopoverProps) {
     };
   }, [open, close, updatePosition]);
 
-  // Attach ref + onClick directly to the trigger element (no wrapper div)
+  const isNativeInteractiveElement = (node: React.ReactElement<Record<string, unknown>>) =>
+    typeof node.type === 'string' && ['button', 'a', 'input', 'select', 'textarea'].includes(node.type);
+
+  // Attach ref + handlers directly to the trigger element (no wrapper div)
   const clonedTrigger = React.isValidElement(trigger)
     ? React.cloneElement(trigger as React.ReactElement<Record<string, unknown>>, {
         ref: triggerRef,
+        'aria-haspopup': 'dialog',
+        'aria-expanded': open,
+        'aria-controls': open ? contentId : undefined,
+        ...(isNativeInteractiveElement(trigger as React.ReactElement<Record<string, unknown>>)
+          ? {}
+          : { role: 'button', tabIndex: 0 }),
         onClick: (e: React.MouseEvent) => {
           const originalOnClick = (trigger as React.ReactElement<Record<string, unknown>>).props
             .onClick as ((e: React.MouseEvent) => void) | undefined;
           originalOnClick?.(e);
           handleToggle();
+        },
+        onKeyDown: (e: React.KeyboardEvent) => {
+          const originalOnKeyDown = (trigger as React.ReactElement<Record<string, unknown>>).props
+            .onKeyDown as ((e: React.KeyboardEvent) => void) | undefined;
+          originalOnKeyDown?.(e);
+          if (!isNativeInteractiveElement(trigger as React.ReactElement<Record<string, unknown>>) && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            handleToggle();
+          }
         },
         className: cn(
           (trigger as React.ReactElement<Record<string, unknown>>).props.className as string | undefined,
@@ -79,9 +98,17 @@ export function Popover({ trigger, children, className }: PopoverProps) {
         ),
       })
     : (
-        <div ref={triggerRef as React.RefObject<HTMLDivElement>} onClick={handleToggle} className="cursor-pointer">
+        <button
+          ref={triggerRef as React.RefObject<HTMLButtonElement>}
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-controls={open ? contentId : undefined}
+          onClick={handleToggle}
+          className="cursor-pointer"
+        >
           {trigger}
-        </div>
+        </button>
       );
 
   return (
@@ -91,7 +118,10 @@ export function Popover({ trigger, children, className }: PopoverProps) {
         rect &&
         createPortal(
           <div
+            id={contentId}
             ref={contentRef}
+            role="dialog"
+            aria-modal="false"
             className={cn(
               'fixed z-50 glass-card rounded-xl p-4 shadow-2xl',
               className,

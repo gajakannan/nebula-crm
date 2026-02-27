@@ -124,6 +124,7 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - `planning-mds/BLUEPRINT.md` Section 3 (screens for this feature)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - API contracts for THIS FEATURE ONLY
+   - `agents/frontend-developer/references/ux-audit-ruleset.md`
 3. **Execute responsibilities (feature-scoped):**
    - Create React components for feature screens
    - Implement forms for this feature (React Hook Form + AJV with JSON Schema)
@@ -131,17 +132,20 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - Add routing for feature screens
    - Style with Tailwind + shadcn/ui
    - Write component tests
+   - Apply and pass UX rule-set checks for this feature's UI changes
 4. **Follow SOLUTION-PATTERNS.md:**
    - React Hook Form for forms
    - AJV + JSON Schema for validation
    - TanStack Query for API
    - Tailwind + shadcn/ui for styling
+   - UX rule-set compliance (`agents/frontend-developer/references/ux-audit-ruleset.md`)
 5. **Outputs (feature-specific):**
    - React components (feature screens)
    - Form implementations
    - TanStack Query hooks
    - Routing updates
    - Component tests
+   - UX audit evidence for this feature (command output + dark/light verification notes)
 
 #### 1c. AI Engineer (Feature Scope, if AI scope)
 1. **Activate AI Engineer agent** by reading `agents/ai-engineer/SKILL.md`
@@ -228,6 +232,9 @@ Each agent validates their feature work:
    - [ ] API integration works for feature
    - [ ] Component tests passing
    - [ ] SOLUTION-PATTERNS.md followed
+   - [ ] UX rule-set checks passed for this feature (`agents/frontend-developer/references/ux-audit-ruleset.md`)
+   - [ ] `pnpm --dir experience lint`, `lint:theme`, `build`, and `test` passed
+   - [ ] `pnpm --dir experience test:visual:theme` passed when style/theme changed
    - [ ] Feature acceptance criteria met
 
 3. **AI Engineer self-review (if AI scope):**

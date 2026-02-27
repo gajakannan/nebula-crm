@@ -19,7 +19,7 @@ export function OpportunityMiniCard({ item }: OpportunityMiniCardProps) {
       </div>
       {item.assignedUserInitials && (
         <span
-          className="ml-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-nebula-violet/10 text-[10px] font-medium text-nebula-violet/80"
+          className="ml-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-nebula-violet/10 text-xs font-medium text-nebula-violet/80"
           title={item.assignedUserDisplayName ?? undefined}
         >
           {item.assignedUserInitials}

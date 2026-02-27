@@ -43,6 +43,7 @@ Execute these review agents **in parallel**:
    - Application runtime validation outputs (test, lint, SAST, dependency scan reports)
    - `planning-mds/BLUEPRINT.md` (requirements and architecture)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
+   - `agents/frontend-developer/references/ux-audit-ruleset.md` (for frontend UX compliance checks)
    - User stories with acceptance criteria
 
 3. **Execute code review:**
@@ -56,6 +57,7 @@ Execute these review agents **in parallel**:
    - Review error handling patterns
    - Check for over-engineering or under-engineering
    - Validate SOLUTION-PATTERNS.md compliance
+   - Validate frontend UX rule-set compliance when UI code changed
 
 4. **Produce code review report:**
    ```markdown
@@ -90,6 +92,7 @@ Execute these review agents **in parallel**:
    - [ ] Clean architecture layers respected
    - [ ] SOLID principles followed
    - [ ] SOLUTION-PATTERNS.md patterns applied
+   - [ ] Frontend UX rule-set checks passed (if frontend changed)
    - [ ] Naming conventions consistent
    - [ ] Error handling appropriate
 

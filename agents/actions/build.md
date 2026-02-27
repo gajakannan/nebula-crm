@@ -130,6 +130,7 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - `planning-mds/BLUEPRINT.md` Section 3 (screens, user stories)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - `planning-mds/api/` (OpenAPI contracts to implement against)
+   - `agents/frontend-developer/references/ux-audit-ruleset.md`
 3. **Execute responsibilities:**
    - Create React components for screens
    - Implement forms with React Hook Form + AJV (JSON Schema) validation
@@ -137,11 +138,13 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - Implement routing and navigation
    - Style with Tailwind + shadcn/ui components
    - Write component tests
+   - Apply and pass UX rule-set checks for changed UI flows
 4. **Follow SOLUTION-PATTERNS.md:**
    - React Hook Form for all forms
    - AJV + JSON Schema for validation
    - TanStack Query for API calls
    - Tailwind + shadcn/ui for styling
+   - UX rule-set compliance (`agents/frontend-developer/references/ux-audit-ruleset.md`)
 5. **Outputs:**
    - React components (pages, layouts, features)
    - TypeScript types and interfaces
@@ -149,6 +152,7 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - Form implementations
    - Routing configuration
    - Component tests
+   - UX audit evidence (required command outputs + dark/light validation notes)
 
 #### 1c. Quality Engineer
 1. **Activate Quality Engineer agent** by reading `agents/quality-engineer/SKILL.md`
@@ -289,6 +293,9 @@ Each agent validates their own work before proceeding to code review:
    - [ ] API integration successful
    - [ ] Component tests passing
    - [ ] SOLUTION-PATTERNS.md followed (React Hook Form, AJV, TanStack Query)
+   - [ ] UX rule-set checks passed for touched UI (`agents/frontend-developer/references/ux-audit-ruleset.md`)
+   - [ ] `pnpm --dir experience lint`, `lint:theme`, `build`, and `test` passed
+   - [ ] `pnpm --dir experience test:visual:theme` passed when style/theme changed
    - [ ] All acceptance criteria met
    - [ ] No console errors
 

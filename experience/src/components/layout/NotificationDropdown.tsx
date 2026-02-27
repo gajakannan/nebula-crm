@@ -62,7 +62,7 @@ export function NotificationDropdown({ open, onToggle, onClose }: NotificationDr
         createPortal(
           <div
             ref={contentRef}
-            className="fixed z-50 glass-card rounded-xl p-4 shadow-2xl"
+            className="fixed z-50 glass-card popover-glass rounded-xl p-4 shadow-2xl"
             style={{
               top: triggerRef.current
                 ? triggerRef.current.getBoundingClientRect().bottom + 8

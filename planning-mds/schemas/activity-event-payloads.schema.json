@@ -7,7 +7,7 @@
   "definitions": {
 
     "BrokerCreated": {
-      "description": "Emitted when a new broker record is created (F1-S1).",
+      "description": "Emitted when a new broker record is created (F0002-S0001).",
       "type": "object",
       "required": ["legalName", "licenseNumber", "state"],
       "properties": {
@@ -22,7 +22,7 @@
     },
 
     "BrokerUpdated": {
-      "description": "Emitted when broker fields are modified, excluding status-only changes (F1-S4). The changedFields object contains only the fields that changed, with before/after values.",
+      "description": "Emitted when broker fields are modified, excluding status-only changes (F0002-S0004). The changedFields object contains only the fields that changed, with before/after values.",
       "type": "object",
       "required": ["changedFields"],
       "properties": {
@@ -45,7 +45,7 @@
     },
 
     "BrokerStatusChanged": {
-      "description": "Emitted when broker status specifically changes (e.g., Active → Inactive). This is a refinement of BrokerUpdated — when the status field changes, emit BrokerStatusChanged instead of BrokerUpdated for clearer feed descriptions (F1-S4).",
+      "description": "Emitted when broker status specifically changes (e.g., Active → Inactive). This is a refinement of BrokerUpdated — when the status field changes, emit BrokerStatusChanged instead of BrokerUpdated for clearer feed descriptions (F0002-S0004).",
       "type": "object",
       "required": ["fromStatus", "toStatus"],
       "properties": {
@@ -57,7 +57,7 @@
     },
 
     "BrokerDeleted": {
-      "description": "Emitted when a broker is soft-deleted (F1-S5). Payload is empty — the event itself records the actor and timestamp.",
+      "description": "Emitted when a broker is soft-deleted (F0002-S0005). Payload is empty — the event itself records the actor and timestamp.",
       "type": "object",
       "properties": {},
       "additionalProperties": false,
@@ -65,7 +65,7 @@
     },
 
     "ContactCreated": {
-      "description": "Emitted when a contact is added to a broker (F1-S6).",
+      "description": "Emitted when a contact is added to a broker (F0002-S0006).",
       "type": "object",
       "required": ["contactId", "fullName", "brokerId"],
       "properties": {
@@ -81,7 +81,7 @@
     },
 
     "ContactUpdated": {
-      "description": "Emitted when a contact's fields are modified (F1-S6).",
+      "description": "Emitted when a contact's fields are modified (F0002-S0006).",
       "type": "object",
       "required": ["contactId", "fullName", "changedFields"],
       "properties": {
@@ -105,7 +105,7 @@
     },
 
     "ContactDeleted": {
-      "description": "Emitted when a contact is soft-deleted from a broker (F1-S6).",
+      "description": "Emitted when a contact is soft-deleted from a broker (F0002-S0006).",
       "type": "object",
       "required": ["contactId", "fullName"],
       "properties": {
@@ -117,7 +117,7 @@
     },
 
     "TaskCreated": {
-      "description": "Emitted when a task is created (F5-S1, referenced by F0-S3/S5).",
+      "description": "Emitted when a task is created (F0003-S0001, referenced by F0001-S0003 and F0001-S0005).",
       "type": "object",
       "required": ["title", "assignedTo"],
       "properties": {
@@ -132,7 +132,7 @@
     },
 
     "TaskUpdated": {
-      "description": "Emitted when task fields are modified (excluding status transitions to/from Done) (F5-S2).",
+      "description": "Emitted when task fields are modified (excluding status transitions to/from Done) (F0003-S0002).",
       "type": "object",
       "required": ["changedFields"],
       "properties": {
@@ -154,7 +154,7 @@
     },
 
     "TaskCompleted": {
-      "description": "Emitted when task status transitions to Done (F5-S2).",
+      "description": "Emitted when task status transitions to Done (F0003-S0002).",
       "type": "object",
       "required": ["completedAt"],
       "properties": {
@@ -165,7 +165,7 @@
     },
 
     "TaskReopened": {
-      "description": "Emitted when task status transitions from Done back to Open or InProgress (F5-S2).",
+      "description": "Emitted when task status transitions from Done back to Open or InProgress (F0003-S0002).",
       "type": "object",
       "required": ["previousCompletedAt"],
       "properties": {
@@ -176,7 +176,7 @@
     },
 
     "TaskDeleted": {
-      "description": "Emitted when a task is soft-deleted (F5-S3). Payload is empty.",
+      "description": "Emitted when a task is soft-deleted (F0003-S0003). Payload is empty.",
       "type": "object",
       "properties": {},
       "additionalProperties": false,
@@ -187,25 +187,25 @@
   "eventTypeRegistry": {
     "description": "Canonical list of all EventType values, their EntityType, and which feature/story emits them.",
     "types": [
-      { "eventType": "BrokerCreated",       "entityType": "Broker",  "emittedBy": "F1-S1" },
-      { "eventType": "BrokerUpdated",       "entityType": "Broker",  "emittedBy": "F1-S4" },
-      { "eventType": "BrokerStatusChanged", "entityType": "Broker",  "emittedBy": "F1-S4" },
-      { "eventType": "BrokerDeleted",       "entityType": "Broker",  "emittedBy": "F1-S5" },
-      { "eventType": "ContactCreated",      "entityType": "Broker",  "emittedBy": "F1-S6" },
-      { "eventType": "ContactUpdated",      "entityType": "Broker",  "emittedBy": "F1-S6" },
-      { "eventType": "ContactDeleted",      "entityType": "Broker",  "emittedBy": "F1-S6" },
-      { "eventType": "TaskCreated",         "entityType": "Task",    "emittedBy": "F5-S1" },
-      { "eventType": "TaskUpdated",         "entityType": "Task",    "emittedBy": "F5-S2" },
-      { "eventType": "TaskCompleted",       "entityType": "Task",    "emittedBy": "F5-S2" },
-      { "eventType": "TaskReopened",        "entityType": "Task",    "emittedBy": "F5-S2" },
-      { "eventType": "TaskDeleted",         "entityType": "Task",    "emittedBy": "F5-S3" }
+      { "eventType": "BrokerCreated",       "entityType": "Broker",  "emittedBy": "F0002-S0001" },
+      { "eventType": "BrokerUpdated",       "entityType": "Broker",  "emittedBy": "F0002-S0004" },
+      { "eventType": "BrokerStatusChanged", "entityType": "Broker",  "emittedBy": "F0002-S0004" },
+      { "eventType": "BrokerDeleted",       "entityType": "Broker",  "emittedBy": "F0002-S0005" },
+      { "eventType": "ContactCreated",      "entityType": "Broker",  "emittedBy": "F0002-S0006" },
+      { "eventType": "ContactUpdated",      "entityType": "Broker",  "emittedBy": "F0002-S0006" },
+      { "eventType": "ContactDeleted",      "entityType": "Broker",  "emittedBy": "F0002-S0006" },
+      { "eventType": "TaskCreated",         "entityType": "Task",    "emittedBy": "F0003-S0001" },
+      { "eventType": "TaskUpdated",         "entityType": "Task",    "emittedBy": "F0003-S0002" },
+      { "eventType": "TaskCompleted",       "entityType": "Task",    "emittedBy": "F0003-S0002" },
+      { "eventType": "TaskReopened",        "entityType": "Task",    "emittedBy": "F0003-S0002" },
+      { "eventType": "TaskDeleted",         "entityType": "Task",    "emittedBy": "F0003-S0003" }
     ]
   },
 
   "implementationNotes": {
-    "descriptionGeneration": "The descriptionTemplate field on each definition shows how to derive the human-readable eventDescription for the activity feed (F0-S4, F1-S7). Templates use {fieldName} placeholders resolved from the payload at query time. The backend service that creates timeline events should pre-render the eventDescription string and store it alongside EventPayloadJson — this avoids query-time template resolution and keeps the feed query simple.",
+    "descriptionGeneration": "The descriptionTemplate field on each definition shows how to derive the human-readable eventDescription for the activity feed (F0001-S0004, F0002-S0007). Templates use {fieldName} placeholders resolved from the payload at query time. The backend service that creates timeline events should pre-render the eventDescription string and store it alongside EventPayloadJson — this avoids query-time template resolution and keeps the feed query simple.",
     "changedFieldsPattern": "For update events (BrokerUpdated, ContactUpdated, TaskUpdated), the changedFields object captures before/after values. Only include fields that actually changed — do not include unchanged fields. The changedFieldNames placeholder in descriptionTemplate is a comma-joined list of the keys in changedFields (e.g., 'legalName, state').",
-    "contactEventsEntityType": "Contact events use EntityType='Broker' (not 'Contact') because they appear in the Broker Activity Feed (F0-S4) and Broker 360 Timeline (F1-S7). The EntityId is the Broker's ID, not the Contact's ID. The Contact's ID is stored in the payload.",
+    "contactEventsEntityType": "Contact events use EntityType='Broker' (not 'Contact') because they appear in the Broker Activity Feed (F0001-S0004) and Broker 360 Timeline (F0002-S0007). The EntityId is the Broker's ID, not the Contact's ID. The Contact's ID is stored in the payload.",
     "extensibility": "When new entity types are added (Submission, Renewal, Account), add their event definitions to this schema. Follow the same pattern: required fields for context, changedFields for updates, empty payload for deletes."
   }
 }

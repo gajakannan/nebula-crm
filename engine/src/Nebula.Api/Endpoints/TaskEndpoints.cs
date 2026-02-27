@@ -20,7 +20,7 @@ public static class TaskEndpoints
             return result is null ? ProblemDetailsHelper.NotFound("Task", taskId) : Results.Ok(result);
         }).WithTags("Tasks").RequireAuthorization();
 
-        // F5 write endpoints NOT registered — return 404 by default
+        // F0003 write endpoints NOT registered — return 404 by default
 
         return app;
     }

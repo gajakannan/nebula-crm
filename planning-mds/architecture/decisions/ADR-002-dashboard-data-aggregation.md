@@ -6,13 +6,13 @@
 
 **Deciders:** Architecture Team
 
-**Technical Story:** Phase B — Dashboard-first architecture (F0)
+**Technical Story:** Phase B — Dashboard-first architecture (F0001)
 
 ---
 
 ## Context and Problem Statement
 
-The Nebula Dashboard (F0) displays five widgets that pull data from multiple backend modules:
+The Nebula Dashboard (F0001) displays five widgets that pull data from multiple backend modules:
 
 | Widget | Source Modules | Query Shape |
 |--------|---------------|-------------|

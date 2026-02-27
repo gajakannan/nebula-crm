@@ -250,22 +250,22 @@ Examples:
 **Epic E1: Customer Relationship Management**
 
 **MVP Stories:**
-- S1: Create customer with basic information
-- S2: View customer list with search and filtering
-- S3: View customer 360 detail screen
-- S4: Update customer information
-- S5: Delete customer (soft delete)
-- S6: View customer timeline events
+- F0001-S0001: Create customer with basic information
+- F0001-S0002: View customer list with search and filtering
+- F0001-S0003: View customer 360 detail screen
+- F0001-S0004: Update customer information
+- F0001-S0005: Delete customer (soft delete)
+- F0001-S0006: View customer timeline events
 
 **Phase 1 Stories:**
-- S7: Manage customer hierarchy (parent/sub-customer)
-- S8: Manage customer addresses
-- S9: Bulk import customers from CSV
-- S10: Export customer data
+- F0001-S0007: Manage customer hierarchy (parent/sub-customer)
+- F0001-S0008: Manage customer addresses
+- F0001-S0009: Bulk import customers from CSV
+- F0001-S0010: Export customer data
 
 **Future Stories:**
-- S11: Customer performance analytics
-- S12: Automated customer health scoring
+- F0001-S0011: Customer performance analytics
+- F0001-S0012: Automated customer health scoring
 
 ---
 
@@ -467,11 +467,11 @@ Use the "Five Whys" technique:
 > As a Sales Operations Manager, I want to manage customers, so I can track relationships
 
 **✅ Good:**
-> - S1: Create new customer
-> - S2: View customer list
-> - S3: View customer 360
-> - S4: Update customer
-> - S5: Delete customer
+> - F0001-S0001: Create new customer
+> - F0001-S0002: View customer list
+> - F0001-S0003: View customer 360
+> - F0001-S0004: Update customer
+> - F0001-S0005: Delete customer
 
 **Fix:** Break large stories into thin vertical slices
 

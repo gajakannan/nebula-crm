@@ -16,18 +16,21 @@ function formatStatus(status: string): string {
 }
 
 export function OpportunityPill({ status, count, colorGroup, entityType }: OpportunityPillProps) {
+  const statusLabel = formatStatus(status);
   const trigger = (
-    <span
+    <button
+      type="button"
+      aria-label={`${statusLabel}: ${count} opportunities`}
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white/90 transition-opacity hover:opacity-80',
         opportunityBg(colorGroup),
       )}
     >
-      {formatStatus(status)}
-      <span className="rounded-full bg-black/20 px-1.5 py-0.5 text-[10px] font-bold">
+      {statusLabel}
+      <span className="rounded-full bg-black/20 px-1.5 py-0.5 text-xs font-bold">
         {count}
       </span>
-    </span>
+    </button>
   );
 
   return (

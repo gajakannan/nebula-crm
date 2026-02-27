@@ -8,12 +8,14 @@ applies_to: product-manager
 
 Use this template for all user stories to ensure consistency and completeness. Keep it domain-neutral; project-specific examples live in `planning-mds/examples/`.
 
-One story per file. Do not combine multiple stories in a single markdown document.
+One story per file. Story files are colocated in their feature folder at `planning-mds/features/F{NNNN}-{slug}/`.
+
+Filename convention: `F{NNNN}-S{NNNN}-{slug}.md` (e.g., `F0001-S0001-create-record.md`).
 
 ## Story Header
 
-**Story ID:** [S1, S2, ...]
-**Epic/Feature:** [E1 or F1]
+**Story ID:** [F0001-S0001, F0001-S0002, ...]
+**Feature:** [F0001 — Feature Name]
 **Title:** [Short descriptive title]
 **Priority:** [Critical | High | Medium | Low]
 **Phase:** [MVP | Phase 1 | Phase 2 | Future]

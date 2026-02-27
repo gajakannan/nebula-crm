@@ -44,8 +44,8 @@ Build Complete
 
 1. **Activate Architect agent** by reading `agents/architect/SKILL.md`
 2. **Read context:**
-   - `planning-mds/INCEPTION.md`
-   - `planning-mds/stories/`
+   - `planning-mds/BLUEPRINT.md`
+   - `planning-mds/features/` (feature folders with colocated stories)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - `planning-mds/api/`
 3. **Produce assembly plan:**
@@ -96,9 +96,9 @@ All stack-specific execution (compile/tests/scans) must run in application runti
 #### 1a. Backend Developer
 1. **Activate Backend Developer agent** by reading `agents/backend-developer/SKILL.md`
 2. **Read context:**
-   - `planning-mds/INCEPTION.md` Section 4 (architecture, data model, API contracts)
+   - `planning-mds/BLUEPRINT.md` Section 4 (architecture, data model, API contracts)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
-   - `planning-mds/stories/` (user stories to implement)
+   - `planning-mds/features/` (user stories to implement)
 3. **Execute responsibilities:**
    - Implement domain entities matching data model
    - Create EF Core DbContext and entities
@@ -127,9 +127,10 @@ All stack-specific execution (compile/tests/scans) must run in application runti
 #### 1b. Frontend Developer
 1. **Activate Frontend Developer agent** by reading `agents/frontend-developer/SKILL.md`
 2. **Read context:**
-   - `planning-mds/INCEPTION.md` Section 3 (screens, user stories)
+   - `planning-mds/BLUEPRINT.md` Section 3 (screens, user stories)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - `planning-mds/api/` (OpenAPI contracts to implement against)
+   - `agents/frontend-developer/references/ux-audit-ruleset.md`
 3. **Execute responsibilities:**
    - Create React components for screens
    - Implement forms with React Hook Form + AJV (JSON Schema) validation
@@ -137,11 +138,13 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - Implement routing and navigation
    - Style with Tailwind + shadcn/ui components
    - Write component tests
+   - Apply and pass UX rule-set checks for changed UI flows
 4. **Follow SOLUTION-PATTERNS.md:**
    - React Hook Form for all forms
    - AJV + JSON Schema for validation
    - TanStack Query for API calls
    - Tailwind + shadcn/ui for styling
+   - UX rule-set compliance (`agents/frontend-developer/references/ux-audit-ruleset.md`)
 5. **Outputs:**
    - React components (pages, layouts, features)
    - TypeScript types and interfaces
@@ -149,12 +152,13 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - Form implementations
    - Routing configuration
    - Component tests
+   - UX audit evidence (required command outputs + dark/light validation notes)
 
 #### 1c. Quality Engineer
 1. **Activate Quality Engineer agent** by reading `agents/quality-engineer/SKILL.md`
 2. **Read context:**
-   - `planning-mds/stories/` (acceptance criteria)
-   - `planning-mds/INCEPTION.md` Section 4.4 (workflows)
+   - `planning-mds/features/` (acceptance criteria from colocated story files)
+   - `planning-mds/BLUEPRINT.md` Section 4.4 (workflows)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
 3. **Execute responsibilities:**
    - Create test plan mapping stories to test cases
@@ -196,7 +200,7 @@ All stack-specific execution (compile/tests/scans) must run in application runti
      * AI-Enabled 3-Tier (backend + frontend + AI + database)
    - Consult architecture references:
      * Read `planning-mds/architecture/SOLUTION-PATTERNS.md`
-     * Read `planning-mds/INCEPTION.md` Section 4 (NFRs)
+     * Read `planning-mds/BLUEPRINT.md` Section 4 (NFRs)
      * Read `agents/devops/references/containerization-guide.md`
    - Define service specifications (runtime, ports, dependencies, env vars)
    - Document deployment targets (dev, staging, prod)
@@ -240,9 +244,9 @@ All stack-specific execution (compile/tests/scans) must run in application runti
 #### 1e. AI Engineer (if AI scope)
 1. **Activate AI Engineer agent** by reading `agents/ai-engineer/SKILL.md`
 2. **Read context:**
-   - `planning-mds/INCEPTION.md` (AI-related stories and constraints)
+   - `planning-mds/BLUEPRINT.md` (AI-related stories and constraints)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
-   - `planning-mds/stories/` (AI feature acceptance criteria)
+   - `planning-mds/features/` (AI feature acceptance criteria in story files)
    - Existing `neuron/` code (if present)
 3. **Execute responsibilities:**
    - Implement AI features in `neuron/` (model integration, prompts, workflows, tools)
@@ -289,6 +293,9 @@ Each agent validates their own work before proceeding to code review:
    - [ ] API integration successful
    - [ ] Component tests passing
    - [ ] SOLUTION-PATTERNS.md followed (React Hook Form, AJV, TanStack Query)
+   - [ ] UX rule-set checks passed for touched UI (`agents/frontend-developer/references/ux-audit-ruleset.md`)
+   - [ ] `pnpm --dir experience lint`, `lint:theme`, `build`, and `test` passed
+   - [ ] `pnpm --dir experience test:visual:theme` passed when style/theme changed
    - [ ] All acceptance criteria met
    - [ ] No console errors
 
@@ -339,9 +346,9 @@ Each agent validates their own work before proceeding to code review:
 
 2. **Read context:**
    - All code produced in Step 1
-   - `planning-mds/INCEPTION.md` (requirements and architecture)
+   - `planning-mds/BLUEPRINT.md` (requirements and architecture)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
-   - `planning-mds/stories/` (acceptance criteria)
+   - `planning-mds/features/` (acceptance criteria in colocated story files)
 
 3. **Execute code review responsibilities:**
    - Review code structure and organization
@@ -515,7 +522,7 @@ Each agent validates their own work before proceeding to code review:
 
 2. **Read context:**
    - All code produced in Step 1
-   - `planning-mds/INCEPTION.md` Section 4.5 (authorization model)
+   - `planning-mds/BLUEPRINT.md` Section 4.5 (authorization model)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - `planning-mds/security/` (threat model, if exists)
 
@@ -876,7 +883,7 @@ This security gate enforcement aligns with `docs/ORCHESTRATION-CONTRACT.md` Sect
 
 **Execution Instructions:**
 
-If `planning-mds/INCEPTION.md` Section 4 defines measurable NFR targets, validate implementation against them and record results:
+If `planning-mds/BLUEPRINT.md` Section 4 defines measurable NFR targets, validate implementation against them and record results:
 
 - [ ] API latency target (for example p95)
 - [ ] Throughput/concurrency target

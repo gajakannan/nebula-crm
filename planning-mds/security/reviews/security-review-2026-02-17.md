@@ -12,7 +12,7 @@ Scope: Planning artifacts (pre-implementation)
 ## Evidence Reviewed
 
 - planning-mds/security/*
-- planning-mds/INCEPTION.md (Sections 3-4)
+- planning-mds/BLUEPRINT.md (Sections 3-4)
 - planning-mds/api/nebula-api.yaml
 - planning-mds/architecture/decisions/*
 

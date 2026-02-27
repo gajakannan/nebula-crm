@@ -1,7 +1,7 @@
 # UX Principles and Best Practices
 
-**Version:** 1.0
-**Last Updated:** 2026-01-29
+**Version:** 1.1
+**Last Updated:** 2026-02-27
 **Applies To:** Frontend Developer
 
 ---
@@ -9,6 +9,17 @@
 ## Overview
 
 This document compiles user experience (UX) principles and best practices to guide the design and implementation of the application's frontend. These principles ensure the application is intuitive, efficient, and delightful to use.
+
+## Enforcement in This Project
+
+This guide is conceptual. For release-gating implementation rules, use:
+
+- `agents/frontend-developer/references/ux-audit-ruleset.md` (mandatory checklist and pass/fail rules)
+- `agents/frontend-developer/SKILL.md` (Definition of Done and workflow commands)
+
+Project-specific rule:
+
+- Use semantic theme tokens/classes for app UI (`text-text-*`, `bg-surface-*`, `border-surface-*`) rather than raw palette classes.
 
 ---
 
@@ -365,11 +376,11 @@ Practical design tips by Tailwind CSS creators. Key takeaways:
 - **Limit color choices** - 3-4 shades per color is plenty
 
 ```tsx
-// ✅ GOOD - Clear hierarchy
+// ✅ GOOD - Clear hierarchy with semantic theme tokens
 <div>
-  <h1 className="text-2xl font-bold text-gray-900">Customer Details</h1>
-  <p className="text-sm font-medium text-gray-700">Contact Information</p>
-  <p className="text-sm text-gray-500">Additional details below</p>
+  <h1 className="text-2xl font-bold text-text-primary">Customer Details</h1>
+  <p className="text-sm font-medium text-text-secondary">Contact Information</p>
+  <p className="text-sm text-text-muted">Additional details below</p>
 </div>
 
 // ❌ BAD - No hierarchy

@@ -4,10 +4,10 @@ type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'info' | 'grad
 
 const variantClasses: Record<BadgeVariant, string> = {
   default: 'border border-surface-border bg-surface-highlight text-text-secondary',
-  success: 'bg-status-success/15 text-status-success',
-  warning: 'bg-status-warning/15 text-status-warning',
-  error: 'bg-status-error/15 text-status-error',
-  info: 'bg-status-info/15 text-status-info',
+  success: 'border border-status-success/35 bg-status-success/20 text-text-primary',
+  warning: 'border border-status-warning/35 bg-status-warning/20 text-text-primary',
+  error: 'border border-status-error/35 bg-status-error/20 text-text-primary',
+  info: 'border border-status-info/35 bg-status-info/20 text-text-primary',
   gradient: 'bg-gradient-to-r from-nebula-violet/20 to-nebula-fuchsia/20 text-nebula-fuchsia border border-nebula-fuchsia/20',
 };
 

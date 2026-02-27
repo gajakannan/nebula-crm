@@ -6,13 +6,13 @@
 
 **Deciders:** Architecture Team
 
-**Technical Story:** Phase B — Dashboard F0 (S3: My Tasks, S5: Nudge Cards)
+**Technical Story:** Phase B — Dashboard F0001 (F0001-S0003: My Tasks, F0001-S0005: Nudge Cards)
 
 ---
 
 ## Context and Problem Statement
 
-Two dashboard widgets — **My Tasks & Reminders (S3)** and **Nudge Cards (S5)** — depend on a Task entity that is not yet defined in the data model. Additionally, nudge cards aggregate time-sensitive items from three different sources (overdue tasks, stale submissions, upcoming renewals) into a prioritized list of up to 3 cards.
+Two dashboard widgets — **My Tasks & Reminders (F0001-S0003)** and **Nudge Cards (F0001-S0005)** — depend on a Task entity that is not yet defined in the data model. Additionally, nudge cards aggregate time-sensitive items from three different sources (overdue tasks, stale submissions, upcoming renewals) into a prioritized list of up to 3 cards.
 
 **Key questions:**
 1. What is the minimal Task entity shape needed for Dashboard MVP?
@@ -23,8 +23,8 @@ Two dashboard widgets — **My Tasks & Reminders (S3)** and **Nudge Cards (S5)**
 
 ## Decision Drivers
 
-- **Dashboard MVP:** Tasks widget and nudge cards are both High priority stories in F0
-- **Feature F5 Alignment:** Task entity must support the future Task Center feature without rework
+- **Dashboard MVP:** Tasks widget and nudge cards are both High priority stories in F0001
+- **Feature F0003 Alignment:** Task entity must support the future Task Center feature without rework
 - **ABAC:** Task visibility must respect ownership (AssignedTo = current user) plus general ABAC scope
 - **Performance:** Nudge computation must complete within 500 ms (p95) as part of the dashboard budget
 - **Auditability:** Task mutations (create, update, complete) must generate timeline events
@@ -226,7 +226,7 @@ function mergeNudges(overdueTasks[], staleSubmissions[], upcomingRenewals[]) →
 | RenewalDate = today | **Eligible.** Lower bound is inclusive. |
 | RenewalDate = today + 14 | **Eligible.** Upper bound is inclusive. |
 | RenewalDate = today + 15 | **Not eligible.** Outside the 14-day window. |
-| Linked entity is soft-deleted | **Task excluded.** Overdue task nudge is skipped; the task still appears in the My Tasks widget (S3) with "[Deleted]" label. |
+| Linked entity is soft-deleted | **Task excluded.** Overdue task nudge is skipped; the task still appears in the My Tasks widget (F0001-S0003) with "[Deleted]" label. |
 | All 3 slots filled by overdue tasks | **Stale/renewal nudges suppressed.** Priority ordering is strict — lower priority types only fill remaining slots. |
 | Two tasks have same DueDate | **Tie-break by Task.Id ascending.** Deterministic — same user always sees the same card. |
 | Zero candidates across all types | **Return empty array.** Frontend hides the "Needs Your Attention" section entirely. |
@@ -260,7 +260,7 @@ EXTRACT(DAY FROM (CURRENT_DATE - wt_latest.OccurredAt))::int
 
 where `wt_latest` is the most recent WorkflowTransition for the entity, resolved via `LEFT JOIN LATERAL ... ORDER BY OccurredAt DESC LIMIT 1`. Uses the existing index on `WorkflowTransition(EntityId, OccurredAt DESC)`.
 
-**Edge case:** If no WorkflowTransition exists for an entity (e.g., newly created submission with no transitions yet), `DaysInCurrentStatus` is NULL. NULL values are excluded from stale submission nudges (NULL fails the `>= 6` comparison). For pipeline mini-cards (S2), NULL renders as "0" days in status.
+**Edge case:** If no WorkflowTransition exists for an entity (e.g., newly created submission with no transitions yet), `DaysInCurrentStatus` is NULL. NULL values are excluded from stale submission nudges (NULL fails the `>= 6` comparison). For pipeline mini-cards (F0001-S0002), NULL renders as "0" days in status.
 
 ---
 
@@ -268,7 +268,7 @@ where `wt_latest` is the most recent WorkflowTransition for the entity, resolved
 
 ### Positive
 
-- **Minimal Entity:** Task table is lean enough for MVP dashboard but extensible for F5 (Task Center)
+- **Minimal Entity:** Task table is lean enough for MVP dashboard but extensible for F0003 (Task Center)
 - **No New Module:** Task lives in the existing TimelineAudit module (or a new lightweight TaskManagement module within the monolith)
 - **Reusable:** Nudge endpoint can be extended with new nudge types (e.g., "pending approval") without changing the frontend
 - **Testable:** Nudge priority logic is a pure function; unit-testable without database

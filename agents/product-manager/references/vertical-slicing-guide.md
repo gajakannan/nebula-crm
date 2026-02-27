@@ -329,26 +329,26 @@ Build happy path, then error cases:
 ### Step 2: Apply CRUD Pattern
 
 **Customer:**
-- S1: View customer list
-- S2: Create customer
-- S3: View customer 360
-- S4: Update customer
-- S5: Delete customer
+- F0001-S0001: View customer list
+- F0001-S0002: Create customer
+- F0001-S0003: View customer 360
+- F0001-S0004: Update customer
+- F0001-S0005: Delete customer
 
 **Addresses (Separate Epic):**
-- S6: View addresses for customer
-- S7: Add address to customer
-- S8: Update address
-- S9: Remove address
+- F0002-S0001: View addresses for customer
+- F0002-S0002: Add address to customer
+- F0002-S0003: Update address
+- F0002-S0004: Remove address
 
 **Hierarchy (Separate Epic):**
-- S10: View customer hierarchy
-- S11: Assign parent customer
-- S12: View sub-customers
+- F0003-S0001: View customer hierarchy
+- F0003-S0002: Assign parent customer
+- F0003-S0003: View sub-customers
 
 **Orders (Separate Epic):**
-- S13: View orders for customer
-- S14: Link order to customer
+- F0004-S0001: View orders for customer
+- F0004-S0002: Link order to customer
 
 **Performance Metrics (Future Phase):**
 - Deferred - not MVP
@@ -356,19 +356,19 @@ Build happy path, then error cases:
 ### Step 3: Prioritize for MVP
 
 **MVP (Must Have):**
-- S1: View customer list ✓
-- S2: Create customer ✓
-- S3: View customer 360 ✓
-- S4: Update customer ✓
+- F0001-S0001: View customer list ✓
+- F0001-S0002: Create customer ✓
+- F0001-S0003: View customer 360 ✓
+- F0001-S0004: Update customer ✓
 
 **Phase 1 (Should Have):**
-- S5: Delete customer
-- S6: View addresses
-- S7: Add address
-- S10: View hierarchy
+- F0001-S0005: Delete customer
+- F0002-S0001: View addresses
+- F0002-S0002: Add address
+- F0003-S0001: View hierarchy
 
 **Future (Nice to Have):**
-- S11-S14: Advanced features
+- F0003-S0002 through F0004-S0002: Advanced features
 - Performance metrics
 
 ---

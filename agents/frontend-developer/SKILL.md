@@ -4,10 +4,10 @@ description: "Implements frontend UI components, forms, state management, and AP
 compatibility: ["manual-orchestration-contract"]
 metadata:
   allowed-tools: "Read Write Edit Bash(npm:*) Bash(npx:*) Bash(python:*)"
-  version: "2.1.0"
+  version: "2.3.0"
   author: "Nebula Framework Team"
   tags: ["frontend", "react", "typescript"]
-  last_updated: "2026-02-14"
+  last_updated: "2026-02-27"
 ---
 
 # Frontend Developer Agent
@@ -30,6 +30,7 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 8. **Requirement Alignment** - Implement only what's specified in screens/stories, do not invent features
 9. **Semantic Theming Discipline** - Use semantic theme tokens/classes (for example `text-text-primary`, `bg-surface-card`) and avoid raw palette utilities in app UI (`zinc/slate/gray/...`) so light/dark themes remain consistent
 10. **Vertical Slice Ownership** - Prefer feature-local organization in `experience/src/features/*` (components, hooks, API calls, types, tests) to reduce cognitive drift; keep only true primitives/utilities in shared locations
+11. **UX Rule-Set Compliance** - Apply `agents/frontend-developer/references/ux-audit-ruleset.md` on every UI change and treat blocking rules as non-negotiable quality gates
 
 ## Scope & Boundaries
 
@@ -184,19 +185,27 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 - Mock API calls in tests
 - Validate theme constraints with `pnpm --dir experience lint:theme`
 
+### 11. UX Rule-Set Enforcement
+- Run the rule-set checklist in `agents/frontend-developer/references/ux-audit-ruleset.md`
+- Use semantic interaction elements (`button`, `Link`) instead of clickable non-interactive wrappers
+- Enforce accessible component patterns for modal/popover/tabs (ARIA + keyboard + focus handling)
+- Verify readability/contrast in both dark and light themes
+- Collect objective evidence (lint/build/visual checks) before handoff
+
 ## Tools & Permissions
 
 **Allowed Tools:** Read, Write, Edit, Bash (for npm/pnpm commands)
 
 **Required Resources:**
-- `planning-mds/INCEPTION.md` - Sections 3.x (screens, stories) and 4.x (API contracts)
+- `planning-mds/BLUEPRINT.md` - Sections 3.x (screens, stories) and 4.x (API contracts)
 - `planning-mds/screens/` - Screen specifications
-- `planning-mds/stories/` - User stories with acceptance criteria
+- `planning-mds/features/` - Feature folders with colocated user stories and acceptance criteria
 - `planning-mds/api/` - OpenAPI contracts for API endpoints
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Frontend patterns
 - `experience/src/index.css` - Theme tokens and semantic color mappings
 - `experience/scripts/check-theme-semantic-classes.mjs` - Theme guard (blocks raw palette classes in app UI)
 - `experience/tests/visual/theme-smoke.spec.ts` - Light/dark visual smoke coverage examples
+- `agents/frontend-developer/references/ux-audit-ruleset.md` - Mandatory UX implementation and audit gate
 
 **Tech Stack:**
 - **Framework:** React 18 + TypeScript
@@ -333,11 +342,17 @@ experience/
 - [ ] Responsive design (mobile, tablet, desktop)
 - [ ] Light and dark theme states verified for UI changes
 - [ ] Accessibility tested (keyboard nav, screen reader)
+- [ ] UX ruleset P0/P1 checks pass (`agents/frontend-developer/references/ux-audit-ruleset.md`)
+- [ ] No clickable non-interactive wrappers (`div/span`) for user actions
 - [ ] TypeScript types complete (no `any` types)
 - [ ] Unit tests passing (≥80% coverage for business logic)
 - [ ] No console errors or warnings
 - [ ] Code follows established patterns in SOLUTION-PATTERNS.md
+- [ ] `pnpm --dir experience lint` passes
 - [ ] `pnpm --dir experience lint:theme` passes (no raw palette classes)
+- [ ] `pnpm --dir experience build` passes
+- [ ] `pnpm --dir experience test` passes
+- [ ] `pnpm --dir experience test:visual:theme` passes when styling/theme behavior changed
 - [ ] Feature-specific UI/hooks/types/API code is co-located in a feature slice (or a documented shared reuse reason exists)
 - [ ] Environment variables documented
 - [ ] README includes setup and run instructions
@@ -383,16 +398,26 @@ experience/
 - Test with screen reader
 - Check color contrast
 
-### 7. Build & Validate (Feedback Loop)
-1. Run `npm run build`
-2. If build fails → read error, fix issue, rebuild
-3. Run `npm test`
-4. If tests fail → read failure output, fix issue, retest
-5. Run `npm run lint`
-6. If lint fails → fix violations, re-lint
-7. Only proceed to optimization when build, tests, and lint pass
+### 7. Run UX Rule-Set Gate
+1. Execute checklist in `agents/frontend-developer/references/ux-audit-ruleset.md`
+2. Confirm semantic interaction elements (`button`, `a/Link`) are used correctly
+3. Validate dialog/popover/tabs keyboard + focus behavior
+4. Verify readability and contrast in dark and light themes
+5. Capture evidence notes/screenshots for handoff
 
-### 8. Optimize
+### 8. Build & Validate (Feedback Loop)
+1. Run `pnpm --dir experience lint`
+2. If lint fails → fix violations, re-lint
+3. Run `pnpm --dir experience lint:theme`
+4. If theme lint fails → replace raw palette classes with semantic theme tokens
+5. Run `pnpm --dir experience build`
+6. If build fails → read error, fix issue, rebuild
+7. Run `pnpm --dir experience test`
+8. If tests fail → read failure output, fix issue, retest
+9. When styling/theme behavior changes, run `pnpm --dir experience test:visual:theme`
+10. Only proceed to optimization when required checks pass
+
+### 9. Optimize
 - Code split routes
 - Lazy load heavy components
 - Memoize expensive computations
@@ -454,6 +479,7 @@ FRONTEND_TEST_CMD="npm test" sh agents/frontend-developer/scripts/run-tests.sh
 ## References
 
 Generic frontend best practices:
+- `agents/frontend-developer/references/ux-audit-ruleset.md` — **Mandatory UX gate for every frontend change**
 - `agents/frontend-developer/references/code-patterns.md` — **All code examples and implementation patterns**
 - `agents/frontend-developer/references/react-best-practices.md`
 - `agents/frontend-developer/references/typescript-patterns.md`

@@ -21,7 +21,7 @@ Blogger
 ## Inputs
 
 ### From Planning
-- `planning-mds/INCEPTION.md` (project context)
+- `planning-mds/BLUEPRINT.md` (project context)
 - `planning-mds/architecture/decisions/` (ADRs)
 - User stories and features
 

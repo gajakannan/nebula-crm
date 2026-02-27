@@ -256,7 +256,7 @@ export function OpportunityChart({ label, entityType, statuses, periodDays }: Op
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h3 className="text-xs font-medium uppercase tracking-wider text-text-muted">{label}</h3>
-          <span className="rounded-full border border-border-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-text-muted">
+          <span className="rounded-full border border-border-muted px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-text-muted">
             {periodDays}d flow
           </span>
         </div>
@@ -305,18 +305,11 @@ export function OpportunityChart({ label, entityType, statuses, periodDays }: Op
               : 'right-[calc(100%+6px)] text-right';
 
             const nodeElement = (
-              <div
+              <button
+                type="button"
                 className="absolute cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nebula-violet"
-                tabIndex={0}
-                role="button"
                 title={`${node.label} (${displayedCount} ${countLabel})`}
                 aria-label={`${node.label}: ${displayedCount} ${countLabel}. Inflow ${node.inflowCount}, outflow ${node.outflowCount}. Click for details.`}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    (e.target as HTMLElement).click();
-                  }
-                }}
                 style={{
                   left: node.x,
                   top: node.y,
@@ -331,17 +324,17 @@ export function OpportunityChart({ label, entityType, statuses, periodDays }: Op
                     boxShadow: `0 0 8px ${hex}25`,
                   }}
                 />
-                <span className="absolute -top-4 left-1/2 -translate-x-1/2 rounded bg-surface-panel/95 px-1 py-0.5 text-[9px] font-semibold leading-none text-text-secondary shadow-sm">
+                <span className="absolute -top-4 left-1/2 -translate-x-1/2 rounded bg-surface-panel/95 px-1 py-0.5 text-xs font-semibold leading-none text-text-secondary shadow-sm">
                   {displayedCount}
                 </span>
                 {showSideLabel && (
                   <span
-                    className={`absolute top-1/2 hidden max-w-28 -translate-y-1/2 text-[10px] leading-tight text-text-muted sm:block ${sideLabelClass}`}
+                    className={`absolute top-1/2 hidden max-w-28 -translate-y-1/2 text-xs leading-tight text-text-muted sm:block ${sideLabelClass}`}
                   >
                     {node.label}
                   </span>
                 )}
-              </div>
+              </button>
             );
 
             if (node.currentCount <= 0) {

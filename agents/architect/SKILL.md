@@ -131,7 +131,7 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
 **Allowed Tools:** Read, Write, Edit, AskUserQuestion
 
 **Required Resources:**
-- `planning-mds/INCEPTION.md` - Sections 0-3 (Phase A outputs)
+- `planning-mds/BLUEPRINT.md` - Sections 0-3 (Phase A outputs)
 - `planning-mds/domain/` - Solution-specific domain knowledge
 - `planning-mds/examples/architecture/` - Solution-specific architecture examples
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Solution-specific architectural patterns
@@ -179,7 +179,7 @@ JSON Schema serves as the single source of truth for cross-tier validation (fron
 - Screen specifications
 
 ### Prerequisites
-- [ ] Phase A complete (INCEPTION.md Section 3.x filled)
+- [ ] Phase A complete (BLUEPRINT.md Section 3.x filled)
 - [ ] User stories written with acceptance criteria
 - [ ] Screen specifications defined
 - [ ] Workflows mapped
@@ -266,7 +266,7 @@ Your architecture specifications will be consumed by **Phase C Implementation Ag
 
 ### Deliverables
 
-All outputs written to `planning-mds/INCEPTION.md` sections 4.x and supporting files under:
+All outputs written to `planning-mds/BLUEPRINT.md` sections 4.x and supporting files under:
 - `planning-mds/architecture/` (ADRs, data model, architecture docs)
 - `planning-mds/api/` (OpenAPI contracts)
 - `planning-mds/schemas/` (JSON Schema validation schemas - shared with frontend/backend)

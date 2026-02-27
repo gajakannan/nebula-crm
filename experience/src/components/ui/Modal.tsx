@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
@@ -12,21 +12,77 @@ interface ModalProps {
 
 export function Modal({ open, onClose, title, children, className }: ModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previousActiveRef = useRef<HTMLElement | null>(null);
+  const titleId = useId();
 
   const handleClose = useCallback(() => onClose(), [onClose]);
 
   useEffect(() => {
     if (!open) return;
 
+    previousActiveRef.current = document.activeElement as HTMLElement | null;
+
+    const focusableSelector = [
+      'a[href]',
+      'button:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',');
+
+    const getFocusable = () => {
+      if (!contentRef.current) return [];
+      return Array.from(contentRef.current.querySelectorAll<HTMLElement>(focusableSelector));
+    };
+
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') handleClose();
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleClose();
+        return;
+      }
+
+      if (e.key !== 'Tab') return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) {
+        e.preventDefault();
+        contentRef.current?.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (e.shiftKey) {
+        if (active === first || !contentRef.current?.contains(active)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (active === last || !contentRef.current?.contains(active)) {
+        e.preventDefault();
+        first.focus();
+      }
     }
 
     document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => {
+      const focusable = getFocusable();
+      if (focusable.length > 0) {
+        focusable[0].focus();
+      } else {
+        contentRef.current?.focus();
+      }
+    });
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
+      previousActiveRef.current?.focus();
     };
   }, [open, handleClose]);
 
@@ -45,15 +101,22 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     >
       <div
         ref={contentRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className={cn(
           'mx-4 w-full max-w-lg rounded-xl glass-card shadow-2xl',
           className,
         )}
       >
         <div className="flex items-center justify-between border-b border-surface-border px-5 py-4">
-          <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
+          <h2 id={titleId} className="text-sm font-semibold text-text-primary">{title}</h2>
           <button
+            ref={closeButtonRef}
+            type="button"
             onClick={handleClose}
+            aria-label="Close dialog"
             className="rounded-md p-1 text-text-secondary transition-colors hover:bg-surface-card-hover hover:text-text-primary"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

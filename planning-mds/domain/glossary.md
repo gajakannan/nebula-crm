@@ -264,9 +264,9 @@ This glossary ensures consistent use of insurance terms in product requirements 
 **Example:** "Policy expires 2025-02-01"
 **In Nebula:** Trigger for renewal workflow
 
-### Inception Date
+### Blueprint Date
 **Definition:** Original start date of first policy (for renewal purposes)
-**Example:** "Account inception 2020-02-01, now on 5th renewal"
+**Example:** "Account blueprint 2020-02-01, now on 5th renewal"
 **In Nebula:** Historical tracking (future phase)
 
 ### Renewal Date

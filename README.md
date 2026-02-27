@@ -17,8 +17,8 @@ As of 2026-02-08, this repository is published as a human-orchestrated framework
 
 ## Quick Orientation
 
-- New project? Start with `inception-setup/README.md` and copy `agents/` into your repo.
-- Exploring the insurance CRM example? Read `planning-mds/INCEPTION.md` and the example artifacts under `planning-mds/examples/`.
+- New project? Start with `blueprint-setup/README.md` and copy `agents/` into your repo.
+- Exploring the insurance CRM example? Read `planning-mds/BLUEPRINT.md` and the example artifacts under `planning-mds/examples/`.
 - Want the boundary rules? See `BOUNDARY-POLICY.md`.
 
 ## Framework Architecture
@@ -78,7 +78,7 @@ As of 2026-02-08, this repository is published as a human-orchestrated framework
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  Single Source of Truth                                                     │
-│  └─ INCEPTION.md       │ Master specification (Sections 0-6)                │
+│  └─ BLUEPRINT.md       │ Master specification (Sections 0-6)                │
 │                                                                              │
 │  Domain Knowledge                                                           │
 │  └─ domain/            │ Glossary, competitive analysis                     │
@@ -101,7 +101,7 @@ As of 2026-02-08, this repository is published as a human-orchestrated framework
 
 ─────────────────────────────────────────────────────────────────────────────
 
-  9 Actions · 11 Agents · 1 Source of Truth (INCEPTION.md)
+  9 Actions · 11 Agents · 1 Source of Truth (BLUEPRINT.md)
   SOLUTION-PATTERNS.md for institutional knowledge
   neuron/ for AI intelligence layer 🧠
 ```
@@ -110,7 +110,7 @@ As of 2026-02-08, this repository is published as a human-orchestrated framework
 
 - `agents/` - Generic, reusable agent roles, templates, and references. Copy as-is.
 - `planning-mds/` - Solution-specific requirements, examples, and decisions (Nebula CRM in this repo). Replace for a new project.
-- `inception-setup/` - Bootstrap guidance for starting a new project.
+- `blueprint-setup/` - Bootstrap guidance for starting a new project.
 - `engine/` - Backend application layer (C# .NET APIs) - currently placeholder.
 - `experience/` - Frontend application layer (React UI) - currently placeholder.
 - `neuron/` - AI intelligence layer (Python LLMs, agents, MCP) 🧠 - directory structure created.
@@ -167,7 +167,7 @@ Keep the builder base runtime generic; put stack SDKs and execution tooling in t
 - `agents/README.md` - How to use the generic agents.
 - `planning-mds/README.md` - What belongs in solution-specific planning.
 - `BOUNDARY-POLICY.md` - Rules that separate generic vs solution-specific content.
-- `inception-setup/README.md` - Bootstrap steps for a new project.
+- `blueprint-setup/README.md` - Bootstrap steps for a new project.
 - `docs/FAQ.md` - Common questions about reuse, stacks, and boundaries.
 - `docs/CONTAINER-STRATEGY.md` - Two-container model (builder runtime vs application runtime).
 - `docs/ORCHESTRATION-CONTRACT.md` - Orchestrator-neutral execution contract.

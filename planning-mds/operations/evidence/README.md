@@ -18,4 +18,13 @@ Each run folder should contain:
 
 - `plan-2026-02-08-preview-walkthrough/` demonstrates the required format for preview release readiness.
 
+## Frontend UX Audit Evidence
+
+- For frontend UI changes, add UX evidence files under:
+  - `planning-mds/operations/evidence/frontend-ux/`
+- Use:
+  - `planning-mds/operations/evidence/frontend-ux/TEMPLATE.md`
+- CI validates this requirement with:
+  - `scripts/validate-frontend-ux-evidence.py`
+
 For execution requirements, see `docs/MANUAL-ORCHESTRATION-RUNBOOK.md`.

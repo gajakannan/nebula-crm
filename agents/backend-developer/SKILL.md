@@ -144,7 +144,7 @@ Your responsibility is to implement the **service layer** (engine/) based on req
 **Allowed Tools:** Read, Write, Edit, Bash (for dotnet commands)
 
 **Required Resources:**
-- `planning-mds/INCEPTION.md` - Sections 4.x (architecture specs)
+- `planning-mds/BLUEPRINT.md` - Sections 4.x (architecture specs)
 - `planning-mds/architecture/` - Data model, decisions, SOLUTION-PATTERNS.md
 - `planning-mds/api/` - OpenAPI contracts
 - `planning-mds/schemas/` - JSON Schema validation schemas (shared with frontend)
@@ -230,7 +230,7 @@ engine/
 - Audit requirements
 
 ### Prerequisites
-- [ ] `planning-mds/INCEPTION.md` Section 4.x complete
+- [ ] `planning-mds/BLUEPRINT.md` Section 4.x complete
 - [ ] API contracts defined in `planning-mds/api/`
 - [ ] JSON Schemas defined in `planning-mds/schemas/`
 - [ ] Data model documented

@@ -6,7 +6,7 @@ This document provides generic feature examples across different domains. Use th
 
 ## Example 1: Task Management System
 
-**Feature ID:** F1
+**Feature ID:** F0001
 **Feature Name:** Task Organization & Prioritization
 **Domain:** Productivity SaaS
 
@@ -28,17 +28,17 @@ As a project manager, I want to organize and prioritize tasks across multiple pr
 - **Out of Scope:** Time tracking, billing, resource allocation (deferred to Phase 2)
 
 **User Stories:**
-- S1: Create task with title, description, assignee, due date
-- S2: Update task status (To Do, In Progress, Done, Blocked)
-- S3: Assign priority level (Critical, High, Medium, Low)
-- S4: Filter tasks by assignee, status, priority, due date
-- S5: Search tasks by title or description
+- F0001-S0001: Create task with title, description, assignee, due date
+- F0001-S0002: Update task status (To Do, In Progress, Done, Blocked)
+- F0001-S0003: Assign priority level (Critical, High, Medium, Low)
+- F0001-S0004: Filter tasks by assignee, status, priority, due date
+- F0001-S0005: Search tasks by title or description
 
 ---
 
 ## Example 2: E-commerce Order Fulfillment
 
-**Feature ID:** F2
+**Feature ID:** F0002
 **Feature Name:** Order Processing & Shipping
 **Domain:** E-commerce Platform
 
@@ -60,17 +60,17 @@ As a warehouse manager, I want to process orders efficiently and generate shippi
 - **Out of Scope:** Inventory management, returns processing (separate features)
 
 **User Stories:**
-- S1: View order queue sorted by order date
-- S2: Generate pick list for batch fulfillment
-- S3: Mark order as picked
-- S4: Generate shipping label via carrier API (USPS, UPS, FedEx)
-- S5: Mark order as shipped with tracking number
+- F0002-S0001: View order queue sorted by order date
+- F0002-S0002: Generate pick list for batch fulfillment
+- F0002-S0003: Mark order as picked
+- F0002-S0004: Generate shipping label via carrier API (USPS, UPS, FedEx)
+- F0002-S0005: Mark order as shipped with tracking number
 
 ---
 
 ## Example 3: Patient Appointment Scheduling
 
-**Feature ID:** F3
+**Feature ID:** F0003
 **Feature Name:** Appointment Scheduling & Reminders
 **Domain:** Healthcare SaaS
 
@@ -92,11 +92,11 @@ As a medical office administrator, I want to schedule patient appointments and s
 - **Out of Scope:** Billing, prescription management, telemedicine (separate features)
 
 **User Stories:**
-- S1: Book appointment for patient (select provider, date/time, reason)
-- S2: Send automated reminder 24 hours before appointment
-- S3: Allow patient to confirm/cancel via SMS link
-- S4: Add patient to waitlist if no slots available
-- S5: Auto-fill waitlist slot when cancellation occurs
+- F0003-S0001: Book appointment for patient (select provider, date/time, reason)
+- F0003-S0002: Send automated reminder 24 hours before appointment
+- F0003-S0003: Allow patient to confirm/cancel via SMS link
+- F0003-S0004: Add patient to waitlist if no slots available
+- F0003-S0005: Auto-fill waitlist slot when cancellation occurs
 
 ---
 

@@ -6,7 +6,7 @@
 
 **Deciders:** Architecture Team
 
-**Technical Story:** Phase B — Dashboard F0 frontend architecture
+**Technical Story:** Phase B — Dashboard F0001 frontend architecture
 
 ---
 
@@ -65,7 +65,7 @@ function Dashboard() {
 }
 ```
 
-**Widget-level error display rules (from F0 spec):**
+**Widget-level error display rules (from F0001 spec):**
 
 | Widget | On Query Failure |
 |--------|-----------------|
@@ -127,7 +127,7 @@ function PipelinePill({ entityType, status, count }: PillProps) {
 
 ### 4. Nudge Card Dismiss — Session-Scoped State
 
-Dismissed nudge card IDs are stored in React state (not persisted). On page refresh, dismissed nudges reappear if the condition still applies (per S5 spec).
+Dismissed nudge card IDs are stored in React state (not persisted). On page refresh, dismissed nudges reappear if the condition still applies (per F0001-S0005 spec).
 
 ```tsx
 function NudgeCardsWidget() {
@@ -231,7 +231,7 @@ queryClient.invalidateQueries({ queryKey: ['dashboard', 'kpis'] });
 
 ---
 
-## Accessibility Checklist (from F0 Screen Spec)
+## Accessibility Checklist (from F0001 Screen Spec)
 
 - [ ] Tab order: Nudge cards -> KPI cards -> Pipeline pills -> Tasks -> Activity Feed
 - [ ] Pipeline pill: Enter/Space opens popover; Escape closes

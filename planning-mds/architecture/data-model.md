@@ -1,6 +1,6 @@
 # Nebula CRM — Data Model Supplement (Dashboard-First)
 
-**Purpose:** This document supplements INCEPTION.md Section 4.2 with detailed data model specifications required by the Dashboard (F0) feature. It adds the **Task** entity (new) and documents **dashboard-specific indexes and query patterns**.
+**Purpose:** This document supplements BLUEPRINT.md Section 4.2 with detailed data model specifications required by the Dashboard (F0001) feature. It adds the **Task** entity (new) and documents **dashboard-specific indexes and query patterns**.
 
 **Last Updated:** 2026-02-22
 
@@ -8,7 +8,7 @@
 
 ## 1. New Entity: Task
 
-The Task entity is required by Dashboard stories S3 (My Tasks & Reminders) and S5 (Nudge Cards). It also serves as the foundation for Feature F5 (Task Center).
+The Task entity is required by Dashboard stories F0001-S0003 (My Tasks & Reminders) and F0001-S0005 (Nudge Cards). It also serves as the foundation for Feature F0003 (Task Center).
 
 See [ADR-003](decisions/ADR-003-task-entity-nudge-engine.md) for design rationale.
 
@@ -79,7 +79,7 @@ These fields are required to implement MVP ABAC scoping and dashboard assigned-u
 
 ## 1.2 Reference Data — Workflow Statuses
 
-INCEPTION.md Section 4.2 (line 306) declares `ReferenceSubmissionStatus` and `ReferenceRenewalStatus` as reference tables. This section defines their complete seed values. For allowed transitions between statuses, see INCEPTION.md Section 4.3.
+BLUEPRINT.md Section 4.2 (line 306) declares `ReferenceSubmissionStatus` and `ReferenceRenewalStatus` as reference tables. This section defines their complete seed values. For allowed transitions between statuses, see BLUEPRINT.md Section 4.3.
 
 ### Reference Table Schema
 
@@ -126,12 +126,12 @@ Both tables share the same structure:
 
 ### Allowed Transitions
 
-For the complete allowed transition matrix (which `FromState → ToState` pairs are valid), see [INCEPTION.md Section 4.3](../INCEPTION.md#43-workflow-rules). Invalid pairs return HTTP 409 (`code=invalid_transition`). Every successful transition appends one `WorkflowTransition` record and one `ActivityTimelineEvent` record.
+For the complete allowed transition matrix (which `FromState → ToState` pairs are valid), see [BLUEPRINT.md Section 4.3](../BLUEPRINT.md#43-workflow-rules). Invalid pairs return HTTP 409 (`code=invalid_transition`). Every successful transition appends one `WorkflowTransition` record and one `ActivityTimelineEvent` record.
 
 ### Seed Strategy
 
 - Seeded in **Migration 004** alongside `ReferenceTaskStatus` using deterministic idempotent upsert.
-- Runtime writes restricted to admin-only actions (per INCEPTION.md constraint).
+- Runtime writes restricted to admin-only actions (per BLUEPRINT.md constraint).
 - Dashboard queries use `IsTerminal` to filter: pipeline views show only `WHERE IsTerminal = false`; KPI "open submissions" counts exclude terminal; renewal rate computes over terminal statuses in trailing 90 days.
 - Frontend pipeline pills use `DisplayOrder` for ordering and `ColorGroup` for color-coding.
 
@@ -139,7 +139,7 @@ For the complete allowed transition matrix (which `FromState → ToState` pairs 
 
 ## 2. Dashboard-Specific Query Patterns
 
-These query patterns document how dashboard widgets access existing entities defined in INCEPTION.md Section 4.2. No schema changes are needed to existing entities — only indexes are added.
+These query patterns document how dashboard widgets access existing entities defined in BLUEPRINT.md Section 4.2. No schema changes are needed to existing entities — only indexes are added.
 
 ### 2.1 KPI Metrics Queries
 
@@ -280,13 +280,13 @@ These indexes are required for dashboard query performance. They do not change a
 3. **Migration 003:** Add dashboard-specific indexes to existing tables (Submissions, Renewals, WorkflowTransition, ActivityTimelineEvent, Brokers, Programs).
 4. **Migration 004:** Seed reference data for `ReferenceTaskStatus` (Open, InProgress, Done), `ReferenceSubmissionStatus` (10 values), and `ReferenceRenewalStatus` (8 values). See Section 1.2 for complete seed definitions.
 
-**Decision:** Task Status uses `ReferenceTaskStatus` to align with INCEPTION.md reference-table strategy. Task Priority remains a CHECK constraint because it is not admin-configurable in MVP. If Priority becomes configurable later, add `ReferenceTaskPriority` via ADR.
+**Decision:** Task Status uses `ReferenceTaskStatus` to align with BLUEPRINT.md reference-table strategy. Task Priority remains a CHECK constraint because it is not admin-configurable in MVP. If Priority becomes configurable later, add `ReferenceTaskPriority` via ADR.
 
 ---
 
 ## Related Documents
 
-- [INCEPTION.md Section 4.2](../INCEPTION.md) — Core entity definitions
+- [BLUEPRINT.md Section 4.2](../BLUEPRINT.md) — Core entity definitions
 - [ADR-003: Task Entity and Nudge Engine](decisions/ADR-003-task-entity-nudge-engine.md) — Design rationale
 - [ADR-002: Dashboard Data Aggregation](decisions/ADR-002-dashboard-data-aggregation.md) — Endpoint structure
 - [SOLUTION-PATTERNS.md](SOLUTION-PATTERNS.md) — Audit, ABAC, and repository patterns

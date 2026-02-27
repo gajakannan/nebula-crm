@@ -355,7 +355,7 @@ The review action presents your report alongside the Security agent's report. Th
 ### Cannot Determine Acceptance Criteria Coverage
 **Symptom:** Unable to map code changes to acceptance criteria.
 **Cause:** User story or AC document is missing or vague.
-**Solution:** Check `planning-mds/stories/` for the relevant user story. If ACs are missing, flag it as a Critical finding — code cannot be approved without verifiable acceptance criteria.
+**Solution:** Check the relevant feature folder under `planning-mds/features/F{NNNN}-{slug}/` for the story file (`F{NNNN}-S{NNNN}-{slug}.md`). If ACs are missing, flag it as a Critical finding — code cannot be approved without verifiable acceptance criteria.
 
 ### Contradictory Pattern Guidance
 **Symptom:** Code follows one convention but `SOLUTION-PATTERNS.md` prescribes another.
@@ -382,4 +382,4 @@ Actions:
 
 Solution-specific:
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` — project patterns and conventions
-- `planning-mds/INCEPTION.md` — requirements and architecture decisions
+- `planning-mds/BLUEPRINT.md` — requirements and architecture decisions

@@ -39,10 +39,10 @@ services:
       db:
         condition: service_healthy
 
-  # Temporal — infrastructure-only for F0/F1.
+  # Temporal — infrastructure-only for F0001/F0002.
   # No application code depends on Temporal in this implementation pass.
   # Provisioned now so F3/F4 workflow orchestration can adopt it without
-  # docker-compose changes later. See INCEPTION.md §5, Phase 0 DOD.
+  # docker-compose changes later. See BLUEPRINT.md §5, Phase 0 DOD.
   temporal:
     image: temporalio/auto-setup:1.25
     container_name: nebula-temporal

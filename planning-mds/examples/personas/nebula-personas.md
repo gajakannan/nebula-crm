@@ -1,6 +1,6 @@
 # Persona Examples
 
-Use these examples when creating user personas for the insurance CRM. Personas should be stored in `planning-mds/INCEPTION.md` Section 3.2 or as separate files if needed.
+Use these examples when creating user personas for the insurance CRM. Personas should be stored in `planning-mds/BLUEPRINT.md` Section 3.2 or as separate files if needed.
 
 **Best Practice:** Create 3-5 personas representing primary and secondary users of the system.
 

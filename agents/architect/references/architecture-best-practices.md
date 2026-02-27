@@ -973,7 +973,7 @@ Architects should define frontend visual quality constraints as enforceable rule
 Architects should define frontend module boundaries early enough that implementation agents do not spread feature code across unrelated global folders.
 
 **Required guidance for frontend-heavy features**
-- Specify the feature slice name(s) in the assembly plan (for example `features/opportunities`, `features/brokers`).
+- Specify the feature slice name(s) in the assembly plan (for example `features/opportunities`, `features/accounts`).
 - State what code must remain feature-local vs what may be shared.
 - Prefer co-location of feature components, hooks, API modules, feature DTO/types, and tests.
 - Reserve shared/global folders for primitives, app shell, and truly cross-feature utilities.

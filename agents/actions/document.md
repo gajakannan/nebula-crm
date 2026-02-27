@@ -22,7 +22,7 @@ Technical Writer
 ## Inputs
 
 ### From Planning
-- `planning-mds/INCEPTION.md` (overview, architecture)
+- `planning-mds/BLUEPRINT.md` (overview, architecture)
 - `planning-mds/architecture/` (data model, ADRs, architecture notes)
 - `planning-mds/api/` (OpenAPI/API contracts)
 - User stories and features

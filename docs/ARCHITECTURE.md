@@ -19,7 +19,7 @@ This diagram shows how the repository is structured and how the reusable framewo
 │         │                            │                  │
 │         ▼                            ▼                  │
 │  ┌──────────────┐         ┌──────────────────────────┐   │
-│  │ inception-   │         │ engine/experience/neuron/│   │
+│  │ blueprint-   │         │ engine/experience/neuron/│   │
 │  │   setup/     │         │    (IMPLEMENTATION)      │   │
 │  │ (BOOTSTRAP)  │         │                          │   │
 │  └──────────────┘         └──────────────────────────┘   │
@@ -38,6 +38,6 @@ COPY THIS ────────┐
 
 - `agents/` is reusable across projects and should be copied as-is.
 - `planning-mds/` is replaced for each new project.
-- `inception-setup/` provides bootstrap guidance and examples.
+- `blueprint-setup/` provides bootstrap guidance and examples.
 - `engine/experience/neuron/` are the implementation layers for the current solution.
 - Architect orchestrates app assembly from planning artifacts into implementation layers.

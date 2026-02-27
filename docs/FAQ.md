@@ -6,13 +6,13 @@ Yes. The roles and templates are reusable; only stack-specific references and ex
 
 ## Can I use this for non-CRM projects?
 
-Yes. The framework is domain-agnostic. See `inception-setup/examples/` for non-insurance examples.
+Yes. The framework is domain-agnostic. See `blueprint-setup/examples/` for non-insurance examples.
 
 ## What do I copy to start a new project?
 
 Copy:
 - `agents/`
-- `inception-setup/`
+- `blueprint-setup/`
 - `README.md` (update title and project framing)
 
 Create new:

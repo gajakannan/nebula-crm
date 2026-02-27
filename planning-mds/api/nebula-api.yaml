@@ -25,7 +25,7 @@ tags:
   - name: Renewals
     description: Renewal workflow operations
   - name: Dashboard
-    description: Dashboard widget data endpoints (F0)
+    description: Dashboard widget data endpoints (F0001)
   - name: Tasks
     description: Task CRUD for My Tasks widget and Task Center
   - name: Timeline
@@ -496,7 +496,7 @@ paths:
           $ref: "#/components/responses/Conflict"
 
   # ──────────────────────────────────────────────────────────────
-  # Dashboard endpoints (NEW — F0)
+  # Dashboard endpoints (NEW — F0001)
   # ──────────────────────────────────────────────────────────────
   /api/dashboard/kpis:
     get:
@@ -667,7 +667,7 @@ paths:
           $ref: "#/components/responses/Forbidden"
 
   # ──────────────────────────────────────────────────────────────
-  # Task endpoints (NEW — F0 + F5)
+  # Task endpoints (NEW — F0001 + F0003)
   # ──────────────────────────────────────────────────────────────
   /api/my/tasks:
     get:
@@ -717,7 +717,7 @@ paths:
     post:
       operationId: createTask
       summary: Create a task (self-assigned only in MVP)
-      description: Task write endpoints are not registered (404) until F5 is activated.
+      description: Task write endpoints are not registered (404) until F0003 is activated.
       tags: [Tasks]
       requestBody:
         required: true
@@ -764,7 +764,7 @@ paths:
     put:
       operationId: updateTask
       summary: Update task (self-assigned only in MVP)
-      description: Task write endpoints are not registered (404) until F5 is activated.
+      description: Task write endpoints are not registered (404) until F0003 is activated.
       tags: [Tasks]
       requestBody:
         required: true
@@ -790,7 +790,7 @@ paths:
     delete:
       operationId: deleteTask
       summary: Soft delete task (self-assigned only in MVP)
-      description: Task write endpoints are not registered (404) until F5 is activated.
+      description: Task write endpoints are not registered (404) until F0003 is activated.
       tags: [Tasks]
       responses:
         "204":

@@ -13,7 +13,7 @@ Purpose:
 
 Contains:
 - `agents/`
-- `inception-setup/`
+- `blueprint-setup/`
 - `scripts/`
 - framework documentation
 

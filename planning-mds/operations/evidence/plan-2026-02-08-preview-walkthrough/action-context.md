@@ -13,8 +13,8 @@
 - `agents/actions/plan.md`
 - `agents/product-manager/SKILL.md`
 - `agents/architect/SKILL.md`
-- `planning-mds/INCEPTION.md`
-- `planning-mds/stories/`
+- `planning-mds/BLUEPRINT.md`
+- `planning-mds/features/`
 - `lifecycle-stage.yaml`
 
 ## Outcome Summary

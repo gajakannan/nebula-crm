@@ -875,7 +875,7 @@ When new patterns emerge or existing patterns need updating:
 ## Related Documents
 
 - `planning-mds/architecture/decisions/*.md` - ADRs explaining why patterns were chosen
-- `planning-mds/INCEPTION.md` Section 4 - Architecture specifications
+- `planning-mds/BLUEPRINT.md` Section 4 - Architecture specifications
 - `agents/*/references/*.md` - Generic best practices (not project-specific)
 
 ---

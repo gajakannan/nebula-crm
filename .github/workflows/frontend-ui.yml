@@ -4,12 +4,16 @@ on:
   pull_request:
     paths:
       - 'experience/**'
+      - 'planning-mds/operations/evidence/frontend-ux/**'
+      - 'scripts/validate-frontend-ux-evidence.py'
       - '.github/workflows/frontend-ui.yml'
   push:
     branches:
       - main
     paths:
       - 'experience/**'
+      - 'planning-mds/operations/evidence/frontend-ux/**'
+      - 'scripts/validate-frontend-ux-evidence.py'
       - '.github/workflows/frontend-ui.yml'
   workflow_dispatch:
 
@@ -23,6 +27,24 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate frontend UX evidence
+        working-directory: .
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            python3 scripts/validate-frontend-ux-evidence.py \
+              --base "${{ github.event.pull_request.base.sha }}" \
+              --head "${{ github.sha }}"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            python3 scripts/validate-frontend-ux-evidence.py \
+              --base "${{ github.event.before }}" \
+              --head "${{ github.sha }}"
+          else
+            python3 scripts/validate-frontend-ux-evidence.py
+          fi
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

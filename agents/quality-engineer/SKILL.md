@@ -166,7 +166,7 @@ Your responsibility is to implement the **quality assurance layer** - tests that
 **Allowed Tools:** Read, Write, Edit, Bash (for test commands)
 
 **Required Resources:**
-- `planning-mds/INCEPTION.md` - Sections 3.x (stories, acceptance criteria)
+- `planning-mds/BLUEPRINT.md` - Sections 3.x (stories, acceptance criteria)
 - `planning-mds/architecture/TESTING-STRATEGY.md` - Comprehensive testing strategy
 - `planning-mds/architecture/TESTING-STACK-SUMMARY.md` - Tool reference
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Section 7 (Testing Patterns)

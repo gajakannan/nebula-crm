@@ -2,6 +2,7 @@ import type { NudgeCardDto } from '../types';
 import { Badge } from '@/components/ui/Badge';
 import { canNavigateTo, getEntityPath } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface NudgeCardProps {
   nudge: NudgeCardDto;
@@ -50,12 +51,12 @@ export function NudgeCard({ nudge, onDismiss }: NudgeCardProps) {
       <p className="mt-1 text-xs text-text-secondary">{nudge.description}</p>
 
       {showCta && path && (
-        <a
-          href={path}
+        <Link
+          to={path}
           className="fx-shadow-cta-brand-hover mt-3 inline-block rounded-lg bg-gradient-to-r from-nebula-violet/20 to-nebula-fuchsia/20 px-3 py-1.5 text-xs font-medium text-nebula-violet transition-all hover:from-nebula-violet/30 hover:to-nebula-fuchsia/30"
         >
           {nudge.ctaLabel}
-        </a>
+        </Link>
       )}
     </div>
   );

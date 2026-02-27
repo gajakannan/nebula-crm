@@ -11,7 +11,7 @@ export function ActivityFeed() {
     <Card className="flex h-full min-h-0 flex-col overflow-hidden p-0">
       <CardHeader className="mb-0 border-b border-border-muted/60 px-4 py-3">
         <CardTitle>Activity</CardTitle>
-        <span className="text-[10px] uppercase tracking-wider text-text-muted">Timeline</span>
+        <span className="text-xs uppercase tracking-wider text-text-muted">Timeline</span>
       </CardHeader>
 
       {isLoading && (

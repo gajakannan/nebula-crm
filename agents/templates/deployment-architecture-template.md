@@ -646,7 +646,7 @@ Implement [Pattern Name] deployment architecture with [orchestration choice].
 **Framework Documentation:**
 - `agents/devops/references/containerization-guide.md` - Detailed containerization patterns
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Solution-specific patterns
-- `planning-mds/INCEPTION.md` Section 4 - NFRs and architecture decisions
+- `planning-mds/BLUEPRINT.md` Section 4 - NFRs and architecture decisions
 
 **External Resources:**
 - [Docker Compose Documentation](https://docs.docker.com/compose/)

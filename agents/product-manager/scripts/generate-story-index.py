@@ -2,22 +2,49 @@
 """
 Story Index Generator
 
-Generates an index/table of contents for all user stories in a directory.
+Generates an index/table of contents for all user stories across feature folders.
 Extracts story ID, title, priority, phase, and feature from each story file.
 
+Stories are colocated in feature folders:
+  planning-mds/features/F{NNNN}-{slug}/F{NNNN}-S{NNNN}-{slug}.md
+
 Usage:
-    python generate-story-index.py <stories-directory>
-    python generate-story-index.py planning-mds/stories/
+    python generate-story-index.py <features-directory>
+    python generate-story-index.py planning-mds/features/
 
 Output:
-    Creates STORY-INDEX.md in the stories directory
+    Creates STORY-INDEX.md in the features directory
 """
 
 import sys
+import io
 import re
 from pathlib import Path
 from typing import List, Dict, Optional
 from dataclasses import dataclass
+
+# Windows cp1252 stdout can't encode emojis used in report output.
+# Reconfigure to utf-8 unconditionally — safe on all platforms.
+if hasattr(sys.stdout, 'buffer'):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+if hasattr(sys.stderr, 'buffer'):
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+# Files in feature folders that are NOT stories — skip during scanning.
+_SKIP_FILENAMES = frozenset({
+    "PRD.MD", "README.MD", "STATUS.MD", "GETTING-STARTED.MD",
+    "STORY-INDEX.MD", "REGISTRY.MD",
+})
+
+
+def _is_story_file(path: Path) -> bool:
+    """Return True if *path* follows strict story naming (F*-S*-*.md)."""
+    if path.name.upper() in _SKIP_FILENAMES:
+        return False
+    if re.match(r"F\d{4}-S\d{4}", path.name):
+        return True
+    return False
+
 
 @dataclass
 class StoryMetadata:
@@ -31,8 +58,8 @@ class StoryMetadata:
     persona: Optional[str] = None
 
 class StoryIndexGenerator:
-    def __init__(self, stories_dir: str):
-        self.stories_dir = Path(stories_dir)
+    def __init__(self, features_dir: str):
+        self.features_dir = Path(features_dir)
         self.stories: List[StoryMetadata] = []
 
     def extract_metadata(self, file_path: Path) -> StoryMetadata:
@@ -47,8 +74,8 @@ class StoryIndexGenerator:
             if story_id_match:
                 metadata.story_id = story_id_match.group(1).strip()
             else:
-                # Try to extract from filename (e.g., S1-example.md)
-                filename_match = re.match(r"(S\d+|US-\d+)", file_path.stem)
+                # Try to extract from strict filename (e.g., F0001-S0001-example.md)
+                filename_match = re.match(r"(F\d{4}-S\d{4})", file_path.stem)
                 if filename_match:
                     metadata.story_id = filename_match.group(1)
 
@@ -63,13 +90,14 @@ class StoryIndexGenerator:
                     metadata.title = heading_match.group(1).strip()
 
             # Extract Feature
-            feature_match = re.search(r"\*\*Epic/Feature:\*\*\s*([^\n]+)", content)
-            if not feature_match:
-                feature_match = re.search(r"\*\*Feature:\*\*\s*([^\n]+)", content)
-            if not feature_match:
-                feature_match = re.search(r"\*\*Epic:\*\*\s*([^\n]+)", content)
+            feature_match = re.search(r"\*\*Feature:\*\*\s*([^\n]+)", content)
             if feature_match:
                 metadata.feature = feature_match.group(1).strip()
+            else:
+                # Infer feature from parent directory name (e.g., F0001-dashboard)
+                parent_name = file_path.parent.name
+                if re.match(r"F\d{4}-", parent_name):
+                    metadata.feature = parent_name
 
             # Extract Priority
             priority_match = re.search(r"\*\*Priority:\*\*\s*([^\n]+)", content)
@@ -92,22 +120,22 @@ class StoryIndexGenerator:
         return metadata
 
     def scan_stories(self):
-        """Scan directory for story markdown files."""
-        if not self.stories_dir.exists():
-            print(f"Error: Directory not found: {self.stories_dir}")
+        """Scan feature directories for story markdown files."""
+        if not self.features_dir.exists():
+            print(f"Error: Directory not found: {self.features_dir}")
             sys.exit(1)
 
-        # Find all .md files recursively in feature subdirectories
-        story_files = list(self.stories_dir.glob("**/*.md"))
-
-        # Exclude index file itself
-        story_files = [f for f in story_files if f.name.upper() != "STORY-INDEX.MD"]
+        # Find story files across all feature folders
+        story_files = [
+            f for f in sorted(self.features_dir.rglob("*.md"))
+            if _is_story_file(f)
+        ]
 
         if not story_files:
-            print(f"Warning: No story files found in {self.stories_dir}")
+            print(f"Warning: No story files found in {self.features_dir}")
 
         # Extract metadata from each file
-        for file_path in sorted(story_files):
+        for file_path in story_files:
             metadata = self.extract_metadata(file_path)
             self.stories.append(metadata)
 
@@ -120,7 +148,7 @@ class StoryIndexGenerator:
         # Header
         lines.append("# User Story Index")
         lines.append("")
-        lines.append("Auto-generated index of all user stories.")
+        lines.append("Auto-generated index of all user stories across feature folders.")
         lines.append("")
         lines.append(f"**Total Stories:** {len(self.stories)}")
         lines.append("")
@@ -156,7 +184,7 @@ class StoryIndexGenerator:
                 persona = story.persona or "-"
 
                 # Create link to story file with relative path
-                rel_path = story.file_path.relative_to(self.stories_dir)
+                rel_path = story.file_path.relative_to(self.features_dir)
                 file_link = f"[{story_id}](./{rel_path})"
 
                 lines.append(f"| {file_link} | {title} | {priority} | {phase} | {persona} |")
@@ -180,7 +208,7 @@ class StoryIndexGenerator:
                 persona = story.persona or "-"
 
                 # Create link with relative path
-                rel_path = story.file_path.relative_to(self.stories_dir)
+                rel_path = story.file_path.relative_to(self.features_dir)
                 file_link = f"[{story_id}](./{rel_path})"
 
                 lines.append(f"| {file_link} | {title} | {priority} | {phase} | {persona} |")
@@ -232,7 +260,7 @@ class StoryIndexGenerator:
     def write_index(self, output_path: Optional[Path] = None):
         """Write index to file."""
         if output_path is None:
-            output_path = self.stories_dir / "STORY-INDEX.md"
+            output_path = self.features_dir / "STORY-INDEX.md"
 
         index_content = self.generate_index()
 
@@ -245,16 +273,16 @@ class StoryIndexGenerator:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python generate-story-index.py <stories-directory>")
-        print("Example: python generate-story-index.py planning-mds/stories/")
+        print("Usage: python generate-story-index.py <features-directory>")
+        print("Example: python generate-story-index.py planning-mds/features/")
         sys.exit(1)
 
-    stories_dir = sys.argv[1]
+    features_dir = sys.argv[1]
 
-    print(f"Generating story index for: {stories_dir}")
+    print(f"Generating story index for: {features_dir}")
     print("-" * 60)
 
-    generator = StoryIndexGenerator(stories_dir)
+    generator = StoryIndexGenerator(features_dir)
     generator.scan_stories()
     generator.write_index()
 

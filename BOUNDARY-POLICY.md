@@ -39,7 +39,7 @@ This policy defines the boundary between generic, reusable agent roles (`agents/
 **Principle:** Everything in `planning-mds/` is specific to the current project and would be replaced for a new project.
 
 **What belongs in planning-mds/:**
-- ✅ Project master specification (INCEPTION.md)
+- ✅ Project master specification (BLUEPRINT.md)
 - ✅ Domain knowledge (glossary, competitive analysis, domain-specific patterns)
 - ✅ Project-specific examples (personas, features, stories, architecture)
 - ✅ Actual project requirements (features/, stories/, architecture/)
@@ -57,7 +57,7 @@ This policy defines the boundary between generic, reusable agent roles (`agents/
 **Principle:** Agent roles consume requirements from `planning-mds/`; they do not create or embed solution requirements.
 
 **Implementation:**
-- Agents read from `planning-mds/INCEPTION.md` and `planning-mds/domain/` to understand project context
+- Agents read from `planning-mds/BLUEPRINT.md` and `planning-mds/domain/` to understand project context
 - Agents reference `planning-mds/examples/` to see how generic patterns apply to this project
 - Agents generate deliverables based on templates in `agents/templates/` and requirements in `planning-mds/`
 - Agents never hard-code project-specific business logic in their role definitions
@@ -73,7 +73,7 @@ This policy defines the boundary between generic, reusable agent roles (`agents/
 2. Create new `planning-mds/` directory structure
 3. Write new domain knowledge in `planning-mds/domain/`
 4. Create new project-specific examples in `planning-mds/examples/`
-5. Write new INCEPTION.md for the new project
+5. Write new BLUEPRINT.md for the new project
 6. Agents are immediately ready to use with new project context
 
 ---

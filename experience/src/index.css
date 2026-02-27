@@ -108,6 +108,9 @@
   --color-surface-card-hover: var(--surface-card-hover);
   --color-surface-border: var(--surface-border);
   --color-surface-highlight: var(--surface-highlight);
+  --color-surface-panel: var(--surface-card);
+  --color-surface-raised: var(--surface-card-hover);
+  --color-border-muted: var(--surface-border);
 
   /* Sidebar Tokens */
   --color-sidebar-bg: var(--sidebar-bg);

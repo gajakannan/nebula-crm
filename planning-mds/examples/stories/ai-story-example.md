@@ -1,7 +1,7 @@
 # Story: AI-Powered Customer Risk Assessment
 
 **Story ID:** AI-1
-**Epic/Feature:** F-AI - Intelligent Customer Insights
+**Feature:** F-AI - Intelligent Customer Insights
 **Title:** AI-powered customer risk assessment with recommendations
 **Priority:** High
 **Phase:** Post-MVP (AI Features)

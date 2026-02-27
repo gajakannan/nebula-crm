@@ -42,8 +42,8 @@ Feature Complete
 
 1. **Activate Architect agent** by reading `agents/architect/SKILL.md`
 2. **Read context:**
-   - Feature stories in `planning-mds/stories/`
-   - `planning-mds/INCEPTION.md` scope and constraints
+   - Feature stories in `planning-mds/features/F{NNNN}-{slug}/F{NNNN}-S{NNNN}-{slug}.md`
+   - `planning-mds/BLUEPRINT.md` scope and constraints
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - `planning-mds/api/` contracts for this feature
 3. **Produce feature assembly plan:**
@@ -93,7 +93,7 @@ All stack-specific execution (compile/tests/scans) must run in application runti
 #### 1a. Backend Developer (Feature Scope)
 1. **Activate Backend Developer agent** by reading `agents/backend-developer/SKILL.md`
 2. **Read context:**
-   - `planning-mds/INCEPTION.md` Section 4 (architecture for this feature)
+   - `planning-mds/BLUEPRINT.md` Section 4 (architecture for this feature)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - User stories for THIS FEATURE ONLY
 3. **Execute responsibilities (feature-scoped):**
@@ -121,7 +121,7 @@ All stack-specific execution (compile/tests/scans) must run in application runti
 #### 1b. Frontend Developer (Feature Scope)
 1. **Activate Frontend Developer agent** by reading `agents/frontend-developer/SKILL.md`
 2. **Read context:**
-   - `planning-mds/INCEPTION.md` Section 3 (screens for this feature)
+   - `planning-mds/BLUEPRINT.md` Section 3 (screens for this feature)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - API contracts for THIS FEATURE ONLY
 3. **Execute responsibilities (feature-scoped):**
@@ -274,7 +274,7 @@ Run these review agents in parallel:
 2. **Read context:**
    - Feature code produced in Step 1
    - Application runtime validation outputs (test, lint, SAST, dependency scan reports)
-   - `planning-mds/INCEPTION.md` (feature requirements)
+   - `planning-mds/BLUEPRINT.md` (feature requirements)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - Feature user stories with acceptance criteria
 
@@ -338,7 +338,7 @@ Run these review agents in parallel:
 2. **Read context:**
    - Feature code produced in Step 1
    - Application runtime validation outputs (test, lint, SAST, dependency scan reports)
-   - `planning-mds/INCEPTION.md` (feature requirements)
+   - `planning-mds/BLUEPRINT.md` (feature requirements)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - Feature user stories with acceptance criteria
    - Existing `planning-mds/security/` artifacts (if present)

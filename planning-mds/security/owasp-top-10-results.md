@@ -12,7 +12,7 @@ Implementation security evidence is tracked separately in `planning-mds/security
 
 ## Assessment Inputs
 
-- planning-mds/INCEPTION.md
+- planning-mds/BLUEPRINT.md
 - planning-mds/api/nebula-api.yaml
 - planning-mds/architecture/*
 - planning-mds/security/*

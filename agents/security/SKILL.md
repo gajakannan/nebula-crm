@@ -99,7 +99,7 @@ During `agents/actions/review.md`, you run in parallel with Code Reviewer:
 ## Required Inputs
 
 Always gather these before reviewing:
-- `planning-mds/INCEPTION.md`
+- `planning-mds/BLUEPRINT.md`
 - `planning-mds/architecture/SOLUTION-PATTERNS.md`
 - `planning-mds/architecture/decisions/`
 - `planning-mds/security/` (if present)
@@ -370,7 +370,7 @@ A security review is complete only when:
 ```bash
 # 1) Read role spec and context
 cat agents/security/SKILL.md
-cat planning-mds/INCEPTION.md
+cat planning-mds/BLUEPRINT.md
 
 # 2) Validate baseline security planning artifacts
 python3 agents/security/scripts/security-audit.py planning-mds/security

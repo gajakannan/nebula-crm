@@ -1,6 +1,6 @@
 # Screen Specification Examples
 
-Use these examples when creating screen specifications for the insurance CRM. Screen specs should be stored in `planning-mds/INCEPTION.md` Section 3.5 or as separate files if needed.
+Use these examples when creating screen specifications for the insurance CRM. Screen specs should be stored in `planning-mds/BLUEPRINT.md` Section 3.5 or as separate files if needed.
 
 **Best Practice:** Define 5-10 key screens for MVP, covering primary user workflows.
 

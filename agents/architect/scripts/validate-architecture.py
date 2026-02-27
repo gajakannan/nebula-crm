@@ -2,13 +2,13 @@
 """
 Architecture Validation Script
 
-Validates architecture specifications in INCEPTION.md for completeness.
+Validates architecture specifications in BLUEPRINT.md for completeness.
 Pulls the entity list from the domain glossary.
 
 Usage:
-    python3 validate-architecture.py <path-to-inception-md> [glossary-file]
-    python3 validate-architecture.py planning-mds/INCEPTION.md
-    python3 validate-architecture.py planning-mds/INCEPTION.md planning-mds/domain/glossary.md
+    python3 validate-architecture.py <path-to-blueprint-md> [glossary-file]
+    python3 validate-architecture.py planning-mds/BLUEPRINT.md
+    python3 validate-architecture.py planning-mds/BLUEPRINT.md planning-mds/domain/glossary.md
 """
 
 import sys
@@ -26,8 +26,8 @@ class ArchitectureValidator:
         self.entities = []
         self.workflows = []
 
-    def load_inception(self) -> bool:
-        """Load INCEPTION.md content."""
+    def load_blueprint(self) -> bool:
+        """Load BLUEPRINT.md content."""
         try:
             self.content = self.file_path.read_text(encoding='utf-8')
             return True
@@ -79,9 +79,9 @@ class ArchitectureValidator:
 
         return entities
 
-    def extract_workflows_from_inception(self) -> List[str]:
+    def extract_workflows_from_blueprint(self) -> List[str]:
         """
-        Extract workflow names from section 1.4 of INCEPTION.md.
+        Extract workflow names from section 1.4 of BLUEPRINT.md.
 
         Expected format:
         ### 1.4 Critical workflows (baseline)
@@ -103,12 +103,12 @@ class ArchitectureValidator:
 
     def validate(self) -> Tuple[bool, List[str], List[str]]:
         """Validate architecture completeness."""
-        if not self.load_inception():
+        if not self.load_blueprint():
             return False, self.errors, self.warnings
 
-        # Extract entities from glossary, workflows from INCEPTION.md section 1.4
+        # Extract entities from glossary, workflows from BLUEPRINT.md section 1.4
         self.entities = self.extract_entities_from_glossary()
-        self.workflows = self.extract_workflows_from_inception()
+        self.workflows = self.extract_workflows_from_blueprint()
 
         # Check Phase B sections (4.x)
         self.check_service_boundaries()
@@ -272,8 +272,8 @@ class ArchitectureValidator:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 validate-architecture.py <inception-md-file> [glossary-file]")
-        print("Example: python3 validate-architecture.py planning-mds/INCEPTION.md planning-mds/domain/glossary.md")
+        print("Usage: python3 validate-architecture.py <blueprint-md-file> [glossary-file]")
+        print("Example: python3 validate-architecture.py planning-mds/BLUEPRINT.md planning-mds/domain/glossary.md")
         sys.exit(1)
 
     file_path = sys.argv[1]

@@ -146,7 +146,7 @@ Phase 3: Implementation (Generate Configs)
 
 2. **Consult Architect:**
    - Read `planning-mds/architecture/SOLUTION-PATTERNS.md`
-   - Read `planning-mds/INCEPTION.md` Section 4 (NFRs)
+   - Read `planning-mds/BLUEPRINT.md` Section 4 (NFRs)
    - Review architectural decisions and constraints
    - Optional: Ask Architect agent for clarification on deployment requirements
 
@@ -296,7 +296,7 @@ Phase 3: Implementation (Generate Configs)
 **Allowed Tools:** Read, Write, Edit, Bash (for Docker, deployment commands)
 
 **Required Resources:**
-- `planning-mds/INCEPTION.md` - Tech stack, deployment requirements
+- `planning-mds/BLUEPRINT.md` - Tech stack, deployment requirements
 - `planning-mds/architecture/` - Architecture, NFRs
 - Source code (to containerize and deploy)
 

@@ -7,7 +7,7 @@ Thanks for contributing to this framework.
 1. Read `README.md`.
 2. Read `BOUNDARY-POLICY.md`.
 3. Confirm whether your change is:
-   - framework-generic (`agents/`, `inception-setup/`, docs), or
+   - framework-generic (`agents/`, `blueprint-setup/`, docs), or
    - solution-specific (`planning-mds/`).
 
 ## 2) Contribution Flow

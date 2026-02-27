@@ -6,8 +6,8 @@ This document provides generic user story examples across different domains. Use
 
 ## Example 1: Task Management - Create Task
 
-**Story ID:** S1
-**Feature:** F1 - Task Organization
+**Story ID:** F0001-S0001
+**Feature:** F0001 - Task Organization
 **Domain:** Productivity SaaS
 
 **User Story:**
@@ -77,8 +77,8 @@ Project managers currently track tasks in spreadsheets, leading to version contr
 
 ## Example 2: E-commerce - Add to Cart
 
-**Story ID:** S2
-**Feature:** F2 - Shopping Cart
+**Story ID:** F0002-S0001
+**Feature:** F0002 - Shopping Cart
 **Domain:** E-commerce
 
 **User Story:**

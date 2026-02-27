@@ -4,7 +4,7 @@
 
 ---
 
-## Feature F1: Broker & MGA Relationship Management
+## Feature F0002: Broker & MGA Relationship Management
 
 **Feature Statement:**
 As a Distribution user, I want to manage broker relationships so that I can grow premium and track broker performance.
@@ -30,17 +30,17 @@ Centralize broker data, activity history, and relationship management to improve
 - Automated broker onboarding workflows (Future)
 
 **Related Stories:**
-- S1: Create Broker
-- S2: Read Broker (360 View)
-- S3: Update Broker
-- S4: Delete Broker
-- S5: Manage Broker Hierarchy
-- S6: Manage Broker Contacts
-- S7: View Broker Activity Timeline
+- F0002-S0001: Create Broker
+- F0002-S0002: Read Broker (360 View)
+- F0002-S0003: Update Broker
+- F0002-S0004: Delete Broker
+- F0002-S0005: Manage Broker Hierarchy
+- F0002-S0006: Manage Broker Contacts
+- F0002-S0007: View Broker Activity Timeline
 
 ---
 
-## Feature F2: Account 360 & Activity Timeline
+## Feature F0003: Account 360 & Activity Timeline
 
 **Feature Statement:**
 As an Underwriter, I want to see all account information and activity in one place so that I can make informed underwriting decisions.
@@ -66,14 +66,14 @@ Provide complete account context including submissions, renewals, communications
 - Integration with third-party data providers (Phase 1)
 
 **Related Stories:**
-- S8: View Account Overview
-- S9: View Activity Timeline
-- S10: View Related Submissions
-- S11: Access Account Documents
+- F0003-S0001: View Account Overview
+- F0003-S0002: View Activity Timeline
+- F0003-S0003: View Related Submissions
+- F0003-S0004: Access Account Documents
 
 ---
 
-## Feature F3: Submission Intake Workflow
+## Feature F0004: Submission Intake Workflow
 
 **Feature Statement:**
 As a Distribution user, I want to efficiently intake and triage new submissions so that they reach the right underwriter quickly.
@@ -99,10 +99,10 @@ Streamline submission intake process to reduce time-to-quote and improve submiss
 - Automated pricing (Phase 1)
 
 **Related Stories:**
-- S12: Create Submission
-- S13: Upload Submission Documents
-- S14: Route Submission to Underwriter
-- S15: Track Submission Status
+- F0004-S0001: Create Submission
+- F0004-S0002: Upload Submission Documents
+- F0004-S0003: Route Submission to Underwriter
+- F0004-S0004: Track Submission Status
 
 ---
 

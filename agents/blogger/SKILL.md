@@ -93,7 +93,7 @@ You do not invent accomplishments or metrics. You write from evidence in code, p
 ## Required Inputs
 
 Before drafting, gather:
-- `planning-mds/INCEPTION.md`
+- `planning-mds/BLUEPRINT.md`
 - `planning-mds/architecture/decisions/` (ADRs)
 - Relevant feature/story artifacts
 - Recent code changes and test outcomes
@@ -319,7 +319,7 @@ cat agents/blogger/SKILL.md
 cat agents/actions/blog.md
 
 # 2) Gather planning and decision context
-cat planning-mds/INCEPTION.md
+cat planning-mds/BLUEPRINT.md
 ls -la planning-mds/architecture/decisions/
 
 # 3) Inspect candidate source material for the post

@@ -3,8 +3,8 @@
 Nebula API contract checks.
 
 Validates story-critical constraints that are intentionally solution-specific:
-- S1 create-broker conflict behavior (POST /api/brokers -> 409)
-- S2 broker search query semantics and constraints
+- F0002-S0001 create-broker conflict behavior (POST /api/brokers -> 409)
+- F0002-S0002 broker search query semantics and constraints
 - Nebula baseline error contract profile (RFC 7807 ProblemDetails)
 
 Usage:
@@ -131,20 +131,20 @@ def validate_nebula_contract(spec: Dict[str, Any]) -> List[str]:
     paths = spec.get("paths", {})
     brokers_path = paths.get("/api/brokers")
     if not isinstance(brokers_path, dict):
-        errors.append("Missing /api/brokers path (required by S1 and S2)")
+        errors.append("Missing /api/brokers path (required by F0002-S0001 and F0002-S0002)")
         return errors
 
     create_operation = brokers_path.get("post")
     if not isinstance(create_operation, dict):
-        errors.append("Missing POST /api/brokers operation (S1)")
+        errors.append("Missing POST /api/brokers operation (F0002-S0001)")
     else:
         responses = create_operation.get("responses", {})
         if "409" not in responses:
-            errors.append("POST /api/brokers must define 409 Conflict for duplicate license behavior (S1)")
+            errors.append("POST /api/brokers must define 409 Conflict for duplicate license behavior (F0002-S0001)")
 
     search_operation = brokers_path.get("get")
     if not isinstance(search_operation, dict):
-        errors.append("Missing GET /api/brokers operation (S2)")
+        errors.append("Missing GET /api/brokers operation (F0002-S0002)")
         return errors
 
     raw_parameters = search_operation.get("parameters", [])
@@ -159,7 +159,7 @@ def validate_nebula_contract(spec: Dict[str, Any]) -> List[str]:
         None,
     )
     if query_param is None:
-        errors.append("GET /api/brokers must define query parameter 'q' (S2)")
+        errors.append("GET /api/brokers must define query parameter 'q' (F0002-S0002)")
     else:
         schema = query_param.get("schema", {})
         if schema.get("type") != "string":
@@ -174,7 +174,7 @@ def validate_nebula_contract(spec: Dict[str, Any]) -> List[str]:
         None,
     )
     if status_param is None:
-        errors.append("GET /api/brokers must define optional query parameter 'status' (S2)")
+        errors.append("GET /api/brokers must define optional query parameter 'status' (F0002-S0002)")
     else:
         status_schema = status_param.get("schema", {})
         enum_values = status_schema.get("enum", [])

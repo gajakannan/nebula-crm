@@ -189,9 +189,9 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 **Allowed Tools:** Read, Write, Edit, Bash (for npm/pnpm commands)
 
 **Required Resources:**
-- `planning-mds/INCEPTION.md` - Sections 3.x (screens, stories) and 4.x (API contracts)
+- `planning-mds/BLUEPRINT.md` - Sections 3.x (screens, stories) and 4.x (API contracts)
 - `planning-mds/screens/` - Screen specifications
-- `planning-mds/stories/` - User stories with acceptance criteria
+- `planning-mds/features/` - Feature folders with colocated user stories and acceptance criteria
 - `planning-mds/api/` - OpenAPI contracts for API endpoints
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Frontend patterns
 - `experience/src/index.css` - Theme tokens and semantic color mappings

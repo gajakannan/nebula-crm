@@ -92,7 +92,7 @@ You do not invent product behavior. You document what is implemented and explici
 ## Required Inputs
 
 Always gather these before drafting:
-- `planning-mds/INCEPTION.md`
+- `planning-mds/BLUEPRINT.md`
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` (if present)
 - Relevant architecture decisions under `planning-mds/architecture/decisions/`
 - Relevant source code and config files
@@ -333,7 +333,7 @@ cat agents/technical-writer/SKILL.md
 cat agents/actions/document.md
 
 # 2) Read planning and architecture context
-cat planning-mds/INCEPTION.md
+cat planning-mds/BLUEPRINT.md
 
 # 3) Inspect current docs and impacted code
 rg --files docs planning-mds | sort

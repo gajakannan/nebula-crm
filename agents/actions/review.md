@@ -41,7 +41,7 @@ Execute these review agents **in parallel**:
    - Source code (backend, frontend, and `neuron/` when AI scope exists)
    - Test suites
    - Application runtime validation outputs (test, lint, SAST, dependency scan reports)
-   - `planning-mds/INCEPTION.md` (requirements and architecture)
+   - `planning-mds/BLUEPRINT.md` (requirements and architecture)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - User stories with acceptance criteria
 
@@ -127,7 +127,7 @@ Execute these review agents **in parallel**:
 
 2. **Read context:**
    - Source code (backend and frontend)
-   - `planning-mds/INCEPTION.md` Section 4.5 (authorization model)
+   - `planning-mds/BLUEPRINT.md` Section 4.5 (authorization model)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md`
    - `planning-mds/security/` (threat model, if exists)
 

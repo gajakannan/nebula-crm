@@ -123,7 +123,7 @@ Orchestrators must distinguish between failure types and apply appropriate handl
      Previous output was invalid. Errors found:
      - Missing required section: "3.2 Personas"
      - Invalid JSON in line 45: unexpected token
-     - Broken reference: Link to non-existent story S99
+     - Broken reference: Link to non-existent story F0001-S0099
 
      Please correct these issues and regenerate output.
      ```
@@ -519,8 +519,8 @@ At minimum, it must satisfy the following action-level I/O requirements:
 
 | Action | Contract Source | Required Inputs | Primary Outputs | Gate Handling |
 |---|---|---|---|---|
-| `init` | `agents/actions/init.md` | Project name, domain context, target users, initial entities | `planning-mds/` scaffold, `planning-mds/INCEPTION.md`, `planning-mds/domain/glossary.md`, `planning-mds/architecture/SOLUTION-PATTERNS.md` | No explicit approval gate; validate required artifacts exist |
-| `plan` | `agents/actions/plan.md` | Existing `planning-mds/INCEPTION.md`, domain/context inputs, user clarifications | Updated `INCEPTION.md`, planning artifacts (stories/personas/features/screens), architecture specs and contracts per action | Enforce all gates defined in action (including requirement and architecture approvals) |
+| `init` | `agents/actions/init.md` | Project name, domain context, target users, initial entities | `planning-mds/` scaffold, `planning-mds/BLUEPRINT.md`, `planning-mds/domain/glossary.md`, `planning-mds/architecture/SOLUTION-PATTERNS.md` | No explicit approval gate; validate required artifacts exist |
+| `plan` | `agents/actions/plan.md` | Existing `planning-mds/BLUEPRINT.md`, domain/context inputs, user clarifications | Updated `BLUEPRINT.md`, planning artifacts (stories/personas/features/screens), architecture specs and contracts per action | Enforce all gates defined in action (including requirement and architecture approvals) |
 | `build` | `agents/actions/build.md` | Approved planning + architecture artifacts, stories, API and pattern references | Production code, tests, deployment configs, build/review summaries | Enforce severity-based review/security gates (no critical override) and route on user decision |
 | `feature` | `agents/actions/feature.md` | Feature-scoped stories + architecture/API context | Feature-scoped backend/frontend/AI changes and tests, feature review output | Enforce severity-based feature gate outcome (critical blocks approval) |
 | `review` | `agents/actions/review.md` | Candidate implementation artifacts and applicable planning/architecture references | Code-quality and security review findings with remediation expectations | Enforce severity-based review gate outcome (critical blocks approval) |

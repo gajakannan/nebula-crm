@@ -495,7 +495,7 @@ Health check: HTTP GET /health
 
 **Read architectural decisions:**
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Established patterns
-- `planning-mds/INCEPTION.md` Section 4 - NFRs (performance, scalability, availability)
+- `planning-mds/BLUEPRINT.md` Section 4 - NFRs (performance, scalability, availability)
 - `planning-mds/architecture/decisions/*.md` - ADRs
 
 **Questions to answer:**

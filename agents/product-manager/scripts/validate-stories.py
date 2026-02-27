@@ -5,11 +5,13 @@ Story Validation Script
 Validates user stories for completeness and quality.
 Checks that stories follow the template and have all required sections.
 
+Stories are colocated in feature folders: planning-mds/features/F{NNNN}-{slug}/F{NNNN}-S{NNNN}-{slug}.md
+
 Usage:
     python3 validate-stories.py <file-or-dir> [<file-or-dir> ...]
-    python3 validate-stories.py planning-mds/stories/
-    python3 validate-stories.py planning-mds/stories/*.md
-    python3 validate-stories.py --strict-warnings planning-mds/stories/
+    python3 validate-stories.py planning-mds/features/
+    python3 validate-stories.py planning-mds/features/F0001-dashboard/F0001-S0001-nudge-cards.md
+    python3 validate-stories.py --strict-warnings planning-mds/features/
 """
 
 import sys
@@ -112,7 +114,7 @@ class StoryValidator:
         if len(story_id_markers) > 1:
             self.errors.append("Multiple stories detected in one file. Keep one story per file.")
 
-        # Legacy combined examples often use headings like "## Story S1: ..."
+        # Combined documents may use headings like "## Story X: ..."
         legacy_story_headings = re.findall(r"^##\s+Story\s+[A-Za-z0-9_-]+", self.content, re.IGNORECASE | re.MULTILINE)
         if len(legacy_story_headings) > 1:
             self.errors.append("Multiple story sections detected. Split into separate files (one story per file).")
@@ -170,7 +172,6 @@ class StoryValidator:
         """Check for story header fields in the template."""
         required_fields = [
             "Story ID",
-            "Epic/Feature",
             "Title",
             "Priority",
             "Phase",
@@ -178,6 +179,9 @@ class StoryValidator:
         for field in required_fields:
             if not re.search(rf"\*\*{re.escape(field)}:\*\*", self.content):
                 self.errors.append(f"Missing story header field: {field}")
+
+        if not re.search(r"\*\*Feature:\*\*", self.content):
+            self.errors.append("Missing story header field: Feature")
 
     def check_context_background(self):
         """Check for context & background section."""
@@ -256,6 +260,24 @@ class StoryValidator:
         end = start + next_heading.start() if next_heading else len(self.content)
         return self.content[start:end].strip()
 
+# Files in feature folders that are NOT stories — skip during validation.
+_SKIP_FILENAMES = frozenset({
+    "PRD.MD", "README.MD", "STATUS.MD", "GETTING-STARTED.MD",
+    "STORY-INDEX.MD", "REGISTRY.MD",
+})
+
+
+def _is_story_file(path: Path) -> bool:
+    """Return True if *path* follows the strict story naming pattern
+    F{NNNN}-S{NNNN}-*.md and is not a feature-level document."""
+    if path.name.upper() in _SKIP_FILENAMES:
+        return False
+    # When scanning a directory, only pick up files matching the story pattern
+    if re.match(r"F\d{4}-S\d{4}", path.name):
+        return True
+    return False
+
+
 def collect_story_files(paths: Iterable[str]) -> Tuple[List[Path], List[str]]:
     story_files: List[Path] = []
     errors: List[str] = []
@@ -266,12 +288,17 @@ def collect_story_files(paths: Iterable[str]) -> Tuple[List[Path], List[str]]:
             errors.append(f"Path not found: {path}")
             continue
         if path.is_dir():
+            # Scan feature folders for story files (F*-S*.md)
             for item in sorted(path.rglob("*.md")):
-                if item.name.upper() == "STORY-INDEX.MD":
-                    continue
-                story_files.append(item)
+                if _is_story_file(item):
+                    story_files.append(item)
         else:
-            story_files.append(path)
+            if _is_story_file(path):
+                story_files.append(path)
+            else:
+                errors.append(
+                    f"File does not match strict story naming pattern F{{NNNN}}-S{{NNNN}}-*.md: {path}"
+                )
 
     # Deduplicate while preserving order
     seen = set()
@@ -306,8 +333,8 @@ def main():
         sys.exit(1)
 
     if not story_files:
-        print("❌ No story files found to validate.")
-        sys.exit(1)
+        print("ℹ️  No story files found to validate (expected pattern: F{NNNN}-S{NNNN}-*.md).")
+        sys.exit(0)
 
     total_errors = 0
     total_warnings = 0

@@ -31,7 +31,7 @@ Ready for Build
 1. **Activate Product Manager agent** by reading `agents/product-manager/SKILL.md`
 
 2. **Read required context:**
-   - `planning-mds/INCEPTION.md` (Sections 0-2 for baseline context)
+   - `planning-mds/BLUEPRINT.md` (Sections 0-2 for baseline context)
    - `planning-mds/domain/` (domain glossary, if exists)
 
 3. **Execute Product Manager responsibilities:**
@@ -43,10 +43,11 @@ Ready for Build
    - Map key workflows across screens
 
 4. **Produce outputs:**
-   - Update `planning-mds/INCEPTION.md` Section 3 (complete, no TODOs)
+   - Update `planning-mds/BLUEPRINT.md` Section 3 (complete, no TODOs)
    - Create `planning-mds/examples/personas/*.md` (if detailed personas needed)
-   - Create `planning-mds/features/*.md` (if detailed feature specs are needed)
-   - Create `planning-mds/stories/` content (if detailed stories needed)
+   - Create feature folders at `planning-mds/features/F{NNNN}-{slug}/` with PRD.md, README.md, STATUS.md, GETTING-STARTED.md
+   - Create stories colocated in feature folders as `F{NNNN}-S{NNNN}-{slug}.md`
+   - Update `planning-mds/features/REGISTRY.md` with new features
 
 5. **Validate Phase A outputs:**
    - [ ] Vision and non-goals documented
@@ -58,10 +59,10 @@ Ready for Build
    - [ ] No TODOs remain in Section 3
 
 **Phase A Outputs:**
-- `planning-mds/INCEPTION.md` Section 3 (complete)
+- `planning-mds/BLUEPRINT.md` Section 3 (complete)
 - `planning-mds/examples/personas/` (optional)
-- `planning-mds/features/` (optional)
-- `planning-mds/stories/` (optional)
+- `planning-mds/features/F{NNNN}-{slug}/` (feature folders with PRD, README, STATUS, GETTING-STARTED, and story files)
+- `planning-mds/features/REGISTRY.md` (feature index)
 
 ---
 
@@ -240,10 +241,10 @@ Replace with:
 
    ═══════════════════════════════════════════════════════════
    Review the following files:
-   - planning-mds/INCEPTION.md (Section 3)
+   - planning-mds/BLUEPRINT.md (Section 3)
    - planning-mds/examples/personas/ (if created)
-   - planning-mds/features/ (if created)
-   - planning-mds/stories/ (if created)
+   - planning-mds/features/REGISTRY.md (feature index)
+   - planning-mds/features/F{NNNN}-{slug}/ (feature folders with PRDs and stories)
    ═══════════════════════════════════════════════════════════
    ```
 
@@ -299,7 +300,7 @@ Replace with:
 1. **Activate Architect agent** by reading `agents/architect/SKILL.md`
 
 2. **Read required context:**
-   - `planning-mds/INCEPTION.md` Sections 0-3 (especially Section 3 - approved requirements)
+   - `planning-mds/BLUEPRINT.md` Sections 0-3 (especially Section 3 - approved requirements)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md` (project-specific patterns to follow)
    - `planning-mds/domain/` (domain knowledge)
    - `agents/architect/references/` (generic architecture best practices)
@@ -324,7 +325,7 @@ Replace with:
    - [ ] All mutations create timeline events
 
 5. **Produce outputs:**
-   - Update `planning-mds/INCEPTION.md` Section 4 (complete, no TODOs)
+   - Update `planning-mds/BLUEPRINT.md` Section 4 (complete, no TODOs)
    - Create `planning-mds/architecture/decisions/*.md` (ADRs for key decisions)
    - Create `planning-mds/architecture/data-model.md` (if detailed ERD needed)
    - Create `planning-mds/api/*.yaml` (OpenAPI contracts for implementation)
@@ -342,7 +343,7 @@ Replace with:
    - [ ] No TODOs remain in Section 4
 
 **Phase B Outputs:**
-- `planning-mds/INCEPTION.md` Section 4 (complete)
+- `planning-mds/BLUEPRINT.md` Section 4 (complete)
 - `planning-mds/architecture/decisions/*.md` (ADRs)
 - `planning-mds/architecture/data-model.md` (optional)
 - `planning-mds/api/*.yaml` (OpenAPI contracts)
@@ -393,7 +394,7 @@ Replace with:
 
    ═══════════════════════════════════════════════════════════
    Review the following files:
-   - planning-mds/INCEPTION.md (Section 4)
+   - planning-mds/BLUEPRINT.md (Section 4)
    - planning-mds/architecture/decisions/ (ADRs)
    - planning-mds/architecture/SOLUTION-PATTERNS.md (patterns followed)
    ═══════════════════════════════════════════════════════════
@@ -499,7 +500,7 @@ Example: "Run the feature action for [specific feature name]"
 - [ ] Phase A completed and approved by user
 - [ ] Phase B completed and approved by user
 - [ ] All outputs exist in planning-mds/
-- [ ] No TODOs remain in INCEPTION.md Sections 3-4
+- [ ] No TODOs remain in BLUEPRINT.md Sections 3-4
 - [ ] SOLUTION-PATTERNS.md patterns documented and followed
 - [ ] Ready to proceed to build action
 
@@ -508,7 +509,7 @@ Example: "Run the feature action for [specific feature name]"
 ## Prerequisites
 
 Before running plan action:
-- [ ] `planning-mds/INCEPTION.md` exists with Sections 0-2 (baseline context)
+- [ ] `planning-mds/BLUEPRINT.md` exists with Sections 0-2 (baseline context)
 - [ ] Domain glossary exists or can be created
 - [ ] User is available to provide approvals at gates
 - [ ] User has clarified business requirements

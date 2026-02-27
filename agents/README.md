@@ -61,7 +61,7 @@ This directory contains **generic, reusable** agent role definitions for buildin
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  Single Source of Truth                                                     │
-│  └─ INCEPTION.md       │ Master specification (Sections 0-6)                │
+│  └─ BLUEPRINT.md       │ Master specification (Sections 0-6)                │
 │                                                                              │
 │  Domain Knowledge                                                           │
 │  └─ domain/            │ Glossary, competitive analysis                     │
@@ -84,7 +84,7 @@ This directory contains **generic, reusable** agent role definitions for buildin
 
 ─────────────────────────────────────────────────────────────────────────────
 
-  9 Actions · 11 Agents · 1 Source of Truth (INCEPTION.md)
+  9 Actions · 11 Agents · 1 Source of Truth (BLUEPRINT.md)
   SOLUTION-PATTERNS.md for institutional knowledge
   neuron/ for AI intelligence layer 🧠
 ```
@@ -103,7 +103,7 @@ This directory contains **generic, reusable** agent role definitions for buildin
 
 ## Single Source of Truth
 
-All agents read requirements from `planning-mds/INCEPTION.md` and related planning artifacts.
+All agents read requirements from `planning-mds/BLUEPRINT.md` and related planning artifacts.
 
 ## Agent Action Flow
 

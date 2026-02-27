@@ -21,10 +21,10 @@ Quality Engineer
 ## Inputs
 
 ### From Planning
-- User stories from `planning-mds/stories/`
-- Acceptance criteria from `INCEPTION.md` section 3
+- User stories from `planning-mds/features/` (colocated in feature folders)
+- Acceptance criteria from `BLUEPRINT.md` section 3
 - API contracts from `planning-mds/api/`
-- Workflows from `INCEPTION.md` section 4.4
+- Workflows from `BLUEPRINT.md` section 4.4
 
 ### From Codebase
 - Backend API endpoints

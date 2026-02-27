@@ -5,7 +5,7 @@ Generic validation scripts.
 ## validate-architecture.py
 
 ```bash
-python3 agents/architect/scripts/validate-architecture.py planning-mds/INCEPTION.md
+python3 agents/architect/scripts/validate-architecture.py planning-mds/BLUEPRINT.md
 ```
 
 ## validate-api-contract.py

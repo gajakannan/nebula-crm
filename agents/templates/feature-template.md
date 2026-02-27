@@ -1,19 +1,20 @@
 ---
-template: feature
-version: 1.1
+template: feature-prd
+version: 2.0
 applies_to: product-manager
 ---
 
-# Feature Specification Template
+# Product Requirements Document (PRD) Template
 
-Use this template to define a feature in a domain-neutral way. Project-specific features live in `planning-mds/features/`.
+Use this template to define a feature as a comprehensive PRD. Each feature lives in its own folder at `planning-mds/features/F{NNNN}-{slug}/PRD.md`.
 
 ## Feature Header
 
-**Feature ID:** [F1, F2, ...]
+**Feature ID:** [F0001, F0002, ...]
 **Feature Name:** [Short descriptive name]
 **Priority:** [Critical | High | Medium | Low]
 **Phase:** [MVP | Phase 1 | Phase 2 | Future]
+**Status:** [Draft | In Progress | Complete | Archived]
 
 ## Feature Statement
 
@@ -44,6 +45,43 @@ Use this template to define a feature in a domain-neutral way. Project-specific 
 - [Explicit non-goal 1]
 - [Explicit non-goal 2]
 
+## Acceptance Criteria Overview
+
+High-level acceptance criteria for the feature as a whole. Individual stories refine these into testable scenarios.
+
+- [ ] [Feature-level criterion 1]
+- [ ] [Feature-level criterion 2]
+- [ ] [Feature-level criterion 3]
+
+## UX / Screens
+
+List screens and key interactions this feature introduces or modifies.
+
+| Screen | Purpose | Key Actions |
+|--------|---------|-------------|
+| [Screen name] | [What it does] | [Primary user actions] |
+
+**Key Workflows:**
+1. [Workflow name] — [Brief description of steps]
+
+## Data Requirements
+
+**Core Entities:**
+- [Entity]: [Purpose and key fields]
+
+**Validation Rules:**
+- [Rule 1]
+- [Rule 2]
+
+**Data Relationships:**
+- [Entity A] → [Entity B]: [Relationship type and meaning]
+
+## Role-Based Access
+
+| Role | Access Level | Notes |
+|------|-------------|-------|
+| [Role] | [Create / Read / Update / Delete] | [Constraints] |
+
 ## Success Criteria
 
 - [Measurable outcome 1]
@@ -60,10 +98,12 @@ Use this template to define a feature in a domain-neutral way. Project-specific 
 - [Dependency 1]
 - [Dependency 2]
 
-## Related User Stories
+## Related Stories
 
-- [Story ID] - [Story title]
-- [Story ID] - [Story title]
+Stories are colocated in this feature folder as `F{NNNN}-S{NNNN}-{slug}.md`.
+
+- [F0001-S0001] - [Story title]
+- [F0001-S0002] - [Story title]
 
 ## Rollout & Enablement (Optional)
 

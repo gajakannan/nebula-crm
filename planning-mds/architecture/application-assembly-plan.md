@@ -6,18 +6,18 @@
 
 ## Purpose
 
-Provide a sequenced, cross‑role plan to assemble the Nebula CRM implementation without blocking dependencies, while keeping F0 (Dashboard) and F1 (Broker Relationship Management) aligned to the approved architecture and contracts.
+Provide a sequenced, cross‑role plan to assemble the Nebula CRM implementation without blocking dependencies, while keeping F0001 (Dashboard) and F0002 (Broker Relationship Management) aligned to the approved architecture and contracts.
 
 ## Scope
 
 - Modules: BrokerRelationship, Submission, Renewal, TaskManagement, TimelineAudit, IdentityAuthorization, Dashboard
-- Features in scope: F0, F1 (MVP)
-- Out of scope: External portal, analytics/insights beyond F0/F1, deployment hardening
-- **F5 Task Write Endpoints:** Out of scope for this implementation pass. Task write endpoints (`POST /api/tasks`, `PUT /api/tasks/{taskId}`, `DELETE /api/tasks/{taskId}`) are not registered and return HTTP 404. Dashboard (F0) only reads tasks. Test data for the My Tasks and Nudge widgets will be provided via a dev seed migration. The story index lists F5-S1/S2/S3 as MVP priority for future activation, not for this pass.
+- Features in scope: F0001, F0002 (MVP)
+- Out of scope: External portal, analytics/insights beyond F0001/F0002, deployment hardening
+- **F0003 Task Write Endpoints:** Out of scope for this implementation pass. Task write endpoints (`POST /api/tasks`, `PUT /api/tasks/{taskId}`, `DELETE /api/tasks/{taskId}`) are not registered and return HTTP 404. Dashboard (F0001) only reads tasks. Test data for the My Tasks and Nudge widgets will be provided via a dev seed migration. The story index lists F0003-S0001, F0003-S0002, and F0003-S0003 as MVP priority for future activation, not for this pass.
 
 ## Required Inputs (Must Exist)
 
-- `planning-mds/INCEPTION.md` (Phase A complete)
+- `planning-mds/BLUEPRINT.md` (Phase A complete)
 - `planning-mds/api/nebula-api.yaml` (OpenAPI contract)
 - `planning-mds/security/authorization-matrix.md` and `planning-mds/security/policies/policy.csv`
 - `planning-mds/architecture/SOLUTION-PATTERNS.md`
@@ -56,9 +56,9 @@ Provide a sequenced, cross‑role plan to assemble the Nebula CRM implementation
 ### 3) Contract‑First API Implementation
 
 **Backend**
-- Implement only endpoints defined in `planning-mds/api/nebula-api.yaml` that are in scope for F0 and F1.
+- Implement only endpoints defined in `planning-mds/api/nebula-api.yaml` that are in scope for F0001 and F0002.
 - For out-of-scope endpoints and schemas (see `planning-mds/schemas/README.md`), do not register routes; callers should receive HTTP 404.
-- Until F5 is activated, task write endpoints (`POST /api/tasks`, `PUT /api/tasks/{taskId}`, `DELETE /api/tasks/{taskId}`) are treated as out-of-scope and must return 404.
+- Until F0003 is activated, task write endpoints (`POST /api/tasks`, `PUT /api/tasks/{taskId}`, `DELETE /api/tasks/{taskId}`) are treated as out-of-scope and must return 404.
 - Enforce schema validation on request payloads.
 - Ensure policy checks for every endpoint (ABAC + role action).
 
@@ -68,7 +68,7 @@ Provide a sequenced, cross‑role plan to assemble the Nebula CRM implementation
 **Checkpoint C:**
 - Contract validation passes; all endpoints return correct shape for dummy data.
 
-### 4) Feature Assembly (F0 + F1)
+### 4) Feature Assembly (F0001 + F0002)
 
 Follow the feature assembly plan to build complete vertical slices.
 
@@ -79,7 +79,7 @@ Follow the feature assembly plan to build complete vertical slices.
 - Security checks: verify deny‑by‑default behavior for missing policies.
 
 **Checkpoint D:**
-- End‑to‑end smoke tests across F0/F1 succeed.
+- End‑to‑end smoke tests across F0001/F0002 succeed.
 
 ## Handoff Contracts
 
@@ -89,7 +89,7 @@ Follow the feature assembly plan to build complete vertical slices.
 
 ## Exit Criteria (Phase C)
 
-- All F0 and F1 stories pass acceptance criteria.
+- All F0001 and F0002 stories pass acceptance criteria.
 - API contract validation passes.
 - ABAC enforcement verified with basic integration tests.
 - UI renders core flows without fallback errors.

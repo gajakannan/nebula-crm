@@ -14,14 +14,14 @@ Architect (architecture validation) + Product Manager (requirements validation)
 
 ## Prerequisites
 
-- [ ] `planning-mds/INCEPTION.md` exists with planning content
+- [ ] `planning-mds/BLUEPRINT.md` exists with planning content
 - [ ] Architecture artifacts exist (data model, API contracts, workflows)
 - [ ] Optional: Implementation code exists (for implementation validation)
 
 ## Inputs
 
 ### From Planning
-- `planning-mds/INCEPTION.md` (all sections)
+- `planning-mds/BLUEPRINT.md` (all sections)
 - `planning-mds/architecture/` (architecture artifacts)
 - `planning-mds/examples/` (personas, features, stories, screens)
 - `planning-mds/domain/glossary.md`
@@ -69,7 +69,7 @@ Architect (architecture validation) + Product Manager (requirements validation)
 
 ### Product Manager (Requirements Validation)
 
-1. **Check INCEPTION.md Section 3 completeness**
+1. **Check BLUEPRINT.md Section 3 completeness**
    - [ ] All subsections filled (3.1-3.5)
    - [ ] No TODO or placeholder text
 
@@ -135,7 +135,7 @@ Architect (architecture validation) + Product Manager (requirements validation)
 
 
 ### Architect (Architecture Validation)
-1. Check `INCEPTION.md` section 4 completeness
+1. Check `BLUEPRINT.md` section 4 completeness
 2. Validate service boundaries are clear
 3. Check data model completeness and consistency
 4. Validate API contracts align with stories
@@ -157,7 +157,7 @@ Architect (architecture validation) + Product Manager (requirements validation)
 ## Validation Criteria
 
 ### Requirements Valid
-- [ ] All INCEPTION.md section 3 subsections complete
+- [ ] All BLUEPRINT.md section 3 subsections complete
 - [ ] No TODOs or placeholders remain
 - [ ] Vision and non-goals clear
 - [ ] All features trace to user needs
@@ -166,7 +166,7 @@ Architect (architecture validation) + Product Manager (requirements validation)
 - [ ] Scope boundaries explicit
 
 ### Architecture Valid
-- [ ] All INCEPTION.md section 4 subsections complete
+- [ ] All BLUEPRINT.md section 4 subsections complete
 - [ ] Service boundaries defined
 - [ ] Data model complete with relationships
 - [ ] API contracts match user stories

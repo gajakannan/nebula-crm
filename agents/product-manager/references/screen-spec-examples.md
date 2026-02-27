@@ -11,7 +11,7 @@ This document provides generic screen specification examples across different do
 **Screen Name:** Task List
 **Route:** `/tasks`
 **User Persona:** Project Manager (Alex Rivera)
-**Feature:** F1 - Task Organization
+**Feature:** F0001 - Task Organization
 
 **Purpose:**
 Display all tasks in a filterable, searchable list with status indicators and quick actions.
@@ -201,7 +201,7 @@ Display all tasks in a filterable, searchable list with status indicators and qu
 **Screen Name:** Product Detail
 **Route:** `/products/:id`
 **User Persona:** Customer (Maria Santos - shopping for clothing)
-**Feature:** F2 - Product Catalog
+**Feature:** F0002 - Product Catalog
 
 **Purpose:**
 Display product details, images, pricing, and "Add to Cart" functionality.

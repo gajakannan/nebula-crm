@@ -9,7 +9,7 @@ Initial preview mode note:
 - [ ] Clone repository
 - [ ] Read `README.md`
 - [ ] (Optional) Build/run the framework container: `docker build -t nebula-agent-builder .`
-- [ ] Review `inception-setup/README.md`
+- [ ] Review `blueprint-setup/README.md`
 - [ ] Understand `BOUNDARY-POLICY.md`
 - [ ] Review `docs/MANUAL-ORCHESTRATION-RUNBOOK.md`
 - [ ] Review `docs/PREVIEW-RELEASE-CHECKLIST.md`
@@ -17,14 +17,14 @@ Initial preview mode note:
 ## Step 2: Copy Framework (30 minutes)
 
 - [ ] Copy `agents/` to your new repo
-- [ ] Copy `inception-setup/` to your new repo
+- [ ] Copy `blueprint-setup/` to your new repo
 - [ ] Update root `README.md` title
 - [ ] (Optional) Adapt tech stack references
 
 ## Step 3: Bootstrap Planning (2–4 hours)
 
 - [ ] Create `planning-mds/` folder structure
-- [ ] Create `planning-mds/INCEPTION.md` from template
+- [ ] Create `planning-mds/BLUEPRINT.md` from template
 - [ ] Document domain knowledge in `planning-mds/domain/`
 - [ ] Create 3–5 initial personas
 
@@ -41,8 +41,8 @@ Initial preview mode note:
 - [ ] Review `lifecycle-stage.yaml` and confirm `current_stage` is correct
 - [ ] Run `python3 scripts/run-lifecycle-gates.py --list`
 - [ ] Run `python3 scripts/run-lifecycle-gates.py`
-- [ ] Run `python3 agents/product-manager/scripts/validate-stories.py planning-mds/stories`
-- [ ] (Optional strict mode) Run `python3 agents/product-manager/scripts/validate-stories.py --strict-warnings planning-mds/stories`
+- [ ] Run `python3 agents/product-manager/scripts/validate-stories.py planning-mds/features`
+- [ ] (Optional strict mode) Run `python3 agents/product-manager/scripts/validate-stories.py --strict-warnings planning-mds/features`
 - [ ] Verify no solution-specific content in `agents/`
 - [ ] Run `python3 scripts/validate-genericness.py`
 - [ ] Confirm all specs follow templates

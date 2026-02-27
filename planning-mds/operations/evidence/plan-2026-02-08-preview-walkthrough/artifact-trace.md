@@ -5,8 +5,8 @@
 - `agents/actions/plan.md`
 - `agents/product-manager/SKILL.md`
 - `agents/architect/SKILL.md`
-- `planning-mds/INCEPTION.md`
-- `planning-mds/stories/STORY-INDEX.md`
+- `planning-mds/BLUEPRINT.md`
+- `planning-mds/features/STORY-INDEX.md`
 - `lifecycle-stage.yaml`
 
 ## Artifacts Written

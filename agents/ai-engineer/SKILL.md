@@ -126,7 +126,7 @@ Your responsibility is to build the **intelligence layer** (neuron/) that powers
 
 **Required Resources:**
 - `neuron/` - AI intelligence layer (Python codebase)
-- `planning-mds/INCEPTION.md` - Requirements for AI features
+- `planning-mds/BLUEPRINT.md` - Requirements for AI features
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Architecture patterns
 - `agents/ai-engineer/references/` - AI engineering best practices
 

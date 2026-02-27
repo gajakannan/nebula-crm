@@ -1,17 +1,17 @@
 # User Story Index
 
-Auto-generated index of all user stories.
+Auto-generated index of all user stories across feature folders.
 
 **Total Stories:** 2
 
 ---
 
-## F1 - Broker Relationship Management
+## F0002 - Broker Relationship Management
 
 | Story ID | Title | Priority | Phase | Persona |
 |----------|-------|----------|-------|---------|
-| [S1](./S1-create-broker.md) | Create a new broker record | Critical | MVP | Distribution Manager |
-| [S2](./S2-search-brokers.md) | Search brokers by name or license number | High | MVP | Distribution Manager |
+| [F0002-S0001](./F0002-S0001-create-broker.md) | Create a new broker record | Critical | MVP | Distribution Manager |
+| [F0002-S0002](./F0002-S0002-search-brokers.md) | Search brokers by name or license number | High | MVP | Distribution Manager |
 
 ---
 

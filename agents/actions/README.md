@@ -25,7 +25,7 @@ An action is a **composition recipe** that:
 ## Action Index
 
 ### Bootstrap Actions
-- **[init](./init.md)** - Bootstrap a new project structure and inception document
+- **[init](./init.md)** - Bootstrap a new project structure and blueprint document
 
 ### Planning Actions
 - **[plan](./plan.md)** - Complete planning flow (Phase A + B): requirements → architecture

@@ -14,7 +14,7 @@ export function TopBar({ title }: TopBarProps) {
   const [notifOpen, setNotifOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-surface-border bg-surface-bg px-4 lg:rounded-t-xl">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-topbar-border bg-topbar-bg px-4 lg:rounded-t-xl">
       <button
         onClick={openMobile}
         aria-label="Open navigation menu"
@@ -38,7 +38,7 @@ export function TopBar({ title }: TopBarProps) {
       </button>
       {title && (
         <>
-          <div className="hidden lg:block h-5 w-px bg-sidebar-border" />
+          <div className="hidden lg:block h-5 w-px bg-topbar-border" />
           <h1 className="hidden text-xl font-semibold text-text-primary lg:block">
             {title}
           </h1>

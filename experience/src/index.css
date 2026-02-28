@@ -2,7 +2,8 @@
 
 /* Theme Custom Properties — dark default */
 :root {
-  --surface-bg: #0b1118;
+  --shell-frame-bg: #0a141b;
+  --surface-bg: var(--shell-frame-bg);
   --surface-card: rgba(17, 25, 35, 0.82);
   --surface-card-hover: rgba(21, 30, 42, 0.92);
   --surface-border: rgba(191, 211, 232, 0.12);
@@ -10,26 +11,33 @@
   --text-primary: #e8eef7;
   --text-secondary: #b4c0cf;
   --text-muted: #8190a4;
-  --sidebar-bg: rgba(7, 12, 18, 0.97);
-  --sidebar-border: rgba(148, 163, 184, 0.16);
-  --sidebar-hover: rgba(76, 131, 214, 0.10);
-  --sidebar-active-bg: rgba(76, 131, 214, 0.17);
-  --sidebar-active-text: #a8c6ee;
-  --bg-glow-1: rgba(76, 131, 214, 0.08);
-  --bg-glow-2: rgba(47, 122, 163, 0.06);
-  --shell-inset-bg: var(--sidebar-bg);
-  --shell-inset-shadow: 0 10px 24px rgba(4, 8, 16, 0.24);
-  --effect-text-shadow-logo: 0 0 8px rgba(76, 131, 214, 0.24);
+  --frame-bg: var(--shell-frame-bg);
+  --frame-border: rgba(122, 151, 166, 0.20);
+  --sidebar-bg: var(--frame-bg);
+  --sidebar-border: var(--frame-border);
+  --topbar-bg: #071018;
+  --topbar-border: rgba(122, 151, 166, 0.34);
+  --sidebar-hover: rgba(57, 143, 135, 0.12);
+  --sidebar-active-bg: rgba(57, 143, 135, 0.21);
+  --sidebar-active-text: #97d6cc;
+  --bg-glow-1: rgba(57, 143, 135, 0.11);
+  --bg-glow-2: rgba(37, 112, 122, 0.08);
+  --shell-inset-bg: #0f1c25;
+  --shell-inset-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.45);
+  --effect-text-shadow-logo: 0 0 8px rgba(57, 143, 135, 0.26);
   --effect-shadow-alert-error: 0 0 20px rgba(201, 92, 92, 0.08);
   --effect-shadow-alert-warning: 0 0 20px rgba(207, 154, 49, 0.08);
-  --effect-shadow-alert-info: 0 0 20px rgba(79, 143, 214, 0.10);
-  --effect-shadow-cta-brand: 0 0 12px rgba(76, 131, 214, 0.16);
+  --effect-shadow-alert-info: 0 0 20px rgba(57, 143, 135, 0.12);
+  --effect-shadow-cta-brand: 0 0 12px rgba(57, 143, 135, 0.20);
   --effect-shadow-task-overdue: 0 0 15px rgba(201, 92, 92, 0.06);
-  --effect-shadow-task-hover: 0 0 15px rgba(76, 131, 214, 0.07);
+  --effect-shadow-task-hover: 0 0 15px rgba(57, 143, 135, 0.10);
 }
 
 [data-theme="light"] {
-  --surface-bg: #f4f7fb;
+  --shell-frame-bg: #e1eaef;
+  --surface-bg: var(--shell-frame-bg);
   --surface-card: rgba(255, 255, 255, 0.93);
   --surface-card-hover: rgba(255, 255, 255, 0.98);
   --surface-border: rgba(30, 41, 59, 0.10);
@@ -37,31 +45,37 @@
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
-  --sidebar-bg: rgba(231, 238, 248, 0.95);
-  --sidebar-border: rgba(71, 85, 105, 0.14);
-  --sidebar-hover: rgba(76, 131, 214, 0.06);
-  --sidebar-active-bg: rgba(76, 131, 214, 0.12);
-  --sidebar-active-text: #315fae;
-  --bg-glow-1: rgba(76, 131, 214, 0.05);
-  --bg-glow-2: rgba(47, 122, 163, 0.035);
-  --shell-inset-bg: var(--sidebar-bg);
-  --shell-inset-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
-  --effect-text-shadow-logo: 0 0 8px rgba(76, 131, 214, 0.16);
+  --frame-bg: var(--shell-frame-bg);
+  --frame-border: rgba(92, 120, 133, 0.17);
+  --sidebar-bg: var(--frame-bg);
+  --sidebar-border: var(--frame-border);
+  --topbar-bg: #c5d3dd;
+  --topbar-border: rgba(78, 103, 118, 0.30);
+  --sidebar-hover: rgba(57, 143, 135, 0.09);
+  --sidebar-active-bg: rgba(57, 143, 135, 0.16);
+  --sidebar-active-text: #1b6f68;
+  --bg-glow-1: rgba(57, 143, 135, 0.06);
+  --bg-glow-2: rgba(37, 112, 122, 0.045);
+  --shell-inset-bg: #f4f8fb;
+  --shell-inset-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    inset 0 -2px 0 rgba(148, 163, 184, 0.32);
+  --effect-text-shadow-logo: 0 0 8px rgba(57, 143, 135, 0.16);
   --effect-shadow-alert-error: 0 0 20px rgba(201, 92, 92, 0.08);
   --effect-shadow-alert-warning: 0 0 20px rgba(207, 154, 49, 0.08);
-  --effect-shadow-alert-info: 0 0 20px rgba(79, 143, 214, 0.08);
-  --effect-shadow-cta-brand: 0 0 12px rgba(76, 131, 214, 0.12);
+  --effect-shadow-alert-info: 0 0 20px rgba(57, 143, 135, 0.09);
+  --effect-shadow-cta-brand: 0 0 12px rgba(57, 143, 135, 0.14);
   --effect-shadow-task-overdue: 0 0 15px rgba(201, 92, 92, 0.06);
-  --effect-shadow-task-hover: 0 0 15px rgba(76, 131, 214, 0.05);
+  --effect-shadow-task-hover: 0 0 15px rgba(57, 143, 135, 0.07);
 }
 
 /* Nebula CRM Design Tokens */
 @theme {
   /* Brand Colors */
-  --color-nebula-violet: #4c83d6;
-  --color-nebula-fuchsia: #2f7aa3;
-  --color-nebula-purple: #3569be;
-  --color-nebula-pink: #a8c6ee;
+  --color-nebula-violet: #2f8f87;
+  --color-nebula-fuchsia: #25707a;
+  --color-nebula-purple: #3f6d82;
+  --color-nebula-pink: #97d6cc;
 
   /* Status Colors */
   --color-status-success: #2f8f6a;
@@ -82,8 +96,8 @@
   --color-glass-bg-hover: var(--surface-card-hover);
 
   /* Glow Tokens */
-  --color-glow-violet: rgba(76, 131, 214, 0.16);
-  --color-glow-fuchsia: rgba(47, 122, 163, 0.10);
+  --color-glow-violet: rgba(47, 143, 135, 0.18);
+  --color-glow-fuchsia: rgba(37, 112, 122, 0.12);
 
   /* Text Tokens */
   --color-text-primary: var(--text-primary);
@@ -106,6 +120,8 @@
   --color-sidebar-hover: var(--sidebar-hover);
   --color-sidebar-active-bg: var(--sidebar-active-bg);
   --color-sidebar-active-text: var(--sidebar-active-text);
+  --color-topbar-bg: var(--topbar-bg);
+  --color-topbar-border: var(--topbar-border);
 
   /* Typography */
   --font-sans: 'Sora', ui-sans-serif, system-ui, sans-serif;
@@ -317,7 +333,7 @@ body {
 .sidebar-item-active {
   background: var(--sidebar-active-bg);
   color: var(--sidebar-active-text);
-  box-shadow: 0 0 14px rgba(76, 131, 214, 0.16);
+  box-shadow: 0 0 14px rgba(47, 143, 135, 0.22);
 }
 
 .sidebar-item-active:hover {
@@ -328,6 +344,7 @@ body {
 /* Sidebar content offset — pushes main content right on desktop */
 .lg-sidebar-offset {
   min-height: 100dvh;
+  background: var(--frame-bg);
 }
 
 @media (min-width: 1024px) {

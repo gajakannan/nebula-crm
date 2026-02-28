@@ -39,6 +39,8 @@ const CHART_PADDING_Y = 14;
 const NODE_MIN_HEIGHT = 20;
 const NODE_MAX_HEIGHT = 88;
 const NODE_INSET_Y = 4;
+const SIDE_LABEL_GUTTER_X = 120;
+const MIN_COLUMN_GAP_X = 84;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -89,7 +91,12 @@ function buildLayout(
 
   const columnIndexes = Array.from(columns.keys()).sort((a, b) => a - b);
   const columnCount = Math.max(columnIndexes.length, 1);
-  const canvasWidth = viewportWidth;
+  const minPlotWidth =
+    COLUMN_PADDING_X * 2 + NODE_BAR_WIDTH + Math.max(0, columnCount - 1) * MIN_COLUMN_GAP_X;
+  const minCanvasWidth = minPlotWidth + SIDE_LABEL_GUTTER_X * 2;
+  const canvasWidth = Math.max(viewportWidth, minCanvasWidth);
+  const plotWidth = canvasWidth - SIDE_LABEL_GUTTER_X * 2;
+  const horizontalSpan = plotWidth - COLUMN_PADDING_X * 2 - NODE_BAR_WIDTH;
 
   const flowMagnitudes = visibleNodes.map((node) =>
     Math.max(node.currentCount, node.inflowCount, node.outflowCount, 1),
@@ -120,8 +127,8 @@ function buildLayout(
     let cursorY = CHART_PADDING_Y + Math.max(0, (innerHeight - occupiedHeight) / 2);
 
     const x = columnCount === 1
-      ? (canvasWidth - NODE_BAR_WIDTH) / 2
-      : COLUMN_PADDING_X + columnIndex * ((canvasWidth - COLUMN_PADDING_X * 2 - NODE_BAR_WIDTH) / (columnCount - 1));
+      ? SIDE_LABEL_GUTTER_X + (plotWidth - NODE_BAR_WIDTH) / 2
+      : SIDE_LABEL_GUTTER_X + COLUMN_PADDING_X + columnIndex * (horizontalSpan / (columnCount - 1));
 
     for (let i = 0; i < columnNodes.length; i++) {
       const node = columnNodes[i];
@@ -258,12 +265,12 @@ export function OpportunityChart({ label, entityType, statuses, periodDays }: Op
         <span className="text-xs text-text-muted">{totalOpen} open</span>
       </div>
 
-      <div ref={containerRef} className="relative pb-2">
+      <div ref={containerRef} className="relative overflow-x-auto pb-2">
         <div
           className="relative"
           style={{
             height: CHART_HEIGHT,
-            width: '100%',
+            width: layout ? layout.canvasWidth : '100%',
             minWidth: '100%',
           }}
         >

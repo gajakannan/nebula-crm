@@ -2,70 +2,84 @@
 
 /* Theme Custom Properties — dark default */
 :root {
-  --surface-bg: #0b1118;
-  --surface-card: rgba(17, 25, 35, 0.82);
-  --surface-card-hover: rgba(21, 30, 42, 0.92);
-  --surface-border: rgba(191, 211, 232, 0.12);
-  --surface-highlight: rgba(255, 255, 255, 0.04);
-  --text-primary: #e8eef7;
-  --text-secondary: #b4c0cf;
-  --text-muted: #8190a4;
-  --sidebar-bg: rgba(7, 12, 18, 0.97);
-  --sidebar-border: rgba(148, 163, 184, 0.16);
-  --sidebar-hover: rgba(76, 131, 214, 0.10);
-  --sidebar-active-bg: rgba(76, 131, 214, 0.17);
-  --sidebar-active-text: #a8c6ee;
-  --bg-glow-1: rgba(76, 131, 214, 0.08);
-  --bg-glow-2: rgba(47, 122, 163, 0.06);
-  --shell-inset-bg: var(--sidebar-bg);
-  --shell-inset-shadow: 0 10px 24px rgba(4, 8, 16, 0.24);
-  --effect-text-shadow-logo: 0 0 8px rgba(76, 131, 214, 0.24);
+  --shell-frame-bg: #0b1220;
+  --surface-bg: var(--shell-frame-bg);
+  --surface-card: rgba(30, 41, 59, 0.88);
+  --surface-card-hover: rgba(51, 65, 85, 0.96);
+  --surface-border: rgba(148, 163, 184, 0.24);
+  --surface-highlight: rgba(255, 255, 255, 0.08);
+  --text-primary: #f8fafc;
+  --text-secondary: #dbe5f1;
+  --text-muted: #a6b6cc;
+  --frame-bg: var(--shell-frame-bg);
+  --frame-border: rgba(148, 163, 184, 0.30);
+  --sidebar-bg: var(--frame-bg);
+  --sidebar-border: var(--frame-border);
+  --topbar-bg: #060d18;
+  --topbar-border: rgba(148, 163, 184, 0.52);
+  --sidebar-hover: rgba(245, 158, 11, 0.16);
+  --sidebar-active-bg: rgba(245, 158, 11, 0.28);
+  --sidebar-active-text: #fde68a;
+  --bg-glow-1: rgba(245, 158, 11, 0.18);
+  --bg-glow-2: rgba(71, 85, 105, 0.16);
+  --shell-inset-bg: #16243a;
+  --shell-inset-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.50);
+  --effect-text-shadow-logo: 0 0 8px rgba(245, 158, 11, 0.42);
   --effect-shadow-alert-error: 0 0 20px rgba(201, 92, 92, 0.08);
-  --effect-shadow-alert-warning: 0 0 20px rgba(207, 154, 49, 0.08);
-  --effect-shadow-alert-info: 0 0 20px rgba(79, 143, 214, 0.10);
-  --effect-shadow-cta-brand: 0 0 12px rgba(76, 131, 214, 0.16);
+  --effect-shadow-alert-warning: 0 0 20px rgba(217, 119, 6, 0.14);
+  --effect-shadow-alert-info: 0 0 20px rgba(79, 143, 214, 0.12);
+  --effect-shadow-cta-brand: 0 0 12px rgba(245, 158, 11, 0.34);
   --effect-shadow-task-overdue: 0 0 15px rgba(201, 92, 92, 0.06);
-  --effect-shadow-task-hover: 0 0 15px rgba(76, 131, 214, 0.07);
+  --effect-shadow-task-hover: 0 0 15px rgba(245, 158, 11, 0.18);
 }
 
 [data-theme="light"] {
-  --surface-bg: #f4f7fb;
-  --surface-card: rgba(255, 255, 255, 0.93);
-  --surface-card-hover: rgba(255, 255, 255, 0.98);
-  --surface-border: rgba(30, 41, 59, 0.10);
-  --surface-highlight: rgba(255, 255, 255, 0.72);
+  --shell-frame-bg: #e2e8f0;
+  --surface-bg: var(--shell-frame-bg);
+  --surface-card: rgba(255, 255, 255, 0.94);
+  --surface-card-hover: rgba(255, 255, 255, 0.99);
+  --surface-border: rgba(51, 65, 85, 0.14);
+  --surface-highlight: rgba(255, 255, 255, 0.82);
   --text-primary: #0f172a;
-  --text-secondary: #475569;
+  --text-secondary: #334155;
   --text-muted: #64748b;
-  --sidebar-bg: rgba(231, 238, 248, 0.95);
-  --sidebar-border: rgba(71, 85, 105, 0.14);
-  --sidebar-hover: rgba(76, 131, 214, 0.06);
-  --sidebar-active-bg: rgba(76, 131, 214, 0.12);
-  --sidebar-active-text: #315fae;
-  --bg-glow-1: rgba(76, 131, 214, 0.05);
-  --bg-glow-2: rgba(47, 122, 163, 0.035);
-  --shell-inset-bg: var(--sidebar-bg);
-  --shell-inset-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
-  --effect-text-shadow-logo: 0 0 8px rgba(76, 131, 214, 0.16);
+  --frame-bg: var(--shell-frame-bg);
+  --frame-border: rgba(100, 116, 139, 0.22);
+  --sidebar-bg: var(--frame-bg);
+  --sidebar-border: var(--frame-border);
+  --topbar-bg: #c0ccd9;
+  --topbar-border: rgba(71, 85, 105, 0.34);
+  --sidebar-hover: rgba(217, 119, 6, 0.10);
+  --sidebar-active-bg: rgba(217, 119, 6, 0.18);
+  --sidebar-active-text: #92400e;
+  --bg-glow-1: rgba(245, 158, 11, 0.09);
+  --bg-glow-2: rgba(100, 116, 139, 0.07);
+  --shell-inset-bg: #f1f5f9;
+  --shell-inset-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    inset 0 -2px 0 rgba(148, 163, 184, 0.32);
+  --effect-text-shadow-logo: 0 0 8px rgba(217, 119, 6, 0.20);
   --effect-shadow-alert-error: 0 0 20px rgba(201, 92, 92, 0.08);
-  --effect-shadow-alert-warning: 0 0 20px rgba(207, 154, 49, 0.08);
-  --effect-shadow-alert-info: 0 0 20px rgba(79, 143, 214, 0.08);
-  --effect-shadow-cta-brand: 0 0 12px rgba(76, 131, 214, 0.12);
+  --effect-shadow-alert-warning: 0 0 20px rgba(217, 119, 6, 0.10);
+  --effect-shadow-alert-info: 0 0 20px rgba(79, 143, 214, 0.09);
+  --effect-shadow-cta-brand: 0 0 12px rgba(217, 119, 6, 0.16);
   --effect-shadow-task-overdue: 0 0 15px rgba(201, 92, 92, 0.06);
-  --effect-shadow-task-hover: 0 0 15px rgba(76, 131, 214, 0.05);
+  --effect-shadow-task-hover: 0 0 15px rgba(217, 119, 6, 0.10);
 }
 
 /* Nebula CRM Design Tokens */
 @theme {
   /* Brand Colors */
-  --color-nebula-violet: #4c83d6;
-  --color-nebula-fuchsia: #2f7aa3;
-  --color-nebula-purple: #3569be;
-  --color-nebula-pink: #a8c6ee;
+  --color-nebula-violet: #f59e0b;
+  --color-nebula-fuchsia: #d97706;
+  --color-nebula-purple: #475569;
+  --color-nebula-pink: #fcd34d;
 
   /* Status Colors */
   --color-status-success: #2f8f6a;
-  --color-status-warning: #cf9a31;
+  --color-status-warning: #d97706;
   --color-status-error: #c95c5c;
   --color-status-info: #4f8fd6;
 
@@ -82,8 +96,8 @@
   --color-glass-bg-hover: var(--surface-card-hover);
 
   /* Glow Tokens */
-  --color-glow-violet: rgba(76, 131, 214, 0.16);
-  --color-glow-fuchsia: rgba(47, 122, 163, 0.10);
+  --color-glow-violet: rgba(245, 158, 11, 0.24);
+  --color-glow-fuchsia: rgba(217, 119, 6, 0.16);
 
   /* Text Tokens */
   --color-text-primary: var(--text-primary);
@@ -106,6 +120,8 @@
   --color-sidebar-hover: var(--sidebar-hover);
   --color-sidebar-active-bg: var(--sidebar-active-bg);
   --color-sidebar-active-text: var(--sidebar-active-text);
+  --color-topbar-bg: var(--topbar-bg);
+  --color-topbar-border: var(--topbar-border);
 
   /* Typography */
   --font-sans: 'Sora', ui-sans-serif, system-ui, sans-serif;
@@ -215,7 +231,7 @@ body {
     0 14px 30px rgba(15, 23, 42, 0.10);
 }
 
-/* Gradient Accent Top — ink/blue brand line */
+/* Gradient Accent Top — slate/amber brand line */
 .gradient-accent-top {
   position: relative;
   overflow: hidden;
@@ -237,7 +253,7 @@ body {
   border-radius: 1px 1px 0 0;
 }
 
-/* Gradient Accent Left — ink/blue brand line on left edge */
+/* Gradient Accent Left — slate/amber brand line on left edge */
 .gradient-accent-left {
   position: relative;
 }
@@ -263,7 +279,7 @@ body {
     90deg,
     rgba(63, 63, 70, 0.4) 0%,
     rgba(113, 113, 122, 0.3) 40%,
-    rgba(76, 131, 214, 0.12) 50%,
+    rgba(245, 158, 11, 0.16) 50%,
     rgba(113, 113, 122, 0.3) 60%,
     rgba(63, 63, 70, 0.4) 100%
   );
@@ -317,7 +333,7 @@ body {
 .sidebar-item-active {
   background: var(--sidebar-active-bg);
   color: var(--sidebar-active-text);
-  box-shadow: 0 0 14px rgba(76, 131, 214, 0.16);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.28);
 }
 
 .sidebar-item-active:hover {
@@ -325,16 +341,33 @@ body {
   color: var(--sidebar-active-text);
 }
 
-/* Sidebar content offset — pushes main content right on desktop */
+/* Right chat panel shell */
+.chat-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--frame-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: width 200ms ease;
+}
+
+/* Sidebar/content offset — keeps center area between left and right rails */
 .lg-sidebar-offset {
   min-height: 100dvh;
+  background: var(--frame-bg);
 }
 
 @media (min-width: 1024px) {
   .lg-sidebar-offset {
     margin-left: var(--sidebar-width, 16rem);
-    transition: margin-left 200ms ease;
-    padding: 1rem 1rem 1rem 0;
+    margin-right: var(--chat-panel-width, 22rem);
+    transition: margin-left 200ms ease, margin-right 200ms ease;
+    padding: 1rem 0rem 1rem 0;
     height: 100dvh;
     min-height: 0;
   }

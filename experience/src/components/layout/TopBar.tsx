@@ -1,20 +1,22 @@
 import { useState } from 'react';
-import { Menu, Sun, Moon, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { Menu, Sun, Moon, PanelLeftClose, PanelLeft, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
 import { useTheme } from '@/hooks/useTheme';
 import { NotificationDropdown } from './NotificationDropdown';
 
 interface TopBarProps {
   title?: string;
+  chatCollapsed: boolean;
+  onToggleChatCollapsed: () => void;
 }
 
-export function TopBar({ title }: TopBarProps) {
+export function TopBar({ title, chatCollapsed, onToggleChatCollapsed }: TopBarProps) {
   const { collapsed, toggleCollapsed, openMobile } = useSidebar();
   const { theme, toggleTheme } = useTheme();
   const [notifOpen, setNotifOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-surface-border bg-surface-bg px-4 lg:rounded-t-xl">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-topbar-border bg-topbar-bg px-4 lg:rounded-t-xl">
       <button
         onClick={openMobile}
         aria-label="Open navigation menu"
@@ -38,7 +40,7 @@ export function TopBar({ title }: TopBarProps) {
       </button>
       {title && (
         <>
-          <div className="hidden lg:block h-5 w-px bg-sidebar-border" />
+          <div className="hidden lg:block h-5 w-px bg-topbar-border" />
           <h1 className="hidden text-xl font-semibold text-text-primary lg:block">
             {title}
           </h1>
@@ -62,6 +64,15 @@ export function TopBar({ title }: TopBarProps) {
           onToggle={() => setNotifOpen((p) => !p)}
           onClose={() => setNotifOpen(false)}
         />
+        <div className="hidden lg:block mx-1 h-5 w-px bg-topbar-border" />
+        <button
+          onClick={onToggleChatCollapsed}
+          aria-label={chatCollapsed ? 'Expand chat panel' : 'Collapse chat panel'}
+          aria-expanded={!chatCollapsed}
+          className="hidden lg:flex h-9 w-9 items-center justify-center rounded-md text-text-muted transition-colors hover:text-text-secondary"
+        >
+          {chatCollapsed ? <PanelRightOpen size={18} /> : <PanelRightClose size={18} />}
+        </button>
       </div>
     </header>
   );

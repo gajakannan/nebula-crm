@@ -12,7 +12,7 @@ export function OpportunitiesSummary() {
   const { data, isLoading, isError, refetch } = useDashboardOpportunities();
 
   return (
-    <Card className="flex h-full min-h-0 flex-col">
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden">
       <CardHeader>
         <CardTitle>Opportunities</CardTitle>
         <div
@@ -43,21 +43,23 @@ export function OpportunitiesSummary() {
       </CardHeader>
 
       {isLoading && (
-        <div className="space-y-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
           <Skeleton className="h-8 w-full" />
           <Skeleton className="h-8 w-full" />
         </div>
       )}
 
       {isError && (
-        <ErrorFallback
-          message="Unable to load opportunities data"
-          onRetry={() => refetch()}
-        />
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+          <ErrorFallback
+            message="Unable to load opportunities data"
+            onRetry={() => refetch()}
+          />
+        </div>
       )}
 
       {data && (
-        <div className="space-y-8">
+        <div className="timeline-scrollbar min-h-0 flex-1 space-y-8 overflow-y-auto pr-1">
           <OpportunityChart
             label="Submissions"
             entityType="submission"

@@ -341,7 +341,22 @@ body {
   color: var(--sidebar-active-text);
 }
 
-/* Sidebar content offset — pushes main content right on desktop */
+/* Right chat panel shell */
+.chat-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--frame-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: width 200ms ease;
+}
+
+/* Sidebar/content offset — keeps center area between left and right rails */
 .lg-sidebar-offset {
   min-height: 100dvh;
   background: var(--frame-bg);
@@ -350,8 +365,9 @@ body {
 @media (min-width: 1024px) {
   .lg-sidebar-offset {
     margin-left: var(--sidebar-width, 16rem);
-    transition: margin-left 200ms ease;
-    padding: 1rem 1rem 1rem 0;
+    margin-right: var(--chat-panel-width, 22rem);
+    transition: margin-left 200ms ease, margin-right 200ms ease;
+    padding: 1rem 0rem 1rem 0;
     height: 100dvh;
     min-height: 0;
   }

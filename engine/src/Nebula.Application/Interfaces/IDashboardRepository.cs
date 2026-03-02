@@ -8,5 +8,5 @@ public interface IDashboardRepository
     Task<DashboardOpportunitiesDto> GetOpportunitiesAsync(CancellationToken ct = default);
     Task<OpportunityFlowDto> GetOpportunityFlowAsync(string entityType, int periodDays, CancellationToken ct = default);
     Task<OpportunityItemsDto> GetOpportunityItemsAsync(string entityType, string status, CancellationToken ct = default);
-    Task<IReadOnlyList<NudgeCardDto>> GetNudgesAsync(string userSubject, CancellationToken ct = default);
+    Task<IReadOnlyList<NudgeCardDto>> GetNudgesAsync(Guid userId, CancellationToken ct = default);
 }

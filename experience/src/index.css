@@ -367,7 +367,7 @@ body {
     margin-left: var(--sidebar-width, 16rem);
     margin-right: var(--chat-panel-width, 22rem);
     transition: margin-left 200ms ease, margin-right 200ms ease;
-    padding: 1rem 0rem 1rem 0;
+    padding: 1rem 0;
     height: 100dvh;
     min-height: 0;
   }

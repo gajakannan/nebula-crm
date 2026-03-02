@@ -49,7 +49,7 @@ public static class DevSeedData
     {
         await EnsureReferenceStatusesAsync(db);
 
-        if (await db.UserProfiles.AnyAsync()) return; // app data already seeded
+        if (await db.Submissions.AnyAsync()) return; // app data already seeded
 
         var rng = new Random(20260226);
         var now = DateTime.UtcNow;
@@ -57,36 +57,36 @@ public static class DevSeedData
         var userProfiles = BuildUserProfiles(now);
         db.UserProfiles.AddRange(userProfiles);
 
-        var userSubjects = userProfiles.Select(u => u.Subject).ToArray();
-        var userNameBySubject = userProfiles.ToDictionary(u => u.Subject, u => u.DisplayName);
+        var userIds = userProfiles.Select(u => u.Id).ToArray();
+        var userNameById = userProfiles.ToDictionary(u => u.Id, u => u.DisplayName);
 
         var mgas = new[]
         {
-            new MGA { Name = "Acme MGA", ExternalCode = "ACME-001", Status = "Active", CreatedAt = now, UpdatedAt = now, CreatedBy = userSubjects[0], UpdatedBy = userSubjects[0] },
-            new MGA { Name = "Orion Specialty MGA", ExternalCode = "ORION-002", Status = "Active", CreatedAt = now, UpdatedAt = now, CreatedBy = userSubjects[1], UpdatedBy = userSubjects[1] },
+            new MGA { Name = "Acme MGA", ExternalCode = "ACME-001", Status = "Active", CreatedAt = now, UpdatedAt = now, CreatedByUserId = userIds[0], UpdatedByUserId = userIds[0] },
+            new MGA { Name = "Orion Specialty MGA", ExternalCode = "ORION-002", Status = "Active", CreatedAt = now, UpdatedAt = now, CreatedByUserId = userIds[1], UpdatedByUserId = userIds[1] },
         };
         db.MGAs.AddRange(mgas);
         await db.SaveChangesAsync();
 
         var programs = new[]
         {
-            new Nebula.Domain.Entities.Program { Name = "General Liability", ProgramCode = "GL-001", MgaId = mgas[0].Id, ManagedBySubject = userSubjects[0], CreatedAt = now, UpdatedAt = now, CreatedBy = userSubjects[0], UpdatedBy = userSubjects[0] },
-            new Nebula.Domain.Entities.Program { Name = "Excess Liability", ProgramCode = "XS-002", MgaId = mgas[0].Id, ManagedBySubject = userSubjects[2], CreatedAt = now, UpdatedAt = now, CreatedBy = userSubjects[2], UpdatedBy = userSubjects[2] },
-            new Nebula.Domain.Entities.Program { Name = "Property CAT", ProgramCode = "PROP-003", MgaId = mgas[1].Id, ManagedBySubject = userSubjects[1], CreatedAt = now, UpdatedAt = now, CreatedBy = userSubjects[1], UpdatedBy = userSubjects[1] },
+            new Nebula.Domain.Entities.Program { Name = "General Liability", ProgramCode = "GL-001", MgaId = mgas[0].Id, ManagedByUserId = userIds[0], CreatedAt = now, UpdatedAt = now, CreatedByUserId = userIds[0], UpdatedByUserId = userIds[0] },
+            new Nebula.Domain.Entities.Program { Name = "Excess Liability", ProgramCode = "XS-002", MgaId = mgas[0].Id, ManagedByUserId = userIds[2], CreatedAt = now, UpdatedAt = now, CreatedByUserId = userIds[2], UpdatedByUserId = userIds[2] },
+            new Nebula.Domain.Entities.Program { Name = "Property CAT", ProgramCode = "PROP-003", MgaId = mgas[1].Id, ManagedByUserId = userIds[1], CreatedAt = now, UpdatedAt = now, CreatedByUserId = userIds[1], UpdatedByUserId = userIds[1] },
         };
         db.Programs.AddRange(programs);
         await db.SaveChangesAsync();
 
-        var accounts = BuildAccounts(AccountSeedCount, now, rng, userSubjects);
+        var accounts = BuildAccounts(AccountSeedCount, now, rng, userIds);
         db.Accounts.AddRange(accounts);
         await db.SaveChangesAsync();
 
-        var brokers = BuildBrokers(BrokerSeedCount, now, rng, userSubjects, mgas, programs);
+        var brokers = BuildBrokers(BrokerSeedCount, now, rng, userIds, mgas, programs);
         db.Brokers.AddRange(brokers);
         await db.SaveChangesAsync();
 
         db.BrokerRegions.AddRange(BuildBrokerRegions(brokers, rng));
-        db.Contacts.AddRange(BuildContacts(brokers, now, rng, userSubjects));
+        db.Contacts.AddRange(BuildContacts(brokers, now, rng, userIds));
 
         var submissions = new List<Submission>(SubmissionSeedCount);
         var renewals = new List<Renewal>(RenewalSeedCount);
@@ -99,7 +99,7 @@ public static class DevSeedData
         {
             var account = accounts[rng.Next(accounts.Count)];
             var broker = brokers[rng.Next(brokers.Count)];
-            var assignedTo = userSubjects[rng.Next(userSubjects.Length)];
+            var assignedTo = userIds[rng.Next(userIds.Length)];
             var path = GenerateWorkflowPath(
                 rng,
                 "Received",
@@ -121,7 +121,7 @@ public static class DevSeedData
                     FromState = path[step - 1],
                     ToState = path[step],
                     Reason = BuildTransitionReason(rng, "Submission", path[step - 1], path[step]),
-                    ActorSubject = assignedTo,
+                    ActorUserId = assignedTo,
                     OccurredAt = occurredAt,
                 });
             }
@@ -134,11 +134,11 @@ public static class DevSeedData
                 CurrentStatus = path[^1],
                 EffectiveDate = now.AddDays(rng.Next(-30, 180)),
                 PremiumEstimate = Math.Round((decimal)(rng.Next(12_000, 250_000) + rng.NextDouble()), 2),
-                AssignedTo = assignedTo,
+                AssignedToUserId = assignedTo,
                 CreatedAt = createdAt,
                 UpdatedAt = updatedAt,
-                CreatedBy = assignedTo,
-                UpdatedBy = assignedTo,
+                CreatedByUserId = assignedTo,
+                UpdatedByUserId = assignedTo,
             };
             submissions.Add(submission);
 
@@ -155,8 +155,8 @@ public static class DevSeedData
                     EntityId = submission.Id,
                     EventType = "SubmissionCreated",
                     EventDescription = $"Submission created for {account.Name}",
-                    ActorSubject = assignedTo,
-                    ActorDisplayName = userNameBySubject[assignedTo],
+                    ActorUserId = assignedTo,
+                    ActorDisplayName = userNameById[assignedTo],
                     OccurredAt = createdAt,
                 });
             }
@@ -169,7 +169,7 @@ public static class DevSeedData
         {
             var account = accounts[rng.Next(accounts.Count)];
             var broker = brokers[rng.Next(brokers.Count)];
-            var assignedTo = userSubjects[rng.Next(userSubjects.Length)];
+            var assignedTo = userIds[rng.Next(userIds.Length)];
             var path = GenerateWorkflowPath(
                 rng,
                 "Created",
@@ -191,7 +191,7 @@ public static class DevSeedData
                     FromState = path[step - 1],
                     ToState = path[step],
                     Reason = BuildTransitionReason(rng, "Renewal", path[step - 1], path[step]),
-                    ActorSubject = assignedTo,
+                    ActorUserId = assignedTo,
                     OccurredAt = occurredAt,
                 });
             }
@@ -203,11 +203,11 @@ public static class DevSeedData
                 SubmissionId = boundSubmissionIds.Count > 0 && rng.NextDouble() < 0.55 ? boundSubmissionIds[rng.Next(boundSubmissionIds.Count)] : null,
                 CurrentStatus = path[^1],
                 RenewalDate = now.AddDays(rng.Next(-60, 180)),
-                AssignedTo = assignedTo,
+                AssignedToUserId = assignedTo,
                 CreatedAt = createdAt,
                 UpdatedAt = updatedAt,
-                CreatedBy = assignedTo,
-                UpdatedBy = assignedTo,
+                CreatedByUserId = assignedTo,
+                UpdatedByUserId = assignedTo,
             };
             renewals.Add(renewal);
 
@@ -221,8 +221,8 @@ public static class DevSeedData
                     EntityId = renewal.Id,
                     EventType = "RenewalCreated",
                     EventDescription = $"Renewal created for {account.Name}",
-                    ActorSubject = assignedTo,
-                    ActorDisplayName = userNameBySubject[assignedTo],
+                    ActorUserId = assignedTo,
+                    ActorDisplayName = userNameById[assignedTo],
                     OccurredAt = createdAt,
                 });
             }
@@ -231,32 +231,35 @@ public static class DevSeedData
         db.Renewals.AddRange(renewals);
         db.WorkflowTransitions.AddRange(transitions);
 
-        var tasks = BuildTasks(now, rng, userSubjects, submissions, renewals, brokers);
+        var tasks = BuildTasks(now, rng, userIds, submissions, renewals, brokers);
         db.Tasks.AddRange(tasks);
 
-        timelineEvents.AddRange(BuildBrokerTimelineEvents(now, rng, userNameBySubject, brokers));
-        timelineEvents.AddRange(BuildTransitionTimelineEvents(rng, userNameBySubject, transitions));
+        timelineEvents.AddRange(BuildBrokerTimelineEvents(now, rng, userNameById, brokers));
+        timelineEvents.AddRange(BuildTransitionTimelineEvents(rng, userNameById, transitions));
         db.ActivityTimelineEvents.AddRange(timelineEvents.OrderByDescending(e => e.OccurredAt).Take(500));
 
         await db.SaveChangesAsync();
     }
 
+    // Dev seed IdP issuer (authentik local dev)
+    private const string DevIdpIssuer = "http://localhost:9000/application/o/nebula/";
+
     private static List<UserProfile> BuildUserProfiles(DateTime now) =>
     [
-        new UserProfile { Subject = "dev-user-001", Email = "sarah.chen@nebula.local", DisplayName = "Sarah Chen", Department = "Distribution", RegionsJson = "[\"West\",\"Central\"]", RolesJson = "[\"DistributionManager\"]", CreatedAt = now, UpdatedAt = now },
-        new UserProfile { Subject = "dev-user-002", Email = "john.miller@nebula.local", DisplayName = "John Miller", Department = "Underwriting", RegionsJson = "[\"East\"]", RolesJson = "[\"Underwriter\"]", CreatedAt = now, UpdatedAt = now },
-        new UserProfile { Subject = "dev-user-003", Email = "lisa.wong@nebula.local", DisplayName = "Lisa Wong", Department = "Distribution", RegionsJson = "[\"West\"]", RolesJson = "[\"DistributionUser\"]", CreatedAt = now, UpdatedAt = now },
-        new UserProfile { Subject = "dev-user-004", Email = "miguel.alvarez@nebula.local", DisplayName = "Miguel Alvarez", Department = "Underwriting", RegionsJson = "[\"South\"]", RolesJson = "[\"SeniorUnderwriter\"]", CreatedAt = now, UpdatedAt = now },
-        new UserProfile { Subject = "dev-user-005", Email = "priya.patel@nebula.local", DisplayName = "Priya Patel", Department = "Distribution", RegionsJson = "[\"East\",\"South\"]", RolesJson = "[\"DistributionUser\"]", CreatedAt = now, UpdatedAt = now },
-        new UserProfile { Subject = "dev-user-006", Email = "evan.turner@nebula.local", DisplayName = "Evan Turner", Department = "Ops", RegionsJson = "[\"Central\"]", RolesJson = "[\"Operations\"]", CreatedAt = now, UpdatedAt = now },
+        new UserProfile { IdpIssuer = DevIdpIssuer, IdpSubject = "dev-user-001", Email = "sarah.chen@nebula.local", DisplayName = "Sarah Chen", Department = "Distribution", RegionsJson = "[\"West\",\"Central\"]", RolesJson = "[\"DistributionManager\"]", CreatedAt = now, UpdatedAt = now },
+        new UserProfile { IdpIssuer = DevIdpIssuer, IdpSubject = "dev-user-002", Email = "john.miller@nebula.local", DisplayName = "John Miller", Department = "Underwriting", RegionsJson = "[\"East\"]", RolesJson = "[\"Underwriter\"]", CreatedAt = now, UpdatedAt = now },
+        new UserProfile { IdpIssuer = DevIdpIssuer, IdpSubject = "dev-user-003", Email = "lisa.wong@nebula.local", DisplayName = "Lisa Wong", Department = "Distribution", RegionsJson = "[\"West\"]", RolesJson = "[\"DistributionUser\"]", CreatedAt = now, UpdatedAt = now },
+        new UserProfile { IdpIssuer = DevIdpIssuer, IdpSubject = "dev-user-004", Email = "miguel.alvarez@nebula.local", DisplayName = "Miguel Alvarez", Department = "Underwriting", RegionsJson = "[\"South\"]", RolesJson = "[\"SeniorUnderwriter\"]", CreatedAt = now, UpdatedAt = now },
+        new UserProfile { IdpIssuer = DevIdpIssuer, IdpSubject = "dev-user-005", Email = "priya.patel@nebula.local", DisplayName = "Priya Patel", Department = "Distribution", RegionsJson = "[\"East\",\"South\"]", RolesJson = "[\"DistributionUser\"]", CreatedAt = now, UpdatedAt = now },
+        new UserProfile { IdpIssuer = DevIdpIssuer, IdpSubject = "dev-user-006", Email = "evan.turner@nebula.local", DisplayName = "Evan Turner", Department = "Ops", RegionsJson = "[\"Central\"]", RolesJson = "[\"Operations\"]", CreatedAt = now, UpdatedAt = now },
     ];
 
-    private static List<Account> BuildAccounts(int count, DateTime now, Random rng, string[] userSubjects)
+    private static List<Account> BuildAccounts(int count, DateTime now, Random rng, Guid[] userIds)
     {
         var accounts = new List<Account>(count);
         for (var i = 1; i <= count; i++)
         {
-            var createdBy = userSubjects[rng.Next(userSubjects.Length)];
+            var createdBy = userIds[rng.Next(userIds.Length)];
             var region = Regions[rng.Next(Regions.Length)];
             var state = States[rng.Next(States.Length)];
             accounts.Add(new Account
@@ -268,8 +271,8 @@ public static class DevSeedData
                 Status = rng.NextDouble() < 0.9 ? "Active" : "Inactive",
                 CreatedAt = now.AddDays(-rng.Next(30, 540)),
                 UpdatedAt = now.AddDays(-rng.Next(1, 120)),
-                CreatedBy = createdBy,
-                UpdatedBy = createdBy,
+                CreatedByUserId = createdBy,
+                UpdatedByUserId = createdBy,
             });
         }
 
@@ -280,14 +283,14 @@ public static class DevSeedData
         int count,
         DateTime now,
         Random rng,
-        string[] userSubjects,
+        Guid[] userIds,
         MGA[] mgas,
         Nebula.Domain.Entities.Program[] programs)
     {
         var brokers = new List<Broker>(count);
         for (var i = 1; i <= count; i++)
         {
-            var createdBy = userSubjects[rng.Next(userSubjects.Length)];
+            var createdBy = userIds[rng.Next(userIds.Length)];
             var state = States[rng.Next(States.Length)];
             var status = WeightedPick(rng,
                 ("Active", 72),
@@ -302,13 +305,13 @@ public static class DevSeedData
                 Status = status,
                 Email = $"broker{i:D3}@example.local",
                 Phone = $"+1-{rng.Next(200, 999)}-{rng.Next(200, 999)}-{rng.Next(1000, 9999)}",
-                ManagedBySubject = status == "Inactive" && rng.NextDouble() < 0.5 ? null : userSubjects[rng.Next(userSubjects.Length)],
+                ManagedByUserId = status == "Inactive" && rng.NextDouble() < 0.5 ? null : userIds[rng.Next(userIds.Length)],
                 MgaId = rng.NextDouble() < 0.8 ? mgas[rng.Next(mgas.Length)].Id : null,
                 PrimaryProgramId = rng.NextDouble() < 0.75 ? programs[rng.Next(programs.Length)].Id : null,
                 CreatedAt = now.AddDays(-rng.Next(20, 720)),
                 UpdatedAt = now.AddDays(-rng.Next(0, 120)),
-                CreatedBy = createdBy,
-                UpdatedBy = createdBy,
+                CreatedByUserId = createdBy,
+                UpdatedByUserId = createdBy,
             });
         }
 
@@ -330,7 +333,7 @@ public static class DevSeedData
         return rows;
     }
 
-    private static IEnumerable<Contact> BuildContacts(IReadOnlyList<Broker> brokers, DateTime now, Random rng, string[] userSubjects)
+    private static IEnumerable<Contact> BuildContacts(IReadOnlyList<Broker> brokers, DateTime now, Random rng, Guid[] userIds)
     {
         var contacts = new List<Contact>(brokers.Count * 2);
         for (var i = 0; i < brokers.Count; i++)
@@ -339,7 +342,7 @@ public static class DevSeedData
             var contactCount = broker.Status == "Inactive" ? 1 : (rng.NextDouble() < 0.5 ? 1 : 2);
             for (var c = 0; c < contactCount; c++)
             {
-                var createdBy = userSubjects[rng.Next(userSubjects.Length)];
+                var createdBy = userIds[rng.Next(userIds.Length)];
                 var first = Pick(rng, FirstNames);
                 var last = Pick(rng, LastNames);
                 contacts.Add(new Contact
@@ -351,8 +354,8 @@ public static class DevSeedData
                     Role = BrokerRoles[rng.Next(BrokerRoles.Length)],
                     CreatedAt = now.AddDays(-rng.Next(10, 600)),
                     UpdatedAt = now.AddDays(-rng.Next(0, 90)),
-                    CreatedBy = createdBy,
-                    UpdatedBy = createdBy,
+                    CreatedByUserId = createdBy,
+                    UpdatedByUserId = createdBy,
                 });
             }
         }
@@ -363,7 +366,7 @@ public static class DevSeedData
     private static List<TaskItem> BuildTasks(
         DateTime now,
         Random rng,
-        string[] userSubjects,
+        Guid[] userIds,
         IReadOnlyList<Submission> submissions,
         IReadOnlyList<Renewal> renewals,
         IReadOnlyList<Broker> brokers)
@@ -371,7 +374,7 @@ public static class DevSeedData
         var tasks = new List<TaskItem>(96);
         for (var i = 0; i < 96; i++)
         {
-            var assignedTo = userSubjects[rng.Next(userSubjects.Length)];
+            var assignedTo = userIds[rng.Next(userIds.Length)];
             var status = WeightedPick(rng, ("Open", 48), ("InProgress", 34), ("Done", 18));
             var dueDate = now.Date.AddDays(rng.Next(-10, 21));
             Guid? linkedId = null;
@@ -407,14 +410,14 @@ public static class DevSeedData
                 Status = status,
                 Priority = TaskPriorities[rng.Next(TaskPriorities.Length)],
                 DueDate = dueDate,
-                AssignedTo = assignedTo,
+                AssignedToUserId = assignedTo,
                 LinkedEntityType = linkedType,
                 LinkedEntityId = linkedId,
                 CompletedAt = status == "Done" ? dueDate.AddDays(rng.Next(-2, 2)) : null,
                 CreatedAt = now.AddDays(-rng.Next(1, 45)),
                 UpdatedAt = now.AddDays(-rng.Next(0, 10)),
-                CreatedBy = assignedTo,
-                UpdatedBy = assignedTo,
+                CreatedByUserId = assignedTo,
+                UpdatedByUserId = assignedTo,
             });
         }
 
@@ -424,21 +427,21 @@ public static class DevSeedData
     private static IEnumerable<ActivityTimelineEvent> BuildBrokerTimelineEvents(
         DateTime now,
         Random rng,
-        IReadOnlyDictionary<string, string> userNameBySubject,
+        IReadOnlyDictionary<Guid, string> userNameById,
         IReadOnlyList<Broker> brokers)
     {
         var events = new List<ActivityTimelineEvent>(brokers.Count + 40);
         foreach (var broker in brokers.Take(160))
         {
-            var actor = broker.CreatedBy;
+            var actor = broker.CreatedByUserId;
             events.Add(new ActivityTimelineEvent
             {
                 EntityType = "Broker",
                 EntityId = broker.Id,
                 EventType = "BrokerCreated",
                 EventDescription = $"New broker \"{broker.LegalName}\" added",
-                ActorSubject = actor,
-                ActorDisplayName = userNameBySubject.GetValueOrDefault(actor),
+                ActorUserId = actor,
+                ActorDisplayName = userNameById.GetValueOrDefault(actor),
                 OccurredAt = broker.CreatedAt,
             });
 
@@ -450,8 +453,8 @@ public static class DevSeedData
                     EntityId = broker.Id,
                     EventType = "BrokerStatusChanged",
                     EventDescription = $"Broker \"{broker.LegalName}\" marked Inactive",
-                    ActorSubject = actor,
-                    ActorDisplayName = userNameBySubject.GetValueOrDefault(actor),
+                    ActorUserId = actor,
+                    ActorDisplayName = userNameById.GetValueOrDefault(actor),
                     OccurredAt = broker.UpdatedAt,
                 });
             }
@@ -462,7 +465,7 @@ public static class DevSeedData
 
     private static IEnumerable<ActivityTimelineEvent> BuildTransitionTimelineEvents(
         Random rng,
-        IReadOnlyDictionary<string, string> userNameBySubject,
+        IReadOnlyDictionary<Guid, string> userNameById,
         IReadOnlyList<WorkflowTransition> transitions)
     {
         return transitions
@@ -475,8 +478,8 @@ public static class DevSeedData
                 EntityId = t.EntityId,
                 EventType = $"{t.WorkflowType}Transitioned",
                 EventDescription = $"{t.WorkflowType} transitioned from {t.FromState} to {t.ToState}",
-                ActorSubject = t.ActorSubject,
-                ActorDisplayName = userNameBySubject.GetValueOrDefault(t.ActorSubject),
+                ActorUserId = t.ActorUserId,
+                ActorDisplayName = userNameById.GetValueOrDefault(t.ActorUserId),
                 OccurredAt = t.OccurredAt,
             })
             .ToList();

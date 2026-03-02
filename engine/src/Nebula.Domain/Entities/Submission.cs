@@ -8,7 +8,7 @@ public class Submission : BaseEntity
     public string CurrentStatus { get; set; } = "Received";
     public DateTime EffectiveDate { get; set; }
     public decimal PremiumEstimate { get; set; }
-    public string AssignedTo { get; set; } = default!;
+    public Guid AssignedToUserId { get; set; }
 
     public Account Account { get; set; } = default!;
     public Broker Broker { get; set; } = default!;

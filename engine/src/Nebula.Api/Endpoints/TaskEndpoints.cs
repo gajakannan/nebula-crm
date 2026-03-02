@@ -10,7 +10,7 @@ public static class TaskEndpoints
     {
         app.MapGet("/api/my/tasks", async (
             int? limit, TaskService svc, ICurrentUserService user, CancellationToken ct) =>
-            Results.Ok(await svc.GetMyTasksAsync(user.Subject, limit ?? 10, ct)))
+            Results.Ok(await svc.GetMyTasksAsync(user.UserId, limit ?? 10, ct)))
             .WithTags("Tasks").RequireAuthorization();
 
         app.MapGet("/api/tasks/{taskId:guid}", async (

@@ -40,7 +40,7 @@ public static class DashboardEndpoints
             Results.Ok(await svc.GetOpportunityItemsAsync(entityType, status, ct)));
 
         group.MapGet("/nudges", async (DashboardService svc, ICurrentUserService user, CancellationToken ct) =>
-            Results.Ok(await svc.GetNudgesAsync(user.Subject, ct)));
+            Results.Ok(await svc.GetNudgesAsync(user.UserId, ct)));
 
         return app;
     }

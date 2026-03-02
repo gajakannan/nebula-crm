@@ -16,7 +16,7 @@ public class WorkflowTransitionConfiguration : IEntityTypeConfiguration<Workflow
         builder.Property(e => e.FromState).IsRequired().HasMaxLength(30);
         builder.Property(e => e.ToState).IsRequired().HasMaxLength(30);
         builder.Property(e => e.Reason).HasMaxLength(500);
-        builder.Property(e => e.ActorSubject).IsRequired().HasMaxLength(255);
+        builder.Property(e => e.ActorUserId).IsRequired();
         builder.Property(e => e.OccurredAt).IsRequired();
 
         builder.HasIndex(e => new { e.EntityId, e.OccurredAt })

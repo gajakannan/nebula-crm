@@ -1,8 +1,7 @@
-import { useState } from 'react';
 import { Menu, Sun, Moon, PanelLeftClose, PanelLeft, PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
 import { useTheme } from '@/hooks/useTheme';
-import { NotificationDropdown } from './NotificationDropdown';
+import { NotificationDropdown } from '@/features/notifications';
 
 interface TopBarProps {
   title?: string;
@@ -13,7 +12,6 @@ interface TopBarProps {
 export function TopBar({ title, chatCollapsed, onToggleChatCollapsed }: TopBarProps) {
   const { collapsed, toggleCollapsed, openMobile } = useSidebar();
   const { theme, toggleTheme } = useTheme();
-  const [notifOpen, setNotifOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-topbar-border bg-topbar-bg px-4 lg:rounded-t-xl">
@@ -59,11 +57,7 @@ export function TopBar({ title, chatCollapsed, onToggleChatCollapsed }: TopBarPr
         >
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </button>
-        <NotificationDropdown
-          open={notifOpen}
-          onToggle={() => setNotifOpen((p) => !p)}
-          onClose={() => setNotifOpen(false)}
-        />
+        <NotificationDropdown />
         <div className="hidden lg:block mx-1 h-5 w-px bg-topbar-border" />
         <button
           onClick={onToggleChatCollapsed}

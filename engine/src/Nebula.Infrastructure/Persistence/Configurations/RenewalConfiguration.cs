@@ -14,10 +14,10 @@ public class RenewalConfiguration : IEntityTypeConfiguration<Renewal>
 
         builder.Property(e => e.CurrentStatus).IsRequired().HasMaxLength(30).HasDefaultValue("Created");
         builder.Property(e => e.RenewalDate).IsRequired();
-        builder.Property(e => e.AssignedTo).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.CreatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.UpdatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.DeletedBy).HasMaxLength(255);
+        builder.Property(e => e.AssignedToUserId).IsRequired();
+        builder.Property(e => e.CreatedByUserId).IsRequired();
+        builder.Property(e => e.UpdatedByUserId).IsRequired();
+        builder.Property(e => e.DeletedByUserId);
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
         builder.HasOne(e => e.Account)
@@ -45,8 +45,8 @@ public class RenewalConfiguration : IEntityTypeConfiguration<Renewal>
         builder.HasIndex(e => e.CurrentStatus)
             .HasDatabaseName("IX_Renewals_CurrentStatus");
 
-        builder.HasIndex(e => new { e.AssignedTo, e.CurrentStatus })
-            .HasDatabaseName("IX_Renewals_AssignedTo_CurrentStatus");
+        builder.HasIndex(e => new { e.AssignedToUserId, e.CurrentStatus })
+            .HasDatabaseName("IX_Renewals_AssignedToUserId_CurrentStatus");
 
         builder.HasIndex(e => new { e.RenewalDate, e.CurrentStatus })
             .HasDatabaseName("IX_Renewals_RenewalDate_Status");

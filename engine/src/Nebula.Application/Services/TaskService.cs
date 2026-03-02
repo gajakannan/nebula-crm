@@ -12,9 +12,9 @@ public class TaskService(ITaskRepository taskRepo)
     }
 
     public async Task<MyTasksResponseDto> GetMyTasksAsync(
-        string assignedTo, int limit, CancellationToken ct = default)
+        Guid assignedToUserId, int limit, CancellationToken ct = default)
     {
-        var (tasks, totalCount) = await taskRepo.GetMyTasksAsync(assignedTo, limit, ct);
+        var (tasks, totalCount) = await taskRepo.GetMyTasksAsync(assignedToUserId, limit, ct);
         var today = DateTime.UtcNow.Date;
         var summaries = tasks.Select(t => new TaskSummaryDto(
             t.Id, t.Title, t.Status, t.DueDate,
@@ -27,6 +27,6 @@ public class TaskService(ITaskRepository taskRepo)
 
     private static TaskDto MapToDto(Domain.Entities.TaskItem t) => new(
         t.Id, t.Title, t.Description, t.Status, t.Priority, t.DueDate,
-        t.AssignedTo, t.LinkedEntityType, t.LinkedEntityId,
+        t.AssignedToUserId, t.LinkedEntityType, t.LinkedEntityId,
         t.CreatedAt, t.UpdatedAt, t.CompletedAt);
 }

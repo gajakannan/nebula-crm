@@ -41,8 +41,8 @@ public class BrokerService(
             Phone = dto.Phone,
             CreatedAt = now,
             UpdatedAt = now,
-            CreatedBy = user.Subject,
-            UpdatedBy = user.Subject,
+            CreatedByUserId = user.UserId,
+            UpdatedByUserId = user.UserId,
         };
 
         await brokerRepo.AddAsync(broker, ct);
@@ -53,7 +53,7 @@ public class BrokerService(
             EntityId = broker.Id,
             EventType = "BrokerCreated",
             EventDescription = $"New broker \"{broker.LegalName}\" added",
-            ActorSubject = user.Subject,
+            ActorUserId = user.UserId,
             ActorDisplayName = user.DisplayName,
             OccurredAt = now,
         }, ct);
@@ -76,7 +76,7 @@ public class BrokerService(
         broker.Email = dto.Email;
         broker.Phone = dto.Phone;
         broker.UpdatedAt = now;
-        broker.UpdatedBy = user.Subject;
+        broker.UpdatedByUserId = user.UserId;
         broker.RowVersion = rowVersion;
 
         await brokerRepo.UpdateAsync(broker, ct);
@@ -92,7 +92,7 @@ public class BrokerService(
             EntityId = broker.Id,
             EventType = eventType,
             EventDescription = description,
-            ActorSubject = user.Subject,
+            ActorUserId = user.UserId,
             ActorDisplayName = user.DisplayName,
             OccurredAt = now,
         }, ct);
@@ -111,9 +111,9 @@ public class BrokerService(
         var now = DateTime.UtcNow;
         broker.IsDeleted = true;
         broker.DeletedAt = now;
-        broker.DeletedBy = user.Subject;
+        broker.DeletedByUserId = user.UserId;
         broker.UpdatedAt = now;
-        broker.UpdatedBy = user.Subject;
+        broker.UpdatedByUserId = user.UserId;
 
         await brokerRepo.UpdateAsync(broker, ct);
 
@@ -123,7 +123,7 @@ public class BrokerService(
             EntityId = broker.Id,
             EventType = "BrokerDeleted",
             EventDescription = $"Broker \"{broker.LegalName}\" deleted",
-            ActorSubject = user.Subject,
+            ActorUserId = user.UserId,
             ActorDisplayName = user.DisplayName,
             OccurredAt = now,
         }, ct);

@@ -7,7 +7,7 @@ public class Renewal : BaseEntity
     public Guid? SubmissionId { get; set; }
     public string CurrentStatus { get; set; } = "Created";
     public DateTime RenewalDate { get; set; }
-    public string AssignedTo { get; set; } = default!;
+    public Guid AssignedToUserId { get; set; }
 
     public Account Account { get; set; } = default!;
     public Broker Broker { get; set; } = default!;

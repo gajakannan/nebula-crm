@@ -1,18 +1,18 @@
 # ADR-002: Authentication Token Storage (Frontend)
 
-**Status:** Accepted
+**Status:** Accepted (updated 2026-03-01 — authentik replaces authentik; token storage strategy unchanged)
 
 **Date:** 2026-01-29
 
 **Deciders:** Architecture Team, Security Team
 
-**Technical Story:** Part of Phase 0 security architecture
+**Technical Story:** Part of Phase 0 security architecture. See [ADR-006](ADR-006-authentik-idp-migration.md) for IdP migration details.
 
 ---
 
 ## Context and Problem Statement
 
-The React frontend receives JWT access tokens and refresh tokens from Keycloak after successful authentication. These tokens grant access to protected API endpoints and must be stored client-side for the duration of the user session. The storage mechanism must balance security (preventing XSS/CSRF attacks), user experience (persistent login), and compliance with insurance industry security standards.
+The React frontend receives JWT access tokens and refresh tokens from authentik after successful authentication. These tokens grant access to protected API endpoints and must be stored client-side for the duration of the user session. The storage mechanism must balance security (preventing XSS/CSRF attacks), user experience (persistent login), and compliance with insurance industry security standards.
 
 **Key Questions:**
 - Where should we store JWT access tokens and refresh tokens in the browser?
@@ -56,14 +56,14 @@ We will store tokens using a two-tier strategy:
 ### Architecture Details:
 
 **Access Token (In-Memory):**
-- Retrieved from Keycloak during login
+- Retrieved from authentik during login
 - Stored in React Context or Zustand state (in-memory only)
 - Included in API requests via `Authorization: Bearer <token>` header
 - Lost on page refresh → triggers automatic refresh flow
 - Short TTL (5-15 minutes)
 
 **Refresh Token (HttpOnly Cookie):**
-- Set by backend after Keycloak token exchange
+- Set by backend after authentik token exchange
 - Cookie attributes: `httpOnly=true`, `secure=true`, `SameSite=Strict`
 - Not accessible to JavaScript (XSS-proof)
 - Used automatically by browser when calling refresh endpoint
@@ -72,7 +72,7 @@ We will store tokens using a two-tier strategy:
 **Token Refresh Flow:**
 1. On app load or access token expiry, frontend calls `/api/auth/refresh`
 2. Browser automatically sends refresh token cookie
-3. Backend validates refresh token with Keycloak
+3. Backend validates refresh token with authentik
 4. Backend returns new access token in response body
 5. Frontend stores new access token in memory
 6. Backend rotates refresh token (new httpOnly cookie)
@@ -123,12 +123,12 @@ const AuthContext = React.createContext<{
   refreshToken: () => Promise<void>;
 }>({ accessToken: null, refreshToken: async () => {} });
 
-// 2. Keycloak Login Flow
+// 2. authentik Login Flow
 async function login() {
-  // Redirect to Keycloak
-  keycloak.login();
+  // Redirect to authentik
+  authentik.login();
   // After redirect back with auth code:
-  const tokens = await keycloak.tokenExchange(authCode);
+  const tokens = await authentik.tokenExchange(authCode);
   // Send tokens to backend to set httpOnly cookie
   await axios.post('/api/auth/token', {
     access_token: tokens.access_token,
@@ -181,8 +181,8 @@ builder.Services.AddCors(options => {
     });
 });
 
-// Add Keycloak service
-builder.Services.AddScoped<IKeycloakService, KeycloakService>();
+// Add authentik service
+builder.Services.AddScoped<IauthentikService, authentikService>();
 
 var app = builder.Build();
 app.UseCors("AllowFrontend");
@@ -190,14 +190,14 @@ app.UseCors("AllowFrontend");
 // Auth Endpoints Group
 var authGroup = app.MapGroup("/api/auth");
 
-// 1. Token Exchange Endpoint (after Keycloak login)
+// 1. Token Exchange Endpoint (after authentik login)
 authGroup.MapPost("/token", async (
     TokenRequest request,
-    IKeycloakService keycloakService,
+    IauthentikService authentikService,
     HttpContext context) =>
 {
-    // Validate tokens with Keycloak
-    var validation = await keycloakService.ValidateTokens(request);
+    // Validate tokens with authentik
+    var validation = await authentikService.ValidateTokens(request);
 
     // Set httpOnly refresh token cookie
     context.Response.Cookies.Append("refresh_token", request.RefreshToken, new CookieOptions
@@ -213,7 +213,7 @@ authGroup.MapPost("/token", async (
 
 // 2. Token Refresh Endpoint
 authGroup.MapPost("/refresh", async (
-    IKeycloakService keycloakService,
+    IauthentikService authentikService,
     HttpContext context) =>
 {
     // Read refresh token from httpOnly cookie
@@ -221,8 +221,8 @@ authGroup.MapPost("/refresh", async (
     if (string.IsNullOrEmpty(refreshToken))
         return Results.Unauthorized();
 
-    // Exchange with Keycloak for new tokens
-    var newTokens = await keycloakService.RefreshTokens(refreshToken);
+    // Exchange with authentik for new tokens
+    var newTokens = await authentikService.RefreshTokens(refreshToken);
 
     // Rotate refresh token (set new cookie)
     context.Response.Cookies.Append("refresh_token", newTokens.RefreshToken, new CookieOptions
@@ -238,7 +238,7 @@ authGroup.MapPost("/refresh", async (
 
 // 3. Logout Endpoint
 authGroup.MapPost("/logout", async (
-    IKeycloakService keycloakService,
+    IauthentikService authentikService,
     HttpContext context) =>
 {
     var refreshToken = context.Request.Cookies["refresh_token"];
@@ -246,10 +246,10 @@ authGroup.MapPost("/logout", async (
     // Delete refresh token cookie
     context.Response.Cookies.Delete("refresh_token");
 
-    // Optionally revoke token with Keycloak
+    // Optionally revoke token with authentik
     if (!string.IsNullOrEmpty(refreshToken))
     {
-        await keycloakService.RevokeToken(refreshToken);
+        await authentikService.RevokeToken(refreshToken);
     }
 
     return Results.Ok();
@@ -280,7 +280,7 @@ axios.defaults.withCredentials = true; // Include cookies in all requests
 3. **Token Expiration:**
    - Access tokens: 5-15 minutes (short-lived)
    - Refresh tokens: 7 days with sliding expiration (refresh extends lifetime)
-   - Idle timeout: 30 minutes (configurable in Keycloak)
+   - Idle timeout: 30 minutes (configurable in authentik)
 
 4. **Revocation:**
    - Refresh tokens stored in database for revocation tracking
@@ -307,6 +307,6 @@ axios.defaults.withCredentials = true; // Include cookies in all requests
 
 ## Related ADRs
 
-- ADR-001: Authentication Strategy (Keycloak OIDC/JWT)
+- ADR-001: Authentication Strategy (authentik OIDC/JWT)
 - ADR-003: Authorization Strategy (Casbin ABAC)
 - ADR-005: CSRF Protection Strategy

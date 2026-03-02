@@ -8,7 +8,7 @@ public class ActivityTimelineEvent
     public string EventType { get; set; } = default!;
     public string? EventPayloadJson { get; set; }
     public string EventDescription { get; set; } = default!;
-    public string ActorSubject { get; set; } = default!;
+    public Guid ActorUserId { get; set; }
     public string? ActorDisplayName { get; set; }
     public DateTime OccurredAt { get; set; }
 }

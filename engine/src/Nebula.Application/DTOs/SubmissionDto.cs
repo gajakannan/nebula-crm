@@ -8,8 +8,8 @@ public record SubmissionDto(
     string CurrentStatus,
     DateTime? EffectiveDate,
     decimal? PremiumEstimate,
-    string? AssignedTo,
+    Guid? AssignedToUserId,
     DateTime CreatedAt,
-    string? CreatedBy,
+    Guid? CreatedByUserId,
     DateTime UpdatedAt,
-    string? UpdatedBy);
+    Guid? UpdatedByUserId);

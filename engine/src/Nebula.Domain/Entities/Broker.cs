@@ -8,7 +8,7 @@ public class Broker : BaseEntity
     public string Status { get; set; } = default!;
     public string? Email { get; set; }
     public string? Phone { get; set; }
-    public string? ManagedBySubject { get; set; }
+    public Guid? ManagedByUserId { get; set; }
     public Guid? MgaId { get; set; }
     public Guid? PrimaryProgramId { get; set; }
 

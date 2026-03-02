@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Bot, Expand, Mic, Minimize, Paperclip, SendHorizontal } from 'lucide-react';
+import { Bot, Expand, Mic, Minimize, Paperclip, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNeuronChat } from '../hooks/useNeuronChat';
 
@@ -102,7 +102,7 @@ export function NeuronPanel({ collapsed, fullscreen, onToggleFullscreen }: Neuro
                   aria-label="Send message"
                   className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-nebula-fuchsia/10 text-nebula-fuchsia transition-colors hover:bg-nebula-fuchsia/20 disabled:cursor-not-allowed disabled:opacity-65"
                 >
-                  <SendHorizontal size={15} />
+                  <Send size={15} />
                 </button>
               </div>
             </div>

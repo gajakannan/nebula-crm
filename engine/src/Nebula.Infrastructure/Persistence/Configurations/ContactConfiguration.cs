@@ -16,9 +16,9 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
         builder.Property(e => e.Email).IsRequired().HasMaxLength(255);
         builder.Property(e => e.Phone).IsRequired().HasMaxLength(30);
         builder.Property(e => e.Role).IsRequired().HasMaxLength(50);
-        builder.Property(e => e.CreatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.UpdatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.DeletedBy).HasMaxLength(255);
+        builder.Property(e => e.CreatedByUserId).IsRequired();
+        builder.Property(e => e.UpdatedByUserId).IsRequired();
+        builder.Property(e => e.DeletedByUserId);
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
         builder.HasOne(e => e.Broker)

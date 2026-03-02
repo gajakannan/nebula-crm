@@ -15,10 +15,10 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
         builder.Property(e => e.CurrentStatus).IsRequired().HasMaxLength(30).HasDefaultValue("Received");
         builder.Property(e => e.EffectiveDate).IsRequired();
         builder.Property(e => e.PremiumEstimate).IsRequired().HasPrecision(18, 2);
-        builder.Property(e => e.AssignedTo).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.CreatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.UpdatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.DeletedBy).HasMaxLength(255);
+        builder.Property(e => e.AssignedToUserId).IsRequired();
+        builder.Property(e => e.CreatedByUserId).IsRequired();
+        builder.Property(e => e.UpdatedByUserId).IsRequired();
+        builder.Property(e => e.DeletedByUserId);
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
         builder.HasOne(e => e.Account)
@@ -46,7 +46,7 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
         builder.HasIndex(e => e.CurrentStatus)
             .HasDatabaseName("IX_Submissions_CurrentStatus");
 
-        builder.HasIndex(e => new { e.AssignedTo, e.CurrentStatus })
-            .HasDatabaseName("IX_Submissions_AssignedTo_CurrentStatus");
+        builder.HasIndex(e => new { e.AssignedToUserId, e.CurrentStatus })
+            .HasDatabaseName("IX_Submissions_AssignedToUserId_CurrentStatus");
     }
 }

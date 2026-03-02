@@ -17,18 +17,36 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
-// Authentication — Keycloak OIDC JWT
+// Authentication — authentik OIDC JWT (F0005)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = builder.Configuration["Authentication:Authority"];
-        options.Audience = builder.Configuration["Authentication:Audience"];
-        options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
         if (builder.Environment.IsDevelopment())
         {
-            options.TokenValidationParameters.ValidateAudience = false;
+            // Dev mode: accept any JWT without contacting authentik.
+            // dev-auth.ts crafts a local token with iss/sub matching the seeded UserProfiles.
+            // Must use JwtSecurityTokenHandler (not the .NET 8+ default JsonWebTokenHandler)
+            // because only JwtSecurityTokenHandler respects the SignatureValidator delegate.
+            var devHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            options.TokenHandlers.Clear();
+            options.TokenHandlers.Add(devHandler);
+            options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = false,
+                ValidateIssuerSigningKey = false,
+                SignatureValidator = (token, _) => devHandler.ReadJwtToken(token),
+            };
+        }
+        else
+        {
+            options.Authority = builder.Configuration["Authentication:Authority"];
+            options.Audience = builder.Configuration["Authentication:Audience"];
+            options.RequireHttpsMetadata = true;
         }
     });
 builder.Services.AddAuthorization();

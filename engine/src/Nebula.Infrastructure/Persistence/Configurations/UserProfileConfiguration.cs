@@ -12,7 +12,8 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
 
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.Subject).IsRequired().HasMaxLength(255);
+        builder.Property(e => e.IdpIssuer).IsRequired().HasMaxLength(500);
+        builder.Property(e => e.IdpSubject).IsRequired().HasMaxLength(255);
         builder.Property(e => e.Email).IsRequired().HasMaxLength(255);
         builder.Property(e => e.DisplayName).IsRequired().HasMaxLength(200);
         builder.Property(e => e.Department).IsRequired().HasMaxLength(100);
@@ -22,7 +23,7 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
         builder.Property(e => e.CreatedAt).IsRequired();
         builder.Property(e => e.UpdatedAt).IsRequired();
 
-        builder.HasIndex(e => e.Subject).IsUnique()
-            .HasDatabaseName("IX_UserProfiles_Subject");
+        builder.HasIndex(e => new { e.IdpIssuer, e.IdpSubject }).IsUnique()
+            .HasDatabaseName("IX_UserProfiles_IdpIssuer_IdpSubject");
     }
 }

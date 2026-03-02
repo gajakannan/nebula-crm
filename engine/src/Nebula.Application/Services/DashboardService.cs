@@ -17,9 +17,9 @@ public class DashboardService(IDashboardRepository dashboardRepo)
     public Task<OpportunityItemsDto> GetOpportunityItemsAsync(string entityType, string status, CancellationToken ct = default) =>
         dashboardRepo.GetOpportunityItemsAsync(entityType, status, ct);
 
-    public async Task<NudgesResponseDto> GetNudgesAsync(string userSubject, CancellationToken ct = default)
+    public async Task<NudgesResponseDto> GetNudgesAsync(Guid userId, CancellationToken ct = default)
     {
-        var nudges = await dashboardRepo.GetNudgesAsync(userSubject, ct);
+        var nudges = await dashboardRepo.GetNudgesAsync(userId, ct);
         return new NudgesResponseDto(nudges);
     }
 }

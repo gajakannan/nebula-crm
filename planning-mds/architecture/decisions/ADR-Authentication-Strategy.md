@@ -1,6 +1,6 @@
-# ADR-001: Authentication Strategy
+# ADR-001: Authentication Strategy (Keycloak — Superseded)
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-006: authentik IdP Migration](ADR-006-authentik-idp-migration.md)
 
 **Date:** 2026-01-29
 

@@ -16,11 +16,11 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.Property(e => e.Description).HasMaxLength(2000);
         builder.Property(e => e.Status).IsRequired().HasMaxLength(20).HasDefaultValue("Open");
         builder.Property(e => e.Priority).IsRequired().HasMaxLength(20).HasDefaultValue("Normal");
-        builder.Property(e => e.AssignedTo).IsRequired().HasMaxLength(255);
+        builder.Property(e => e.AssignedToUserId).IsRequired();
         builder.Property(e => e.LinkedEntityType).HasMaxLength(50);
-        builder.Property(e => e.CreatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.UpdatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.DeletedBy).HasMaxLength(255);
+        builder.Property(e => e.CreatedByUserId).IsRequired();
+        builder.Property(e => e.UpdatedByUserId).IsRequired();
+        builder.Property(e => e.DeletedByUserId);
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
         builder.Property(e => e.RowVersion)
@@ -30,8 +30,8 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .IsConcurrencyToken();
         builder.HasQueryFilter(e => !e.IsDeleted);
 
-        builder.HasIndex(e => new { e.AssignedTo, e.Status, e.DueDate })
-            .HasDatabaseName("IX_Tasks_AssignedTo_Status_DueDate");
+        builder.HasIndex(e => new { e.AssignedToUserId, e.Status, e.DueDate })
+            .HasDatabaseName("IX_Tasks_AssignedToUserId_Status_DueDate");
 
         builder.HasIndex(e => new { e.DueDate, e.Status })
             .HasDatabaseName("IX_Tasks_DueDate_Status")

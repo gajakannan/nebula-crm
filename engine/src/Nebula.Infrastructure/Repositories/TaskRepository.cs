@@ -11,10 +11,10 @@ public class TaskRepository(AppDbContext db) : ITaskRepository
         await db.Tasks.FirstOrDefaultAsync(t => t.Id == id, ct);
 
     public async Task<(IReadOnlyList<TaskItem> Tasks, int TotalCount)> GetMyTasksAsync(
-        string assignedTo, int limit, CancellationToken ct = default)
+        Guid assignedToUserId, int limit, CancellationToken ct = default)
     {
         var query = db.Tasks
-            .Where(t => t.AssignedTo == assignedTo && t.Status != "Done");
+            .Where(t => t.AssignedToUserId == assignedToUserId && t.Status != "Done");
 
         var totalCount = await query.CountAsync(ct);
 

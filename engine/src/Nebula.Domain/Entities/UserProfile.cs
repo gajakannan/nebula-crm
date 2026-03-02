@@ -3,7 +3,8 @@ namespace Nebula.Domain.Entities;
 public class UserProfile
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public string Subject { get; set; } = default!;
+    public string IdpIssuer { get; set; } = default!;
+    public string IdpSubject { get; set; } = default!;
     public string Email { get; set; } = default!;
     public string DisplayName { get; set; } = default!;
     public string Department { get; set; } = default!;

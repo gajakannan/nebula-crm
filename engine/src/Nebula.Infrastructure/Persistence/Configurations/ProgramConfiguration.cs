@@ -14,10 +14,10 @@ public class ProgramConfiguration : IEntityTypeConfiguration<Program>
 
         builder.Property(e => e.Name).IsRequired().HasMaxLength(200);
         builder.Property(e => e.ProgramCode).IsRequired().HasMaxLength(50);
-        builder.Property(e => e.ManagedBySubject).HasMaxLength(255);
-        builder.Property(e => e.CreatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.UpdatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.DeletedBy).HasMaxLength(255);
+        builder.Property(e => e.ManagedByUserId);
+        builder.Property(e => e.CreatedByUserId).IsRequired();
+        builder.Property(e => e.UpdatedByUserId).IsRequired();
+        builder.Property(e => e.DeletedByUserId);
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
         builder.HasOne(e => e.Mga)
@@ -32,7 +32,7 @@ public class ProgramConfiguration : IEntityTypeConfiguration<Program>
             .IsConcurrencyToken();
         builder.HasQueryFilter(e => !e.IsDeleted);
 
-        builder.HasIndex(e => e.ManagedBySubject)
-            .HasDatabaseName("IX_Programs_ManagedBySubject");
+        builder.HasIndex(e => e.ManagedByUserId)
+            .HasDatabaseName("IX_Programs_ManagedByUserId");
     }
 }

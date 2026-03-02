@@ -2,7 +2,7 @@ namespace Nebula.Application.Common;
 
 public interface ICurrentUserService
 {
-    string Subject { get; }
+    Guid UserId { get; }
     string? DisplayName { get; }
     IReadOnlyList<string> Roles { get; }
     IReadOnlyList<string> Regions { get; }

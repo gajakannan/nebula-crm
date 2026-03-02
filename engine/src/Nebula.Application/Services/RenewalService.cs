@@ -40,13 +40,13 @@ public class RenewalService(
             FromState = renewal.CurrentStatus,
             ToState = dto.ToState,
             Reason = dto.Reason,
-            ActorSubject = user.Subject,
+            ActorUserId = user.UserId,
             OccurredAt = now,
         };
 
         renewal.CurrentStatus = dto.ToState;
         renewal.UpdatedAt = now;
-        renewal.UpdatedBy = user.Subject;
+        renewal.UpdatedByUserId = user.UserId;
 
         await transitionRepo.AddAsync(transition, ct);
         await renewalRepo.UpdateAsync(renewal, ct);
@@ -57,7 +57,7 @@ public class RenewalService(
             EntityId = renewalId,
             EventType = "RenewalTransitioned",
             EventDescription = $"Renewal transitioned from {transition.FromState} to {transition.ToState}",
-            ActorSubject = user.Subject,
+            ActorUserId = user.UserId,
             ActorDisplayName = user.DisplayName,
             OccurredAt = now,
         }, ct);
@@ -67,7 +67,7 @@ public class RenewalService(
 
     private static RenewalDto MapToDto(Renewal r) => new(
         r.Id, r.AccountId, r.BrokerId, r.SubmissionId, r.CurrentStatus,
-        r.RenewalDate, r.AssignedTo, r.CreatedAt, r.CreatedBy, r.UpdatedAt, r.UpdatedBy);
+        r.RenewalDate, r.AssignedToUserId, r.CreatedAt, r.CreatedByUserId, r.UpdatedAt, r.UpdatedByUserId);
 
     private static WorkflowTransitionRecordDto MapTransition(WorkflowTransition t) => new(
         t.Id, t.WorkflowType, t.EntityId, t.FromState, t.ToState, t.Reason, t.OccurredAt);

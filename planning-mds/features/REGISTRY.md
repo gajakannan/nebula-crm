@@ -1,6 +1,6 @@
 # Feature Registry
 
-**Next Available Feature Number:** F0005
+**Next Available Feature Number:** F0006
 
 ## Active Features
 
@@ -10,6 +10,7 @@
 | F0002 | Broker & MGA Relationship Management | In Progress | MVP | `F0002-broker-relationship-management/` |
 | F0003 | Task Center + Reminders (API-only MVP) | Draft | MVP | `F0003-task-center/` |
 | F0004 | Task Center UI + Manager Assignment | Draft | Phase 1 | `F0004-task-center-ui-and-assignment/` |
+| F0005 | IdP Migration: Keycloak → authentik | Draft | Infrastructure Patch | `F0005-idp-migration/` |
 
 ## Archived Features
 

@@ -41,8 +41,8 @@ public class ContactService(
             Role = dto.Role ?? "Primary",
             CreatedAt = now,
             UpdatedAt = now,
-            CreatedBy = user.Subject,
-            UpdatedBy = user.Subject,
+            CreatedByUserId = user.UserId,
+            UpdatedByUserId = user.UserId,
         };
 
         await contactRepo.AddAsync(contact, ct);
@@ -53,7 +53,7 @@ public class ContactService(
             EntityId = dto.BrokerId,
             EventType = "ContactCreated",
             EventDescription = $"Contact \"{contact.FullName}\" added to broker \"{broker.LegalName}\"",
-            ActorSubject = user.Subject,
+            ActorUserId = user.UserId,
             ActorDisplayName = user.DisplayName,
             OccurredAt = now,
         }, ct);
@@ -73,7 +73,7 @@ public class ContactService(
         contact.Phone = dto.Phone;
         contact.Role = dto.Role ?? contact.Role;
         contact.UpdatedAt = now;
-        contact.UpdatedBy = user.Subject;
+        contact.UpdatedByUserId = user.UserId;
         contact.RowVersion = rowVersion;
 
         await contactRepo.UpdateAsync(contact, ct);
@@ -86,7 +86,7 @@ public class ContactService(
                 EntityId = contact.BrokerId.Value,
                 EventType = "ContactUpdated",
                 EventDescription = $"Contact \"{contact.FullName}\" updated",
-                ActorSubject = user.Subject,
+                ActorUserId = user.UserId,
                 ActorDisplayName = user.DisplayName,
                 OccurredAt = now,
             }, ct);
@@ -103,9 +103,9 @@ public class ContactService(
         var now = DateTime.UtcNow;
         contact.IsDeleted = true;
         contact.DeletedAt = now;
-        contact.DeletedBy = user.Subject;
+        contact.DeletedByUserId = user.UserId;
         contact.UpdatedAt = now;
-        contact.UpdatedBy = user.Subject;
+        contact.UpdatedByUserId = user.UserId;
 
         await contactRepo.UpdateAsync(contact, ct);
 
@@ -117,7 +117,7 @@ public class ContactService(
                 EntityId = contact.BrokerId.Value,
                 EventType = "ContactDeleted",
                 EventDescription = $"Contact \"{contact.FullName}\" deleted",
-                ActorSubject = user.Subject,
+                ActorUserId = user.UserId,
                 ActorDisplayName = user.DisplayName,
                 OccurredAt = now,
             }, ct);

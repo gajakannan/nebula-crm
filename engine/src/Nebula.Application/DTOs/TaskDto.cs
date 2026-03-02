@@ -7,7 +7,7 @@ public record TaskDto(
     string Status,
     string Priority,
     DateTime? DueDate,
-    string AssignedTo,
+    Guid AssignedToUserId,
     string? LinkedEntityType,
     Guid? LinkedEntityId,
     DateTime CreatedAt,

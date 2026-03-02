@@ -7,8 +7,8 @@ public record RenewalDto(
     Guid? SubmissionId,
     string CurrentStatus,
     DateTime RenewalDate,
-    string? AssignedTo,
+    Guid? AssignedToUserId,
     DateTime CreatedAt,
-    string? CreatedBy,
+    Guid? CreatedByUserId,
     DateTime UpdatedAt,
-    string? UpdatedBy);
+    Guid? UpdatedByUserId);

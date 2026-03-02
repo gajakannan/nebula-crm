@@ -8,6 +8,6 @@ public class WorkflowTransition
     public string FromState { get; set; } = default!;
     public string ToState { get; set; } = default!;
     public string? Reason { get; set; }
-    public string ActorSubject { get; set; } = default!;
+    public Guid ActorUserId { get; set; }
     public DateTime OccurredAt { get; set; }
 }

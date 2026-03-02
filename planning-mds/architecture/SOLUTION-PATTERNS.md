@@ -46,10 +46,12 @@ if (!await _authorizationService.Authorize(user, "broker", "read", broker))
 ```
 
 ### Pattern: JWT Token Authentication
-**Decision:** Use JWT tokens issued by Keycloak for authentication
-**Rationale:** Standard, stateless, integrates with existing identity provider
+**Decision:** Use JWT tokens issued by **authentik** for authentication
+**Rationale:** Standard, stateless, integrates with existing identity provider (authentik). See [ADR-006](../architecture/decisions/ADR-006-authentik-idp-migration.md) for IdP choice rationale.
 **Applied in:** All API requests
 **Token Location:** Authorization header (Bearer token)
+**OIDC Authority:** `http://authentik-server:9000/application/o/nebula/`
+**Roles claim:** `nebula_roles` (flat string array, authentik property mapping)
 
 ### Pattern: Per-Endpoint Authorization
 **Decision:** Every API endpoint must explicitly check authorization
@@ -442,9 +444,9 @@ public class BaseEntity
 {
     public Guid Id { get; set; }
     public DateTime CreatedAt { get; set; }
-    public string CreatedBy { get; set; } = default!; // Keycloak subject (sub claim)
+    public Guid CreatedByUserId { get; set; } // internal UserId from UserProfile; never raw IdP sub
     public DateTime? UpdatedAt { get; set; }
-    public string? UpdatedBy { get; set; } // Keycloak subject (sub claim)
+    public Guid? UpdatedByUserId { get; set; } // internal UserId from UserProfile
 }
 ```
 
@@ -457,7 +459,7 @@ public class BaseEntity
 ```csharp
 public bool IsDeleted { get; set; }
 public DateTime? DeletedAt { get; set; }
-public string? DeletedBy { get; set; } // Keycloak subject (sub claim)
+public Guid? DeletedByUserId { get; set; } // internal UserId from UserProfile; never raw IdP sub
 ```
 
 ### Pattern: Optimistic Concurrency Control
@@ -726,32 +728,30 @@ _logger.LogInformation(
 - Avoid caching secrets or raw PII without explicit approval.
 - Include tenant/subject identifiers in cache keys for scoped data.
 
-### Pattern: UserProfile Create-on-First-Login
-**Decision:** Create or update a `UserProfile` row on every authenticated API request (upsert by `Subject`)
-**Rationale:** Dashboard queries (pipeline mini-cards, activity feed) JOIN `UserProfile` for display names and initials. Profiles must exist before data can be displayed correctly. Syncing from Keycloak claims at request time avoids a separate admin sync job.
-**Applied in:** Authentication middleware / JWT pipeline
-**Fields synced from JWT claims:** `Email`, `DisplayName` (from `name` or `given_name`+`family_name`), `Department`, `Regions` (from custom claim `regions`)
+### Pattern: UserProfile Create-on-First-Login (Claims Normalization)
+**Decision:** On every authenticated API request, upsert a `UserProfile` row keyed by `(IdpIssuer, IdpSubject)` and return the stable internal `UserId (uuid)`. All downstream code uses `NebulaPrincipal.UserId`, never a raw IdP `sub`.
+**Rationale:** Dashboard queries (pipeline mini-cards, activity feed) JOIN `UserProfile` for display names and initials. The `UserId` principal key ensures ownership fields remain valid across IdP migrations. See [ADR-006](decisions/ADR-006-authentik-idp-migration.md).
+**Applied in:** Authentication middleware / JWT pipeline via `IClaimsPrincipalNormalizer`
+**Fields synced from JWT claims:** `Email`, `DisplayName` (from `name`), `Department`, `Regions` (custom claim), `Roles` (from `nebula_roles` — authentik property mapping)
 
 **Implementation approach:**
 ```csharp
-// Middleware or filter that runs after JWT validation
-public class UserProfileSyncFilter : IEndpointFilter
+// Middleware runs after JWT validation
+public class NebulaPrincipalMiddleware
 {
-    public async ValueTask<object?> InvokeAsync(
-        EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    public async Task InvokeAsync(HttpContext context, IClaimsPrincipalNormalizer normalizer)
     {
-        var user = context.HttpContext.User;
-        var subject = user.FindFirstValue("sub");
-        if (subject is not null)
+        if (context.User.Identity?.IsAuthenticated == true)
         {
-            await _userProfileService.UpsertFromClaimsAsync(subject, user.Claims);
+            var principal = await normalizer.NormalizeAsync(context.User);
+            context.Items["NebulaPrincipal"] = principal;
         }
-        return await next(context);
+        await _next(context);
     }
 }
 ```
 
-**Performance note:** Use a short-lived in-memory cache (e.g., 5 minutes) keyed by `Subject` to avoid a DB upsert on every request. Invalidate on profile-relevant claim changes.
+**Performance note:** `IClaimsPrincipalNormalizer` uses a 5-minute in-memory cache keyed by `(IdpIssuer, IdpSubject)` to avoid a DB upsert on every request.
 
 ### Pattern: OWASP Top 10 Compliance
 **Decision:** Follow OWASP Top 10 security practices
@@ -817,7 +817,7 @@ problemDetails.Extensions["traceId"] = traceId;
 ### Pattern: Docker for All Services
 **Decision:** All services run in Docker containers
 **Rationale:** Consistency, reproducibility, deployment simplicity
-**Applied in:** Backend, Frontend, Database, Keycloak
+**Applied in:** Backend, Frontend, Database, authentik (server + worker), Redis
 
 ### Pattern: docker-compose for Local Development
 **Decision:** Use docker-compose for local dev environment
@@ -832,8 +832,10 @@ problemDetails.Extensions["traceId"] = traceId;
 **Example:**
 ```bash
 DATABASE_CONNECTION_STRING=...
-KEYCLOAK_URL=...
-JWT_SECRET=...
+Authentication__Authority=http://authentik-server:9000/application/o/nebula/
+Authentication__Audience=nebula
+Authentication__RolesClaim=nebula_roles
+AUTHENTIK_SECRET_KEY=...
 ```
 
 ---

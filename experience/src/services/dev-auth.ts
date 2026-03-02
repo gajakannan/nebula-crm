@@ -1,39 +1,36 @@
 /**
- * Dev-only: auto-fetches a Keycloak token using password grant.
- * Remove this when real OIDC login flow is implemented.
+ * Dev-only: crafts a local JWT with claims matching the seeded dev users.
+ * No authentik required — the backend accepts these in dev mode (signature not validated).
+ * Remove this when real OIDC login flow is implemented (F0005-S0003).
+ *
+ * IdpIssuer and IdpSubject values must match DevSeedData.cs:
+ *   DevIdpIssuer = "http://localhost:9000/application/o/nebula/"
+ *   IdpSubject   = "dev-user-001" (Sarah Chen — DistributionManager)
  */
 
-const KEYCLOAK_URL = 'http://localhost:8081/realms/nebula/protocol/openid-connect/token';
-const CLIENT_ID = 'nebula-crm';
-const USERNAME = 'admin';
-const PASSWORD = 'password';
+const DEV_ISS = 'http://localhost:9000/application/o/nebula/';
+const DEV_SUB = 'dev-user-001'; // Sarah Chen — DistributionManager
 
-let cachedToken: string | null = null;
-let tokenExpiry = 0;
+function base64url(obj: object): string {
+  return btoa(JSON.stringify(obj))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
 
-export async function getDevToken(): Promise<string> {
-  // Return cached token if still valid (with 30s buffer)
-  if (cachedToken && Date.now() < tokenExpiry - 30_000) {
-    return cachedToken;
+let _devToken: string | null = null;
+
+export function getDevToken(): Promise<string> {
+  if (!_devToken) {
+    const header = base64url({ alg: 'HS256', typ: 'JWT' });
+    const payload = base64url({
+      iss: DEV_ISS,
+      sub: DEV_SUB,
+      name: 'Sarah Chen',
+      nebula_roles: ['DistributionManager'],
+      exp: Math.floor(Date.now() / 1000) + 86400 * 365,
+    });
+    _devToken = `${header}.${payload}.dev`;
   }
-
-  const response = await fetch(KEYCLOAK_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'password',
-      client_id: CLIENT_ID,
-      username: USERNAME,
-      password: PASSWORD,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Dev auth failed: ${response.status}`);
-  }
-
-  const data = await response.json();
-  cachedToken = data.access_token;
-  tokenExpiry = Date.now() + data.expires_in * 1000;
-  return cachedToken!;
+  return Promise.resolve(_devToken);
 }

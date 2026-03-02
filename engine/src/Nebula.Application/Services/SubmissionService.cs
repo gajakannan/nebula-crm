@@ -40,13 +40,13 @@ public class SubmissionService(
             FromState = submission.CurrentStatus,
             ToState = dto.ToState,
             Reason = dto.Reason,
-            ActorSubject = user.Subject,
+            ActorUserId = user.UserId,
             OccurredAt = now,
         };
 
         submission.CurrentStatus = dto.ToState;
         submission.UpdatedAt = now;
-        submission.UpdatedBy = user.Subject;
+        submission.UpdatedByUserId = user.UserId;
 
         await transitionRepo.AddAsync(transition, ct);
         await submissionRepo.UpdateAsync(submission, ct);
@@ -57,7 +57,7 @@ public class SubmissionService(
             EntityId = submissionId,
             EventType = "SubmissionTransitioned",
             EventDescription = $"Submission transitioned from {transition.FromState} to {transition.ToState}",
-            ActorSubject = user.Subject,
+            ActorUserId = user.UserId,
             ActorDisplayName = user.DisplayName,
             OccurredAt = now,
         }, ct);
@@ -67,8 +67,8 @@ public class SubmissionService(
 
     private static SubmissionDto MapToDto(Submission s) => new(
         s.Id, s.AccountId, s.BrokerId, s.ProgramId, s.CurrentStatus,
-        s.EffectiveDate, s.PremiumEstimate, s.AssignedTo,
-        s.CreatedAt, s.CreatedBy, s.UpdatedAt, s.UpdatedBy);
+        s.EffectiveDate, s.PremiumEstimate, s.AssignedToUserId,
+        s.CreatedAt, s.CreatedByUserId, s.UpdatedAt, s.UpdatedByUserId);
 
     private static WorkflowTransitionRecordDto MapTransition(WorkflowTransition t) => new(
         t.Id, t.WorkflowType, t.EntityId, t.FromState, t.ToState, t.Reason, t.OccurredAt);

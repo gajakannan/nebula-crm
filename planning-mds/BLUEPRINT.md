@@ -62,7 +62,7 @@ External users (future): MGA users with limited access (not in Phase 0 MVP unles
 - Document (versioned)
 - ActivityTimelineEvent (immutable audit/timeline)
 - WorkflowTransition (immutable append-only transitions)
-- UserProfile (internal profile driven by Keycloak subject)
+- UserProfile (internal profile; maps IdP `(iss, sub)` to a stable internal `UserId (uuid)` — IdP-agnostic per ADR-006)
 - UserPreference (separate table)
 
 ### 1.4 Critical workflows (baseline)
@@ -86,7 +86,7 @@ These are locked unless explicitly changed later:
 - Backend: C# / .NET 10 Minimal APIs
 - Database: PostgreSQL (dev + prod)
 - ORM: EF Core 10
-- AuthN: Keycloak (OIDC/JWT)
+- AuthN: authentik (OIDC/JWT) — replaces Keycloak per ADR-006
 - AuthZ: Casbin ABAC enforced server-side
 - Workflow engine: Temporal (included in Phase 0)
 - Deploy: Docker + docker-compose
@@ -213,7 +213,8 @@ This section defines the build-ready technical baseline for the reference implem
 
 **Architecture Decision Records:** See `planning-mds/architecture/decisions/` for detailed ADRs:
 - [ADR-001](architecture/decisions/ADR-001-json-schema-validation.md) — JSON Schema Validation
-- [ADR-Auth](architecture/decisions/ADR-Authentication-Strategy.md) — Authentication Strategy (Keycloak)
+- [ADR-Auth](architecture/decisions/ADR-Authentication-Strategy.md) — Authentication Strategy (Keycloak — **superseded**)
+- [ADR-006](architecture/decisions/ADR-006-authentik-idp-migration.md) — Authentication Strategy (authentik — **current**)
 - [ADR-Token](architecture/decisions/ADR-Auth-Token-Storage.md) — Auth Token Storage (Hybrid)
 - [ADR-002](architecture/decisions/ADR-002-dashboard-data-aggregation.md) — Dashboard Data Aggregation (per-widget endpoints)
 - [ADR-003](architecture/decisions/ADR-003-task-entity-nudge-engine.md) — Task Entity & Nudge Engine
@@ -250,7 +251,8 @@ This section defines the build-ready technical baseline for the reference implem
   - Owns ActivityTimelineEvent and WorkflowTransition append-only records.
   - Provides timeline query/read APIs (including `GET /api/timeline/events` for dashboard activity feed).
 - IdentityAuthorization module:
-  - Validates Keycloak tokens and resolves subject attributes.
+  - Validates authentik JWT tokens (JWKS from `Authentication__Authority/.well-known/openid-configuration`).
+  - Normalizes `(iss, sub)` claims to internal `NebulaPrincipal { UserId, Roles, Regions }` via `IClaimsPrincipalNormalizer`.
   - Enforces Casbin ABAC policies at API/application boundaries.
 
 ### 4.2 Data model (detailed)
@@ -265,7 +267,7 @@ Core entities (minimum baseline):
   - Id (uuid), Name, Industry, PrimaryState, Region, Status
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
 - Broker
-  - Id (uuid), LegalName, LicenseNumber, State, Status, ManagedBySubject (nullable)
+  - Id (uuid), LegalName, LicenseNumber, State, Status, ManagedByUserId (uuid?, FK → UserProfile.UserId)
   - MgaId (nullable), PrimaryProgramId (nullable)
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
 - BrokerRegion (new — multi-region broker scope)
@@ -275,33 +277,35 @@ Core entities (minimum baseline):
   - Id (uuid), Name, ExternalCode, Status
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
 - Program
-  - Id (uuid), Name, ProgramCode, MgaId, ManagedBySubject (nullable)
-  - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
+  - Id (uuid), Name, ProgramCode, MgaId, ManagedByUserId (uuid?, FK → UserProfile.UserId)
+  - CreatedAt, CreatedByUserId (uuid), UpdatedAt, UpdatedByUserId (uuid?), IsDeleted
 - Contact
   - Id (uuid), BrokerId (nullable), AccountId (nullable), FullName, Email, Phone, Role
   - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
 - Submission
-  - Id (uuid), AccountId, BrokerId, ProgramId (nullable), CurrentStatus, EffectiveDate, PremiumEstimate, AssignedTo (Keycloak subject)
-  - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
+  - Id (uuid), AccountId, BrokerId, ProgramId (nullable), CurrentStatus, EffectiveDate, PremiumEstimate, AssignedToUserId (uuid, FK → UserProfile.UserId)
+  - CreatedAt, CreatedByUserId (uuid), UpdatedAt, UpdatedByUserId (uuid?), IsDeleted
 - Renewal
-  - Id (uuid), AccountId, BrokerId, SubmissionId (nullable), CurrentStatus, RenewalDate, AssignedTo (Keycloak subject)
-  - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, IsDeleted
+  - Id (uuid), AccountId, BrokerId, SubmissionId (nullable), CurrentStatus, RenewalDate, AssignedToUserId (uuid, FK → UserProfile.UserId)
+  - CreatedAt, CreatedByUserId (uuid), UpdatedAt, UpdatedByUserId (uuid?), IsDeleted
 - **Task** (new — required by Dashboard F0001 and Task Center F0003)
   - Id (uuid), Title, Description (nullable), Status (Open/InProgress/Done), Priority (Low/Normal/High/Urgent)
-  - DueDate (nullable), AssignedTo (Keycloak subject)
+  - DueDate (nullable), AssignedToUserId (uuid, FK → UserProfile.UserId)
   - LinkedEntityType (nullable), LinkedEntityId (nullable) — polymorphic link to Broker/Submission/Renewal/Account
-  - CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, CompletedAt (nullable), IsDeleted
+  - CreatedAt, CreatedByUserId (uuid), UpdatedAt, UpdatedByUserId (uuid?), CompletedAt (nullable), IsDeleted
   - See [data-model.md](architecture/data-model.md) for full table definition, indexes, and audit requirements
 - UserProfile
-  - Subject (Keycloak sub), Email, DisplayName, Department, RegionsJson, RolesJson
+  - UserId (uuid, PK), IdpIssuer (varchar), IdpSubject (varchar) — UNIQUE(IdpIssuer, IdpSubject)
+  - Email, DisplayName, Department, RegionsJson, RolesJson
   - CreatedAt, UpdatedAt
+  - (No longer keyed by raw IdP sub — see ADR-006 for principal key design)
 - UserPreference
   - Id (uuid), Subject, PreferenceKey, PreferenceValueJson
   - CreatedAt, UpdatedAt
 - ActivityTimelineEvent (append-only)
-  - Id (uuid), EntityType, EntityId, EventType, EventPayloadJson, ActorSubject, OccurredAt
+  - Id (uuid), EntityType, EntityId, EventType, EventPayloadJson, ActorUserId (uuid, logical ref → UserProfile.UserId), OccurredAt
 - WorkflowTransition (append-only)
-  - Id (uuid), WorkflowType, EntityId, FromState, ToState, Reason, ActorSubject, OccurredAt
+  - Id (uuid), WorkflowType, EntityId, FromState, ToState, Reason, ActorUserId (uuid, logical ref → UserProfile.UserId), OccurredAt
 
 Reference tables and seed strategy:
 - ReferenceState, ReferenceIndustry, ReferenceTaskStatus, ReferenceSubmissionStatus, ReferenceRenewalStatus
@@ -418,7 +422,7 @@ Performance:
 - List endpoints support pagination and bounded query size.
 
 Security:
-- OIDC JWT validation against Keycloak issuer/audience.
+- OIDC JWT validation against authentik issuer/audience (see ADR-006).
 - Casbin ABAC for all protected actions.
 - Secrets via environment variables; no hardcoded credentials in code or config.
 - Immutable audit trail for every mutation and transition.
@@ -440,7 +444,7 @@ Implementation should proceed in staged increments. Start Phase 0 foundation whe
 
 ### Phase 0 Foundation — required components
 
-Must include Postgres + Keycloak + Casbin in docker-compose. Temporal is included as infrastructure-only
+Must include Postgres + Redis + authentik (server + worker) + Casbin in docker-compose. Temporal is included as infrastructure-only
 (server + worker containers); no F0001/F0002 story uses Temporal workflows — it is provisioned now so that
 Submission/Renewal workflow orchestration (F0006/F0007) can adopt it without docker-compose changes later.
 Backend: Clean Architecture scaffold + auth + ABAC wiring + error contract + timeline append-only.
@@ -457,7 +461,7 @@ No scope creep in Phase 0:
 
 Definition of Done for Phase 0:
 
-- [ ] docker-compose includes Postgres, Keycloak, Casbin policy source, Temporal (infrastructure-only; no app code depends on it in F0001/F0002)
+- [ ] docker-compose includes Postgres, Redis, authentik (server + worker), Casbin policy source, Temporal (infrastructure-only; no app code depends on it in F0001/F0002)
 - [ ] backend scaffolded with clean architecture boundaries and auth/ABAC wiring
 - [ ] frontend authenticated shell with protected routes
 - [ ] consistent error contract implemented across API endpoints

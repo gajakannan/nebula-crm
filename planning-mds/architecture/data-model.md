@@ -22,13 +22,13 @@ See [ADR-003](decisions/ADR-003-task-entity-nudge-engine.md) for design rational
 | Status | varchar(20) | NOT NULL, FK -> ReferenceTaskStatus.Code | 'Open' | Current task state |
 | Priority | varchar(20) | NOT NULL, CHECK IN ('Low','Normal','High','Urgent') | 'Normal' | Task priority level |
 | DueDate | date | NULL | — | Optional due date |
-| AssignedTo | varchar(255) | NOT NULL | — | Keycloak subject (sub claim) of assigned user |
+| AssignedToUserId | uuid | NOT NULL, FK → UserProfile.UserId | — | Internal UserId of assigned user (stable across IdP changes) |
 | LinkedEntityType | varchar(50) | NULL | — | Type of linked entity: 'Broker', 'Submission', 'Renewal', 'Account' |
 | LinkedEntityId | uuid | NULL | — | ID of the linked entity (polymorphic; no hard FK) |
 | CreatedAt | timestamptz | NOT NULL | now() | UTC creation timestamp |
-| CreatedBy | varchar(255) | NOT NULL | — | Keycloak subject of creator |
+| CreatedByUserId | uuid | NOT NULL, FK → UserProfile.UserId | — | Internal UserId of creator |
 | UpdatedAt | timestamptz | NOT NULL | now() | UTC last-update timestamp |
-| UpdatedBy | varchar(255) | NOT NULL | — | Keycloak subject of last updater |
+| UpdatedByUserId | uuid | NOT NULL, FK → UserProfile.UserId | — | Internal UserId of last updater |
 | CompletedAt | timestamptz | NULL | — | Set when Status transitions to Done |
 | IsDeleted | boolean | NOT NULL | false | Soft delete flag |
 
@@ -37,7 +37,7 @@ See [ADR-003](decisions/ADR-003-task-entity-nudge-engine.md) for design rational
 | Index Name | Columns | Type | Purpose |
 |-----------|---------|------|---------|
 | `PK_Tasks_Id` | Id | PRIMARY KEY, clustered | — |
-| `IX_Tasks_AssignedTo_Status_DueDate` | (AssignedTo, Status, DueDate) | B-tree | My Tasks widget query |
+| `IX_Tasks_AssignedToUserId_Status_DueDate` | (AssignedToUserId, Status, DueDate) | B-tree | My Tasks widget query |
 | `IX_Tasks_DueDate_Status` | (DueDate, Status) WHERE IsDeleted = false AND Status != 'Done' | Partial B-tree | Nudge: overdue task detection |
 | `IX_Tasks_LinkedEntity` | (LinkedEntityType, LinkedEntityId) | B-tree | Entity-linked task lookups |
 
@@ -66,11 +66,11 @@ See [activity-event-payloads.schema.json](../schemas/activity-event-payloads.sch
 These fields are required to implement MVP ABAC scoping and dashboard assigned-user display without introducing full assignment tables.
 
 - **Accounts:** `Region` (string, required)
-- **Brokers:** `ManagedBySubject` (nullable, Keycloak subject)
+- **Brokers:** `ManagedByUserId` (uuid?, FK → UserProfile.UserId)
 - **BrokerRegion:** `BrokerId` + `Region` (multi-region broker scope)
-- **Programs:** `ManagedBySubject` (nullable, Keycloak subject)
-- **Submissions:** `AssignedTo` (Keycloak subject), `IsDeleted` (boolean, default false)
-- **Renewals:** `AssignedTo` (Keycloak subject), `IsDeleted` (boolean, default false)
+- **Programs:** `ManagedByUserId` (uuid?, FK → UserProfile.UserId)
+- **Submissions:** `AssignedToUserId` (uuid, FK → UserProfile.UserId), `IsDeleted` (boolean, default false)
+- **Renewals:** `AssignedToUserId` (uuid, FK → UserProfile.UserId), `IsDeleted` (boolean, default false)
 
 **Validation rule (MVP):**
 - Submission/renewal creation must validate region alignment: `Account.Region` must be included in the broker's `BrokerRegion` set; otherwise return HTTP 400 with `ProblemDetails` (`code=region_mismatch`).
@@ -192,7 +192,7 @@ FROM Submissions s
     ORDER BY wt.OccurredAt DESC
     LIMIT 1
   ) wt_latest ON true
-  LEFT JOIN UserProfile up ON up.Subject = s.AssignedTo
+  LEFT JOIN UserProfile up ON up.UserId = s.AssignedToUserId
 WHERE s.CurrentStatus = @status
   -- + ABAC scope filter
 ORDER BY DaysInStatus DESC
@@ -212,7 +212,7 @@ SELECT
   ate.EntityId
 FROM ActivityTimelineEvent ate
   JOIN Brokers b ON ate.EntityId = b.Id AND ate.EntityType = 'Broker'
-  LEFT JOIN UserProfile up ON up.Subject = ate.ActorSubject
+  LEFT JOIN UserProfile up ON up.UserId = ate.ActorUserId
 WHERE ate.EntityType = 'Broker'
   -- + ABAC scope filter on broker visibility
 ORDER BY ate.OccurredAt DESC
@@ -228,14 +228,14 @@ These indexes are required for dashboard query performance. They do not change a
 | Table | Index Name | Columns | Type | Dashboard Use |
 |-------|-----------|---------|------|--------------|
 | Submissions | `IX_Submissions_CurrentStatus` | (CurrentStatus) WHERE CurrentStatus NOT IN terminal | Partial B-tree | KPI open count, pipeline grouping |
-| Submissions | `IX_Submissions_AssignedTo_CurrentStatus` | (AssignedTo, CurrentStatus) | B-tree | Assigned-scope pipeline + KPI counts |
+| Submissions | `IX_Submissions_AssignedToUserId_CurrentStatus` | (AssignedToUserId, CurrentStatus) | B-tree | Assigned-scope pipeline + KPI counts |
 | Renewals | `IX_Renewals_CurrentStatus` | (CurrentStatus) | B-tree | KPI renewal rate, pipeline grouping |
-| Renewals | `IX_Renewals_AssignedTo_CurrentStatus` | (AssignedTo, CurrentStatus) | B-tree | Assigned-scope pipeline + KPI counts |
+| Renewals | `IX_Renewals_AssignedToUserId_CurrentStatus` | (AssignedToUserId, CurrentStatus) | B-tree | Assigned-scope pipeline + KPI counts |
 | Renewals | `IX_Renewals_RenewalDate_Status` | (RenewalDate, CurrentStatus) | B-tree | Nudge: upcoming renewals |
 | WorkflowTransition | `IX_WT_EntityId_OccurredAt` | (EntityId, OccurredAt DESC) | B-tree | DaysInStatus computation, avg turnaround |
 | ActivityTimelineEvent | `IX_ATE_EntityType_OccurredAt` | (EntityType, OccurredAt DESC) | B-tree | Broker activity feed |
-| Brokers | `IX_Brokers_ManagedBySubject` | (ManagedBySubject) | B-tree | RelationshipManager scope |
-| Programs | `IX_Programs_ManagedBySubject` | (ManagedBySubject) | B-tree | ProgramManager scope |
+| Brokers | `IX_Brokers_ManagedByUserId` | (ManagedByUserId) | B-tree | RelationshipManager scope |
+| Programs | `IX_Programs_ManagedByUserId` | (ManagedByUserId) | B-tree | ProgramManager scope |
 | BrokerRegions | `IX_BrokerRegions_Region_BrokerId` | (Region, BrokerId) | B-tree | Region-scoped broker visibility |
 | Accounts | `IX_Accounts_Region` | (Region) | B-tree | Region-scoped account/submission visibility |
 

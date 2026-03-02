@@ -18,10 +18,10 @@ public class BrokerConfiguration : IEntityTypeConfiguration<Broker>
         builder.Property(e => e.Status).IsRequired().HasMaxLength(20);
         builder.Property(e => e.Email).HasMaxLength(255);
         builder.Property(e => e.Phone).HasMaxLength(30);
-        builder.Property(e => e.ManagedBySubject).HasMaxLength(255);
-        builder.Property(e => e.CreatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.UpdatedBy).IsRequired().HasMaxLength(255);
-        builder.Property(e => e.DeletedBy).HasMaxLength(255);
+        builder.Property(e => e.ManagedByUserId);
+        builder.Property(e => e.CreatedByUserId).IsRequired();
+        builder.Property(e => e.UpdatedByUserId).IsRequired();
+        builder.Property(e => e.DeletedByUserId);
         builder.Property(e => e.IsDeleted).HasDefaultValue(false);
 
         builder.HasOne(e => e.Mga)
@@ -43,7 +43,7 @@ public class BrokerConfiguration : IEntityTypeConfiguration<Broker>
 
         builder.HasIndex(e => e.LicenseNumber).IsUnique()
             .HasDatabaseName("IX_Brokers_LicenseNumber");
-        builder.HasIndex(e => e.ManagedBySubject)
-            .HasDatabaseName("IX_Brokers_ManagedBySubject");
+        builder.HasIndex(e => e.ManagedByUserId)
+            .HasDatabaseName("IX_Brokers_ManagedByUserId");
     }
 }

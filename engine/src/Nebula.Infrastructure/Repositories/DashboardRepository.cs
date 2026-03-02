@@ -232,10 +232,10 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
 
             var items = await query.Take(5).ToListAsync(ct);
 
-            var userSubjects = items.Select(s => s.AssignedTo).Distinct().ToList();
+            var userIds = items.Select(s => s.AssignedToUserId).Distinct().ToList();
             var users = await db.UserProfiles
-                .Where(u => userSubjects.Contains(u.Subject))
-                .ToDictionaryAsync(u => u.Subject, ct);
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, ct);
 
             var miniCards = items.Select(s =>
             {
@@ -243,7 +243,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
                     ? (int)(DateTime.UtcNow - transitionDate).TotalDays
                     : (int)(DateTime.UtcNow - s.CreatedAt).TotalDays;
 
-                users.TryGetValue(s.AssignedTo, out var user);
+                users.TryGetValue(s.AssignedToUserId, out var user);
                 var initials = GetInitials(user?.DisplayName);
 
                 return new OpportunityMiniCardDto(s.Id, s.Account.Name, (double)s.PremiumEstimate, daysInStatus, initials, user?.DisplayName);
@@ -267,10 +267,10 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
 
             var items = await query.Take(5).ToListAsync(ct);
 
-            var userSubjects = items.Select(r => r.AssignedTo).Distinct().ToList();
+            var userIds = items.Select(r => r.AssignedToUserId).Distinct().ToList();
             var users = await db.UserProfiles
-                .Where(u => userSubjects.Contains(u.Subject))
-                .ToDictionaryAsync(u => u.Subject, ct);
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, ct);
 
             var miniCards = items.Select(r =>
             {
@@ -278,7 +278,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
                     ? (int)(DateTime.UtcNow - transitionDate).TotalDays
                     : (int)(DateTime.UtcNow - r.CreatedAt).TotalDays;
 
-                users.TryGetValue(r.AssignedTo, out var user);
+                users.TryGetValue(r.AssignedToUserId, out var user);
                 var initials = GetInitials(user?.DisplayName);
 
                 return new OpportunityMiniCardDto(r.Id, r.Account.Name, null, daysInStatus, initials, user?.DisplayName);
@@ -288,7 +288,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         }
     }
 
-    public async Task<IReadOnlyList<NudgeCardDto>> GetNudgesAsync(string userSubject, CancellationToken ct = default)
+    public async Task<IReadOnlyList<NudgeCardDto>> GetNudgesAsync(Guid userId, CancellationToken ct = default)
     {
         var nudges = new List<NudgeCardDto>();
         var today = DateTime.UtcNow.Date;
@@ -304,7 +304,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
 
         // Priority 1: Overdue tasks
         var overdueTasks = await db.Tasks
-            .Where(t => t.AssignedTo == userSubject && t.Status != "Done"
+            .Where(t => t.AssignedToUserId == userId && t.Status != "Done"
                 && t.DueDate.HasValue && t.DueDate.Value < today)
             .OrderBy(t => t.DueDate)
             .Take(3)

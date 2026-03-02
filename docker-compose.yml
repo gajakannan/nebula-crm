@@ -18,23 +18,57 @@ services:
       timeout: 5s
       retries: 5
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.0
-    container_name: nebula-keycloak
-    command: start-dev --import-realm
+  # authentik — OIDC identity provider (see ADR-006, F0005).
+  # Redis removed in authentik 2025.10 — PostgreSQL handles caching, tasks, and WebSockets.
+  # Two containers required: server (UI + SSO) and worker (background tasks + blueprints).
+  # AUTHENTIK_SECRET_KEY must be set in .env (generate with: python3 -c "import secrets; print(secrets.token_urlsafe(50))")
+  authentik-server:
+    image: authentik/server:2026.2.0
+    container_name: nebula-authentik-server
+    command: server
     restart: unless-stopped
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: change_me
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
-      KC_DB_USERNAME: postgres
-      KC_DB_PASSWORD: postgres
-      KC_HEALTH_ENABLED: "true"
-    ports:
-      - "8081:8080"
+      AUTHENTIK_POSTGRESQL__HOST: db
+      AUTHENTIK_POSTGRESQL__USER: postgres
+      AUTHENTIK_POSTGRESQL__PASSWORD: postgres
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+      AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
     volumes:
-      - ./docker/keycloak/nebula-realm.json:/opt/keycloak/data/import/nebula-realm.json:ro
+      # Mount into /blueprints/custom — authentik scans /blueprints/** recursively by default,
+      # so built-in flows (default/, system/) are preserved alongside our custom blueprints.
+      - ./docker/authentik/blueprints:/blueprints/custom:ro
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:9000/-/health/live/', timeout=2).read(); print('ok')\""
+      interval: 10s
+      timeout: 5s
+      retries: 18
+
+  authentik-worker:
+    image: authentik/server:2026.2.0
+    container_name: nebula-authentik-worker
+    command: worker
+    restart: unless-stopped
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: db
+      AUTHENTIK_POSTGRESQL__USER: postgres
+      AUTHENTIK_POSTGRESQL__PASSWORD: postgres
+      AUTHENTIK_POSTGRESQL__NAME: authentik
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+      AUTHENTIK_BOOTSTRAP_PASSWORD: "devpassword" # dev-only, never use in production.
+      AUTHENTIK_BOOTSTRAP_EMAIL: "admin@nebula.dev"
+    volumes:
+      - ./docker/authentik/blueprints:/blueprints/custom:ro
     depends_on:
       db:
         condition: service_healthy
@@ -82,15 +116,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=nebula;Username=postgres;Password=postgres
-      Authentication__Authority: http://keycloak:8080/realms/nebula
-      Authentication__Audience: nebula-api
+      Authentication__Authority: http://authentik-server:9000/application/o/nebula/
+      Authentication__Audience: nebula
+      Authentication__RolesClaim: nebula_roles
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
-      keycloak:
-        condition: service_started
+      # ✅ better than "service_started" if you add the healthcheck above
+      authentik-server:
+        condition: service_healthy
 
 volumes:
   nebula-db-data:

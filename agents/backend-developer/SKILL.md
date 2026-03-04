@@ -103,7 +103,7 @@ Your responsibility is to implement the **service layer** (engine/) based on req
 - Implement repositories with EF Core
 - Create database migrations
 - Implement timeline/audit services
-- Integrate external services (Keycloak, Temporal, etc.)
+- Integrate external services (authentik, Temporal, etc.)
 
 ### 4. API Layer Implementation
 - Implement API endpoints per OpenAPI specs
@@ -155,7 +155,7 @@ Your responsibility is to implement the **service layer** (engine/) based on req
 - **API Style:** Minimal APIs (or Controllers if complex)
 - **Database:** PostgreSQL
 - **ORM:** EF Core 10
-- **Authentication:** Keycloak (OIDC/JWT)
+- **Authentication:** authentik (OIDC/JWT)
 - **Authorization:** Casbin with ABAC
 - **Validation:** NJsonSchema (JSON Schema validator)
 - **Workflow Engine:** Temporal.io
@@ -223,6 +223,8 @@ engine/
 
 ### Required Context
 - Data model (entities, relationships, constraints)
+- Domain ERD — `planning-mds/architecture/data-model.md` (Mermaid `erDiagram`)
+- Feature ERD — embedded in feature README if new entities introduced
 - API contracts (OpenAPI specs)
 - JSON Schemas for validation
 - Workflow rules and state machines
@@ -233,7 +235,7 @@ engine/
 - [ ] `planning-mds/BLUEPRINT.md` Section 4.x complete
 - [ ] API contracts defined in `planning-mds/api/`
 - [ ] JSON Schemas defined in `planning-mds/schemas/`
-- [ ] Data model documented
+- [ ] Data model documented with ERD
 - [ ] Workflow state machines defined
 
 ## Output Contract
@@ -265,7 +267,7 @@ engine/
 **Configuration:**
 - `appsettings.json` with environment variables
 - Database connection strings
-- Keycloak integration config
+- authentik integration config
 - Casbin policy files
 
 **Documentation:**
@@ -275,6 +277,7 @@ engine/
 
 ## Definition of Done
 
+- [ ] Domain entities match the ERD in `planning-mds/architecture/data-model.md`
 - [ ] All endpoints implemented per OpenAPI specs
 - [ ] JSON Schema validation implemented for requests
 - [ ] Authorization enforced on all endpoints (Casbin)
@@ -330,11 +333,12 @@ engine/
 - Write integration tests
 
 ### 6. Build & Validate (Feedback Loop)
-1. Run `dotnet build`
-2. If build fails → read error, fix issue, rebuild
-3. Run `dotnet test`
-4. If tests fail → read failure output, fix issue, retest
-5. Only proceed to migration when both build and tests pass
+1. Cross-check implemented entities against the ERD — field names, types, and relationships must match
+2. Run `dotnet build`
+3. If build fails → read error, fix issue, rebuild
+4. Run `dotnet test`
+5. If tests fail → read failure output, fix issue, retest
+6. Only proceed to migration when both build and tests pass
 
 ### 7. Migrate & Verify
 - Apply migrations to dev database

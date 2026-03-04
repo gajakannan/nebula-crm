@@ -1,8 +1,215 @@
-# Nebula CRM — Data Model Supplement (Dashboard-First)
+# Nebula CRM — Data Model
 
-**Purpose:** This document supplements BLUEPRINT.md Section 4.2 with detailed data model specifications required by the Dashboard (F0001) feature. It adds the **Task** entity (new) and documents **dashboard-specific indexes and query patterns**.
+**Purpose:** Authoritative data model reference for Nebula CRM. Contains the domain ERD, entity specifications, reference data, query patterns, and migration strategy. Supplements BLUEPRINT.md Section 4.2.
 
-**Last Updated:** 2026-02-22
+**Last Updated:** 2026-03-03
+
+---
+
+## 0. Domain Entity Relationship Diagram
+
+Reflects all entities implemented as of F0002 (Broker Management). Audit fields (`CreatedAt`, `CreatedByUserId`, `UpdatedAt`, `UpdatedByUserId`, `DeletedAt`, `DeletedByUserId`, `IsDeleted`, `RowVersion`) are present on all `BaseEntity` subclasses and omitted from the diagram for clarity.
+
+### Mermaid ERD
+
+```mermaid
+erDiagram
+    UserProfile {
+        uuid Id PK
+        string IdpIssuer
+        string IdpSubject
+        string Email
+        string DisplayName
+        string Department
+        jsonb RegionsJson
+        jsonb RolesJson
+        bool IsActive
+    }
+    MGA {
+        uuid Id PK
+        string Name
+        string ExternalCode
+        string Status
+    }
+    Program {
+        uuid Id PK
+        string Name
+        string ProgramCode
+        uuid MgaId FK
+        uuid ManagedByUserId FK "nullable"
+    }
+    Broker {
+        uuid Id PK
+        string LegalName
+        string LicenseNumber UK
+        string State
+        string Status
+        uuid MgaId FK "nullable"
+        uuid PrimaryProgramId FK "nullable"
+        uuid ManagedByUserId FK "nullable"
+    }
+    BrokerRegion {
+        uuid BrokerId PK,FK
+        string Region PK
+    }
+    Account {
+        uuid Id PK
+        string Name
+        string Industry
+        string PrimaryState
+        string Region
+        string Status
+    }
+    Contact {
+        uuid Id PK
+        uuid BrokerId FK "nullable"
+        uuid AccountId FK "nullable"
+        string FullName
+        string Email
+        string Role
+    }
+    Submission {
+        uuid Id PK
+        uuid AccountId FK
+        uuid BrokerId FK
+        uuid ProgramId FK "nullable"
+        string CurrentStatus FK
+        date EffectiveDate
+        decimal PremiumEstimate
+        uuid AssignedToUserId FK
+    }
+    Renewal {
+        uuid Id PK
+        uuid AccountId FK
+        uuid BrokerId FK
+        uuid SubmissionId FK "nullable"
+        string CurrentStatus FK
+        date RenewalDate
+        uuid AssignedToUserId FK
+    }
+    TaskItem {
+        uuid Id PK
+        string Title
+        string Status FK
+        string Priority
+        date DueDate "nullable"
+        uuid AssignedToUserId FK
+        string LinkedEntityType "nullable, polymorphic"
+        uuid LinkedEntityId "nullable, polymorphic"
+        datetime CompletedAt "nullable"
+    }
+    ActivityTimelineEvent {
+        uuid Id PK
+        string EntityType "polymorphic"
+        uuid EntityId "polymorphic, no FK constraint"
+        string EventType
+        string EventDescription
+        uuid ActorUserId
+        datetime OccurredAt
+    }
+    WorkflowTransition {
+        uuid Id PK
+        string WorkflowType
+        uuid EntityId "polymorphic, no FK constraint"
+        string FromState
+        string ToState
+        string Reason "nullable"
+        uuid ActorUserId
+        datetime OccurredAt
+    }
+    ReferenceSubmissionStatus {
+        string Code PK
+        string DisplayName
+        bool IsTerminal
+        smallint DisplayOrder
+        string ColorGroup "nullable"
+    }
+    ReferenceRenewalStatus {
+        string Code PK
+        string DisplayName
+        bool IsTerminal
+        smallint DisplayOrder
+        string ColorGroup "nullable"
+    }
+    ReferenceTaskStatus {
+        string Code PK
+        string DisplayName
+        smallint DisplayOrder
+    }
+
+    MGA ||--o{ Program : "hosts"
+    MGA |o--o{ Broker : "affiliates"
+    Program |o--o{ Broker : "primary program for"
+    Broker ||--o{ BrokerRegion : "covers"
+    Broker |o--o{ Contact : "has"
+    Account |o--o{ Contact : "has"
+    Account ||--o{ Submission : "generates"
+    Broker ||--o{ Submission : "submits"
+    Program |o--o{ Submission : "under"
+    Account ||--o{ Renewal : "renews via"
+    Broker ||--o{ Renewal : "manages"
+    Submission |o--o{ Renewal : "originates"
+    UserProfile |o--o{ Broker : "manages"
+    UserProfile |o--o{ Program : "manages"
+    UserProfile ||--o{ Submission : "assigned"
+    UserProfile ||--o{ Renewal : "assigned"
+    UserProfile ||--o{ TaskItem : "assigned"
+    ReferenceSubmissionStatus ||--o{ Submission : "status"
+    ReferenceRenewalStatus ||--o{ Renewal : "status"
+    ReferenceTaskStatus ||--o{ TaskItem : "status"
+```
+
+### ASCII Companion
+
+For terminals, PR review comments, and ADR inline use.
+
+```
+NEBULA CRM — DOMAIN MODEL (as of F0002)
+Audit fields omitted (all BaseEntity subclasses carry: Id, CreatedAt/By, UpdatedAt/By, DeletedAt/By, IsDeleted, RowVersion).
+
+IDENTITY
+  UserProfile(Id PK, IdpIssuer, IdpSubject UK, Email, DisplayName, Department, Roles[], Regions[])
+     │
+     │ manages (opt)           manages (opt)           assigned (req)
+     ▼                         ▼                        ▼
+  Program ◄──────── MGA        Program                 Submission / Renewal / TaskItem
+
+DISTRIBUTION NETWORK
+  MGA(Name, ExternalCode, Status)
+   ├─hosts──────────────► Program(Name, ProgramCode, MgaId FK, ManagedByUserId FK opt)
+   └─affiliates (opt)──► Broker(LegalName, LicenseNumber UK, State, Status,
+                                MgaId FK opt, PrimaryProgramId FK opt, ManagedByUserId FK opt)
+                           ├─covers──► BrokerRegion(BrokerId PK+FK, Region PK)
+                           └─has────► Contact(FullName, Email, Role, BrokerId FK opt, AccountId FK opt)
+  Account(Name, Industry, PrimaryState, Region, Status)
+   └─has────────────────► Contact (same Contact table, AccountId FK opt)
+
+WORK ITEMS
+  Submission(EffectiveDate, PremiumEstimate, CurrentStatus FK)
+   ├─FK (req)──► Account
+   ├─FK (req)──► Broker
+   ├─FK (opt)──► Program
+   ├─FK────────► ReferenceSubmissionStatus(Code PK, IsTerminal, DisplayOrder)
+   └─FK────────► UserProfile (AssignedToUserId)
+
+  Renewal(RenewalDate, CurrentStatus FK)
+   ├─FK (req)──► Account
+   ├─FK (req)──► Broker
+   ├─FK (opt)──► Submission (originating)
+   ├─FK────────► ReferenceRenewalStatus(Code PK, IsTerminal, DisplayOrder)
+   └─FK────────► UserProfile (AssignedToUserId)
+
+TASKS
+  TaskItem(Title, Priority, DueDate opt, Status FK, CompletedAt opt)
+   ├─FK────────► UserProfile (AssignedToUserId)
+   ├─FK────────► ReferenceTaskStatus(Code PK, DisplayOrder)
+   └─polymorphic (no FK)──► Broker | Account | Submission | Renewal
+                             via (LinkedEntityType, LinkedEntityId)
+
+AUDIT / APPEND-ONLY (no soft delete; polymorphic EntityId — no FK constraint)
+  ActivityTimelineEvent(EntityType, EntityId, EventType, EventDescription, ActorUserId, OccurredAt)
+  WorkflowTransition   (WorkflowType, EntityId, FromState, ToState, Reason opt, ActorUserId, OccurredAt)
+```
 
 ---
 
@@ -241,33 +448,11 @@ These indexes are required for dashboard query performance. They do not change a
 
 ---
 
-## 4. Entity Relationship Diagram (Dashboard Scope)
+## 4. Entity Relationship Diagram (Dashboard Context)
 
-```
-                        ┌─────────────┐
-                        │  Dashboard  │ (virtual — no table)
-                        └──────┬──────┘
-               ┌───────────────┼───────────────────────┐
-               │               │                       │
-      ┌────────▼────────┐ ┌────▼──────┐  ┌─────────────▼────────────┐
-      │     Tasks       │ │  KPIs     │  │  Pipeline Summary        │
-      │ (new entity)    │ │ (computed)│  │  (computed from S + R)   │
-      └────────┬────────┘ └───────────┘  └─────────────────────────┘
-               │
-    ┌──────────┼──────────────┐
-    │ LinkedEntityType/Id     │ (polymorphic)
-    │                         │
-┌───▼───┐  ┌─────────┐  ┌────▼────┐  ┌─────────┐
-│Broker │  │ Account │  │Submissn │  │ Renewal │
-└───┬───┘  └─────────┘  └────┬────┘  └────┬────┘
-    │                        │             │
-    │   ┌────────────────────┴─────────────┘
-    │   │
-┌───▼───▼──────────────────┐  ┌──────────────────────────┐
-│ ActivityTimelineEvent    │  │ WorkflowTransition       │
-│ (append-only)            │  │ (append-only)            │
-└──────────────────────────┘  └──────────────────────────┘
-```
+See **Section 0** for the full domain ERD (Mermaid + ASCII) covering all implemented entities.
+
+The dashboard consumes a subset of the domain: it aggregates computed KPIs and pipeline counts from `Submission` and `Renewal`, surfaces `TaskItem` records assigned to the current user, and streams `ActivityTimelineEvent` records filtered by entity type. No new tables are introduced for the dashboard itself — it queries existing entities via the indexes defined in Section 3.
 
 ---
 
@@ -293,4 +478,4 @@ These indexes are required for dashboard query performance. They do not change a
 
 ---
 
-**Version:** 1.0
+**Version:** 2.0 — 2026-03-03: Added full domain ERD (Mermaid + ASCII) in Section 0 covering all entities implemented through F0002. Expanded from dashboard-scope supplement to authoritative domain model document.

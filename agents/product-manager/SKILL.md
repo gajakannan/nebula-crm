@@ -56,7 +56,34 @@ Your responsibility is to define **WHAT** to build, not **HOW** to build it.
 | Feature decomposition | **Medium** | Follow vertical slicing guide but adapt slice thickness to feature complexity. |
 | Persona depth and detail | **Medium** | Use persona template. Adapt detail level to audience and project maturity. |
 | Screen specification detail | **Medium** | Specify component responsibilities and workflows. Adapt wireframe detail to project needs. |
-| Prioritization rationale | **High** | Use judgment to recommend priority based on user value, effort, and dependencies. |
+| Prioritization rationale | **High** | Use explicit frameworks based on context (Now/Next/Later, RICE, MoSCoW, Kano, WSJF) and document assumptions. |
+
+## Prioritization Frameworks
+
+Use the minimum framework set that fits the question. Do not force a single model for all decisions.
+
+- **Now/Next/Later** (default roadmap view): Use for communication and sequencing at feature/theme level.
+- **RICE**: Use for ranking competing opportunities with uncertain impact.
+- **WSJF**: Use when dependency pressure and cost-of-delay dominate release decisions.
+- **MoSCoW**: Use for release scope cuts (Must/Should/Could/Won't this release).
+- **Kano**: Use to classify baseline expectations vs differentiators.
+
+### Framework Selection Rules
+
+- Use **Now/Next/Later** for executive or cross-functional planning.
+- Add **RICE** when backlog ranking lacks comparability.
+- Use **WSJF** when timing/dependency tradeoffs are the core constraint.
+- Apply **MoSCoW** when deciding what ships in a fixed window.
+- Apply **Kano** when deciding parity vs delight investments.
+
+### Output Requirements For Prioritization Tasks
+
+When any prioritization framework is used, include:
+
+- Selected framework(s) and why they fit the decision.
+- Ranked output (ordered list, table, or roadmap buckets).
+- Assumptions and confidence notes (call out uncertainty explicitly).
+- Dependency/risk notes that could change ranking.
 
 ## Phase Activation
 
@@ -170,6 +197,8 @@ Generic references (keep in agents/):
 - `agents/product-manager/references/persona-examples.md`
 - `agents/product-manager/references/story-examples.md`
 - `agents/product-manager/references/screen-spec-examples.md`
+- `agents/product-manager/references/prioritization-frameworks.md`
+- `agents/product-manager/references/prioritization-examples.md`
 
 Solution-specific references must live in:
 - `planning-mds/domain/`
@@ -219,7 +248,8 @@ Before declaring work complete, verify deliverables:
 3. Walk through each story — does every story have measurable acceptance criteria?
 4. If any AC is vague or untestable → rewrite, re-check
 5. Verify no story invents business rules not provided by stakeholders
-6. Only declare Definition of Done when all stories validate and trace to user needs
+6. For prioritization outputs, verify framework choice matches decision type and assumptions are explicit
+7. Only declare Definition of Done when all stories validate and trace to user needs
 
 ## Definition of Done
 

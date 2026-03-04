@@ -72,11 +72,13 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
 2) **Define service boundaries**
    - Identify modules and service boundaries
    - Define dependencies and interfaces
+   - Produce C4 L1 (System Context) and L2 (Container) diagrams — see [Diagram Standards](#diagram-standards)
 
 3) **Design data model**
    - Create entity models with relationships
    - Apply data modeling patterns from SOLUTION-PATTERNS.md
    - Ensure audit fields and soft delete patterns included
+   - Produce or update ERD — see [Diagram Standards](#diagram-standards)
 
 4) **Define workflow rules**
    - Specify state machines and transitions
@@ -162,6 +164,54 @@ Generic references in `agents/architect/references/` only. Solution-specific exa
 - Add approved patterns to SOLUTION-PATTERNS.md with clear rationale
 - Update patterns when conventions evolve or change
 - Mark deprecated patterns clearly
+
+## Diagram Standards
+
+### Format Rules
+
+Two formats are used — choose based on context:
+
+| Format | When to Use | Rendering |
+|--------|-------------|-----------|
+| **Mermaid** | Primary format for all stored diagram files in `planning-mds/` | GitHub, GitLab, VS Code (native) |
+| **ASCII** | Inline in ADR decision sections; quick conversational sketches; any context where rendering is uncertain | Everywhere — zero dependency |
+
+**Rule of thumb:** Every formal stored diagram gets Mermaid. ADR decision sections that include a diagram get ASCII so the ADR is readable in terminals, PR inline comments, and Slack.
+
+---
+
+### C4 Architecture Diagrams
+
+Use Mermaid `C4Context` / `C4Container` / `C4Component` syntax.
+
+| Level | Produce When | Stored In |
+|-------|-------------|-----------|
+| **L1 — System Context** | Once at project start; update when system boundary or actors change | `planning-mds/architecture/c4-context.md` |
+| **L2 — Container** | Per feature that adds a new service, changes inter-container communication, or introduces infrastructure | `planning-mds/architecture/c4-container.md` |
+| **L3 — Component** | For complex features with non-obvious internal structure (e.g. new AI integration, new workflow engine usage) | Feature README or `planning-mds/architecture/c4-component-{feature}.md` |
+| **L4 — Code** | Not required — auto-generated from code | — |
+
+Include an ASCII companion in the ADR for any C4 diagram that directly justifies a major architectural decision (e.g. ADR introducing a new service).
+
+---
+
+### ERD (Entity Relationship Diagrams)
+
+Use Mermaid `erDiagram` syntax.
+
+| Scope | Produce When | Stored In |
+|-------|-------------|-----------|
+| **Domain ERD** | Once; update whenever entities or relationships change | Embedded in `planning-mds/architecture/data-model.md` |
+| **Feature ERD** | Per feature that introduces new entities or modifies existing relationships | Embedded in the feature README |
+
+ERD content rules:
+- Show entity names, primary key, foreign keys, and discriminating business fields (not every column)
+- Show cardinality (`||--o{`, `}|--|{`, etc.) with relationship labels
+- Omit audit fields (CreatedAt, UpdatedAt, etc.) — they are on all entities by convention
+
+Include an ASCII version of the feature ERD inline in the feature README for terminals and PR review readability.
+
+---
 
 ## JSON Schema Validation Architecture
 
@@ -275,7 +325,10 @@ All outputs written to `planning-mds/BLUEPRINT.md` sections 4.x and supporting f
 
 | Deliverable | Backend Dev | Frontend Dev | AI Engineer | QA | DevOps | Security |
 |-------------|:-----------:|:------------:|:-----------:|:--:|:------:|:--------:|
-| Data Model (ERD) | ✅ | | | | | |
+| Domain ERD (Mermaid + ASCII) | ✅ | | | | | |
+| C4 L1 System Context (Mermaid + ASCII in ADR) | ✅ | ✅ | ✅ | | ✅ | ✅ |
+| C4 L2 Container (Mermaid + ASCII in ADR) | ✅ | ✅ | ✅ | | ✅ | |
+| C4 L3 Component (complex features only) | ✅ | ✅ | | | | |
 | API Contracts (OpenAPI) | ✅ | ✅ | | ✅ | | |
 | JSON Schemas | ✅ | ✅ | | ✅ | | |
 | Workflow State Machines | ✅ | ✅ | | | | |
@@ -292,13 +345,20 @@ Before declaring work complete, verify each deliverable:
 2. Validate JSON Schemas parse without errors
 3. Cross-check data model entities against API contracts — every entity with CRUD should have matching endpoints
 4. Cross-check JSON Schemas against OpenAPI request/response definitions — schemas must align
-5. If inconsistencies found → fix, re-validate
-6. Only declare Definition of Done when all cross-checks pass
+5. Cross-check ERD entities and relationships against data model tables — every entity in the tables must appear in the ERD
+6. Verify C4 L2 container diagram reflects all services present in docker-compose (or equivalent)
+7. If inconsistencies found → fix, re-validate
+8. Only declare Definition of Done when all cross-checks pass
 
 ## Definition of Done
 
 - Service boundaries clear
 - Data model complete
+- Domain ERD (Mermaid) present and up to date in `planning-mds/architecture/data-model.md`
+- Feature ERD (Mermaid + ASCII) embedded in feature README if new entities introduced
+- C4 L1 + L2 diagrams (Mermaid) present in `planning-mds/architecture/`
+- C4 L3 produced for features with non-obvious internal structure
+- ASCII diagram included in any ADR that justifies a structural decision
 - API contracts defined (OpenAPI specs)
 - JSON Schemas created for all request/response models
 - JSON Schemas stored in `planning-mds/schemas/` for sharing

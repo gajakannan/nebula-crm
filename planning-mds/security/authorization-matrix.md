@@ -1,8 +1,8 @@
 # Authorization Matrix (Requirements)
 
 Owner: Product Manager
-Status: Final
-Last Updated: 2026-02-21
+Status: Final (MVP) + Phase 1 delta defined
+Last Updated: 2026-03-04
 
 Sources used: BLUEPRINT.md §1.2, §3.1, §3.2, §4.3, §4.4; F0001-S0001, F0001-S0002, F0001-S0003, F0001-S0004, F0001-S0005; F0002-S0001 through F0002-S0007.
 No requirements invented. Gaps are marked "Not yet specified" with a reference to the blocking story.
@@ -19,6 +19,7 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 | RelationshipManager | Internal broker relationship manager. Maintains broker/account relationships and timeline context. | BLUEPRINT §1.2, §3.2; F0002-S0002, F0001-S0004 |
 | ProgramManager | Internal MGA/program manager. Oversees MGA program-level relationships. | BLUEPRINT §1.2, §3.2; F0001-S0001, F0001-S0004 |
 | Admin | Internal administrator. Broad management access including policy administration. | BLUEPRINT §4.4 |
+| BrokerUser | External broker user for scoped Phase 1 login. Access is constrained to broker-visible resources only. | F0009 PRD; F0009-S0004 |
 | ExternalUser | External broker/MGA user. No access to any MVP resource. Self-service portal deferred to future. | BLUEPRINT §3.1 non-goals |
 
 ---
@@ -274,11 +275,42 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 
 ---
 
+### 2.10 BrokerUser (Phase 1 Delta — F0009)
+
+This section applies only when F0009 is enabled. It does not alter MVP InternalOnly rules for existing external users by default.
+
+| Role | Resource | Action | Decision | Business Scope / Constraints | Story / AC Reference |
+|------|----------|--------|----------|------------------------------|----------------------|
+| BrokerUser | broker | read / search | **ALLOW** | Only broker records mapped to authenticated broker identity; no cross-broker visibility. | F0009-S0004 |
+| BrokerUser | broker | create / update / delete / reactivate | **DENY** | BrokerUser is read-first in Phase 1. | F0009 PRD Out of Scope; F0009-S0004 |
+| BrokerUser | contact | read | **ALLOW** | Only contacts for broker-visible broker records. Internal-only fields masked/omitted. | F0009-S0004 |
+| BrokerUser | contact | create / update / delete | **DENY** | No broker-side contact mutations in this phase. | F0009 PRD Out of Scope |
+| BrokerUser | dashboard_kpi | read | **ALLOW** | Broker-scoped KPI subset only (no internal aggregate KPI exposure). | F0009-S0003, F0009-S0004 |
+| BrokerUser | dashboard_pipeline | read | **ALLOW** | Broker-scoped pipeline subset only. | F0009-S0003, F0009-S0004 |
+| BrokerUser | dashboard_nudge | read | **ALLOW** | Broker-visible nudges only; no internal-only reminders. | F0009-S0004 |
+| BrokerUser | timeline_event | read | **ALLOW** | Only events explicitly classified BrokerVisible. | F0009-S0004 |
+| BrokerUser | task | read | **ALLOW** | Broker-visible tasks assigned to or linked to authenticated broker identity only. | F0009-S0004 |
+| BrokerUser | task | create / update / delete | **DENY** | No broker task mutation in Phase 1. | F0009 PRD Out of Scope |
+| BrokerUser | submission | read | **DENY** | Submission self-service is out of scope for this feature phase. | F0009 PRD Out of Scope |
+| BrokerUser | submission | transition | **DENY** | No workflow transitions by BrokerUser in Phase 1. | F0009 PRD Out of Scope |
+| BrokerUser | renewal | read | **DENY** | Renewal self-service is out of scope for this feature phase. | F0009 PRD Out of Scope |
+| BrokerUser | renewal | transition | **DENY** | No workflow transitions by BrokerUser in Phase 1. | F0009 PRD Out of Scope |
+
+**Constraints applying to all BrokerUser ALLOW decisions:**
+- Default deny applies for any resource/action not explicitly listed as ALLOW above.
+- Server-side ABAC enforcement is authoritative; frontend hiding is defense-in-depth only.
+- InternalOnly fields must be masked or omitted from all BrokerUser responses.
+- All BrokerUser reads must be broker-tenant scoped and auditable.
+
+---
+
 ## 3. InternalOnly Content Rule
 
 All resources in this matrix are classified **InternalOnly** for MVP. No data is accessible to ExternalUser under any circumstances. This rule applies universally to all resources above.
 
 Sources: BLUEPRINT §1.2 (external users are Future only), §3.1 non-goals ("No external broker/MGA self-service portal in MVP"), F0001-S0001 through F0001-S0005 Data Visibility sections, F0002-S0001 and F0002-S0002 Data Visibility sections.
+
+Phase 1 exception (F0009): BrokerUser access can be enabled only for the explicitly broker-visible resources and actions listed in §2.10.
 
 ---
 

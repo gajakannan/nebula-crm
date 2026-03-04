@@ -1,6 +1,10 @@
 # Feature Registry
 
-**Next Available Feature Number:** F0006
+**Next Available Feature Number:** F0010
+
+**Planning Views:**
+- Roadmap sequencing (`Now / Next / Later`): `planning-mds/features/ROADMAP.md`
+- Story rollup index: `planning-mds/features/STORY-INDEX.md`
 
 ## Active Features
 
@@ -11,6 +15,15 @@
 | F0003 | Task Center + Reminders (API-only MVP) | Draft | MVP | `F0003-task-center/` |
 | F0004 | Task Center UI + Manager Assignment | Draft | Phase 1 | `F0004-task-center-ui-and-assignment/` |
 | F0005 | IdP Migration: Keycloak → authentik | Draft | Infrastructure Patch | `F0005-idp-migration/` |
+| F0009 | Authentication + Role-Based Login | Draft | Phase 1 | `F0009-authentication-and-role-based-login/` |
+
+## Planned (Reserved IDs)
+
+| Feature ID | Name | Status | Phase | Folder |
+|------------|------|--------|-------|--------|
+| F0006 | Submission Intake Workflow | Planned | MVP | `TBD` |
+| F0007 | Renewal Pipeline | Planned | MVP | `TBD` |
+| F0008 | Broker Insights | Planned | MVP | `TBD` |
 
 ## Archived Features
 

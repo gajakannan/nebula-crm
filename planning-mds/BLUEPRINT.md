@@ -155,6 +155,7 @@ Status: This repository is currently focused on the agent builder framework, and
 - F0006: Submission Intake Workflow - Planned
 - F0007: Renewal Pipeline - Planned
 - F0008: Broker Insights - Planned
+- F0009: Authentication + Role-Based Login - Planned (Phase 1, includes scoped BrokerUser login)
 - [F0004: Task Center UI + Manager Assignment](features/F0004-task-center-ui-and-assignment/PRD.md) - Planned
 
 ### 3.4 MVP Features and Stories (vertical-slice friendly)

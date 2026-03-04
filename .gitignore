@@ -5,6 +5,10 @@
 # .NET
 bin/
 obj/
+**/bin/**
+**/obj/**
+**/bin\\Debug/**
+**/bin\\Release/**
 *.user
 *.suo
 *.csproj.user

@@ -18,7 +18,8 @@ export function BrokerContactsTab({
   onEditContact,
   onDeleteContact,
 }: BrokerContactsTabProps) {
-  const { data: contacts, isLoading, isError, refetch } = useBrokerContacts(brokerId);
+  const { data: page, isLoading, isError, refetch } = useBrokerContacts(brokerId);
+  const contacts = page?.data ?? [];
 
   if (isLoading) {
     return (
@@ -38,7 +39,7 @@ export function BrokerContactsTab({
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-sm font-medium text-text-secondary">
-          {contacts && contacts.length > 0 ? `${contacts.length} contact${contacts.length > 1 ? 's' : ''}` : ''}
+          {contacts.length > 0 ? `${contacts.length} contact${contacts.length > 1 ? 's' : ''}` : ''}
         </h3>
         <button
           onClick={onAddContact}
@@ -48,11 +49,11 @@ export function BrokerContactsTab({
         </button>
       </div>
 
-      {contacts && contacts.length === 0 && (
+      {contacts.length === 0 && (
         <p className="py-8 text-center text-sm text-text-muted">No contacts yet.</p>
       )}
 
-      {contacts && contacts.length > 0 && (
+      {contacts.length > 0 && (
         <div className="space-y-2">
           {contacts.map((contact) => (
             <ContactRow

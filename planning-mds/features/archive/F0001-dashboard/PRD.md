@@ -30,7 +30,7 @@
 **In Scope:**
 - Nudge cards (dismissible action prompts for overdue tasks, stale submissions, upcoming renewals — up to 3 at top of dashboard)
 - Key metrics cards (total active brokers, open submissions, renewal rate, avg turnaround)
-- Pipeline summary widget (mini-Kanban: horizontal status pills with counts, expandable to show mini-cards on hover/click)
+- Pipeline summary widget (Sankey-style opportunities flow for submissions and renewals, with interactive node/link details)
 - My tasks & reminders widget (tasks assigned to logged-in user, sorted by due date)
 - Broker activity feed widget (recent timeline events across broker relationships)
 - Role-aware content (widgets show data filtered by the user's authorization scope)
@@ -74,7 +74,7 @@
 ## Related User Stories
 
 - F0001-S0001 - View Key Metrics Cards
-- F0001-S0002 - View Pipeline Summary (Mini-Kanban)
+- F0001-S0002 - View Pipeline Summary (Sankey Opportunities)
 - F0001-S0003 - View My Tasks and Reminders
 - F0001-S0004 - View Broker Activity Feed
 - F0001-S0005 - View Nudge Cards

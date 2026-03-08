@@ -193,7 +193,7 @@ public class ContactService(
     }
 
     private static ContactDto MapToDto(Contact c) => new(
-        c.Id, c.BrokerId, c.AccountId, c.FullName, c.Email, c.Phone, c.Role);
+        c.Id, c.BrokerId, c.AccountId, c.FullName, c.Email, c.Phone, c.Role, c.RowVersion);
 
     private static ContactBrokerUserDto MapToBrokerUserDto(Contact c) => new(
         c.Id, c.BrokerId ?? Guid.Empty, c.FullName, c.Email, c.Phone, c.Role, c.CreatedAt, c.UpdatedAt);

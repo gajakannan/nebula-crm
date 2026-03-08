@@ -1,0 +1,108 @@
+using System.Net;
+using System.Net.Http.Json;
+using FluentAssertions;
+using Nebula.Application.DTOs;
+
+namespace Nebula.Tests.Integration;
+
+/// <summary>
+/// Casbin authorization tests for F0002 broker/contact/timeline endpoints (G1).
+/// Uses a role-less user (TestNebulaRoles = []) to verify all protected endpoints
+/// return 403 when the caller lacks the required permission.
+/// </summary>
+public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
+    : IClassFixture<CustomWebApplicationFactory>, IDisposable
+{
+    private readonly HttpClient _client = factory.CreateClient();
+
+    public void Dispose()
+    {
+        TestAuthHandler.TestSubject = "test-user-001";
+        TestAuthHandler.TestRole = "Admin";
+        TestAuthHandler.TestDisplayName = "Test User";
+        TestAuthHandler.ResetF0009Overrides();
+    }
+
+    private static void SetNoRolesContext()
+    {
+        TestAuthHandler.TestRole = "ExternalUser";
+        TestAuthHandler.TestNebulaRoles = [];
+    }
+
+    // ── Broker endpoints ────────────────────────────────────────────────────
+    [Fact]
+    public async Task ListBrokers_WithNoRoles_Returns403()
+    {
+        SetNoRolesContext();
+        var response = await _client.GetAsync("/api/brokers");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task CreateBroker_WithNoRoles_Returns403()
+    {
+        SetNoRolesContext();
+        var response = await _client.PostAsJsonAsync("/api/brokers",
+            new BrokerCreateDto("Auth Test", "AUTH-001", "CA", null, null));
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetBroker_WithNoRoles_Returns403()
+    {
+        SetNoRolesContext();
+        var response = await _client.GetAsync($"/api/brokers/{Guid.NewGuid()}");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task DeleteBroker_WithNoRoles_Returns403()
+    {
+        SetNoRolesContext();
+        var response = await _client.DeleteAsync($"/api/brokers/{Guid.NewGuid()}");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task ReactivateBroker_WithNoRoles_Returns403()
+    {
+        SetNoRolesContext();
+        var response = await _client.PostAsync($"/api/brokers/{Guid.NewGuid()}/reactivate", null);
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    // ── Contact endpoints ───────────────────────────────────────────────────
+    [Fact]
+    public async Task ListContacts_WithNoRoles_Returns403()
+    {
+        SetNoRolesContext();
+        var response = await _client.GetAsync("/api/contacts");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task CreateContact_WithNoRoles_Returns403()
+    {
+        SetNoRolesContext();
+        var response = await _client.PostAsJsonAsync("/api/contacts",
+            new ContactCreateDto(Guid.NewGuid(), "Test", "t@t.com", "+11234567890", null));
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task DeleteContact_WithNoRoles_Returns403()
+    {
+        SetNoRolesContext();
+        var response = await _client.DeleteAsync($"/api/contacts/{Guid.NewGuid()}");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    // ── Timeline endpoint ───────────────────────────────────────────────────
+    [Fact]
+    public async Task GetTimeline_WithNoRoles_Returns403()
+    {
+        SetNoRolesContext();
+        var response = await _client.GetAsync("/api/timeline/events?entityType=Broker");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+}

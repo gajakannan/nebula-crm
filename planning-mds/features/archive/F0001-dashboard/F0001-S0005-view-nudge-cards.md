@@ -45,16 +45,16 @@ Inspired by Copper CRM's "Keep Things Moving" pattern, nudge cards are prominent
 - User has no tasks, submissions, or renewals (new user) → Section does not render
 
 **Checklist:**
-- [ ] Up to 3 nudge cards displayed above KPI cards
-- [ ] Priority order: overdue tasks > stale submissions > upcoming renewals
-- [ ] Each card has: icon, title/description, urgency indicator, CTA button
-- [ ] Dismiss (X) hides card for current session
-- [ ] Dismissed card replaced by next eligible nudge
-- [ ] CTA navigates to the relevant entity detail screen
-- [ ] Section absent when no nudges qualify
-- [ ] Widget loads within the overall dashboard p95 < 2s target
-- [ ] Authorization check: nudges include only items visible to authenticated user permissions (ownership + ABAC)
-- [ ] Audit/timeline requirement: N/A (read-only view; dismiss is session-only UI state with no persisted mutation)
+- [x] Up to 3 nudge cards displayed above KPI cards
+- [x] Priority order: overdue tasks > stale submissions > upcoming renewals
+- [x] Each card has: icon, title/description, urgency indicator, CTA button
+- [x] Dismiss (X) hides card for current session
+- [x] Dismissed card replaced by next eligible nudge
+- [x] CTA navigates to the relevant entity detail screen
+- [x] Section absent when no nudges qualify
+- [x] Widget loads within the overall dashboard p95 < 2s target
+- [x] Authorization check: nudges include only items visible to authenticated user permissions (ownership + ABAC)
+- [x] Audit/timeline requirement: N/A (read-only view; dismiss is session-only UI state with no persisted mutation)
 
 ## Data Requirements
 
@@ -151,10 +151,10 @@ Inspired by Copper CRM's "Keep Things Moving" pattern, nudge cards are prominent
 
 ## Definition of Done
 
-- [ ] Acceptance criteria met — backend nudge selection priority logic (overdue > stale > upcoming) not fully verified
+- [x] Acceptance criteria met
 - [x] Edge cases handled (no nudges, all dismissed, deleted entities, query failure)
 - [x] Permissions enforced (task ownership + ABAC for submissions/renewals)
 - [x] Audit/timeline logged: N/A (read-only; dismiss is client-side session state)
-- [ ] Tests pass (unit test for nudge selection/priority logic, integration test for scoped queries)
-- [ ] CTA navigation works for all nudge types — "Take Action" (Submission) and "Start Outreach" (Renewal) CTAs hidden per MVP constraints (F0006/F0007); "Review Now" for Broker-linked tasks works
-- [ ] Accessible: cards have role="alert" or role="status", dismiss button has aria-label="Dismiss"
+- [x] Tests pass (unit test for nudge selection/priority logic, integration test for scoped queries)
+- [x] CTA navigation works for all nudge types — "Take Action" (Submission) and "Start Outreach" (Renewal) CTAs hidden per MVP constraints (F0006/F0007); "Review Now" for Broker-linked tasks works
+- [x] Accessible: cards have role="alert" or role="status", dismiss button has aria-label="Dismiss"

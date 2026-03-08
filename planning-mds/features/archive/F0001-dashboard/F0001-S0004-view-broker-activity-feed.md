@@ -38,13 +38,13 @@ Broker relationships are the lifeblood of commercial P&C distribution. Currently
 - Multiple events for the same broker in quick succession → Display each as a separate feed item (no grouping in MVP)
 
 **Checklist:**
-- [ ] Feed shows up to 20 most recent broker timeline events
-- [ ] Events are scoped to user's authorization
-- [ ] Each item shows: event description, broker name, actor, relative timestamp
-- [ ] Sorted by OccurredAt descending
-- [ ] Click navigates to Broker 360
-- [ ] Empty state shows "No recent broker activity."
-- [ ] Widget loads within the overall dashboard p95 < 2s target
+- [x] Feed shows up to 20 most recent broker timeline events
+- [x] Events are scoped to user's authorization
+- [x] Each item shows: event description, broker name, actor, relative timestamp
+- [x] Sorted by OccurredAt descending
+- [x] Click navigates to Broker 360
+- [x] Empty state shows "No recent broker activity."
+- [x] Widget loads within the overall dashboard p95 < 2s target
 
 ## Data Requirements
 
@@ -121,6 +121,6 @@ Broker relationships are the lifeblood of commercial P&C distribution. Currently
 - [x] Edge cases handled (empty feed, restricted scope, unknown actor, query failure)
 - [x] Permissions enforced (Casbin ABAC scope on broker entity)
 - [x] Audit/timeline logged: N/A (read-only)
-- [ ] Tests pass (unit test for event rendering, integration test for scoped query)
+- [x] Tests pass (unit test for event rendering, integration test for scoped query)
 - [x] Click-through to Broker 360 works
-- [ ] Accessible: feed items use semantic list markup with proper ARIA
+- [x] Accessible: feed items use semantic list markup with proper ARIA

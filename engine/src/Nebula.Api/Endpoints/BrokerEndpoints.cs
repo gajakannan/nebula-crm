@@ -28,14 +28,17 @@ public static class BrokerEndpoints
 
     private static async Task<IResult> ListBrokers(
         string? q, string? status, int? page, int? pageSize,
-        BrokerService svc, ICurrentUserService user, CancellationToken ct)
+        BrokerService svc, ICurrentUserService user, IAuthorizationService authz, CancellationToken ct)
     {
-        // BrokerUser: scope-isolated view — only their own broker, no search/filter params honoured.
+        // BrokerUser: scope-isolated view — Casbin not consulted; scope isolation enforced by service.
         if (user.Roles.Contains("BrokerUser"))
         {
             var brokerUserResult = await svc.ListForBrokerUserAsync(user, ct);
             return Results.Ok(new { data = brokerUserResult.Data, page = brokerUserResult.Page, pageSize = brokerUserResult.PageSize, totalCount = brokerUserResult.TotalCount, totalPages = brokerUserResult.TotalPages });
         }
+
+        if (!await HasAccessAsync(user, authz, "broker", "search"))
+            return ProblemDetailsHelper.Forbidden();
 
         if (status is not null && status is not ("Active" or "Inactive" or "Pending"))
             return ProblemDetailsHelper.ValidationError(
@@ -50,8 +53,12 @@ public static class BrokerEndpoints
         IValidator<BrokerCreateDto> validator,
         BrokerService svc,
         ICurrentUserService user,
+        IAuthorizationService authz,
         CancellationToken ct)
     {
+        if (!await HasAccessAsync(user, authz, "broker", "create"))
+            return ProblemDetailsHelper.Forbidden();
+
         var validation = await validator.ValidateAsync(dto, ct);
         if (!validation.IsValid)
             return ProblemDetailsHelper.ValidationError(
@@ -67,7 +74,7 @@ public static class BrokerEndpoints
     }
 
     private static async Task<IResult> GetBroker(
-        Guid brokerId, BrokerService svc, ICurrentUserService user, CancellationToken ct)
+        Guid brokerId, BrokerService svc, ICurrentUserService user, IAuthorizationService authz, CancellationToken ct)
     {
         // BrokerUser: scope-isolated detail — throws BrokerScopeUnresolvableException (→ 403) if cross-broker.
         if (user.Roles.Contains("BrokerUser"))
@@ -75,6 +82,9 @@ public static class BrokerEndpoints
             var brokerUserResult = await svc.GetByIdForBrokerUserAsync(brokerId, user, ct);
             return brokerUserResult is null ? ProblemDetailsHelper.NotFound("Broker", brokerId) : Results.Ok(brokerUserResult);
         }
+
+        if (!await HasAccessAsync(user, authz, "broker", "read"))
+            return ProblemDetailsHelper.Forbidden();
 
         var result = await svc.GetByIdAsync(brokerId, user, ct);
         return result is null ? ProblemDetailsHelper.NotFound("Broker", brokerId) : Results.Ok(result);
@@ -86,9 +96,13 @@ public static class BrokerEndpoints
         IValidator<BrokerUpdateDto> validator,
         BrokerService svc,
         ICurrentUserService user,
+        IAuthorizationService authz,
         HttpContext httpContext,
         CancellationToken ct)
     {
+        if (!await HasAccessAsync(user, authz, "broker", "update"))
+            return ProblemDetailsHelper.Forbidden();
+
         var validation = await validator.ValidateAsync(dto, ct);
         if (!validation.IsValid)
             return ProblemDetailsHelper.ValidationError(
@@ -115,8 +129,11 @@ public static class BrokerEndpoints
     }
 
     private static async Task<IResult> DeleteBroker(
-        Guid brokerId, BrokerService svc, ICurrentUserService user, CancellationToken ct)
+        Guid brokerId, BrokerService svc, ICurrentUserService user, IAuthorizationService authz, CancellationToken ct)
     {
+        if (!await HasAccessAsync(user, authz, "broker", "delete"))
+            return ProblemDetailsHelper.Forbidden();
+
         var error = await svc.DeleteAsync(brokerId, user, ct);
         return error switch
         {
@@ -133,16 +150,8 @@ public static class BrokerEndpoints
         IAuthorizationService authz,
         CancellationToken ct)
     {
-        var authorized = false;
-        foreach (var role in user.Roles)
-        {
-            if (await authz.AuthorizeAsync(role, "broker", "reactivate"))
-            {
-                authorized = true;
-                break;
-            }
-        }
-        if (!authorized) return ProblemDetailsHelper.Forbidden();
+        if (!await HasAccessAsync(user, authz, "broker", "reactivate"))
+            return ProblemDetailsHelper.Forbidden();
 
         var (result, error) = await svc.ReactivateAsync(brokerId, user, ct);
         return error switch
@@ -151,5 +160,14 @@ public static class BrokerEndpoints
             "already_active" => ProblemDetailsHelper.AlreadyActive(),
             _ => Results.Ok(result),
         };
+    }
+
+    private static async Task<bool> HasAccessAsync(
+        ICurrentUserService user, IAuthorizationService authz, string resource, string action)
+    {
+        foreach (var role in user.Roles)
+            if (await authz.AuthorizeAsync(role, resource, action))
+                return true;
+        return false;
     }
 }

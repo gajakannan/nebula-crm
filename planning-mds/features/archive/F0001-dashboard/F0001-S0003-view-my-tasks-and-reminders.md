@@ -48,15 +48,15 @@ Follow-up tasks and reminders are currently tracked in personal calendars, stick
 - Linked entity was deleted (soft-deleted) → Display task but show entity name as "[Deleted]"
 
 **Checklist:**
-- [ ] Tasks filtered to logged-in user only
-- [ ] Sorted by DueDate ascending (nulls last)
-- [ ] Max 10 items displayed with "View all" overflow link
-- [ ] Overdue tasks visually highlighted
-- [ ] Click navigates to linked entity or Task Center
-- [ ] Empty state message when no open tasks
-- [ ] Widget loads within the overall dashboard p95 < 2s target
-- [ ] Permission check: only tasks for the authenticated and authorized user are returned
-- [ ] Audit/timeline requirement: N/A (read-only view with no mutation)
+- [x] Tasks filtered to logged-in user only
+- [x] Sorted by DueDate ascending (nulls last)
+- [x] Max 10 items displayed with "View all" overflow link
+- [x] Overdue tasks visually highlighted
+- [x] Click navigates to linked entity or Task Center
+- [x] Empty state message when no open tasks
+- [x] Widget loads within the overall dashboard p95 < 2s target
+- [x] Permission check: only tasks for the authenticated and authorized user are returned
+- [x] Audit/timeline requirement: N/A (read-only view with no mutation)
 
 ## Data Requirements
 
@@ -134,5 +134,5 @@ Follow-up tasks and reminders are currently tracked in personal calendars, stick
 - [x] Edge cases handled (empty state, null due dates, deleted entities, query failure)
 - [x] Permissions enforced (user sees only own tasks)
 - [x] Audit/timeline logged: N/A (read-only)
-- [ ] Tests pass (unit test for sorting/filtering logic, integration test for user-scoped query)
-- [ ] Accessible: task list has proper ARIA roles (role="list")
+- [x] Tests pass (unit test for sorting/filtering logic, integration test for user-scoped query)
+- [x] Accessible: task list has proper ARIA roles (role="list")

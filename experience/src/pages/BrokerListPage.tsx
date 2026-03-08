@@ -16,7 +16,7 @@ export default function BrokerListPage() {
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search);
 
-  const { data, isLoading, isError, refetch } = useBrokers({
+  const { data, isLoading, isError, error, refetch } = useBrokers({
     q: debouncedSearch,
     status: statusFilter,
     page,
@@ -68,10 +68,9 @@ export default function BrokerListPage() {
 
           {isLoading && <BrokerListSkeleton />}
           {isError && (
-            <ErrorFallback
-              message="Unable to load brokers."
-              onRetry={() => refetch()}
-            />
+            (error as any)?.status === 403
+              ? <p className="py-8 text-center text-sm text-text-muted">You don't have permission to view the broker directory.</p>
+              : <ErrorFallback message="Unable to load brokers." onRetry={() => refetch()} />
           )}
           {data && data.data.length === 0 && (
             <div className="py-8 text-center text-sm text-text-muted">

@@ -40,6 +40,7 @@ export interface ContactDto {
   email: string | null;
   phone: string | null;
   role: string;
+  rowVersion: number;
 }
 
 export interface ContactCreateDto {

@@ -1,6 +1,6 @@
 # F0002 — Broker & MGA Relationship Management
 
-**Status:** In Progress (7/8 stories done)
+**Status:** In Progress (8/9 stories done)
 **Priority:** Critical
 **Phase:** MVP
 
@@ -27,7 +27,8 @@ Broker lifecycle management with search, Broker 360, contacts, and activity time
 | [F0002-S0005](./F0002-S0005-delete-broker.md) | Delete Broker | Done |
 | [F0002-S0006](./F0002-S0006-manage-broker-contacts.md) | Manage Broker Contacts | Done |
 | [F0002-S0007](./F0002-S0007-view-broker-activity-timeline.md) | View Broker Activity Timeline | Done |
-| [F0002-S0008](./F0002-S0008-reactivate-broker.md) | Reactivate Broker | In Progress |
+| [F0002-S0008](./F0002-S0008-reactivate-broker.md) | Reactivate Broker | Done |
+| [F0002-S0009](./F0002-S0009-adopt-native-casbin-enforcer.md) | Adopt Native Casbin Enforcer | Planned |
 
-**Total Stories:** 8
-**Completed:** 7 / 8
+**Total Stories:** 9
+**Completed:** 8 / 9

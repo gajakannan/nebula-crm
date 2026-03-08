@@ -72,6 +72,7 @@
 - F0002-S0006 - Manage Broker Contacts
 - F0002-S0007 - View Broker Activity Timeline
 - F0002-S0008 - Reactivate Broker
+- F0002-S0009 - Adopt Native Casbin Enforcer (authorization hardening)
 
 ## Rollout & Enablement
 

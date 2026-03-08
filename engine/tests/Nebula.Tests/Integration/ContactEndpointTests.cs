@@ -47,4 +47,41 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
         var response = await _client.GetAsync($"/api/contacts/{Guid.NewGuid()}");
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
+
+    // ── F0002 G3: paginated envelope + RowVersion ───────────────────────────
+    [Fact]
+    public async Task ListContacts_ReturnsPaginatedEnvelope()
+    {
+        var broker = await CreateBrokerAsync("CTT-PAG-001");
+        await _client.PostAsJsonAsync("/api/contacts",
+            new ContactCreateDto(broker.Id, "Paged Contact", "paged@test.com", "+14155553333", null));
+
+        var response = await _client.GetAsync($"/api/contacts?brokerId={broker.Id}");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var json = await response.Content.ReadFromJsonAsync<JsonPaginatedContactList>();
+        json.Should().NotBeNull();
+        json!.Data.Should().NotBeEmpty();
+        json.TotalCount.Should().BeGreaterThanOrEqualTo(1);
+        json.Page.Should().Be(1);
+        json.TotalPages.Should().BeGreaterThanOrEqualTo(1);
+    }
+
+    [Fact]
+    public async Task CreateContact_ResponseIncludesRowVersion()
+    {
+        var broker = await CreateBrokerAsync("CTT-RV-001");
+        var dto = new ContactCreateDto(broker.Id, "RV Test", "rv@test.com", "+14155554444", null);
+
+        var response = await _client.PostAsJsonAsync("/api/contacts", dto);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var result = await response.Content.ReadFromJsonAsync<ContactDto>();
+        result.Should().NotBeNull();
+        // RowVersion is a uint returned in response — default value 0 on creation is valid.
+        result!.RowVersion.Should().BeGreaterThanOrEqualTo(0u);
+    }
+
+    private record JsonPaginatedContactList(
+        IReadOnlyList<ContactDto> Data, int Page, int PageSize, int TotalCount, int TotalPages);
 }

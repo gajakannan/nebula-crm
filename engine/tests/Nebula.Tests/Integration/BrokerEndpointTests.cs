@@ -106,6 +106,61 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
+    // ── F0002-S0005: deactivation sets Status=Inactive ─────────────────────
+    [Fact]
+    public async Task DeleteBroker_SetsStatusInactive()
+    {
+        var create = await _client.PostAsJsonAsync("/api/brokers",
+            new BrokerCreateDto("Status Inactive Test", "STAT-001", "CA", null, null));
+        var created = await create.Content.ReadFromJsonAsync<BrokerDto>();
+
+        await _client.DeleteAsync($"/api/brokers/{created!.Id}");
+
+        // Admin can see deactivated brokers — verify Status=Inactive
+        var get = await _client.GetAsync($"/api/brokers/{created.Id}");
+        get.StatusCode.Should().Be(HttpStatusCode.OK);
+        var broker = await get.Content.ReadFromJsonAsync<BrokerDto>();
+        broker!.Status.Should().Be("Inactive");
+        broker.IsDeleted.Should().BeTrue();
+    }
+
+    // ── F0002-S0008: reactivation endpoint ─────────────────────────────────
+    [Fact]
+    public async Task ReactivateBroker_AfterDeactivation_Returns200WithActiveStatus()
+    {
+        var create = await _client.PostAsJsonAsync("/api/brokers",
+            new BrokerCreateDto("Reactivate Test", "REACT-001", "TX", null, null));
+        var created = await create.Content.ReadFromJsonAsync<BrokerDto>();
+
+        await _client.DeleteAsync($"/api/brokers/{created!.Id}");
+
+        var response = await _client.PostAsync($"/api/brokers/{created.Id}/reactivate", null);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var result = await response.Content.ReadFromJsonAsync<BrokerDto>();
+        result!.Status.Should().Be("Active");
+        result.IsDeleted.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ReactivateBroker_AlreadyActive_Returns409()
+    {
+        var create = await _client.PostAsJsonAsync("/api/brokers",
+            new BrokerCreateDto("Already Active", "REACT-002", "NY", null, null));
+        var created = await create.Content.ReadFromJsonAsync<BrokerDto>();
+
+        var response = await _client.PostAsync($"/api/brokers/{created!.Id}/reactivate", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task ReactivateBroker_NonExistent_Returns404()
+    {
+        var response = await _client.PostAsync($"/api/brokers/{Guid.NewGuid()}/reactivate", null);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
     private record JsonPaginatedBrokerList(
         IReadOnlyList<BrokerDto> Data, int Page, int PageSize, int TotalCount, int TotalPages);
 }

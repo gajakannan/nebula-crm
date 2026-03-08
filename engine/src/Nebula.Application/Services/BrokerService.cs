@@ -193,6 +193,7 @@ public class BrokerService(
 
         var now = DateTime.UtcNow;
         broker.IsDeleted = true;
+        broker.Status = "Inactive";
         broker.DeletedAt = now;
         broker.DeletedByUserId = user.UserId;
         broker.UpdatedAt = now;

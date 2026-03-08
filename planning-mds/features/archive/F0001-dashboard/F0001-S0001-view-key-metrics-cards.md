@@ -35,13 +35,13 @@ Distribution teams currently have no single view for high-level portfolio metric
 - Submission or Renewal entities not yet seeded (e.g., fresh environment or early phased rollout) → affected cards display "0" or "—" as appropriate; dashboard still loads and remaining widgets render normally
 
 **Checklist:**
-- [ ] Four KPI cards render on dashboard load
-- [ ] Each card shows a numeric value or "—" when data is insufficient
-- [ ] Values are consistent with underlying list/search results
-- [ ] Cards load within the overall dashboard p95 < 2s target
-- [ ] Cards are read-only (no edit actions)
-- [ ] Authorization check: all KPI queries are scoped by authenticated user permissions (ABAC)
-- [ ] Audit/timeline requirement: N/A (read-only view with no mutation)
+- [x] Four KPI cards render on dashboard load
+- [x] Each card shows a numeric value or "—" when data is insufficient
+- [x] Values are consistent with underlying list/search results
+- [x] Cards load within the overall dashboard p95 < 2s target
+- [x] Cards are read-only (no edit actions)
+- [x] Authorization check: all KPI queries are scoped by authenticated user permissions (ABAC)
+- [x] Audit/timeline requirement: N/A (read-only view with no mutation)
 
 ## Data Requirements
 
@@ -110,5 +110,5 @@ Distribution teams currently have no single view for high-level portfolio metric
 - [x] Edge cases handled (zero data, restricted scope, query failure)
 - [x] Permissions enforced (Casbin ABAC scope filtering)
 - [x] Audit/timeline logged: N/A (read-only; no mutations)
-- [ ] Tests pass (unit test for aggregation logic, integration test for scoped queries)
-- [ ] Accessible: cards have aria-labels for screen readers
+- [x] Tests pass (unit test for aggregation logic, integration test for scoped queries)
+- [x] Accessible: cards have aria-labels for screen readers

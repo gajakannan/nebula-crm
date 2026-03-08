@@ -70,6 +70,7 @@ export function ContactFormModal({ brokerId, contact, open, onClose }: ContactFo
             phone: form.phone.trim(),
             role: form.role.trim() || undefined,
           },
+          rowVersion: contact.rowVersion,
         });
       } else {
         await createContact.mutateAsync({

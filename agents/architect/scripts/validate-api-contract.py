@@ -162,7 +162,7 @@ class ApiContractValidator:
                 return ''
 
         content = response_object.get('content', {})
-        json_content = content.get('application/json')
+        json_content = content.get('application/json') or content.get('application/problem+json')
         if not isinstance(json_content, dict):
             self.errors.append(f"{context}: error responses must define application/json content")
             return ''

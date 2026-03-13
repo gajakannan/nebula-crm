@@ -18,7 +18,7 @@ This document is the working prioritization view for feature sequencing.
 
 | Feature | Phase | Why Now |
 |---------|-------|---------|
-| [F0010 — Dashboard Opportunities Refactor (Pipeline Board + Insight Views)](./F0010-dashboard-opportunities-refactor/README.md) | MVP | Replaces dense Sankey default with clearer operational views and preserves drilldown utility across desktop/tablet/mobile. |
+| [F0011 — Dashboard Opportunities Flow-First Modernization (Connected Pipeline + Terminal Outcomes)](./F0011-dashboard-opportunities-flow-modernization/README.md) | MVP | Direct follow-up to F0010: opportunities still need a connected flow and explicit terminal outcomes to reduce triage friction. |
 
 ## Next
 
@@ -43,6 +43,7 @@ This document is the working prioritization view for feature sequencing.
 | [F0002 — Broker & MGA Relationship Management](./archive/F0002-broker-relationship-management/README.md) | MVP | Done and archived (post-MVP hardening follow-ups tracked) |
 | [F0005 — IdP Migration: Keycloak → authentik](./archive/F0005-idp-migration/README.md) | Foundation | Done and archived |
 | [F0009 — Authentication + Role-Based Login](./archive/F0009-authentication-and-role-based-login/README.md) | Phase 1 | Done and archived |
+| [F0010 — Dashboard Opportunities Refactor (Pipeline Board + Insight Views)](./F0010-dashboard-opportunities-refactor/README.md) | MVP | Done |
 
 ## Notes
 

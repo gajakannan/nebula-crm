@@ -129,6 +129,7 @@ Files outside `agents/` that are part of the framework but live at the repo root
 1) Copy `agents/` into a new repo
 2) Run the **[init action](./actions/init.md)** to scaffold root-level framework files and `planning-mds/` structure
 3) Use the agents as-is; all solution-specific content must live in `planning-mds/`
+4) For the full fork-to-first-feature workflow, use `agents/docs/FORK-AND-BUILD-APP.md`
 
 ## Single Source of Truth
 

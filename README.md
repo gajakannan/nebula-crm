@@ -17,7 +17,7 @@ As of 2026-02-08, this repository is **published as a human-orchestrated framewo
 
 ## Quick Orientation
 
-- New project? Start with `blueprint-setup/README.md` and copy `agents/` into your repo.
+- New project? Start with `agents/docs/FORK-AND-BUILD-APP.md`.
 - Exploring the insurance CRM example? Read `planning-mds/BLUEPRINT.md` and the example artifacts under `planning-mds/examples/`.
 - Want the boundary rules? See `BOUNDARY-POLICY.md`.
 
@@ -165,6 +165,7 @@ Keep the builder base runtime generic; put stack SDKs and execution tooling in t
 ## Key Documents
 
 - `agents/README.md` - How to use the generic agents.
+- `agents/docs/FORK-AND-BUILD-APP.md` - End-to-end fork, bootstrap, and first-feature workflow.
 - `planning-mds/README.md` - What belongs in solution-specific planning.
 - `BOUNDARY-POLICY.md` - Rules that separate generic vs solution-specific content.
 - `blueprint-setup/README.md` - Bootstrap steps for a new project.
@@ -181,6 +182,7 @@ Keep the builder base runtime generic; put stack SDKs and execution tooling in t
 Gates are activated by lifecycle stage, not by ad-hoc command selection.
 
 ```bash
+python3 -m pip install -r agents/scripts/requirements.txt
 python3 agents/scripts/run-lifecycle-gates.py --list
 python3 agents/scripts/run-lifecycle-gates.py
 ```

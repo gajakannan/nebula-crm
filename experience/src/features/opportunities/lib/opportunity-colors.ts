@@ -6,6 +6,8 @@ const bgClasses: Record<OpportunityColorGroup, string> = {
   waiting: 'bg-opportunity-waiting',
   review: 'bg-opportunity-review',
   decision: 'bg-opportunity-decision',
+  won: 'bg-emerald-600',
+  lost: 'bg-rose-600',
 };
 
 const textClasses: Record<OpportunityColorGroup, string> = {
@@ -14,6 +16,8 @@ const textClasses: Record<OpportunityColorGroup, string> = {
   waiting: 'text-opportunity-waiting',
   review: 'text-opportunity-review',
   decision: 'text-opportunity-decision',
+  won: 'text-emerald-400',
+  lost: 'text-rose-400',
 };
 
 const borderClasses: Record<OpportunityColorGroup, string> = {
@@ -22,6 +26,8 @@ const borderClasses: Record<OpportunityColorGroup, string> = {
   waiting: 'border-opportunity-waiting',
   review: 'border-opportunity-review',
   decision: 'border-opportunity-decision',
+  won: 'border-emerald-600',
+  lost: 'border-rose-600',
 };
 
 export function opportunityBg(group: OpportunityColorGroup): string {
@@ -42,6 +48,8 @@ const hexColors: Record<OpportunityColorGroup, string> = {
   waiting: '#c18a2f',
   review: '#7664c7',
   decision: '#2f7f92',
+  won: '#059669',
+  lost: '#dc2626',
 };
 
 const hexColorsLight: Record<OpportunityColorGroup, string> = {
@@ -50,6 +58,8 @@ const hexColorsLight: Record<OpportunityColorGroup, string> = {
   waiting: '#ddb15b',
   review: '#a190e2',
   decision: '#5ba8b8',
+  won: '#34d399',
+  lost: '#f87171',
 };
 
 export function opportunityHex(group: OpportunityColorGroup): string {

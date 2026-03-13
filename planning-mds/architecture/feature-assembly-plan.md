@@ -1,49 +1,327 @@
-# Feature Assembly Plan (F0001 + F0002 + F0009 + F0010)
+# Feature Assembly Plan (F0001 + F0002 + F0009 + F0010 + F0011)
 
 **Owner:** Architect
 **Status:** Approved
-**Last Updated:** 2026-03-08
+**Last Updated:** 2026-03-12
 
 ## Goal
 
-Define the build order, role handoffs, and integration checkpoints for F0001 (Dashboard), F0002 (Broker Relationship Management), F0009 (Authentication + Role-Based Login), and F0010 (Dashboard Opportunities Refactor).
+Define the build order, role handoffs, and integration checkpoints for F0001 (Dashboard), F0002 (Broker Relationship Management), F0009 (Authentication + Role-Based Login), F0010 (Dashboard Opportunities Refactor), and F0011 (Dashboard Opportunities Flow-First Modernization).
+
+---
+
+## F0011 — Dashboard Opportunities Flow-First Modernization (Connected Pipeline + Terminal Outcomes)
+
+**Updated:** 2026-03-12 — Planning assembly pass
+
+### Dependencies
+
+- F0010 baseline opportunities implementation (Pipeline Board + Heatmap/Treemap/Sunburst)
+- Existing opportunities endpoints:
+  - `GET /dashboard/opportunities`
+  - `GET /dashboard/opportunities/flow`
+  - `GET /dashboard/opportunities/{entityType}/{status}/items`
+- Existing ABAC policy coverage for `dashboard_pipeline`
+
+### Architecture Notes
+
+**This slice is a dashboard opportunities refactor with additive aggregate contract work.**
+
+No workflow-state taxonomy changes are expected. Focus is on:
+- Flow-first connected rendering model
+- Terminal outcomes rail aggregates and drilldowns
+- Visual hierarchy refresh and responsive interaction parity
+
+#### Backend Scope (Expected)
+
+- Extend opportunities payloads (or add dedicated aggregate endpoint) to support:
+  - deterministic stage sequence metadata for connected rendering
+  - terminal outcome summary nodes (count, percent, average days to exit)
+  - stable drilldown target identifiers for stage and outcome nodes
+- Preserve `dashboard_pipeline` authorization behavior for all opportunities routes.
+
+#### Frontend Scope (Expected)
+
+File placement remains under `experience/src/features/opportunities/`.
+
+Primary additions/changes:
+- `OpportunitiesSummary.tsx` -> promote connected flow canvas as default
+- new flow canvas component(s) for stage node + ribbon rendering
+- terminal outcomes rail component
+- secondary mini-view strip (aging + radial-inspired summaries)
+- responsive simplification for mobile layout (stacked stage cards + bottleneck/outcome list)
+
+### Backend Assembly Steps
+
+1. Define or update DTOs for stage sequence and outcome summaries.
+2. Add/extend repository methods to compute terminal outcomes and stage ordering metadata.
+3. Add/extend service methods for flow and outcome aggregates.
+4. Add/extend dashboard endpoints for outcomes aggregate access.
+5. Add unit tests for aggregate calculations and ordering guarantees.
+6. Add integration tests for endpoint behavior, authorization, and validation.
+
+### Frontend Assembly Steps
+
+1. Add/update opportunities types for stage/outcome aggregate contracts.
+2. Add/update hooks for connected flow and outcomes rail data.
+3. Implement connected flow canvas default view.
+4. Implement outcomes rail and outcome drilldown interactions.
+5. Apply visual system updates (reduced border noise, warm-to-cool rhythm, stage emphasis).
+6. Implement secondary mini-view strip and contextual expand interactions.
+7. Apply responsive and accessibility behavior across breakpoints.
+8. Add component and interaction tests; run lint/build/test gates.
+
+### QA Assembly Steps
+
+1. Create test plan with story-to-test mapping.
+2. E2E: flow-default render, period switching, stage/outcome drilldowns.
+3. E2E: mini-view expand behavior and return-to-flow context.
+4. E2E: breakpoint parity (desktop/tablet/phone) and error isolation.
+5. Validate accessibility requirements for keyboard/screen-reader flows.
+
+### DevOps Assembly Steps
+
+1. Confirm no new runtime services or env-var contracts are introduced.
+2. Run backend/frontend runtime smoke checks in application runtime containers.
+3. Capture deployability evidence and document deviations if discovered.
+
+### Dependency Order
+
+```
+Step 1 (Backend):  DTO/contract updates -> repository aggregates -> service -> endpoint -> tests
+Step 1 (Frontend): types/hooks -> connected flow -> outcomes rail -> visual system -> mini-views -> responsive/a11y -> tests
+Step 2 (QA):       E2E + accessibility validation after backend/frontend merge
+Step 2 (DevOps):   deployability smoke checks and evidence capture
+```
+
+### Integration Checklist
+
+- [x] API contract touchpoints identified
+- [x] Frontend contract touchpoints identified
+- [ ] AI contract compatibility validated (if in scope) — N/A
+- [x] Test cases mapped to acceptance criteria (planning test plan)
+- [x] Run/deploy instructions drafted in feature getting-started docs
+
+### Risks and Blockers
+
+| Item | Severity | Mitigation | Owner |
+|------|----------|------------|-------|
+| Terminal outcome category mapping ambiguity | Medium | Confirm mapping before implementation; provide fallback grouping in contract | Product + Backend |
+| Stage emphasis rule source ambiguity | Medium | Decide backend flag vs frontend-derived rule before build | Product + Frontend |
+| Breakpoint complexity for connected flow | Medium | Explicitly test desktop/tablet/phone parity in QE plan | Frontend + QE |
+| Visual refresh impacts readability | Low | Keep labels/counts first; enforce contrast checks | Frontend + QE |
+
+### Signoff Role Matrix
+
+| Role | Required | Rationale |
+|------|----------|-----------|
+| Quality Engineer | Yes | Baseline acceptance criteria and cross-device parity coverage |
+| Code Reviewer | Yes | Baseline independent implementation review |
+| Security Reviewer | Yes | Opportunities aggregate and drilldown authorization verification |
+| DevOps | No | No expected infrastructure/env-contract changes |
+| Architect | No | No planned architecture exceptions |
+
+**Checkpoint F0011-A:** Connected opportunities flow default + outcomes rail + responsive accessibility parity are implemented and validated with ABAC-preserving drilldowns.
 
 ---
 
 ## F0010 — Dashboard Opportunities Refactor (Pipeline Board + Insight Views)
 
+**Updated:** 2026-03-11 — Detailed implementation assembly plan (F0010 build pass)
+
 ### Dependencies
-- Existing dashboard opportunities widget shell and period controls
-- Opportunities summary data (`/dashboard/opportunities`)
-- Opportunities drilldown mini-card flow (`/dashboard/opportunities/{entityType}/{status}/items`)
-- ABAC policy coverage for `dashboard_pipeline` and related resources
+- Existing dashboard opportunities widget shell and period controls (F0001)
+- Opportunities summary data (`GET /dashboard/opportunities`)
+- Opportunities flow data (`GET /dashboard/opportunities/flow`)
+- Opportunities drilldown mini-cards (`GET /dashboard/opportunities/{entityType}/{status}/items`)
+- ABAC policy coverage for `dashboard_pipeline` resource
+
+### Architecture Notes
+
+**This is primarily a frontend refactor with two new backend aggregation endpoints.**
+
+No new domain entities, no EF Core migrations, no Casbin policy changes. All data is read-only aggregation from existing Submission/Renewal/WorkflowTransition tables.
+
+#### New Backend Endpoints
+
+**`GET /dashboard/opportunities/aging`** (S0002)
+- Query params: `entityType` (submission|renewal, required), `periodDays` (1–730, default 180)
+- Returns: status × aging-bucket matrix. Fixed buckets: `0-2`, `3-5`, `6-10`, `11-20`, `21+`
+- Response shape:
+  ```json
+  {
+    "entityType": "submission",
+    "periodDays": 180,
+    "statuses": [{
+      "status": "Received", "label": "Received", "colorGroup": "intake",
+      "displayOrder": 1,
+      "buckets": [
+        { "key": "0-2", "label": "0–2 days", "count": 5 },
+        { "key": "3-5", "label": "3–5 days", "count": 3 },
+        { "key": "6-10", "label": "6–10 days", "count": 8 },
+        { "key": "11-20", "label": "11–20 days", "count": 2 },
+        { "key": "21+", "label": "21+ days", "count": 1 }
+      ],
+      "total": 19
+    }]
+  }
+  ```
+- Authorization: `dashboard_pipeline` (same as existing)
+- Implementation: Query non-terminal entities, compute `daysInStatus` (same logic as mini-card items — last WorkflowTransition to current status, fallback to CreatedAt), group by status × bucket.
+
+**`GET /dashboard/opportunities/hierarchy`** (S0003/S0004)
+- Query params: `periodDays` (1–730, default 180)
+- Returns: tree-structured data for Treemap and Sunburst views
+- Response shape:
+  ```json
+  {
+    "periodDays": 180,
+    "root": {
+      "id": "root", "label": "All Opportunities", "count": 142,
+      "children": [{
+        "id": "submission", "label": "Submissions", "count": 85,
+        "levelType": "entityType",
+        "children": [{
+          "id": "submission:intake", "label": "Intake", "count": 20,
+          "levelType": "colorGroup", "colorGroup": "intake",
+          "children": [{
+            "id": "submission:intake:Received", "label": "Received",
+            "count": 20, "levelType": "status", "colorGroup": "intake"
+          }]
+        }]
+      }]
+    }
+  }
+  ```
+- Authorization: `dashboard_pipeline`
+- Implementation: Query non-terminal submissions + renewals, group by EntityType → ColorGroup → Status. Reuses reference status tables for labels and display ordering.
+
+#### Frontend Component Architecture
+
+File placement: All new files in `experience/src/features/opportunities/`.
+
+```
+features/opportunities/
+├── components/
+│   ├── OpportunitiesSummary.tsx       ← MODIFY: add view mode state, render active view
+│   ├── OpportunityChart.tsx           ← KEEP (Sankey, remove from default path)
+│   ├── OpportunityPipelineBoard.tsx   ← NEW: Pipeline Board default (S0001)
+│   ├── OpportunityHeatmap.tsx         ← NEW: Aging Heatmap (S0002)
+│   ├── OpportunityTreemap.tsx         ← NEW: Composition Treemap (S0003)
+│   ├── OpportunitySunburst.tsx        ← NEW: Hierarchy Sunburst (S0004)
+│   ├── OpportunityViewSwitcher.tsx    ← NEW: View mode toggle bar
+│   ├── OpportunityDrilldown.tsx       ← NEW: Unified drilldown (S0005)
+│   ├── OpportunityPopover.tsx         ← KEEP (reused by drilldown)
+│   ├── OpportunityMiniCard.tsx        ← KEEP
+│   └── OpportunityPill.tsx            ← KEEP (reuse in Pipeline Board)
+├── hooks/
+│   ├── useDashboardOpportunities.ts   ← KEEP
+│   ├── useOpportunityFlow.ts          ← KEEP
+│   ├── useOpportunityItems.ts         ← KEEP
+│   ├── useOpportunityAging.ts         ← NEW (S0002)
+│   └── useOpportunityHierarchy.ts     ← NEW (S0003/S0004)
+├── lib/
+│   └── opportunity-colors.ts          ← KEEP
+├── types.ts                           ← MODIFY: add new DTOs
+└── index.ts                           ← KEEP
+```
+
+View mode state: `useState<'pipeline' | 'heatmap' | 'treemap' | 'sunburst'>('pipeline')`.
+
+Responsive strategy (S0005):
+- Desktop (≥1280px): Full visualization, side-by-side entity sections
+- Tablet (768–1279px): Stacked entity sections, reduced chart heights
+- Mobile (<768px): Single entity tab, horizontally scrollable board, compact charts
+
+Accessibility (S0005):
+- View switcher: `role="tablist"` / `role="tab"` with `aria-selected`
+- SVG visualizations: `aria-label` on containers, text summary fallback
+- Keyboard: Tab for view navigation, Enter/Space for target selection, Escape for drilldown close
+- `prefers-reduced-motion`: disable chart transitions
+
+Charting approach: Use custom SVG implementations. Heatmap = HTML table with intensity backgrounds. Treemap and Sunburst use `d3-hierarchy` for layout math with custom SVG rendering. Avoid heavy charting libraries.
 
 ### Backend Assembly Steps
-1. Define/refine opportunities insights contracts required for:
-   - Pipeline Board default summary
-   - Aging Heatmap aggregates (status x bucket)
-   - Composition hierarchy aggregates (treemap/sunburst)
-2. Ensure aggregation responses remain ABAC-scoped before grouping and rollup.
-3. Keep drilldown contract compatibility for status-level mini-card access from all supported views.
-4. Add/update unit and integration tests for all opportunities data contracts in this feature.
+
+1. **(A)** Add `OpportunityAgingDto`, `OpportunityAgingStatusDto`, `OpportunityAgingBucketDto` DTOs
+2. **(B)** Add `OpportunityHierarchyDto`, `OpportunityHierarchyNodeDto` DTOs
+3. **(C)** Add `GetOpportunityAgingAsync(entityType, periodDays)` to `IDashboardRepository` and implement in `DashboardRepository`
+4. **(D)** Add `GetOpportunityHierarchyAsync(periodDays)` to `IDashboardRepository` and implement in `DashboardRepository`
+5. **(E)** Add `GetOpportunityAgingAsync` and `GetOpportunityHierarchyAsync` to `DashboardService`
+6. **(F)** Register `GET /dashboard/opportunities/aging` and `GET /dashboard/opportunities/hierarchy` endpoints in `DashboardEndpoints.cs`
+7. **(G)** Add unit tests for aging bucket calculation and hierarchy tree construction
+8. **(H)** Add integration tests for both new endpoints (200 OK, 401, 403, validation)
 
 ### Frontend Assembly Steps
-1. Make Pipeline Board the default opportunities view for Submissions and Renewals.
-2. Add view switcher: Pipeline / Heatmap / Treemap / Sunburst.
-3. Reuse consistent drilldown interaction model across supported views.
-4. Implement responsive behaviors for MacBook, iPad, and iPhone class breakpoints.
-5. Preserve widget-level error isolation and period selector state across view switches.
 
-### QA/Integration
-- Validate acceptance criteria for all F0010 stories.
-- Validate visual and interaction parity across breakpoints.
-- Validate ABAC scope and role boundaries for each view and drilldown path.
-- Validate non-blocking behavior for empty/error/loading states.
+1. **(I)** Add new types to `types.ts` (aging DTOs, hierarchy DTOs, view mode type)
+2. **(J)** Create `useOpportunityAging.ts` and `useOpportunityHierarchy.ts` hooks
+3. **(K)** Create `OpportunityViewSwitcher.tsx` — view mode toggle bar
+4. **(L)** Create `OpportunityPipelineBoard.tsx` — Pipeline Board default view (S0001)
+5. **(M)** Modify `OpportunitiesSummary.tsx` — add view mode state, render active view component
+6. **(N)** Create `OpportunityHeatmap.tsx` — Aging Heatmap view (S0002)
+7. **(O)** Create `OpportunityTreemap.tsx` — Composition Treemap view (S0003)
+8. **(P)** Create `OpportunitySunburst.tsx` — Hierarchy Sunburst view (S0004)
+9. **(Q)** Create `OpportunityDrilldown.tsx` — Unified drilldown popover (S0005)
+10. **(R)** Apply responsive layout and accessibility across all views (S0005)
+11. **(S)** Add component tests for all new components
+12. **(T)** Run lint, build, test, lint:theme
 
-### DevOps/Runtime
-- Confirm no new runtime dependencies are required.
-- Run containerized backend/frontend smoke checks with opportunities widget enabled.
-- Record deployability evidence in feature-level artifact.
+### QA Assembly Steps
+
+1. **(U)** Create test plan covering all 5 stories
+2. **(V)** E2E test: default Pipeline Board load, period switching
+3. **(W)** E2E test: view mode switching (all 4 views)
+4. **(X)** E2E test: drilldown from Pipeline Board and Heatmap
+5. **(Y)** E2E test: empty/error states
+6. **(Z)** Validate ABAC scope preservation
+
+### DevOps Assembly Steps
+
+1. **(AA)** Verify no new infra/env-var dependencies
+2. **(AB)** Run backend build + test in container
+3. **(AC)** Run frontend build + test
+4. **(AD)** Record deployability evidence
+
+### Dependency Order
+
+```
+Step 1 (Backend):  (A,B) DTOs → (C,D) Repository [parallel] → (E) Service → (F) Endpoints → (G,H) Tests
+Step 1 (Frontend): (I) Types → (J) Hooks → (K) ViewSwitcher → (L) PipelineBoard → (M) Summary refactor
+                   → (N) Heatmap [depends on backend C] → (O) Treemap → (P) Sunburst [depends on backend D]
+                   → (Q) Drilldown → (R) Responsive/A11y → (S,T) Tests
+Step 2 (QA):       (U–Z) [depends on all implementation]
+Step 2 (DevOps):   (AA–AD) [depends on all implementation]
+```
+
+Backend and Frontend (S0001/view switcher) can proceed in parallel. Frontend S0002-S0004 depend on their backend endpoints.
+
+### Integration Checklist
+
+- [x] API contract compatibility validated — existing endpoints unchanged, new endpoints follow REST patterns
+- [x] Frontend contract compatibility validated — new hooks for new endpoints, existing hooks unchanged
+- [ ] AI contract compatibility validated (if in scope) — N/A
+- [ ] Test cases mapped to acceptance criteria
+- [ ] Run/deploy instructions updated
+
+### Risks and Blockers
+
+| Item | Severity | Mitigation | Owner |
+|------|----------|------------|-------|
+| Charting library for Treemap/Sunburst | Medium | Use d3-hierarchy for layout math + custom SVG rendering. Minimal new dependency. | Frontend Developer |
+| Aging bucket query performance | Low | Aggregate in DB query. Use same patterns as existing flow query. | Backend Developer |
+| Responsive complexity (4 views × 3 breakpoints) | Medium | Test each combination explicitly in E2E. | Frontend Developer + QE |
+| Sankey removal surprise | Low | Keep OpportunityChart.tsx in codebase, just not default. Can restore later. | Architect |
+
+### Signoff Role Matrix
+
+| Role | Required | Rationale |
+|------|----------|-----------|
+| Quality Engineer | Yes | Baseline: acceptance criteria coverage for 5 stories, E2E workflows |
+| Code Reviewer | Yes | Baseline: independent implementation review |
+| Security Reviewer | Yes | New backend endpoints require authorization verification |
+| DevOps | No | No new infra, env vars, or deployment changes |
+| Architect | No | Standard patterns, no architecture exceptions |
 
 **Checkpoint F0010-A:** Opportunities widget defaults to Pipeline Board, optional insights render correctly, and drilldowns remain scoped and usable across breakpoints.
 

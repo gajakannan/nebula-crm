@@ -9,7 +9,9 @@ export type OpportunityColorGroup =
   | 'triage'
   | 'waiting'
   | 'review'
-  | 'decision';
+  | 'decision'
+  | 'won'
+  | 'lost';
 
 export interface DashboardOpportunitiesDto {
   submissions: OpportunityStatusCountDto[];
@@ -56,4 +58,61 @@ export interface OpportunityMiniCardDto {
 export interface OpportunityItemsDto {
   items: OpportunityMiniCardDto[];
   totalCount: number;
+}
+
+// View mode for opportunities widget
+export type OpportunityViewMode = 'pipeline' | 'heatmap' | 'treemap' | 'sunburst';
+
+// Aging Heatmap DTOs (S0002)
+export interface OpportunityAgingBucketDto {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface OpportunityAgingStatusDto {
+  status: string;
+  label: string;
+  colorGroup: OpportunityColorGroup;
+  displayOrder: number;
+  buckets: OpportunityAgingBucketDto[];
+  total: number;
+}
+
+export interface OpportunityAgingDto {
+  entityType: OpportunityEntityType;
+  periodDays: number;
+  statuses: OpportunityAgingStatusDto[];
+}
+
+// Hierarchy DTOs (S0003/S0004 — Treemap & Sunburst)
+export interface OpportunityHierarchyNodeDto {
+  id: string;
+  label: string;
+  count: number;
+  levelType?: string;
+  colorGroup?: OpportunityColorGroup;
+  children?: OpportunityHierarchyNodeDto[];
+}
+
+export interface OpportunityHierarchyDto {
+  periodDays: number;
+  root: OpportunityHierarchyNodeDto;
+}
+
+export type OpportunityBranchStyle = 'solid' | 'red_dashed' | 'gray_dotted';
+
+export interface OpportunityOutcomeDto {
+  key: string;
+  label: string;
+  branchStyle: OpportunityBranchStyle;
+  count: number;
+  percentOfTotal: number;
+  averageDaysToExit: number | null;
+}
+
+export interface OpportunityOutcomesDto {
+  periodDays: number;
+  totalExits: number;
+  outcomes: OpportunityOutcomeDto[];
 }

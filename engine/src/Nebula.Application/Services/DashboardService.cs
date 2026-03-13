@@ -21,6 +21,12 @@ public class DashboardService(IDashboardRepository dashboardRepo, BrokerScopeRes
     public Task<OpportunityItemsDto> GetOpportunityItemsAsync(string entityType, string status, CancellationToken ct = default) =>
         dashboardRepo.GetOpportunityItemsAsync(entityType, status, ct);
 
+    public Task<OpportunityAgingDto> GetOpportunityAgingAsync(string entityType, int periodDays = 180, CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityAgingAsync(entityType, periodDays, ct);
+
+    public Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(int periodDays = 180, CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityHierarchyAsync(periodDays, ct);
+
     public async Task<NudgesResponseDto> GetNudgesAsync(Guid userId, ICurrentUserService user, CancellationToken ct = default)
     {
         var nudges = await dashboardRepo.GetNudgesAsync(userId, ct);

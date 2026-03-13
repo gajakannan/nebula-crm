@@ -429,6 +429,190 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         return nudges;
     }
 
+    private static readonly (string Key, string Label, int Min, int Max)[] AgingBuckets =
+    [
+        ("0-2", "0\u20132 days", 0, 2),
+        ("3-5", "3\u20135 days", 3, 5),
+        ("6-10", "6\u201310 days", 6, 10),
+        ("11-20", "11\u201320 days", 11, 20),
+        ("21+", "21+ days", 21, int.MaxValue),
+    ];
+
+    public async Task<OpportunityAgingDto> GetOpportunityAgingAsync(
+        string entityType,
+        int periodDays,
+        CancellationToken ct = default)
+    {
+        if (periodDays <= 0) periodDays = 180;
+        if (periodDays > 730) periodDays = 730;
+
+        var normalizedEntityType = entityType.Trim().ToLowerInvariant();
+
+        List<StatusMeta> statuses;
+        List<EntityAgingEntry> entities;
+
+        if (normalizedEntityType == "submission")
+        {
+            statuses = await db.ReferenceSubmissionStatuses
+                .OrderBy(s => s.DisplayOrder)
+                .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
+                .ToListAsync(ct);
+
+            var candidates = await db.Submissions
+                .Select(s => new { s.Id, s.CurrentStatus, s.CreatedAt })
+                .ToListAsync(ct);
+
+            var candidateIds = candidates.Select(c => c.Id).ToList();
+            var transitions = await db.WorkflowTransitions
+                .Where(wt => wt.WorkflowType == "Submission" && candidateIds.Contains(wt.EntityId))
+                .Select(wt => new { wt.EntityId, wt.ToState, wt.OccurredAt })
+                .ToListAsync(ct);
+
+            var transitionLookup = transitions
+                .GroupBy(wt => wt.EntityId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            entities = candidates.Select(c =>
+            {
+                var enteredCurrent = transitionLookup.TryGetValue(c.Id, out var txns)
+                    ? txns.Where(t => t.ToState == c.CurrentStatus).Select(t => t.OccurredAt).DefaultIfEmpty(c.CreatedAt).Max()
+                    : c.CreatedAt;
+                return new EntityAgingEntry(c.CurrentStatus, (int)(DateTime.UtcNow - enteredCurrent).TotalDays);
+            }).ToList();
+        }
+        else if (normalizedEntityType == "renewal")
+        {
+            statuses = await db.ReferenceRenewalStatuses
+                .OrderBy(s => s.DisplayOrder)
+                .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
+                .ToListAsync(ct);
+
+            var candidates = await db.Renewals
+                .Select(r => new { r.Id, r.CurrentStatus, r.CreatedAt })
+                .ToListAsync(ct);
+
+            var candidateIds = candidates.Select(c => c.Id).ToList();
+            var transitions = await db.WorkflowTransitions
+                .Where(wt => wt.WorkflowType == "Renewal" && candidateIds.Contains(wt.EntityId))
+                .Select(wt => new { wt.EntityId, wt.ToState, wt.OccurredAt })
+                .ToListAsync(ct);
+
+            var transitionLookup = transitions
+                .GroupBy(wt => wt.EntityId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            entities = candidates.Select(c =>
+            {
+                var enteredCurrent = transitionLookup.TryGetValue(c.Id, out var txns)
+                    ? txns.Where(t => t.ToState == c.CurrentStatus).Select(t => t.OccurredAt).DefaultIfEmpty(c.CreatedAt).Max()
+                    : c.CreatedAt;
+                return new EntityAgingEntry(c.CurrentStatus, (int)(DateTime.UtcNow - enteredCurrent).TotalDays);
+            }).ToList();
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException(nameof(entityType), "entityType must be 'submission' or 'renewal'.");
+        }
+
+        var groupedByStatus = entities
+            .GroupBy(e => e.Status)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var agingStatuses = statuses.Select(s =>
+        {
+            var statusEntities = groupedByStatus.GetValueOrDefault(s.Code, []);
+            var buckets = AgingBuckets.Select(b =>
+            {
+                var count = statusEntities.Count(e => e.DaysInStatus >= b.Min && e.DaysInStatus <= b.Max);
+                return new OpportunityAgingBucketDto(b.Key, b.Label, count);
+            }).ToList();
+
+            return new OpportunityAgingStatusDto(
+                s.Code, s.DisplayName, s.ColorGroup ?? "intake", s.DisplayOrder, buckets, statusEntities.Count);
+        }).ToList();
+
+        return new OpportunityAgingDto(normalizedEntityType, periodDays, agingStatuses);
+    }
+
+    public async Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(
+        int periodDays,
+        CancellationToken ct = default)
+    {
+        if (periodDays <= 0) periodDays = 180;
+        if (periodDays > 730) periodDays = 730;
+
+        // Submissions — include all statuses (active + terminal) for composition views
+        var submissionStatuses = await db.ReferenceSubmissionStatuses
+            .OrderBy(s => s.DisplayOrder)
+            .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
+            .ToListAsync(ct);
+
+        var submissionCounts = await db.Submissions
+            .GroupBy(s => s.CurrentStatus)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.Status, g => g.Count, ct);
+
+        // Renewals — include all statuses (active + terminal) for composition views
+        var renewalStatuses = await db.ReferenceRenewalStatuses
+            .OrderBy(s => s.DisplayOrder)
+            .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
+            .ToListAsync(ct);
+
+        var renewalCounts = await db.Renewals
+            .GroupBy(r => r.CurrentStatus)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.Status, g => g.Count, ct);
+
+        var submissionChildren = BuildHierarchyChildren("submission", submissionStatuses, submissionCounts);
+        var renewalChildren = BuildHierarchyChildren("renewal", renewalStatuses, renewalCounts);
+
+        var submissionTotal = submissionChildren.Sum(c => c.Count);
+        var renewalTotal = renewalChildren.Sum(c => c.Count);
+
+        var root = new OpportunityHierarchyNodeDto(
+            "root", "All Opportunities", submissionTotal + renewalTotal,
+            Children:
+            [
+                new OpportunityHierarchyNodeDto("submission", "Submissions", submissionTotal, "entityType", Children: submissionChildren),
+                new OpportunityHierarchyNodeDto("renewal", "Renewals", renewalTotal, "entityType", Children: renewalChildren),
+            ]);
+
+        return new OpportunityHierarchyDto(periodDays, root);
+    }
+
+    private static List<OpportunityHierarchyNodeDto> BuildHierarchyChildren(
+        string entityType,
+        List<StatusMeta> statuses,
+        Dictionary<string, int> counts)
+    {
+        return statuses
+            .GroupBy(s => s.ColorGroup ?? "intake")
+            .Select(colorGrouping =>
+            {
+                var statusChildren = colorGrouping
+                    .Select(s => new OpportunityHierarchyNodeDto(
+                        $"{entityType}:{colorGrouping.Key}:{s.Code}",
+                        s.DisplayName,
+                        counts.GetValueOrDefault(s.Code, 0),
+                        "status",
+                        colorGrouping.Key))
+                    .ToList();
+
+                var groupLabel = char.ToUpperInvariant(colorGrouping.Key[0]) + colorGrouping.Key[1..];
+
+                return new OpportunityHierarchyNodeDto(
+                    $"{entityType}:{colorGrouping.Key}",
+                    groupLabel,
+                    statusChildren.Sum(c => c.Count),
+                    "colorGroup",
+                    colorGrouping.Key,
+                    statusChildren);
+            })
+            .ToList();
+    }
+
+    private sealed record EntityAgingEntry(string Status, int DaysInStatus);
+
     private static string? GetInitials(string? displayName)
     {
         if (string.IsNullOrWhiteSpace(displayName)) return null;

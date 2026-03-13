@@ -8,6 +8,8 @@ public interface IDashboardRepository
     Task<DashboardOpportunitiesDto> GetOpportunitiesAsync(CancellationToken ct = default);
     Task<OpportunityFlowDto> GetOpportunityFlowAsync(string entityType, int periodDays, CancellationToken ct = default);
     Task<OpportunityItemsDto> GetOpportunityItemsAsync(string entityType, string status, CancellationToken ct = default);
+    Task<OpportunityAgingDto> GetOpportunityAgingAsync(string entityType, int periodDays, CancellationToken ct = default);
+    Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(int periodDays, CancellationToken ct = default);
     Task<IReadOnlyList<NudgeCardDto>> GetNudgesAsync(Guid userId, CancellationToken ct = default);
     /// <summary>
     /// BrokerUser variant: returns only OverdueTask nudges linked to the specified broker IDs (F0009 §14).

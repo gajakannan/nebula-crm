@@ -13,7 +13,7 @@
 |------------|------|--------|-------|--------|
 | F0003 | Task Center + Reminders (API-only MVP) | Draft | MVP | `F0003-task-center/` |
 | F0004 | Task Center UI + Manager Assignment | Draft | Phase 1 | `F0004-task-center-ui-and-assignment/` |
-| F0010 | Dashboard Opportunities Refactor (Pipeline Board + Insight Views) | Draft | MVP | `F0010-dashboard-opportunities-refactor/` |
+| F0010 | Dashboard Opportunities Refactor (Pipeline Board + Insight Views) | Done | MVP | `F0010-dashboard-opportunities-refactor/` |
 
 ## Planned (Reserved IDs)
 

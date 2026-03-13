@@ -37,6 +37,7 @@ Initial preview mode note:
 
 ## Validation
 
+- [ ] Install framework script dependencies: `python3 -m pip install -r agents/scripts/requirements.txt`
 - [ ] Review `lifecycle-stage.yaml` and confirm `current_stage` is correct
 - [ ] Run `python3 agents/scripts/run-lifecycle-gates.py --list`
 - [ ] Run `python3 agents/scripts/run-lifecycle-gates.py`

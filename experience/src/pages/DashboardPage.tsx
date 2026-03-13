@@ -13,16 +13,12 @@ export default function DashboardPage() {
         <NudgeCardsSection />
         <KpiCardsRow />
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_17.5rem] xl:items-stretch 2xl:grid-cols-[minmax(0,1fr)_18.5rem]">
-          <div className="xl:h-[44rem] xl:min-h-0">
-            <OpportunitiesSummary />
-          </div>
-          <div className="xl:h-[44rem] xl:min-h-0">
-            <ActivityFeed />
-          </div>
-        </div>
+        <OpportunitiesSummary />
 
-        <MyTasksWidget />
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_18.5rem] xl:items-start">
+          <MyTasksWidget />
+          <ActivityFeed />
+        </div>
       </div>
     </DashboardLayout>
   );

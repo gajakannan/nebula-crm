@@ -168,7 +168,7 @@ Status: This repository is currently focused on the agent builder framework. Pha
 - F0008: Broker Insights - Planned
 - [F0009: Authentication + Role-Based Login](features/archive/F0009-authentication-and-role-based-login/PRD.md) - Done (Archived; Phase 1)
 - [F0004: Task Center UI + Manager Assignment](features/F0004-task-center-ui-and-assignment/PRD.md) - Planned
-- [F0010: Dashboard Opportunities Refactor (Pipeline Board + Insight Views)](features/F0010-dashboard-opportunities-refactor/PRD.md) - Draft
+- [F0010: Dashboard Opportunities Refactor (Pipeline Board + Insight Views)](features/F0010-dashboard-opportunities-refactor/PRD.md) - Done
 
 ### 3.4 MVP Features and Stories (vertical-slice friendly)
 
@@ -205,11 +205,11 @@ Status: This repository is currently focused on the agent builder framework. Pha
 - [F0009-S0005: Seeded User Access Validation Matrix](features/archive/F0009-authentication-and-role-based-login/F0009-S0005-seeded-user-access-validation-matrix.md) - Done (Archived)
 
 **MVP Stories (Feature F0010: Dashboard Opportunities Refactor):**
-- [F0010-S0001: Replace Sankey default with Pipeline Board](features/F0010-dashboard-opportunities-refactor/F0010-S0001-replace-sankey-with-pipeline-board-default.md) - Draft
-- [F0010-S0002: Add Opportunities Aging Heatmap view](features/F0010-dashboard-opportunities-refactor/F0010-S0002-add-opportunity-aging-heatmap-view.md) - Draft
-- [F0010-S0003: Add Opportunities Composition Treemap view](features/F0010-dashboard-opportunities-refactor/F0010-S0003-add-opportunity-composition-treemap-view.md) - Draft
-- [F0010-S0004: Add Opportunities Hierarchy Sunburst view](features/F0010-dashboard-opportunities-refactor/F0010-S0004-add-opportunity-hierarchy-sunburst-view.md) - Draft
-- [F0010-S0005: Unify drilldown, responsive layout, and accessibility](features/F0010-dashboard-opportunities-refactor/F0010-S0005-unify-drilldown-responsive-and-accessibility.md) - Draft
+- [F0010-S0001: Replace Sankey default with Pipeline Board](features/F0010-dashboard-opportunities-refactor/F0010-S0001-replace-sankey-with-pipeline-board-default.md) - Done
+- [F0010-S0002: Add Opportunities Aging Heatmap view](features/F0010-dashboard-opportunities-refactor/F0010-S0002-add-opportunity-aging-heatmap-view.md) - Done
+- [F0010-S0003: Add Opportunities Composition Treemap view](features/F0010-dashboard-opportunities-refactor/F0010-S0003-add-opportunity-composition-treemap-view.md) - Done
+- [F0010-S0004: Add Opportunities Hierarchy Sunburst view](features/F0010-dashboard-opportunities-refactor/F0010-S0004-add-opportunity-hierarchy-sunburst-view.md) - Done
+- [F0010-S0005: Unify drilldown, responsive layout, and accessibility](features/F0010-dashboard-opportunities-refactor/F0010-S0005-unify-drilldown-responsive-and-accessibility.md) - Done
 
 **Story Index:** See `planning-mds/features/STORY-INDEX.md` for auto-generated summary of all stories (if generated).
 

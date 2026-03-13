@@ -19,4 +19,4 @@ Validation scope includes:
 - operation-level 4xx/5xx responses referencing `#/components/schemas/ProblemDetails`
 - OpenAPI structure checks (required fields, response coverage, schema hygiene)
 
-Note: `validate-api-contract.py` requires PyYAML (`pip install pyyaml`).
+Dependency note: install framework script dependencies from `agents/scripts/requirements.txt`.

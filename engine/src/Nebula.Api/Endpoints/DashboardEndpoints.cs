@@ -17,6 +17,8 @@ public static class DashboardEndpoints
         group.MapGet("/opportunities", GetOpportunities);
         group.MapGet("/opportunities/flow", GetOpportunityFlow);
         group.MapGet("/opportunities/{entityType}/{status}/items", GetOpportunityItems);
+        group.MapGet("/opportunities/aging", GetOpportunityAging);
+        group.MapGet("/opportunities/hierarchy", GetOpportunityHierarchy);
         group.MapGet("/nudges", GetNudges);
 
         return app;
@@ -64,6 +66,35 @@ public static class DashboardEndpoints
         if (!await HasAccessAsync(user, authz, "dashboard_pipeline"))
             return ProblemDetailsHelper.Forbidden();
         return Results.Ok(await svc.GetOpportunityItemsAsync(entityType, status, ct));
+    }
+
+    private static async Task<IResult> GetOpportunityAging(
+        string entityType, int? periodDays,
+        DashboardService svc, IAuthorizationService authz, ICurrentUserService user, CancellationToken ct)
+    {
+        if (!await HasAccessAsync(user, authz, "dashboard_pipeline"))
+            return ProblemDetailsHelper.Forbidden();
+
+        if (entityType is not ("submission" or "renewal"))
+        {
+            return Results.BadRequest(new
+            {
+                code = "invalid_entity_type",
+                message = "entityType must be 'submission' or 'renewal'.",
+            });
+        }
+
+        return Results.Ok(await svc.GetOpportunityAgingAsync(entityType, periodDays ?? 180, ct));
+    }
+
+    private static async Task<IResult> GetOpportunityHierarchy(
+        int? periodDays,
+        DashboardService svc, IAuthorizationService authz, ICurrentUserService user, CancellationToken ct)
+    {
+        if (!await HasAccessAsync(user, authz, "dashboard_pipeline"))
+            return ProblemDetailsHelper.Forbidden();
+
+        return Results.Ok(await svc.GetOpportunityHierarchyAsync(periodDays ?? 180, ct));
     }
 
     private static async Task<IResult> GetNudges(

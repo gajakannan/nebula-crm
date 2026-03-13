@@ -22,6 +22,7 @@ Thanks for contributing to this framework.
 Run at minimum:
 
 ```bash
+python3 -m pip install -r agents/scripts/requirements.txt
 python3 agents/scripts/run-lifecycle-gates.py
 ```
 

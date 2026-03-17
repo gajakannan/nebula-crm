@@ -141,8 +141,8 @@ function PipelineStageCard({
       aria-label={`${statusLabel}: ${count} opportunities`}
       className={cn(
         'flex min-w-[7rem] flex-col items-center gap-1 rounded-lg border border-border-muted bg-surface-card px-3 py-2 text-center transition-colors hover:bg-surface-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nebula-violet/50',
-        isBlocked && 'border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.18)]',
-        isActive && 'border-nebula-violet/60 shadow-[0_0_16px_rgba(124,58,237,0.2)]',
+        isBlocked && 'border-rose-500/60 shadow-alert-blocked',
+        isActive && 'border-nebula-violet/60 shadow-brand-active',
       )}
     >
       <span

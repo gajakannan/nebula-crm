@@ -1,11 +1,14 @@
 import { Popover } from '@/components/ui/Popover';
 import { OpportunityOutcomePopoverContent } from './OpportunityOutcomePopover';
 import type { OutcomeAnchor } from './ConnectedFlow';
+import type { StoryChapter } from './storyTypes';
 import { cn } from '@/lib/utils';
 
 interface TerminalOutcomesRailProps {
   anchors: OutcomeAnchor[];
   periodDays: number;
+  chapter: StoryChapter;
+  allOutcomesZero: boolean;
 }
 
 function branchStyleLabel(branchStyle: OutcomeAnchor['branchStyle']): string {
@@ -14,25 +17,33 @@ function branchStyleLabel(branchStyle: OutcomeAnchor['branchStyle']): string {
   return 'Negative';
 }
 
-export function TerminalOutcomesRail({ anchors, periodDays }: TerminalOutcomesRailProps) {
+export function TerminalOutcomesRail({
+  anchors,
+  periodDays,
+  chapter,
+  allOutcomesZero,
+}: TerminalOutcomesRailProps) {
   if (anchors.length === 0) {
     return null;
   }
 
   return (
-    <aside aria-label="Terminal outcomes rail">
+    <aside aria-label="Terminal outcome branches">
       {anchors.map((anchor) => (
         <div
           key={anchor.key}
-          className="absolute -translate-y-1/2"
-          style={{ left: anchor.x - 70, top: anchor.y }}
+          className="absolute -translate-x-1/2 -translate-y-1/2"
+          style={{ left: anchor.x, top: anchor.y }}
         >
           <Popover
+            contentAriaLabel={`${anchor.label} outcome details, ${anchor.count} exits, ${anchor.percentOfTotal.toFixed(1)} percent`}
             trigger={
               <button
                 type="button"
                 className={cn(
-                  'w-[138px] rounded-xl bg-surface-main/65 px-3 py-2 text-left shadow-sm transition-colors hover:bg-surface-main/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nebula-violet/50',
+                  'w-[156px] rounded-xl bg-surface-main/65 px-3 py-2 text-left shadow-sm transition-colors hover:bg-surface-main/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nebula-violet/50',
+                  chapter === 'outcomes' && !allOutcomesZero && 'ring-1 ring-nebula-violet/45 shadow-brand-active',
+                  chapter === 'outcomes' && allOutcomesZero && 'opacity-65',
                 )}
                 aria-label={`${anchor.label} outcome, ${anchor.count} exits, ${anchor.percentOfTotal.toFixed(1)} percent of total`}
               >
@@ -40,8 +51,20 @@ export function TerminalOutcomesRail({ anchors, periodDays }: TerminalOutcomesRa
                   {anchor.label}
                 </p>
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="text-base font-semibold text-text-primary">{anchor.count}</span>
-                  <span className="text-xs text-text-muted">
+                  <span
+                    className={cn(
+                      'text-base font-semibold text-text-primary',
+                      chapter === 'outcomes' && !allOutcomesZero && 'text-lg',
+                    )}
+                  >
+                    {anchor.count}
+                  </span>
+                  <span
+                    className={cn(
+                      'text-xs text-text-muted',
+                      chapter === 'outcomes' && !allOutcomesZero && 'text-sm font-semibold text-text-primary',
+                    )}
+                  >
                     {anchor.percentOfTotal.toFixed(1)}%
                   </span>
                 </div>

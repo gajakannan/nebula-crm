@@ -17,7 +17,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.3")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -103,6 +103,10 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ActorUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BrokerDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<Guid>("EntityId")
                         .HasColumnType("uuid");
 
@@ -141,6 +145,10 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("BrokerTenantId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -210,6 +218,11 @@ namespace Nebula.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BrokerTenantId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Brokers_BrokerTenantId")
+                        .HasFilter("\"BrokerTenantId\" IS NOT NULL");
+
                     b.HasIndex("LicenseNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_Brokers_LicenseNumber");
@@ -217,12 +230,12 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                     b.HasIndex("ManagedByUserId")
                         .HasDatabaseName("IX_Brokers_ManagedByUserId");
 
-                    b.HasIndex("IsDeleted", "Status")
-                        .HasDatabaseName("IX_Brokers_Status_IsDeleted");
-
                     b.HasIndex("MgaId");
 
                     b.HasIndex("PrimaryProgramId");
+
+                    b.HasIndex("Status", "IsDeleted")
+                        .HasDatabaseName("IX_Brokers_Status_IsDeleted");
 
                     b.ToTable("Brokers", (string)null);
                 });
@@ -548,6 +561,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "Bound",
+                            ColorGroup = "won",
                             Description = "Policy renewed and bound",
                             DisplayName = "Bound",
                             DisplayOrder = (short)10,
@@ -556,6 +570,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "NotRenewed",
+                            ColorGroup = "lost",
                             Description = "Renewal closed without binding",
                             DisplayName = "Not Renewed",
                             DisplayOrder = (short)11,
@@ -564,6 +579,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "Lost",
+                            ColorGroup = "lost",
                             Description = "Lost to competitor",
                             DisplayName = "Lost",
                             DisplayOrder = (short)12,
@@ -572,6 +588,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "Lapsed",
+                            ColorGroup = "lost",
                             Description = "Policy expired without renewal",
                             DisplayName = "Lapsed",
                             DisplayOrder = (short)13,
@@ -580,6 +597,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "Withdrawn",
+                            ColorGroup = "lost",
                             Description = "Renewal withdrawn by broker or insured",
                             DisplayName = "Withdrawn",
                             DisplayOrder = (short)14,
@@ -588,6 +606,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "Expired",
+                            ColorGroup = "lost",
                             Description = "Renewal workflow expired before completion",
                             DisplayName = "Expired",
                             DisplayOrder = (short)15,
@@ -731,6 +750,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "Bound",
+                            ColorGroup = "won",
                             Description = "Policy bound and issued",
                             DisplayName = "Bound",
                             DisplayOrder = (short)12,
@@ -739,6 +759,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "Declined",
+                            ColorGroup = "lost",
                             Description = "Submission declined by underwriter",
                             DisplayName = "Declined",
                             DisplayOrder = (short)13,
@@ -747,6 +768,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "Withdrawn",
+                            ColorGroup = "lost",
                             Description = "Broker or insured withdrew submission",
                             DisplayName = "Withdrawn",
                             DisplayOrder = (short)14,
@@ -755,6 +777,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "NotQuoted",
+                            ColorGroup = "lost",
                             Description = "Submission closed without quote issued",
                             DisplayName = "Not Quoted",
                             DisplayOrder = (short)15,
@@ -763,6 +786,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "Lost",
+                            ColorGroup = "lost",
                             Description = "Opportunity lost to another market or strategy change",
                             DisplayName = "Lost",
                             DisplayOrder = (short)16,
@@ -771,6 +795,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         new
                         {
                             Code = "Expired",
+                            ColorGroup = "lost",
                             Description = "Submission expired before disposition completed",
                             DisplayName = "Expired",
                             DisplayOrder = (short)17,
@@ -856,6 +881,10 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<string>("LineOfBusiness")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateTime>("RenewalDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -935,6 +964,10 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
+
+                    b.Property<string>("LineOfBusiness")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<decimal>("PremiumEstimate")
                         .HasPrecision(18, 2)
@@ -1085,6 +1118,16 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
+                    b.Property<string>("IdpIssuer")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("IdpSubject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -1098,16 +1141,6 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
-                    b.Property<string>("IdpIssuer")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("IdpSubject")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1118,6 +1151,248 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("IX_UserProfiles_IdpIssuer_IdpSubject");
 
                     b.ToTable("UserProfiles", (string)null);
+                });
+
+            modelBuilder.Entity("Nebula.Domain.Entities.WorkflowSlaThreshold", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<int>("TargetDays")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("WarningDays")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType", "Status")
+                        .IsUnique()
+                        .HasDatabaseName("UX_WorkflowSlaThresholds_EntityType_Status");
+
+                    b.ToTable("WorkflowSlaThresholds", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_WorkflowSlaThresholds_WarningLessThanTarget", "\"WarningDays\" < \"TargetDays\"");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1fef8cb4-2f9b-41e8-9329-3c1a5d22790a"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "Received",
+                            TargetDays = 2,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("f6969f8b-7ab9-4ab0-a6e9-26f95f57b21c"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "Triaging",
+                            TargetDays = 5,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("379f3ad6-68f0-4d2f-b52f-5ab9bb40f157"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "WaitingOnBroker",
+                            TargetDays = 10,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("33cc5f8d-33ea-4f8a-a737-2f64946f044f"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "WaitingOnDocuments",
+                            TargetDays = 10,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("ec690f3d-84c8-4709-8b32-ff1efde52e52"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "ReadyForUWReview",
+                            TargetDays = 7,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("8b43ed42-17f2-426a-a14a-442f6a7d43d4"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "InReview",
+                            TargetDays = 14,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("ecf8f24e-8ead-4a44-b123-b85b6527db31"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "QuotePreparation",
+                            TargetDays = 7,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("3047cb13-59f8-4d87-a79d-e80e9dcf28ea"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "Quoted",
+                            TargetDays = 21,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 7
+                        },
+                        new
+                        {
+                            Id = new Guid("95db58fe-ef54-4c7b-b707-0cdf6458cd5b"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "RequoteRequested",
+                            TargetDays = 21,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 7
+                        },
+                        new
+                        {
+                            Id = new Guid("0ef57fce-6bd8-42e7-b1ef-767e44a02817"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "BindRequested",
+                            TargetDays = 5,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("f419f936-3f6f-4135-9d9b-7744bb5e43b8"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "submission",
+                            Status = "Binding",
+                            TargetDays = 5,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30efe68f-9e5c-4e7f-9191-e68ee0f8eb26"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            Status = "Created",
+                            TargetDays = 3,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("0e5f31e6-af58-4e30-8ea0-f2d6f862994e"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            Status = "Early",
+                            TargetDays = 30,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 7
+                        },
+                        new
+                        {
+                            Id = new Guid("f0f6f093-7e6e-45f5-ac84-76510ddfe371"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            Status = "DataReview",
+                            TargetDays = 5,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("bb695667-05cf-43dd-a89c-c05e4747967c"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            Status = "OutreachStarted",
+                            TargetDays = 7,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("2a620479-fc25-4a25-b0c5-1dce00a3693a"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            Status = "WaitingOnBroker",
+                            TargetDays = 10,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("77ca3fa9-fddd-47ec-b4d2-84bcbf001687"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            Status = "InReview",
+                            TargetDays = 14,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 5
+                        },
+                        new
+                        {
+                            Id = new Guid("f501f5dd-23d4-4250-9eab-65a70d0c08f5"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            Status = "Quoted",
+                            TargetDays = 21,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 7
+                        },
+                        new
+                        {
+                            Id = new Guid("d7fe40cd-c9a5-4fd5-b09c-47f10ff0f20f"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            Status = "Negotiation",
+                            TargetDays = 21,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 7
+                        },
+                        new
+                        {
+                            Id = new Guid("fdf17afe-4182-46e4-bf8b-3079e74b3579"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            Status = "BindRequested",
+                            TargetDays = 5,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 2
+                        });
                 });
 
             modelBuilder.Entity("Nebula.Domain.Entities.WorkflowTransition", b =>

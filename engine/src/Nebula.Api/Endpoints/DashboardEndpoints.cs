@@ -16,6 +16,15 @@ public static class DashboardEndpoints
         "lost_competitor",
     ];
 
+    private static readonly HashSet<string> SupportedBreakdownGroupBy =
+    [
+        "assigneduser",
+        "broker",
+        "program",
+        "lineofbusiness",
+        "brokerstate",
+    ];
+
     public static IEndpointRouteBuilder MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/dashboard")
@@ -28,6 +37,7 @@ public static class DashboardEndpoints
         group.MapGet("/opportunities/outcomes/{outcomeKey}/items", GetOpportunityOutcomeItems);
         group.MapGet("/opportunities/flow", GetOpportunityFlow);
         group.MapGet("/opportunities/{entityType}/{status}/items", GetOpportunityItems);
+        group.MapGet("/opportunities/{entityType}/{status}/breakdown", GetOpportunityBreakdown);
         group.MapGet("/opportunities/aging", GetOpportunityAging);
         group.MapGet("/opportunities/hierarchy", GetOpportunityHierarchy);
         group.MapGet("/nudges", GetNudges);
@@ -41,7 +51,7 @@ public static class DashboardEndpoints
     {
         if (!await HasAccessAsync(user, authz, "dashboard_kpi"))
             return ProblemDetailsHelper.Forbidden();
-        return Results.Ok(await svc.GetKpisAsync(periodDays ?? 90, ct));
+        return Results.Ok(await svc.GetKpisAsync(user, periodDays ?? 90, ct));
     }
 
     private static async Task<IResult> GetOpportunities(
@@ -50,7 +60,7 @@ public static class DashboardEndpoints
     {
         if (!await HasAccessAsync(user, authz, "dashboard_pipeline"))
             return ProblemDetailsHelper.Forbidden();
-        return Results.Ok(await svc.GetOpportunitiesAsync(periodDays ?? 180, ct));
+        return Results.Ok(await svc.GetOpportunitiesAsync(user, periodDays ?? 180, ct));
     }
 
     private static async Task<IResult> GetOpportunityFlow(
@@ -69,7 +79,7 @@ public static class DashboardEndpoints
             });
         }
 
-        return Results.Ok(await svc.GetOpportunityFlowAsync(entityType, periodDays ?? 180, ct));
+        return Results.Ok(await svc.GetOpportunityFlowAsync(user, entityType, periodDays ?? 180, ct));
     }
 
     private static async Task<IResult> GetOpportunityItems(
@@ -78,7 +88,42 @@ public static class DashboardEndpoints
     {
         if (!await HasAccessAsync(user, authz, "dashboard_pipeline"))
             return ProblemDetailsHelper.Forbidden();
-        return Results.Ok(await svc.GetOpportunityItemsAsync(entityType, status, ct));
+        return Results.Ok(await svc.GetOpportunityItemsAsync(user, entityType, status, ct));
+    }
+
+    private static async Task<IResult> GetOpportunityBreakdown(
+        string entityType,
+        string status,
+        string? groupBy,
+        int? periodDays,
+        DashboardService svc,
+        IAuthorizationService authz,
+        ICurrentUserService user,
+        CancellationToken ct)
+    {
+        if (!await HasAccessAsync(user, authz, "dashboard_pipeline"))
+            return ProblemDetailsHelper.Forbidden();
+
+        if (entityType is not ("submission" or "renewal"))
+        {
+            return Results.BadRequest(new
+            {
+                code = "invalid_entity_type",
+                message = "entityType must be 'submission' or 'renewal'.",
+            });
+        }
+
+        var normalizedGroupBy = groupBy?.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(normalizedGroupBy) || !SupportedBreakdownGroupBy.Contains(normalizedGroupBy))
+        {
+            return Results.BadRequest(new
+            {
+                code = "invalid_group_by",
+                message = "groupBy must be one of: assignedUser, broker, program, lineOfBusiness, brokerState.",
+            });
+        }
+
+        return Results.Ok(await svc.GetOpportunityBreakdownAsync(user, entityType, status, normalizedGroupBy, periodDays ?? 180, ct));
     }
 
     private static async Task<IResult> GetOpportunityOutcomes(
@@ -88,7 +133,7 @@ public static class DashboardEndpoints
         if (!await HasAccessAsync(user, authz, "dashboard_pipeline"))
             return ProblemDetailsHelper.Forbidden();
 
-        return Results.Ok(await svc.GetOpportunityOutcomesAsync(periodDays ?? 180, ct));
+        return Results.Ok(await svc.GetOpportunityOutcomesAsync(user, periodDays ?? 180, ct));
     }
 
     private static async Task<IResult> GetOpportunityOutcomeItems(
@@ -109,7 +154,7 @@ public static class DashboardEndpoints
             });
         }
 
-        return Results.Ok(await svc.GetOpportunityOutcomeItemsAsync(normalizedKey, periodDays ?? 180, ct));
+        return Results.Ok(await svc.GetOpportunityOutcomeItemsAsync(user, normalizedKey, periodDays ?? 180, ct));
     }
 
     private static async Task<IResult> GetOpportunityAging(
@@ -128,7 +173,7 @@ public static class DashboardEndpoints
             });
         }
 
-        return Results.Ok(await svc.GetOpportunityAgingAsync(entityType, periodDays ?? 180, ct));
+        return Results.Ok(await svc.GetOpportunityAgingAsync(user, entityType, periodDays ?? 180, ct));
     }
 
     private static async Task<IResult> GetOpportunityHierarchy(
@@ -138,7 +183,7 @@ public static class DashboardEndpoints
         if (!await HasAccessAsync(user, authz, "dashboard_pipeline"))
             return ProblemDetailsHelper.Forbidden();
 
-        return Results.Ok(await svc.GetOpportunityHierarchyAsync(periodDays ?? 180, ct));
+        return Results.Ok(await svc.GetOpportunityHierarchyAsync(user, periodDays ?? 180, ct));
     }
 
     private static async Task<IResult> GetNudges(

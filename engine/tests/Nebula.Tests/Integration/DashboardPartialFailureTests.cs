@@ -12,6 +12,7 @@ using Nebula.Application.DTOs;
 using Nebula.Application.Interfaces;
 using Nebula.Infrastructure.Persistence;
 using Nebula.Infrastructure.Repositories;
+using Nebula.Application.Common;
 
 namespace Nebula.Tests.Integration;
 
@@ -77,35 +78,38 @@ public class DashboardPartialFailureTests : IClassFixture<CustomWebApplicationFa
         IDashboardRepository inner,
         bool failKpis) : IDashboardRepository
     {
-        public Task<DashboardKpisDto> GetKpisAsync(int periodDays = 90, CancellationToken ct = default)
+        public Task<DashboardKpisDto> GetKpisAsync(ICurrentUserService user, int periodDays = 90, CancellationToken ct = default)
         {
             if (!failKpis)
-                return inner.GetKpisAsync(periodDays, ct);
+                return inner.GetKpisAsync(user, periodDays, ct);
 
             return Task.FromException<DashboardKpisDto>(
                 new InvalidOperationException("Simulated KPI repository failure."));
         }
 
-        public Task<DashboardOpportunitiesDto> GetOpportunitiesAsync(int periodDays = 180, CancellationToken ct = default) =>
-            inner.GetOpportunitiesAsync(periodDays, ct);
+        public Task<DashboardOpportunitiesDto> GetOpportunitiesAsync(ICurrentUserService user, int periodDays = 180, CancellationToken ct = default) =>
+            inner.GetOpportunitiesAsync(user, periodDays, ct);
 
-        public Task<OpportunityFlowDto> GetOpportunityFlowAsync(string entityType, int periodDays, CancellationToken ct = default) =>
-            inner.GetOpportunityFlowAsync(entityType, periodDays, ct);
+        public Task<OpportunityFlowDto> GetOpportunityFlowAsync(ICurrentUserService user, string entityType, int periodDays, CancellationToken ct = default) =>
+            inner.GetOpportunityFlowAsync(user, entityType, periodDays, ct);
 
-        public Task<OpportunityItemsDto> GetOpportunityItemsAsync(string entityType, string status, CancellationToken ct = default) =>
-            inner.GetOpportunityItemsAsync(entityType, status, ct);
+        public Task<OpportunityItemsDto> GetOpportunityItemsAsync(ICurrentUserService user, string entityType, string status, CancellationToken ct = default) =>
+            inner.GetOpportunityItemsAsync(user, entityType, status, ct);
 
-        public Task<OpportunityAgingDto> GetOpportunityAgingAsync(string entityType, int periodDays, CancellationToken ct = default) =>
-            inner.GetOpportunityAgingAsync(entityType, periodDays, ct);
+        public Task<OpportunityBreakdownDto> GetOpportunityBreakdownAsync(ICurrentUserService user, string entityType, string status, string groupBy, int periodDays, CancellationToken ct = default) =>
+            inner.GetOpportunityBreakdownAsync(user, entityType, status, groupBy, periodDays, ct);
 
-        public Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(int periodDays, CancellationToken ct = default) =>
-            inner.GetOpportunityHierarchyAsync(periodDays, ct);
+        public Task<OpportunityAgingDto> GetOpportunityAgingAsync(ICurrentUserService user, string entityType, int periodDays, CancellationToken ct = default) =>
+            inner.GetOpportunityAgingAsync(user, entityType, periodDays, ct);
 
-        public Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(int periodDays, CancellationToken ct = default) =>
-            inner.GetOpportunityOutcomesAsync(periodDays, ct);
+        public Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(ICurrentUserService user, int periodDays, CancellationToken ct = default) =>
+            inner.GetOpportunityHierarchyAsync(user, periodDays, ct);
 
-        public Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(string outcomeKey, int periodDays, CancellationToken ct = default) =>
-            inner.GetOpportunityOutcomeItemsAsync(outcomeKey, periodDays, ct);
+        public Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(ICurrentUserService user, int periodDays, CancellationToken ct = default) =>
+            inner.GetOpportunityOutcomesAsync(user, periodDays, ct);
+
+        public Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(ICurrentUserService user, string outcomeKey, int periodDays, CancellationToken ct = default) =>
+            inner.GetOpportunityOutcomeItemsAsync(user, outcomeKey, periodDays, ct);
 
         public Task<IReadOnlyList<NudgeCardDto>> GetNudgesAsync(Guid userId, CancellationToken ct = default) =>
             inner.GetNudgesAsync(userId, ct);

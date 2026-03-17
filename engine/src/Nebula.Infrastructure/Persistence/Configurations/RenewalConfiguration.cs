@@ -13,6 +13,7 @@ public class RenewalConfiguration : IEntityTypeConfiguration<Renewal>
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.CurrentStatus).IsRequired().HasMaxLength(30).HasDefaultValue("Created");
+        builder.Property(e => e.LineOfBusiness).HasMaxLength(50);
         builder.Property(e => e.RenewalDate).IsRequired();
         builder.Property(e => e.AssignedToUserId).IsRequired();
         builder.Property(e => e.CreatedByUserId).IsRequired();

@@ -5,6 +5,7 @@ public record RenewalDto(
     Guid AccountId,
     Guid BrokerId,
     Guid? SubmissionId,
+    string? LineOfBusiness,
     string CurrentStatus,
     DateTime RenewalDate,
     Guid? AssignedToUserId,

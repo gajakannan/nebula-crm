@@ -7,7 +7,10 @@ export function ActivityFeed() {
   const { data, isLoading, isError, refetch } = useTimelineEvents('Broker', 12);
 
   return (
-    <section className="canvas-section canvas-zone-default flex min-h-0 flex-col" aria-label="Activity section">
+    <section
+      className="glass-card operational-panel flex min-h-0 flex-col rounded-xl p-4 md:p-5"
+      aria-label="Activity section"
+    >
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-text-primary">Activity</h2>
         <span className="text-xs uppercase tracking-wider text-text-muted">Timeline</span>

@@ -1,14 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using Nebula.Application.Common;
 using Nebula.Application.DTOs;
 using Nebula.Application.Interfaces;
 using Nebula.Application.Services;
+using Nebula.Domain.Entities;
+using Nebula.Domain.Workflow;
 using Nebula.Infrastructure.Persistence;
 
 namespace Nebula.Infrastructure.Repositories;
 
 public class DashboardRepository(AppDbContext db) : IDashboardRepository
 {
-    public async Task<DashboardKpisDto> GetKpisAsync(int periodDays = 90, CancellationToken ct = default)
+    public async Task<DashboardKpisDto> GetKpisAsync(ICurrentUserService user, int periodDays = 90, CancellationToken ct = default)
     {
         periodDays = NormalizePeriodDays(periodDays, 90);
 
@@ -21,14 +24,18 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .Select(s => s.Code)
             .ToListAsync(ct);
 
-        var activeBrokers = await db.Brokers.CountAsync(b => b.Status == "Active", ct);
-        var openSubmissions = await db.Submissions
+        var scopedBrokers = GetScopedBrokerQuery(user);
+        var scopedSubmissions = GetScopedSubmissionQuery(user);
+        var scopedRenewals = GetScopedRenewalQuery(user);
+
+        var activeBrokers = await scopedBrokers.CountAsync(b => b.Status == "Active", ct);
+        var openSubmissions = await scopedSubmissions
             .CountAsync(s => !terminalSubmissionStatuses.Contains(s.CurrentStatus), ct);
 
         var windowStart = DateTime.UtcNow.AddDays(-periodDays);
 
         // Renewal rate: % of renewals reaching Bound out of all that exited opportunities in selected window.
-        var exitedRenewals = await db.Renewals
+        var exitedRenewals = await scopedRenewals
             .Where(r => terminalRenewalStatuses.Contains(r.CurrentStatus) && r.UpdatedAt >= windowStart)
             .ToListAsync(ct);
 
@@ -37,8 +44,11 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             : null;
 
         // Avg turnaround: mean days from Submission.CreatedAt to first terminal transition
+        var scopedSubmissionIds = scopedSubmissions.Select(submission => submission.Id);
+
         var terminalTransitions = await db.WorkflowTransitions
             .Where(wt => wt.WorkflowType == "Submission"
+                && scopedSubmissionIds.Contains(wt.EntityId)
                 && terminalSubmissionStatuses.Contains(wt.ToState)
                 && wt.OccurredAt >= windowStart)
             .GroupBy(wt => wt.EntityId)
@@ -49,7 +59,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         if (terminalTransitions.Count > 0)
         {
             var submissionIds = terminalTransitions.Select(t => t.EntityId).ToList();
-            var submissions = await db.Submissions.IgnoreQueryFilters()
+            var submissions = await scopedSubmissions
                 .Where(s => submissionIds.Contains(s.Id))
                 .ToDictionaryAsync(s => s.Id, s => s.CreatedAt, ct);
 
@@ -65,7 +75,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         return new DashboardKpisDto(activeBrokers, openSubmissions, renewalRate, avgTurnaroundDays);
     }
 
-    public async Task<DashboardOpportunitiesDto> GetOpportunitiesAsync(int periodDays = 180, CancellationToken ct = default)
+    public async Task<DashboardOpportunitiesDto> GetOpportunitiesAsync(ICurrentUserService user, int periodDays = 180, CancellationToken ct = default)
     {
         if (periodDays <= 0) periodDays = 180;
         if (periodDays > 730) periodDays = 730;
@@ -82,7 +92,10 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .Select(s => s.Code)
             .ToListAsync(ct);
 
-        var submissionCounts = await db.Submissions
+        var scopedSubmissions = GetScopedSubmissionQuery(user);
+        var scopedRenewals = GetScopedRenewalQuery(user);
+
+        var submissionCounts = await scopedSubmissions
             .Where(s =>
                 !submissionTerminalStatuses.Contains(s.CurrentStatus)
                 && s.CreatedAt >= windowStart)
@@ -108,7 +121,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .Select(s => s.Code)
             .ToListAsync(ct);
 
-        var renewalCounts = await db.Renewals
+        var renewalCounts = await scopedRenewals
             .Where(r =>
                 !renewalTerminalStatuses.Contains(r.CurrentStatus)
                 && r.CreatedAt >= windowStart)
@@ -127,6 +140,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
     }
 
     public async Task<OpportunityFlowDto> GetOpportunityFlowAsync(
+        ICurrentUserService user,
         string entityType,
         int periodDays,
         CancellationToken ct = default)
@@ -149,12 +163,14 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
                 .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
                 .ToListAsync(ct);
 
-            currentCounts = await db.Submissions
+            var scopedSubmissions = GetScopedSubmissionQuery(user);
+
+            currentCounts = await scopedSubmissions
                 .GroupBy(s => s.CurrentStatus)
                 .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(g => g.Status, g => g.Count, ct);
 
-            currentEntities = await db.Submissions
+            currentEntities = await scopedSubmissions
                 .Select(s => new CurrentEntityState(s.Id, s.CurrentStatus, s.CreatedAt))
                 .ToListAsync(ct);
 
@@ -167,12 +183,14 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
                 .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
                 .ToListAsync(ct);
 
-            currentCounts = await db.Renewals
+            var scopedRenewals = GetScopedRenewalQuery(user);
+
+            currentCounts = await scopedRenewals
                 .GroupBy(r => r.CurrentStatus)
                 .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(g => g.Status, g => g.Count, ct);
 
-            currentEntities = await db.Renewals
+            currentEntities = await scopedRenewals
                 .Select(r => new CurrentEntityState(r.Id, r.CurrentStatus, r.CreatedAt))
                 .ToListAsync(ct);
 
@@ -183,14 +201,18 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             throw new ArgumentOutOfRangeException(nameof(entityType), "entityType must be 'submission' or 'renewal'.");
         }
 
-        var linkRows = await db.WorkflowTransitions
-            .Where(wt => wt.WorkflowType == workflowType
-                && wt.OccurredAt >= windowStart
-                && wt.OccurredAt <= windowEnd
-                && wt.FromState != wt.ToState)
-            .GroupBy(wt => new { wt.FromState, wt.ToState })
-            .Select(g => new OpportunityFlowLinkDto(g.Key.FromState, g.Key.ToState, g.Count()))
-            .ToListAsync(ct);
+        var scopedEntityIds = currentEntities.Select(entity => entity.EntityId).ToList();
+        var linkRows = scopedEntityIds.Count == 0
+            ? []
+            : await db.WorkflowTransitions
+                .Where(wt => wt.WorkflowType == workflowType
+                    && scopedEntityIds.Contains(wt.EntityId)
+                    && wt.OccurredAt >= windowStart
+                    && wt.OccurredAt <= windowEnd
+                    && wt.FromState != wt.ToState)
+                .GroupBy(wt => new { wt.FromState, wt.ToState })
+                .Select(g => new OpportunityFlowLinkDto(g.Key.FromState, g.Key.ToState, g.Count()))
+                .ToListAsync(ct);
 
         var inflowByStatus = linkRows
             .GroupBy(l => l.TargetStatus)
@@ -209,11 +231,10 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .ToList();
 
         var allStatuses = statuses.Concat(unknownStatuses).ToList();
-        var entityIds = currentEntities.Select(e => e.EntityId).ToList();
-        var allTransitions = entityIds.Count == 0
+        var allTransitions = scopedEntityIds.Count == 0
             ? []
             : await db.WorkflowTransitions
-                .Where(wt => wt.WorkflowType == workflowType && entityIds.Contains(wt.EntityId))
+                .Where(wt => wt.WorkflowType == workflowType && scopedEntityIds.Contains(wt.EntityId))
                 .Select(wt => new CurrentStatusTransition(wt.EntityId, wt.ToState, wt.OccurredAt))
                 .ToListAsync(ct);
 
@@ -251,25 +272,28 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
     }
 
     public async Task<OpportunityItemsDto> GetOpportunityItemsAsync(
+        ICurrentUserService user,
         string entityType,
         string status,
         CancellationToken ct = default)
     {
         if (entityType == "submission")
         {
-            var query = db.Submissions
+            var query = GetScopedSubmissionQuery(user)
                 .Include(s => s.Account)
                 .Where(s => s.CurrentStatus == status);
 
             var totalCount = await query.CountAsync(ct);
 
-            var lastTransitions = await db.WorkflowTransitions
-                .Where(wt => wt.WorkflowType == "Submission" && wt.ToState == status)
-                .GroupBy(wt => wt.EntityId)
-                .Select(g => new { EntityId = g.Key, LastTransition = g.Max(wt => wt.OccurredAt) })
-                .ToDictionaryAsync(g => g.EntityId, g => g.LastTransition, ct);
-
             var items = await query.Take(5).ToListAsync(ct);
+            var itemIds = items.Select(item => item.Id).ToList();
+            var lastTransitions = itemIds.Count == 0
+                ? new Dictionary<Guid, DateTime>()
+                : await db.WorkflowTransitions
+                    .Where(wt => wt.WorkflowType == "Submission" && wt.ToState == status && itemIds.Contains(wt.EntityId))
+                    .GroupBy(wt => wt.EntityId)
+                    .Select(g => new { EntityId = g.Key, LastTransition = g.Max(wt => wt.OccurredAt) })
+                    .ToDictionaryAsync(g => g.EntityId, g => g.LastTransition, ct);
 
             var userIds = items.Select(s => s.AssignedToUserId).Distinct().ToList();
             var users = await db.UserProfiles
@@ -292,19 +316,21 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         }
         else // renewal
         {
-            var query = db.Renewals
+            var query = GetScopedRenewalQuery(user)
                 .Include(r => r.Account)
                 .Where(r => r.CurrentStatus == status);
 
             var totalCount = await query.CountAsync(ct);
 
-            var lastTransitions = await db.WorkflowTransitions
-                .Where(wt => wt.WorkflowType == "Renewal" && wt.ToState == status)
-                .GroupBy(wt => wt.EntityId)
-                .Select(g => new { EntityId = g.Key, LastTransition = g.Max(wt => wt.OccurredAt) })
-                .ToDictionaryAsync(g => g.EntityId, g => g.LastTransition, ct);
-
             var items = await query.Take(5).ToListAsync(ct);
+            var itemIds = items.Select(item => item.Id).ToList();
+            var lastTransitions = itemIds.Count == 0
+                ? new Dictionary<Guid, DateTime>()
+                : await db.WorkflowTransitions
+                    .Where(wt => wt.WorkflowType == "Renewal" && wt.ToState == status && itemIds.Contains(wt.EntityId))
+                    .GroupBy(wt => wt.EntityId)
+                    .Select(g => new { EntityId = g.Key, LastTransition = g.Max(wt => wt.OccurredAt) })
+                    .ToDictionaryAsync(g => g.EntityId, g => g.LastTransition, ct);
 
             var userIds = items.Select(r => r.AssignedToUserId).Distinct().ToList();
             var users = await db.UserProfiles
@@ -327,6 +353,158 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         }
     }
 
+    public async Task<OpportunityBreakdownDto> GetOpportunityBreakdownAsync(
+        ICurrentUserService user,
+        string entityType,
+        string status,
+        string groupBy,
+        int periodDays,
+        CancellationToken ct = default)
+    {
+        periodDays = NormalizePeriodDays(periodDays, 180);
+        var normalizedEntityType = entityType.Trim().ToLowerInvariant();
+        var normalizedGroupBy = groupBy.Trim().ToLowerInvariant();
+        var windowStart = DateTime.UtcNow.AddDays(-periodDays);
+
+        List<BreakdownAggregation> rawGroups = normalizedEntityType switch
+        {
+            "submission" => await GetSubmissionBreakdownGroupsAsync(user, status, normalizedGroupBy, windowStart, ct),
+            "renewal" => await GetRenewalBreakdownGroupsAsync(user, status, normalizedGroupBy, windowStart, ct),
+            _ => throw new ArgumentOutOfRangeException(nameof(entityType), "entityType must be 'submission' or 'renewal'."),
+        };
+
+        var groups = rawGroups
+            .Select(raw => MapBreakdownGroup(raw.Key, raw.Count, normalizedGroupBy))
+            .OrderByDescending(group => group.Count)
+            .ThenBy(group => group.Label, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return new OpportunityBreakdownDto(
+            normalizedEntityType,
+            status,
+            GroupByValueToContractFormat(normalizedGroupBy),
+            periodDays,
+            groups,
+            groups.Sum(group => group.Count));
+    }
+
+    private async Task<List<BreakdownAggregation>> GetSubmissionBreakdownGroupsAsync(
+        ICurrentUserService user,
+        string status,
+        string groupBy,
+        DateTime windowStart,
+        CancellationToken ct)
+    {
+        var scopedSubmissions = GetScopedSubmissionQuery(user)
+            .Where(submission => submission.CurrentStatus == status && submission.CreatedAt >= windowStart);
+
+        return groupBy switch
+        {
+            "assigneduser" => await (
+                from submission in scopedSubmissions
+                join assignee in db.UserProfiles on submission.AssignedToUserId equals assignee.Id into userJoin
+                from assignee in userJoin.DefaultIfEmpty()
+                group submission by assignee.DisplayName into grouped
+                select new BreakdownAggregation(grouped.Key, grouped.Count()))
+                .ToListAsync(ct),
+            "broker" => await (
+                from submission in scopedSubmissions
+                join broker in db.Brokers on submission.BrokerId equals broker.Id into brokerJoin
+                from broker in brokerJoin.DefaultIfEmpty()
+                group submission by broker.LegalName into grouped
+                select new BreakdownAggregation(grouped.Key, grouped.Count()))
+                .ToListAsync(ct),
+            "program" => await (
+                from submission in scopedSubmissions
+                join program in db.Programs on submission.ProgramId equals program.Id into programJoin
+                from program in programJoin.DefaultIfEmpty()
+                group submission by program.Name into grouped
+                select new BreakdownAggregation(grouped.Key, grouped.Count()))
+                .ToListAsync(ct),
+            "lineofbusiness" => await scopedSubmissions
+                .GroupBy(submission => submission.LineOfBusiness)
+                .Select(grouped => new BreakdownAggregation(grouped.Key, grouped.Count()))
+                .ToListAsync(ct),
+            "brokerstate" => await (
+                from submission in scopedSubmissions
+                join broker in db.Brokers on submission.BrokerId equals broker.Id into brokerJoin
+                from broker in brokerJoin.DefaultIfEmpty()
+                group submission by broker.State into grouped
+                select new BreakdownAggregation(grouped.Key, grouped.Count()))
+                .ToListAsync(ct),
+            _ => throw new ArgumentOutOfRangeException(nameof(groupBy), "Unsupported breakdown groupBy."),
+        };
+    }
+
+    private async Task<List<BreakdownAggregation>> GetRenewalBreakdownGroupsAsync(
+        ICurrentUserService user,
+        string status,
+        string groupBy,
+        DateTime windowStart,
+        CancellationToken ct)
+    {
+        var scopedRenewals = GetScopedRenewalQuery(user)
+            .Where(renewal => renewal.CurrentStatus == status && renewal.CreatedAt >= windowStart);
+
+        return groupBy switch
+        {
+            "assigneduser" => await (
+                from renewal in scopedRenewals
+                join assignee in db.UserProfiles on renewal.AssignedToUserId equals assignee.Id into userJoin
+                from assignee in userJoin.DefaultIfEmpty()
+                group renewal by assignee.DisplayName into grouped
+                select new BreakdownAggregation(grouped.Key, grouped.Count()))
+                .ToListAsync(ct),
+            "broker" => await (
+                from renewal in scopedRenewals
+                join broker in db.Brokers on renewal.BrokerId equals broker.Id into brokerJoin
+                from broker in brokerJoin.DefaultIfEmpty()
+                group renewal by broker.LegalName into grouped
+                select new BreakdownAggregation(grouped.Key, grouped.Count()))
+                .ToListAsync(ct),
+            "program" => await (
+                from renewal in scopedRenewals
+                join submission in db.Submissions on renewal.SubmissionId equals submission.Id into submissionJoin
+                from submission in submissionJoin.DefaultIfEmpty()
+                join program in db.Programs on submission.ProgramId equals program.Id into programJoin
+                from program in programJoin.DefaultIfEmpty()
+                group renewal by program.Name into grouped
+                select new BreakdownAggregation(grouped.Key, grouped.Count()))
+                .ToListAsync(ct),
+            "lineofbusiness" => await scopedRenewals
+                .GroupBy(renewal => renewal.LineOfBusiness)
+                .Select(grouped => new BreakdownAggregation(grouped.Key, grouped.Count()))
+                .ToListAsync(ct),
+            "brokerstate" => await (
+                from renewal in scopedRenewals
+                join broker in db.Brokers on renewal.BrokerId equals broker.Id into brokerJoin
+                from broker in brokerJoin.DefaultIfEmpty()
+                group renewal by broker.State into grouped
+                select new BreakdownAggregation(grouped.Key, grouped.Count()))
+                .ToListAsync(ct),
+            _ => throw new ArgumentOutOfRangeException(nameof(groupBy), "Unsupported breakdown groupBy."),
+        };
+    }
+
+    private static OpportunityBreakdownGroupDto MapBreakdownGroup(string? key, int count, string normalizedGroupBy)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return new OpportunityBreakdownGroupDto(null, "Unknown", count);
+
+        return normalizedGroupBy == "lineofbusiness"
+            ? new OpportunityBreakdownGroupDto(key, LineOfBusinessCatalog.GetDisplayLabel(key), count)
+            : new OpportunityBreakdownGroupDto(key, key, count);
+    }
+
+    private static string GroupByValueToContractFormat(string normalizedGroupBy) =>
+        normalizedGroupBy switch
+        {
+            "assigneduser" => "assignedUser",
+            "lineofbusiness" => "lineOfBusiness",
+            "brokerstate" => "brokerState",
+            _ => normalizedGroupBy,
+        };
+
     private static readonly IReadOnlyList<OutcomeDefinition> OutcomeDefinitions =
     [
         new("bound", "Bound", "solid"),
@@ -337,6 +515,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
     ];
 
     public async Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(
+        ICurrentUserService user,
         int periodDays,
         CancellationToken ct = default)
     {
@@ -352,9 +531,13 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .Select(s => s.Code)
             .ToHashSetAsync(ct);
 
+        var scopedSubmissionIds = GetScopedSubmissionQuery(user).Select(submission => submission.Id);
+        var scopedRenewalIds = GetScopedRenewalQuery(user).Select(renewal => renewal.Id);
+
         var submissionTransitions = await db.WorkflowTransitions
             .Where(wt =>
                 wt.WorkflowType == "Submission"
+                && scopedSubmissionIds.Contains(wt.EntityId)
                 && wt.OccurredAt >= windowStart
                 && submissionTerminalStatuses.Contains(wt.ToState))
             .Select(wt => new ExitTransition(wt.EntityId, wt.ToState, wt.OccurredAt))
@@ -363,6 +546,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         var renewalTransitions = await db.WorkflowTransitions
             .Where(wt =>
                 wt.WorkflowType == "Renewal"
+                && scopedRenewalIds.Contains(wt.EntityId)
                 && wt.OccurredAt >= windowStart
                 && renewalTerminalStatuses.Contains(wt.ToState))
             .Select(wt => new ExitTransition(wt.EntityId, wt.ToState, wt.OccurredAt))
@@ -382,14 +566,14 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
 
         var submissionCreatedAt = submissionIds.Count == 0
             ? new Dictionary<Guid, DateTime>()
-            : await db.Submissions.IgnoreQueryFilters()
+            : await GetScopedSubmissionQuery(user)
                 .Where(s => submissionIds.Contains(s.Id))
                 .Select(s => new { s.Id, s.CreatedAt })
                 .ToDictionaryAsync(s => s.Id, s => s.CreatedAt, ct);
 
         var renewalCreatedAt = renewalIds.Count == 0
             ? new Dictionary<Guid, DateTime>()
-            : await db.Renewals.IgnoreQueryFilters()
+            : await GetScopedRenewalQuery(user)
                 .Where(r => renewalIds.Contains(r.Id))
                 .Select(r => new { r.Id, r.CreatedAt })
                 .ToDictionaryAsync(r => r.Id, r => r.CreatedAt, ct);
@@ -452,6 +636,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
     }
 
     public async Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(
+        ICurrentUserService user,
         string outcomeKey,
         int periodDays,
         CancellationToken ct = default)
@@ -464,8 +649,8 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
 
         var windowStart = DateTime.UtcNow.AddDays(-periodDays);
 
-        var submissionItems = await GetOutcomeSubmissionItemsAsync(normalizedOutcomeKey, windowStart, ct);
-        var renewalItems = await GetOutcomeRenewalItemsAsync(normalizedOutcomeKey, windowStart, ct);
+        var submissionItems = await GetOutcomeSubmissionItemsAsync(user, normalizedOutcomeKey, windowStart, ct);
+        var renewalItems = await GetOutcomeRenewalItemsAsync(user, normalizedOutcomeKey, windowStart, ct);
 
         var combined = submissionItems
             .Concat(renewalItems)
@@ -477,6 +662,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
     }
 
     private async Task<IReadOnlyList<OpportunityMiniCardDto>> GetOutcomeSubmissionItemsAsync(
+        ICurrentUserService user,
         string outcomeKey,
         DateTime windowStart,
         CancellationToken ct)
@@ -485,9 +671,12 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         if (statuses.Count == 0)
             return [];
 
+        var scopedSubmissionIds = GetScopedSubmissionQuery(user).Select(submission => submission.Id);
+
         var transitions = await db.WorkflowTransitions
             .Where(wt =>
                 wt.WorkflowType == "Submission"
+                && scopedSubmissionIds.Contains(wt.EntityId)
                 && wt.OccurredAt >= windowStart
                 && statuses.Contains(wt.ToState))
             .Select(wt => new ExitTransition(wt.EntityId, wt.ToState, wt.OccurredAt))
@@ -502,7 +691,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .ToDictionary(e => e.EntityId, e => e);
         var entityIds = firstExits.Keys.ToList();
 
-        var submissions = await db.Submissions
+        var submissions = await GetScopedSubmissionQuery(user)
             .Include(s => s.Account)
             .Where(s => entityIds.Contains(s.Id))
             .Select(s => new
@@ -540,6 +729,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
     }
 
     private async Task<IReadOnlyList<OpportunityMiniCardDto>> GetOutcomeRenewalItemsAsync(
+        ICurrentUserService user,
         string outcomeKey,
         DateTime windowStart,
         CancellationToken ct)
@@ -548,9 +738,12 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         if (statuses.Count == 0)
             return [];
 
+        var scopedRenewalIds = GetScopedRenewalQuery(user).Select(renewal => renewal.Id);
+
         var transitions = await db.WorkflowTransitions
             .Where(wt =>
                 wt.WorkflowType == "Renewal"
+                && scopedRenewalIds.Contains(wt.EntityId)
                 && wt.OccurredAt >= windowStart
                 && statuses.Contains(wt.ToState))
             .Select(wt => new ExitTransition(wt.EntityId, wt.ToState, wt.OccurredAt))
@@ -565,7 +758,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .ToDictionary(e => e.EntityId, e => e);
         var entityIds = firstExits.Keys.ToList();
 
-        var renewals = await db.Renewals
+        var renewals = await GetScopedRenewalQuery(user)
             .Include(r => r.Account)
             .Where(r => entityIds.Contains(r.Id))
             .Select(r => new
@@ -786,6 +979,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
     ];
 
     public async Task<OpportunityAgingDto> GetOpportunityAgingAsync(
+        ICurrentUserService user,
         string entityType,
         int periodDays,
         CancellationToken ct = default)
@@ -804,7 +998,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
                 .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
                 .ToListAsync(ct);
 
-            var candidates = await db.Submissions
+            var candidates = await GetScopedSubmissionQuery(user)
                 .Select(s => new { s.Id, s.CurrentStatus, s.CreatedAt })
                 .ToListAsync(ct);
 
@@ -833,7 +1027,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
                 .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
                 .ToListAsync(ct);
 
-            var candidates = await db.Renewals
+            var candidates = await GetScopedRenewalQuery(user)
                 .Select(r => new { r.Id, r.CurrentStatus, r.CreatedAt })
                 .ToListAsync(ct);
 
@@ -864,9 +1058,33 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .GroupBy(e => e.Status)
             .ToDictionary(g => g.Key, g => g.ToList());
 
+        var thresholdRows = await db.WorkflowSlaThresholds
+            .Where(threshold => threshold.EntityType == normalizedEntityType)
+            .Select(threshold => new WorkflowSlaThresholdEntry(
+                threshold.Status,
+                new WorkflowSlaThresholdDto(threshold.WarningDays, threshold.TargetDays)))
+            .ToListAsync(ct);
+
+        var thresholds = thresholdRows.ToDictionary(
+            row => row.Status,
+            row => row.Threshold,
+            StringComparer.OrdinalIgnoreCase);
+
         var agingStatuses = statuses.Select(s =>
         {
             var statusEntities = groupedByStatus.GetValueOrDefault(s.Code, []);
+            thresholds.TryGetValue(s.Code, out var threshold);
+
+            OpportunityAgingSlaDto? sla = null;
+            if (threshold is not null)
+            {
+                var bands = new SlaStatusBandsDto(
+                    statusEntities.Count(entity => entity.DaysInStatus <= threshold.WarningDays),
+                    statusEntities.Count(entity => entity.DaysInStatus > threshold.WarningDays && entity.DaysInStatus <= threshold.TargetDays),
+                    statusEntities.Count(entity => entity.DaysInStatus > threshold.TargetDays));
+                sla = OpportunityAgingSlaDto.From(threshold, bands);
+            }
+
             var buckets = AgingBuckets.Select(b =>
             {
                 var count = statusEntities.Count(e => e.DaysInStatus >= b.Min && e.DaysInStatus <= b.Max);
@@ -874,13 +1092,14 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             }).ToList();
 
             return new OpportunityAgingStatusDto(
-                s.Code, s.DisplayName, s.ColorGroup ?? "intake", s.DisplayOrder, buckets, statusEntities.Count);
+                s.Code, s.DisplayName, s.ColorGroup ?? "intake", s.DisplayOrder, sla, buckets, statusEntities.Count);
         }).ToList();
 
         return new OpportunityAgingDto(normalizedEntityType, periodDays, agingStatuses);
     }
 
     public async Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(
+        ICurrentUserService user,
         int periodDays,
         CancellationToken ct = default)
     {
@@ -892,7 +1111,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
             .ToListAsync(ct);
 
-        var submissionCounts = await db.Submissions
+        var submissionCounts = await GetScopedSubmissionQuery(user)
             .GroupBy(s => s.CurrentStatus)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.Status, g => g.Count, ct);
@@ -903,7 +1122,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .Select(s => new StatusMeta(s.Code, s.DisplayName, s.IsTerminal, s.DisplayOrder, s.ColorGroup))
             .ToListAsync(ct);
 
-        var renewalCounts = await db.Renewals
+        var renewalCounts = await GetScopedRenewalQuery(user)
             .GroupBy(r => r.CurrentStatus)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.Status, g => g.Count, ct);
@@ -956,9 +1175,121 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .ToList();
     }
 
+    private IQueryable<Broker> GetScopedBrokerQuery(ICurrentUserService user)
+    {
+        var brokers = db.Brokers.AsQueryable();
+        if (HasRole(user, "Admin"))
+            return brokers;
+
+        var includeAssigned = HasRole(user, "DistributionUser") || HasRole(user, "Underwriter");
+        var includeRegion = HasRole(user, "DistributionManager") || HasRole(user, "Underwriter");
+        var includeManagedBroker = HasRole(user, "RelationshipManager");
+        var includeManagedProgram = HasRole(user, "ProgramManager");
+
+        var normalizedRegions = NormalizeRegions(user.Regions);
+        var managedProgramIds = db.Programs
+            .Where(program => program.ManagedByUserId == user.UserId)
+            .Select(program => program.Id);
+        var programScopedSubmissionIds = db.Submissions
+            .Where(submission => submission.ProgramId.HasValue && managedProgramIds.Contains(submission.ProgramId.Value))
+            .Select(submission => submission.Id);
+        var programScopedBrokerIds = db.Submissions
+            .Where(submission => submission.ProgramId.HasValue && managedProgramIds.Contains(submission.ProgramId.Value))
+            .Select(submission => submission.BrokerId)
+            .Union(db.Renewals
+                .Where(renewal => renewal.SubmissionId.HasValue && programScopedSubmissionIds.Contains(renewal.SubmissionId.Value))
+                .Select(renewal => renewal.BrokerId))
+            .Union(db.Brokers
+                .Where(broker => broker.PrimaryProgramId.HasValue && managedProgramIds.Contains(broker.PrimaryProgramId.Value))
+                .Select(broker => broker.Id));
+        var assignedBrokerIds = db.Submissions
+            .Where(submission => submission.AssignedToUserId == user.UserId)
+            .Select(submission => submission.BrokerId)
+            .Union(db.Renewals
+                .Where(renewal => renewal.AssignedToUserId == user.UserId)
+                .Select(renewal => renewal.BrokerId));
+
+        return brokers.Where(broker =>
+            (includeAssigned && assignedBrokerIds.Contains(broker.Id))
+            || (includeRegion
+                && normalizedRegions.Count > 0
+                && broker.BrokerRegions.Any(region => normalizedRegions.Contains(region.Region)))
+            || (includeManagedBroker && broker.ManagedByUserId == user.UserId)
+            || (includeManagedProgram && programScopedBrokerIds.Contains(broker.Id)));
+    }
+
+    private IQueryable<Submission> GetScopedSubmissionQuery(ICurrentUserService user)
+    {
+        var submissions = db.Submissions.AsQueryable();
+        if (HasRole(user, "Admin"))
+            return submissions;
+
+        var includeAssigned = HasRole(user, "DistributionUser") || HasRole(user, "Underwriter");
+        var includeRegion = HasRole(user, "DistributionManager") || HasRole(user, "Underwriter");
+        var includeManagedBroker = HasRole(user, "RelationshipManager");
+        var includeManagedProgram = HasRole(user, "ProgramManager");
+
+        var normalizedRegions = NormalizeRegions(user.Regions);
+        var managedProgramIds = db.Programs
+            .Where(program => program.ManagedByUserId == user.UserId)
+            .Select(program => program.Id);
+
+        return submissions.Where(submission =>
+            (includeAssigned && submission.AssignedToUserId == user.UserId)
+            || (includeRegion
+                && normalizedRegions.Count > 0
+                && submission.Broker.BrokerRegions.Any(region => normalizedRegions.Contains(region.Region)))
+            || (includeManagedBroker && submission.Broker.ManagedByUserId == user.UserId)
+            || (includeManagedProgram
+                && submission.ProgramId.HasValue
+                && managedProgramIds.Contains(submission.ProgramId.Value)));
+    }
+
+    private IQueryable<Renewal> GetScopedRenewalQuery(ICurrentUserService user)
+    {
+        var renewals = db.Renewals.AsQueryable();
+        if (HasRole(user, "Admin"))
+            return renewals;
+
+        var includeAssigned = HasRole(user, "DistributionUser") || HasRole(user, "Underwriter");
+        var includeRegion = HasRole(user, "DistributionManager") || HasRole(user, "Underwriter");
+        var includeManagedBroker = HasRole(user, "RelationshipManager");
+        var includeManagedProgram = HasRole(user, "ProgramManager");
+
+        var normalizedRegions = NormalizeRegions(user.Regions);
+        var managedProgramIds = db.Programs
+            .Where(program => program.ManagedByUserId == user.UserId)
+            .Select(program => program.Id);
+        var programScopedSubmissionIds = db.Submissions
+            .Where(submission => submission.ProgramId.HasValue && managedProgramIds.Contains(submission.ProgramId.Value))
+            .Select(submission => submission.Id);
+
+        return renewals.Where(renewal =>
+            (includeAssigned && renewal.AssignedToUserId == user.UserId)
+            || (includeRegion
+                && normalizedRegions.Count > 0
+                && renewal.Broker.BrokerRegions.Any(region => normalizedRegions.Contains(region.Region)))
+            || (includeManagedBroker && renewal.Broker.ManagedByUserId == user.UserId)
+            || (includeManagedProgram
+                && renewal.SubmissionId.HasValue
+                && programScopedSubmissionIds.Contains(renewal.SubmissionId.Value)));
+    }
+
+    private static bool HasRole(ICurrentUserService user, string role) =>
+        user.Roles.Any(existingRole => string.Equals(existingRole, role, StringComparison.OrdinalIgnoreCase));
+
+    private static List<string> NormalizeRegions(IReadOnlyList<string> regions) =>
+        regions
+            .Where(region => !string.IsNullOrWhiteSpace(region))
+            .Select(region => region.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
     private sealed record EntityAgingEntry(string Status, int DaysInStatus);
+    private sealed record BreakdownAggregation(string? Key, int Count);
     private sealed record CurrentEntityState(Guid EntityId, string Status, DateTime CreatedAt);
     private sealed record CurrentStatusTransition(Guid EntityId, string ToState, DateTime OccurredAt);
+    private sealed record WorkflowSlaThresholdEntry(string Status, WorkflowSlaThresholdDto Threshold);
     private sealed record ExitTransition(Guid EntityId, string ExitStatus, DateTime ExitAtUtc);
     private sealed record OutcomeExitEntry(string OutcomeKey, int DaysToExit);
     private sealed record OutcomeDefinition(string Key, string Label, string BranchStyle);

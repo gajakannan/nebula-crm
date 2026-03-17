@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nebula.local/schemas/renewal-create-request.schema.json",
+  "title": "RenewalCreateRequest",
+  "description": "Validation rules for creating a renewal.",
+  "type": "object",
+  "required": [
+    "accountId",
+    "brokerId",
+    "currentStatus",
+    "renewalDate",
+    "assignedTo"
+  ],
+  "properties": {
+    "accountId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "brokerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "submissionId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "lineOfBusiness": {
+      "anyOf": [
+        { "$ref": "https://nebula.local/schemas/line-of-business.schema.json" },
+        { "type": "null" }
+      ]
+    },
+    "currentStatus": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30
+    },
+    "renewalDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "assignedTo": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "additionalProperties": false
+}

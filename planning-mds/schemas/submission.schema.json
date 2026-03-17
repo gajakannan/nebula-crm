@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nebula.local/schemas/submission.schema.json",
+  "title": "Submission",
+  "description": "Submission workflow entity response contract.",
+  "type": "object",
+  "required": [
+    "id",
+    "accountId",
+    "brokerId",
+    "currentStatus",
+    "effectiveDate",
+    "premiumEstimate",
+    "assignedTo",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "accountId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "brokerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "programId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "lineOfBusiness": {
+      "anyOf": [
+        { "$ref": "https://nebula.local/schemas/line-of-business.schema.json" },
+        { "type": "null" }
+      ]
+    },
+    "currentStatus": {
+      "type": "string"
+    },
+    "effectiveDate": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "premiumEstimate": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "assignedTo": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdBy": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedBy": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    }
+  },
+  "additionalProperties": false
+}

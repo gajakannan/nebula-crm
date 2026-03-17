@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Nebula.Application.Common;
 using Nebula.Infrastructure.Persistence;
 using Nebula.Infrastructure.Repositories;
 using Nebula.Domain.Entities;
@@ -117,8 +118,9 @@ public class DashboardRepositoryKpiTests
         await db.SaveChangesAsync();
 
         var repository = new DashboardRepository(db);
-        var ninetyDayKpis = await repository.GetKpisAsync(90);
-        var thirtyDayKpis = await repository.GetKpisAsync(30);
+        var adminUser = new TestCurrentUserService(userId, ["Admin"], ["West"]);
+        var ninetyDayKpis = await repository.GetKpisAsync(adminUser, 90);
+        var thirtyDayKpis = await repository.GetKpisAsync(adminUser, 30);
 
         ninetyDayKpis.ActiveBrokers.Should().Be(2);
         thirtyDayKpis.ActiveBrokers.Should().Be(2);
@@ -184,8 +186,9 @@ public class DashboardRepositoryKpiTests
         await db.SaveChangesAsync();
 
         var repository = new DashboardRepository(db);
-        var defaultWindowKpis = await repository.GetKpisAsync(0);
-        var maxWindowKpis = await repository.GetKpisAsync(1000);
+        var adminUser = new TestCurrentUserService(userId, ["Admin"], ["West"]);
+        var defaultWindowKpis = await repository.GetKpisAsync(adminUser, 0);
+        var maxWindowKpis = await repository.GetKpisAsync(adminUser, 1000);
 
         defaultWindowKpis.RenewalRate.Should().Be(100.0);
         maxWindowKpis.RenewalRate.Should().Be(50.0);
@@ -210,5 +213,17 @@ public class DashboardRepositoryKpiTests
             new ReferenceRenewalStatus { Code = "Created", DisplayName = "Created", Description = "Created", IsTerminal = false, DisplayOrder = 1, ColorGroup = "intake" },
             new ReferenceRenewalStatus { Code = "Bound", DisplayName = "Bound", Description = "Bound", IsTerminal = true, DisplayOrder = 2, ColorGroup = "decision" },
             new ReferenceRenewalStatus { Code = "Lost", DisplayName = "Lost", Description = "Lost", IsTerminal = true, DisplayOrder = 3, ColorGroup = "decision" });
+    }
+
+    private sealed class TestCurrentUserService(
+        Guid userId,
+        IReadOnlyList<string> roles,
+        IReadOnlyList<string> regions) : ICurrentUserService
+    {
+        public Guid UserId => userId;
+        public string? DisplayName => "Test User";
+        public IReadOnlyList<string> Roles => roles;
+        public IReadOnlyList<string> Regions => regions;
+        public string? BrokerTenantId => null;
     }
 }

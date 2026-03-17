@@ -66,7 +66,7 @@ public class SubmissionService(
     }
 
     private static SubmissionDto MapToDto(Submission s) => new(
-        s.Id, s.AccountId, s.BrokerId, s.ProgramId, s.CurrentStatus,
+        s.Id, s.AccountId, s.BrokerId, s.ProgramId, s.LineOfBusiness, s.CurrentStatus,
         s.EffectiveDate, s.PremiumEstimate, s.AssignedToUserId,
         s.CreatedAt, s.CreatedByUserId, s.UpdatedAt, s.UpdatedByUserId);
 

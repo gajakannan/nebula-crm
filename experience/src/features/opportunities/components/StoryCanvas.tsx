@@ -1,12 +1,11 @@
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { KpiCardsRow } from '@/features/kpis';
 import { cn } from '@/lib/utils';
-import { useOpportunityAging } from '../hooks/useOpportunityAging';
 import { useOpportunityFlow } from '../hooks/useOpportunityFlow';
-import { useOpportunityHierarchy } from '../hooks/useOpportunityHierarchy';
 import { useOpportunityOutcomes } from '../hooks/useOpportunityOutcomes';
+import { useOpportunityAging } from '../hooks/useOpportunityAging';
 import { ConnectedFlow } from './ConnectedFlow';
 import type { StoryChapter } from './storyTypes';
 
@@ -16,8 +15,6 @@ const CHAPTERS: { key: StoryChapter; label: string }[] = [
   { key: 'flow', label: 'Flow' },
   { key: 'friction', label: 'Friction' },
   { key: 'outcomes', label: 'Outcomes' },
-  { key: 'aging', label: 'Aging' },
-  { key: 'mix', label: 'Mix' },
 ];
 
 export function StoryCanvas() {
@@ -26,19 +23,68 @@ export function StoryCanvas() {
 
   const flowQuery = useOpportunityFlow('submission', periodDays);
   const outcomesQuery = useOpportunityOutcomes(periodDays);
-  const agingQuery = useOpportunityAging('submission', periodDays, {
-    enabled: chapter === 'aging',
-  });
-  const mixQuery = useOpportunityHierarchy(periodDays, {
-    enabled: chapter === 'mix',
-  });
+  const agingQuery = useOpportunityAging('submission', periodDays);
+
+  function focusChapter(
+    chapterIndex: number,
+    chapterTabs: NodeListOf<HTMLButtonElement> | undefined,
+  ) {
+    const nextIndex = ((chapterIndex % CHAPTERS.length) + CHAPTERS.length) % CHAPTERS.length;
+    setChapter(CHAPTERS[nextIndex].key);
+    chapterTabs?.[nextIndex]?.focus();
+  }
+
+  function onChapterKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    chapterIndex: number,
+  ) {
+    const chapterTabs = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('button[role="tab"]');
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      focusChapter(chapterIndex + 1, chapterTabs);
+    }
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      focusChapter(chapterIndex - 1, chapterTabs);
+    }
+
+    if (event.key === 'Home') {
+      event.preventDefault();
+      focusChapter(0, chapterTabs);
+    }
+
+    if (event.key === 'End') {
+      event.preventDefault();
+      focusChapter(CHAPTERS.length - 1, chapterTabs);
+    }
+  }
 
   return (
     <section aria-label="Opportunity story canvas">
       <header className="canvas-section canvas-zone-tight" aria-label="Story controls">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="sm:hidden">
+            <label htmlFor="story-period-window" className="sr-only">
+              Opportunity period window
+            </label>
+            <select
+              id="story-period-window"
+              aria-label="Opportunity period window"
+              value={periodDays}
+              onChange={(event) => setPeriodDays(Number(event.target.value) as (typeof PERIOD_WINDOWS)[number])}
+              className="w-full rounded-lg border border-surface-border bg-surface-main/65 px-3 py-2 text-sm font-medium text-text-primary"
+            >
+              {PERIOD_WINDOWS.map((windowDays) => (
+                <option key={windowDays} value={windowDays}>
+                  {windowDays} days
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div
-            className="inline-flex flex-wrap items-center gap-1"
+            className="hidden flex-wrap items-center gap-1 sm:inline-flex"
             role="tablist"
             aria-label="Opportunity period window"
           >
@@ -64,11 +110,11 @@ export function StoryCanvas() {
           </div>
 
           <div
-            className="inline-flex flex-wrap items-center gap-1"
+            className="inline-flex w-full max-w-full items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] lg:w-auto"
             role="tablist"
             aria-label="Story chapters"
           >
-            {CHAPTERS.map((chapterOption) => {
+            {CHAPTERS.map((chapterOption, chapterIndex) => {
               const active = chapterOption.key === chapter;
               return (
                 <button
@@ -77,9 +123,11 @@ export function StoryCanvas() {
                   role="tab"
                   aria-selected={active}
                   aria-controls="story-flow-canvas"
+                  tabIndex={active ? 0 : -1}
                   onClick={() => setChapter(chapterOption.key)}
+                  onKeyDown={(event) => onChapterKeyDown(event, chapterIndex)}
                   className={cn(
-                    'rounded-full bg-surface-main/55 px-3 py-1 text-xs font-semibold text-text-secondary transition-colors',
+                    'min-w-fit whitespace-nowrap rounded-full bg-surface-main/55 px-3 py-1 text-xs font-semibold text-text-secondary transition-colors',
                     active && 'bg-nebula-violet/20 text-nebula-violet',
                   )}
                 >
@@ -107,21 +155,14 @@ export function StoryCanvas() {
           <ConnectedFlow
             flow={flowQuery.data}
             outcomes={outcomesQuery.data?.outcomes ?? []}
-            chapter={chapter}
-            periodDays={periodDays}
-            outcomesLoading={outcomesQuery.isLoading}
-            outcomesError={outcomesQuery.isError}
-            onRetryOutcomes={() => outcomesQuery.refetch()}
-            agingData={agingQuery.data}
-            agingLoading={agingQuery.isLoading}
-            agingError={agingQuery.isError}
-            onRetryAging={() => agingQuery.refetch()}
-            mixData={mixQuery.data}
-            mixLoading={mixQuery.isLoading}
-            mixError={mixQuery.isError}
-            onRetryMix={() => mixQuery.refetch()}
-          />
-        )}
+              chapter={chapter}
+              periodDays={periodDays}
+              outcomesLoading={outcomesQuery.isLoading}
+              outcomesError={outcomesQuery.isError}
+              onRetryOutcomes={() => outcomesQuery.refetch()}
+              aging={agingQuery.data}
+            />
+          )}
       </section>
     </section>
   );

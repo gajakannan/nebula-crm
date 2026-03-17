@@ -1,20 +1,466 @@
-# Feature Assembly Plan (F0001 + F0002 + F0009 + F0010 + F0012)
+# Feature Assembly Plan (F0001 + F0002 + F0009 + F0010 + F0012 + F0013)
 
 **Owner:** Architect
 **Status:** Approved
-**Last Updated:** 2026-03-13
+**Last Updated:** 2026-03-14
 
 ## Goal
 
-Define the build order, role handoffs, and integration checkpoints for F0001 (Dashboard), F0002 (Broker Relationship Management), F0009 (Authentication + Role-Based Login), F0010 (Dashboard Opportunities Refactor), and F0012 (Dashboard Storytelling Infographic Canvas).
+Define the build order, role handoffs, and integration checkpoints for F0001 (Dashboard), F0002 (Broker Relationship Management), F0009 (Authentication + Role-Based Login), F0010 (Dashboard Opportunities Refactor), F0012 (Dashboard Storytelling Infographic Canvas), and F0013 (Dashboard Framed Storytelling Canvas).
 
-**Note:** F0011 (Dashboard Opportunities Flow-First Modernization) has been deprecated and superseded by F0012. All F0011 scope is absorbed into F0012. See F0011 section below for details.
+**Note:** F0010 frontend (Pipeline Board) and F0011 are abandoned — superseded by F0012, then F0013. F0012 is archived — superseded by F0013. Backend endpoints from F0010 and F0012 carry forward into F0013. See individual feature sections for details.
 
 ---
 
-## F0012 — Dashboard Storytelling Infographic Canvas (Flat Canvas + Collapsible Rails)
+## F0013 — Dashboard Framed Storytelling Canvas
 
-**Updated:** 2026-03-13 — Architecture review findings incorporated (H-ARCH-01/02, M-ARCH-01/02/03, L-ARCH-01/02/03)
+**Updated:** 2026-03-14 — Architecture review complete; backend scope confirmed (LOB, SLA, breakdown endpoint — ADR-009)
+
+### Dependencies
+
+**Carries forward from F0012 (all implemented and deployed):**
+- `periodDays` parameter on `GET /dashboard/kpis`
+- `avgDwellDays` + `emphasis` on `OpportunityFlowNode` (flow endpoint)
+- `GET /dashboard/opportunities/aging` — per-status aging bucket matrix (implemented; missing from OpenAPI spec — backfill in Step F)
+- `GET /dashboard/opportunities/hierarchy` — entity type → color group → status tree (implemented; missing from OpenAPI spec — backfill in Step F)
+
+**Carries forward from F0010 (all implemented and deployed):**
+- `GET /dashboard/opportunities` — stage summary counts
+- `GET /dashboard/opportunities/flow` — flow nodes and links
+- `GET /dashboard/opportunities/outcomes` — terminal outcome aggregates
+- `GET /dashboard/opportunities/{entityType}/{status}/items` — mini-card drilldowns
+- `GET /dashboard/opportunities/outcomes/{outcomeKey}/items` — outcome mini-card drilldowns
+
+**Existing infrastructure (unchanged):**
+- ABAC policy: `dashboard_kpi`, `dashboard_pipeline`, `dashboard_nudge` — no changes
+- `GET /dashboard/nudges`, `GET /my/tasks`, `GET /my/timeline` — unchanged
+- TanStack Query hooks in `experience/src/features/opportunities/hooks/` — 7 hooks, all carry forward
+- TypeScript DTOs in `experience/src/features/opportunities/types.ts` — carry forward, extend
+
+**New backend dependencies (ADR-009):**
+- `LineOfBusiness` field on Submission and Renewal entities (EF Core migration)
+- `WorkflowSlaThreshold` entity and seed data (EF Core migration)
+- `GET /dashboard/opportunities/{entityType}/{status}/breakdown` — new endpoint
+- Aging endpoint enhancement: SLA band computation per status
+
+### Architecture Notes
+
+#### What F0012 Got Wrong and F0013 Corrects
+
+F0012 over-interpreted "infographic" as "flatten everything," stripping borders, depth, and glow from ALL dashboard components — including operational panels (nudges, activity, tasks) that need those identity elements. F0013 restores a three-layer visual hierarchy: app chrome as frame, operational panels with glass-card depth, and story canvas zone as the flat infographic surface.
+
+| F0012 Concept | F0013 Change |
+|---|---|
+| Flat canvas for everything | Three-layer hierarchy: frame + glass-card operational panels + flat story zone |
+| Horizontal connected flow | Vertical timeline, stops alternating left-right |
+| 5 chapters (Flow/Friction/Outcomes/Aging/Mix) | 3 chapters (Flow/Friction/Outcomes); Aging/Mix become per-stop alternates |
+| Lazy-load Aging/Mix on chapter switch | All chapter data eager; breakdown data lazy per-stop |
+| Violet/fuchsia palette | Muted coral/steel blue editorial palette |
+| Activity/Tasks as flat stacked sections | Activity/Tasks restored to glass-card raised panels |
+
+#### Backend Changes
+
+**1. Line of Business Classification (ADR-009)**
+
+Add `LineOfBusiness` (string, nullable) to both Submission and Renewal entities. Nullable for backward compatibility — existing records retain `null`.
+
+Known values (commercial P&C NAIC/ISO standard):
+
+| Value | Display Label |
+|---|---|
+| `Property` | Property |
+| `GeneralLiability` | General Liability |
+| `CommercialAuto` | Commercial Auto |
+| `WorkersCompensation` | Workers' Compensation |
+| `ProfessionalLiability` | Professional Liability / E&O |
+| `Marine` | Marine / Inland Marine |
+| `Umbrella` | Umbrella / Excess |
+| `Surety` | Surety / Bond |
+| `Cyber` | Cyber Liability |
+| `DirectorsOfficers` | Directors & Officers |
+
+Stored as string (not DB enum) for extensibility. Validated at API layer against the known set. Requires EF Core migration, DTO updates, OpenAPI spec update, JSON schema updates, and seed data population.
+
+**2. SLA Configuration Table (ADR-009)**
+
+New entity `WorkflowSlaThreshold` with per-entity-type, per-status SLA thresholds.
+
+| Field | Type | Description |
+|---|---|---|
+| `Id` | uuid (PK) | |
+| `EntityType` | string | `submission` or `renewal` |
+| `Status` | string | Workflow status |
+| `WarningDays` | int | Days threshold for "approaching" state |
+| `TargetDays` | int | SLA target — breach if exceeded |
+| `CreatedAt` | datetime | Audit |
+| `UpdatedAt` | datetime | Audit |
+
+Constraint: `(EntityType, Status)` unique. `WarningDays < TargetDays`.
+
+SLA band computation:
+- **On time:** dwell ≤ `WarningDays`
+- **Approaching:** `WarningDays` < dwell ≤ `TargetDays`
+- **Overdue:** dwell > `TargetDays`
+
+Seed defaults (submission):
+
+| Status | WarningDays | TargetDays | Rationale |
+|---|---|---|---|
+| Received | 1 | 2 | Fast intake expected |
+| Triaging | 2 | 5 | Triage within a week |
+| WaitingOnBroker | 5 | 10 | External dependency, more tolerance |
+| ReadyForUWReview | 3 | 7 | Queue shouldn't stall |
+| InReview | 5 | 14 | Complex analysis |
+| Quoted | 7 | 21 | Decision window |
+| BindRequested | 2 | 5 | Final step, should be quick |
+
+Seed defaults (renewal — same statuses, slightly relaxed where applicable):
+
+| Status | WarningDays | TargetDays |
+|---|---|---|
+| Received | 1 | 3 |
+| Triaging | 2 | 5 |
+| WaitingOnBroker | 5 | 10 |
+| ReadyForUWReview | 3 | 7 |
+| InReview | 5 | 14 |
+| Quoted | 7 | 21 |
+| BindRequested | 2 | 5 |
+
+No CRUD API at MVP — seed-only via migration.
+
+**3. Per-Stage Breakdown Endpoint (new)**
+
+```
+GET /dashboard/opportunities/{entityType}/{status}/breakdown
+  ?groupBy=assignedUser|broker|program|lineOfBusiness|brokerState
+  &periodDays=180
+```
+
+Response shape:
+```json
+{
+  "entityType": "submission",
+  "status": "Received",
+  "groupBy": "lineOfBusiness",
+  "periodDays": 180,
+  "groups": [
+    { "key": "Property", "label": "Property", "count": 42 },
+    { "key": "GeneralLiability", "label": "General Liability", "count": 28 },
+    { "key": null, "label": "Unknown", "count": 3 }
+  ],
+  "total": 73
+}
+```
+
+Authorization: `dashboard_pipeline` (same as existing stage endpoints).
+
+groupBy join paths:
+- `assignedUser`: Submission/Renewal → UserProfile (display name)
+- `broker`: Submission/Renewal → Broker (legal name)
+- `program`: Submission/Renewal → Program (name)
+- `lineOfBusiness`: Submission/Renewal `.LineOfBusiness`
+- `brokerState`: Submission/Renewal → Broker `.State`
+
+Null groups: items where the groupBy field is null are collected into `{ key: null, label: "Unknown" }`.
+
+**4. Aging Endpoint Enhancement (SLA bands)**
+
+Extend `GET /dashboard/opportunities/aging` response to include SLA context per status:
+
+```json
+{
+  "statuses": [{
+    "status": "Received",
+    "label": "Received",
+    "colorGroup": "intake",
+    "displayOrder": 1,
+    "sla": {
+      "warningDays": 1,
+      "targetDays": 2,
+      "onTimeCount": 15,
+      "approachingCount": 3,
+      "overdueCount": 1
+    },
+    "buckets": [
+      { "key": "0-2", "label": "0–2 days", "count": 8 },
+      ...
+    ],
+    "total": 19
+  }]
+}
+```
+
+The `sla` object is pre-computed server-side from `WorkflowSlaThreshold`. Existing `buckets` remain for the aging heatmap. Frontend uses `sla` for SLA gauge visualizations at each stage.
+
+**5. OpenAPI Spec Backfill**
+
+The aging and hierarchy endpoints are implemented in backend code but missing from `nebula-api.yaml`. Backfill both endpoint definitions and response schemas into the spec as part of this feature.
+
+#### Frontend Changes
+
+**Component Decomposition:**
+
+```
+experience/src/features/opportunities/components/
+├── StoryCanvas.tsx                     ← MODIFY: vertical timeline; reduce chapters to 3
+├── VerticalTimeline.tsx                ← NEW: SVG vertical spine with alternating stage nodes
+├── TimelineStageNode.tsx              ← NEW: individual node (mini-vis + callout areas)
+├── MiniVisualization.tsx              ← NEW: contextual chart dispatcher per stage
+├── NarrativeCallout.tsx               ← NEW: 2-3 data-driven bullet points per stage
+├── TerminalOutcomesBranch.tsx         ← NEW: terminal branches at timeline bottom
+├── ChapterOverlayManager.tsx          ← MODIFY: reduce to Flow/Friction/Outcomes only
+├── overlays/
+│   ├── FrictionOverlay.tsx            ← KEEP: dwell time donuts + emphasis rings
+│   └── OutcomesOverlay.tsx            ← KEEP: terminal branch highlighting
+├── charts/                             ← NEW directory: SVG mini-chart components
+│   ├── IconGridChart.tsx              ← Waffle chart (LOB icons at Received)
+│   ├── SlaGaugeChart.tsx              ← SLA arc gauge (Triaging, etc.)
+│   ├── ProgressRingChart.tsx          ← Progress ring (WaitingOnBroker)
+│   ├── DonutChart.tsx                 ← Donut (UW Review, Quoted, Friction uniform)
+│   ├── StackedBarChart.tsx            ← Stacked bar (Quote Prep)
+│   ├── CountBadge.tsx                 ← Count badge (BindRequested)
+│   └── BarChart.tsx                   ← Bar chart (alternates: top brokers, etc.)
+├── ConnectedFlow.tsx                   ← REMOVE after VerticalTimeline complete
+├── TerminalOutcomesRail.tsx           ← REMOVE after TerminalOutcomesBranch complete
+├── overlays/AgingOverlay.tsx          ← REMOVE (aging is now per-stop alternate)
+└── overlays/MixOverlay.tsx            ← REMOVE (mix is now per-stop alternate)
+```
+
+**Data Loading Strategy:**
+
+| Data | When Loaded | Hook | Budget |
+|------|-------------|------|--------|
+| Nudges | Eager (mount) | `useDashboardNudges()` | Parallel |
+| KPIs | Eager (mount) | `useDashboardKpis(periodDays)` | Parallel |
+| Flow + Friction | Eager (mount) | `useOpportunityFlow(entityType, periodDays)` | Parallel |
+| Outcomes | Eager (mount) | `useOpportunityOutcomes(periodDays)` | Parallel |
+| Aging + SLA | Eager (mount) | `useOpportunityAging(entityType, periodDays)` | Parallel |
+| Tasks | Eager (mount) | `useMyTasks()` | Parallel (deferred render) |
+| Activity | Eager (mount) | `useTimelineEvents(...)` | Parallel (deferred render) |
+| Breakdown | **Lazy** (per-stop toggle) | `useOpportunityBreakdown(entityType, status, groupBy, periodDays, { enabled })` | <250ms on toggle |
+
+Initial load: 7 parallel queries. Breakdown requests lazy-load on per-stop alternate toggle.
+
+### Backend Assembly Steps
+
+1. **(A) EF Migration: Add LineOfBusiness to Submission and Renewal**
+   - Add nullable `string? LineOfBusiness` to `Submission` and `Renewal` entities
+   - Property configuration: `maxLength: 50`
+   - Generate and apply EF Core migration
+
+2. **(B) EF Migration: Create WorkflowSlaThreshold table**
+   - New entity with `(EntityType, Status)` unique constraint
+   - Seed data for submission and renewal statuses per tables above
+   - Generate and apply EF Core migration
+
+3. **(C) Update Submission/Renewal DTOs and Request Schemas**
+   - Add `LineOfBusiness` to DTOs, create requests, and update requests
+   - API-layer validation: if provided, must be one of the 10 known values; null allowed
+   - Update JSON schemas in `planning-mds/schemas/`
+
+4. **(D) Implement Breakdown Endpoint**
+   - Add `OpportunityBreakdownDto`, `OpportunityBreakdownGroupDto` DTOs
+   - Add `GetOpportunityBreakdownAsync(entityType, status, groupBy, periodDays)` to `IDashboardRepository` + `DashboardRepository`
+   - Implement groupBy join logic for all 5 dimensions (assignedUser, broker, program, lineOfBusiness, brokerState)
+   - Add to `DashboardService`
+   - Register `GET /dashboard/opportunities/{entityType}/{status}/breakdown` in `DashboardEndpoints.cs`
+   - Authorization: `dashboard_pipeline`
+
+5. **(E) Enhance Aging Endpoint with SLA Bands**
+   - Add `WorkflowSlaThresholdDto` and `SlaStatusBandsDto` DTOs
+   - Modify `GetOpportunityAgingAsync` to join `WorkflowSlaThreshold` and compute onTime/approaching/overdue counts per status
+   - Add `sla` object to `OpportunityAgingStatusDto` response
+
+6. **(F) Update OpenAPI Spec**
+   - Backfill aging endpoint definition + response schema (existing tech debt)
+   - Backfill hierarchy endpoint definition + response schema (existing tech debt)
+   - Add breakdown endpoint definition + response schema
+   - Add `lineOfBusiness` to Submission/Renewal schemas
+   - Add `sla` to aging response schema
+   - Update JSON schemas in `planning-mds/schemas/`
+
+7. **(G) Update Dev Seed Data**
+   - Add `LineOfBusiness` values to existing test submissions and renewals
+   - Distribute across LOB types for realistic visualization testing
+
+8. **(H) Unit Tests**
+   - Breakdown groupBy logic for all 5 dimensions
+   - SLA band computation (onTime/approaching/overdue boundary cases: exactly at warning, exactly at target, below, above)
+   - LOB validation (valid values, null, invalid)
+
+9. **(I) Integration Tests**
+   - Breakdown endpoint: 200 OK for each groupBy value, 400 for invalid groupBy, 401, 403
+   - Enhanced aging: SLA bands present in response, correct band assignment
+   - LOB on create/update submission and renewal
+
+### Frontend Assembly Steps
+
+1. **(J) S0000: Editorial Palette Refresh**
+   - Update CSS custom properties in `globals.css` (dark + light themes)
+   - Update glass-card, glow, gradient utilities to coral/steel-blue
+   - Add data visualization palette tokens (6 semantic colors: `--data-primary` through `--data-danger`)
+   - Replace all hardcoded violet/fuchsia hex values in components with CSS custom properties
+   - Verify WCAG AA contrast for all text/background pairs in both themes
+
+2. **(K) S0001: Three-Layer Visual Hierarchy**
+   - Restore `glass-card` + depth + glow on NudgeCardsSection, ActivityFeed, MyTasksPanel
+   - Ensure story canvas zone (KPIs, flow, chapters) remains flat/borderless
+   - Verify three-layer distinction in both dark and light themes
+
+3. **(L) S0002: Vertical Timeline**
+   - Create `VerticalTimeline.tsx` — SVG vertical spine with alternating left-right nodes
+   - Create `TimelineStageNode.tsx` — individual node with mini-vis area + callout area
+   - Create `TerminalOutcomesBranch.tsx` — fan-out branches at bottom
+   - Flow ribbons along spine (thickness proportional to transition count)
+   - Color progression follows `colorGroup` (warm-to-cool top-to-bottom)
+   - Mini-visualization area scales proportionally with stage item count
+   - Keyboard navigation (tab order follows displayOrder top-to-bottom)
+   - Wire into `StoryCanvas.tsx` replacing `ConnectedFlow.tsx`
+
+4. **(M) Add Breakdown Hook + Update Types**
+   - Create `useOpportunityBreakdown.ts` — TanStack Query hook with `enabled` flag for lazy loading
+   - Add breakdown DTOs to `types.ts`
+   - Add SLA band types to aging DTOs in `types.ts`
+   - Update `useOpportunityAging` return type to include SLA data
+
+5. **(N) S0003: Mini-Visualizations + Callouts + Alternates**
+   - Create SVG chart components: `IconGridChart`, `SlaGaugeChart`, `ProgressRingChart`, `DonutChart`, `StackedBarChart`, `CountBadge`, `BarChart`
+   - Create `MiniVisualization.tsx` — dispatcher rendering the right chart per stage mapping
+   - Create `NarrativeCallout.tsx` — 2-3 dynamically-computed bullet points per stage
+   - Implement per-stop alternate toggle (dot/chevron indicator, 150ms crossfade)
+   - Wire breakdown data into alternates needing groupBy data (LOB, broker, UW, program, brokerState)
+   - Wire SLA band data from aging endpoint into SLA gauge at Triaging (and other stages)
+   - Graceful degradation: count < 3 → count badge fallback; null LOB → "Unknown" group; missing data → skip alternate in cycle
+   - Geographic alternates: use `brokerState` groupBy, render as simplified regional dot map or bar-by-state
+
+6. **(O) S0004: Chapter Controls (3 chapters)**
+   - Modify `StoryCanvas.tsx` chapter state to 3 values: `flow | friction | outcomes`
+   - Modify `ChapterOverlayManager.tsx` to remove Aging/Mix overlay imports
+   - Remove `AgingOverlay.tsx` and `MixOverlay.tsx`
+   - Flow: contextual defaults + per-stop alternate toggles visible
+   - Friction: all stops → uniform dwell-band donuts + emphasis rings; per-stop toggles hidden
+   - Outcomes: terminal branches glow, stage visuals dim; per-stop toggles hidden
+   - Switching back to Flow restores last-selected per-stop alternate (React state)
+
+7. **(P) S0005: Responsive/Accessibility/Performance**
+   - 4 breakpoints: desktop (1280+), tablet landscape (1024), tablet portrait (768), phone (375)
+   - Desktop: vertical timeline full width, all nodes visible
+   - Phone: timeline stays vertical (natural fit); radial popovers as bottom-sheets; chapter controls as scrollable pill group
+   - Keyboard: Tab → chapter controls → timeline stage nodes → per-stop toggle → next node
+   - ARIA: `role="tablist"` on chapters, `aria-label` on all chart SVGs, callout text readable by screen reader
+   - `prefers-reduced-motion`: disable glow pulse animations, retain static shadows
+   - Performance: LCP < 2.5s, timeline SVG < 200ms, chapter switch < 150ms, max 7 parallel mount queries
+
+8. **(Q) Cleanup**
+   - Remove `ConnectedFlow.tsx`, `TerminalOutcomesRail.tsx`
+   - Remove `AgingOverlay.tsx`, `MixOverlay.tsx`
+
+9. **(R) Tests**
+   - Component tests for all new chart components (icon grid, gauge, donut, bar, etc.)
+   - StoryCanvas integration: chapter switching, period sync
+   - VerticalTimeline: node rendering, ribbon proportions, keyboard nav
+   - MiniVisualization: stage-to-chart mapping, fallback/degradation
+   - NarrativeCallout: dynamic bullet generation from data
+   - Run lint, build, test, lint:theme
+
+### QA Assembly Steps
+
+1. **(S) Test Plan** — story-to-test mapping for all 6 stories
+2. **(T) Backend Tests** — breakdown groupBy dimensions, SLA band boundaries, LOB validation, ABAC scoping
+3. **(U) Frontend E2E**
+   - Editorial palette in both themes
+   - Three-layer visual hierarchy (glass-card on operational panels, flat on story zone)
+   - Vertical timeline with correct stage ordering and alternating layout
+   - Mini-visualizations render inline with correct chart types per stage
+   - Narrative callouts display data-driven bullets
+   - Per-stop alternate toggle cycles through views (breakdown data loads on toggle)
+   - Chapter switching (Flow/Friction/Outcomes) changes all visuals uniformly
+   - Per-stop toggles hidden during Friction/Outcomes, restored on Flow
+   - Terminal outcome branches at timeline bottom
+   - Period sync across all data sources
+4. **(V) Responsive/Accessibility E2E**
+   - All 4 breakpoints render correctly
+   - Rail collapse states (4 combinations)
+   - Keyboard navigation through timeline and chapters
+   - Screen reader announces stage label + count
+   - `prefers-reduced-motion` disables animations
+5. **(W) Performance Validation** — LCP, SVG render, chapter switch, mount query count, breakdown lazy-load timing
+
+### DevOps Assembly Steps
+
+1. **(X) Migration Verification** — EF Core migrations (LOB + SLA) apply cleanly in containers; seed data populates
+2. **(Y) Runtime Smoke** — dashboard loads with seeded LOB/SLA data; all endpoints respond; no new env vars or infra
+
+### Dependency Order
+
+```
+Step 0 (Backend):   (A) LOB migration + (B) SLA migration [parallel, independent]
+Step 1 (Backend):   (C) DTO/schema updates → (D) Breakdown endpoint → (E) Aging SLA enhancement [sequential]
+Step 1 (Backend):   (F) OpenAPI spec + (G) seed data [parallel with Step 1]
+Step 2 (Backend):   (H) unit tests + (I) integration tests
+
+Step 0 (Frontend):  (J) S0000 editorial palette [independent — can start immediately]
+Step 1 (Frontend):  (K) S0001 visual hierarchy [depends on J]
+Step 2 (Frontend):  (L) S0002 vertical timeline [depends on K]
+Step 2 (Frontend):  (M) breakdown hook + types [depends on backend D]
+Step 3 (Frontend):  (N) S0003 mini-vis + callouts [depends on L + backend D + backend E]
+Step 4 (Frontend):  (O) S0004 chapter controls [depends on N]
+Step 5 (Frontend):  (P) S0005 responsive/a11y [depends on O]
+Step 6 (Frontend):  (Q) cleanup + (R) tests
+
+Step 3 (QA):        (S–W) [depends on all implementation]
+Step 3 (DevOps):    (X–Y) [depends on backend migrations]
+```
+
+Backend Step 0–1 and Frontend Step 0–1 proceed in parallel. Frontend S0003+ depends on backend breakdown + aging SLA endpoints.
+
+### Integration Checklist
+
+- [ ] API contract: breakdown endpoint added to OpenAPI spec
+- [ ] API contract: aging endpoint backfilled + SLA bands schema added
+- [ ] API contract: hierarchy endpoint backfilled
+- [ ] API contract: `lineOfBusiness` added to Submission/Renewal schemas
+- [ ] JSON schemas created/updated: breakdown response, aging SLA bands, LOB on create/update
+- [ ] Frontend types: breakdown DTO, SLA bands on aging DTO, LOB on submission/renewal
+- [ ] Frontend hooks: `useOpportunityBreakdown`, enhanced `useOpportunityAging`
+- [ ] Component decomposition: VerticalTimeline, TimelineStageNode, MiniVisualization, NarrativeCallout, 7 chart components
+- [ ] Chapter reduction: 5 → 3 with removal of AgingOverlay + MixOverlay
+- [ ] Test cases mapped to all 6 story acceptance criteria
+- [ ] Run/deploy instructions updated in F0013 GETTING-STARTED.md
+- [ ] ADR-009 written and filed
+
+### Risks and Blockers
+
+| Item | Severity | Mitigation | Owner |
+|------|----------|------------|-------|
+| LOB migration + existing null data | High | Nullable field; seed data pre-populated; icon grid groups nulls as "Unknown" | Backend Dev |
+| Breakdown endpoint query performance (GROUP BY across large tables) | Medium | Index on `(CurrentStatus, EntityType)` already exists for other queries; add composite index if profiling warrants | Backend Dev |
+| SVG mini-chart rendering 7–10 charts simultaneously | Medium | SVG is lightweight; profile against LCP budget; virtualize off-screen stages if needed | Frontend Dev |
+| Multiple interaction modes (per-stop toggles + chapter override) | Medium | Chapter override hides per-stop toggles — modes mutually exclusive; clear UI labeling | Frontend Dev + QE |
+| Aging SLA thresholds require migration to change | Low | Seed-only at MVP; values are stable defaults; admin UI deferred | Architect |
+| OpenAPI spec drift (aging/hierarchy not in spec) | Low | Backfill as part of Step F; resolves existing tech debt | Backend Dev |
+
+### Signoff Role Matrix
+
+| Role | Required | Rationale |
+|------|----------|-----------|
+| Quality Engineer | Yes | 6-story acceptance criteria, responsive/a11y, performance budgets |
+| Code Reviewer | Yes | New entity, new endpoint, SVG component decomposition |
+| Security Reviewer | Yes | Breakdown endpoint authorization, LOB data exposure |
+| DevOps | Yes | EF Core migrations (LOB + SLA table), seed data |
+| Architect | No | Patterns documented in ADR-009; no architecture exceptions |
+
+**Checkpoint F0013-A:** Framed storytelling canvas dashboard with vertical timeline, contextual mini-visualizations (LOB icon grid, SLA gauge, etc.), per-stop alternates backed by breakdown endpoint, 3-chapter controls, and editorial palette. Backend LOB, SLA, and breakdown data serving correctly with ABAC scoping.
+
+---
+
+## F0012 — Dashboard Storytelling Infographic Canvas — ARCHIVED
+
+**Updated:** 2026-03-14 — Archived, superseded by F0013
+
+> **ARCHIVED:** F0013 supersedes F0012. F0012's backend contract changes (periodDays on KPIs, avgDwellDays + emphasis on flow nodes) are implemented and carry forward into F0013. F0012's frontend flat-canvas approach is replaced by F0013's three-layer visual hierarchy.
+
+**Original Updated:** 2026-03-13 — Architecture review findings incorporated (H-ARCH-01/02, M-ARCH-01/02/03, L-ARCH-01/02/03)
 
 ### Dependencies
 
@@ -217,11 +663,11 @@ Step 2 (DevOps):     runtime smoke checks and evidence capture
 
 ---
 
-## F0011 — Dashboard Opportunities Flow-First Modernization — DEPRECATED
+## F0011 — Dashboard Opportunities Flow-First Modernization — ABANDONED
 
-**Updated:** 2026-03-13 — Deprecated, superseded by F0012
+**Updated:** 2026-03-14 — Abandoned, superseded by F0012 then F0013
 
-> **DEPRECATED:** F0012 absorbs all F0011 scope. F0011 will not be implemented separately. See F0012 assembly steps above.
+> **ABANDONED:** F0011 was first deprecated in favor of F0012, then F0012 was archived in favor of F0013. F0011 will not be implemented. Its connected flow concept influenced F0012 and F0013 but no F0011-specific code ships.
 
 **Original Updated:** 2026-03-12 — Planning assembly pass
 
@@ -336,9 +782,13 @@ Step 2 (DevOps):   deployability smoke checks and evidence capture
 
 ---
 
-## F0010 — Dashboard Opportunities Refactor (Pipeline Board + Insight Views)
+## F0010 — Dashboard Opportunities Refactor (Pipeline Board + Insight Views) — FRONTEND SUPERSEDED
 
-**Updated:** 2026-03-11 — Detailed implementation assembly plan (F0010 build pass)
+**Updated:** 2026-03-14 — Frontend Pipeline Board superseded by F0013 vertical timeline; backend endpoints (aging, hierarchy) carry forward
+
+> **FRONTEND SUPERSEDED:** F0013 replaces the Pipeline Board default view with a vertical timeline. F0010's backend endpoints (`/dashboard/opportunities/aging`, `/dashboard/opportunities/hierarchy`) remain implemented and are consumed by F0013. The Heatmap, Treemap, and Sunburst frontend views from F0010 are replaced by F0013's per-stop alternate visualizations.
+
+**Original Updated:** 2026-03-11 — Detailed implementation assembly plan (F0010 build pass)
 
 ### Dependencies
 - Existing dashboard opportunities widget shell and period controls (F0001)

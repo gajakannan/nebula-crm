@@ -2,80 +2,102 @@
 
 /* Theme Custom Properties — dark default */
 :root {
-  --shell-frame-bg: #0b1220;
+  --shell-frame-bg: #1a2332;
   --surface-bg: var(--shell-frame-bg);
-  --surface-card: rgba(30, 41, 59, 0.88);
-  --surface-card-hover: rgba(51, 65, 85, 0.96);
-  --surface-border: rgba(148, 163, 184, 0.24);
+  --surface-card: rgba(36, 48, 68, 0.88);
+  --surface-card-hover: rgba(42, 54, 80, 0.96);
+  --surface-border: #2e3a4e;
   --surface-highlight: rgba(255, 255, 255, 0.08);
-  --text-primary: #f8fafc;
-  --text-secondary: #dbe5f1;
-  --text-muted: #a6b6cc;
+  --text-primary: #e8e8e8;
+  --text-secondary: #a0a8b4;
+  --text-muted: #8d96a3;
+  --accent-primary: #e06070;
+  --accent-secondary: #5080a5;
+  --accent-tertiary: #d4a054;
+  --ring: #e06070;
+  --data-primary: #e06070;
+  --data-secondary: #5080a5;
+  --data-tertiary: #d4a054;
+  --data-quaternary: #6aaa7a;
+  --data-muted: #4a5568;
+  --data-danger: #d05050;
   --frame-bg: var(--shell-frame-bg);
-  --frame-border: rgba(148, 163, 184, 0.30);
+  --frame-border: rgba(80, 128, 165, 0.34);
   --sidebar-bg: var(--frame-bg);
   --sidebar-border: var(--frame-border);
-  --topbar-bg: #060d18;
-  --topbar-border: rgba(148, 163, 184, 0.52);
-  --sidebar-hover: rgba(245, 158, 11, 0.16);
-  --sidebar-active-bg: rgba(245, 158, 11, 0.28);
-  --sidebar-active-text: #fde68a;
-  --bg-glow-1: rgba(245, 158, 11, 0.18);
-  --bg-glow-2: rgba(71, 85, 105, 0.16);
-  --shell-inset-bg: #16243a;
+  --topbar-bg: #182131;
+  --topbar-border: rgba(80, 128, 165, 0.45);
+  --sidebar-hover: rgba(224, 96, 112, 0.16);
+  --sidebar-active-bg: rgba(224, 96, 112, 0.26);
+  --sidebar-active-text: #f6d2ce;
+  --bg-glow-1: rgba(224, 96, 112, 0.18);
+  --bg-glow-2: rgba(80, 128, 165, 0.16);
+  --shell-inset-bg: #202c41;
   --shell-inset-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -2px 0 rgba(0, 0, 0, 0.50);
-  --effect-text-shadow-logo: 0 0 8px rgba(245, 158, 11, 0.42);
+  --effect-text-shadow-logo: 0 0 8px rgba(224, 96, 112, 0.40);
   --effect-shadow-alert-error: 0 0 20px rgba(201, 92, 92, 0.08);
   --effect-shadow-alert-warning: 0 0 20px rgba(217, 119, 6, 0.14);
-  --effect-shadow-alert-info: 0 0 20px rgba(79, 143, 214, 0.12);
-  --effect-shadow-cta-brand: 0 0 12px rgba(245, 158, 11, 0.34);
+  --effect-shadow-alert-info: 0 0 20px rgba(80, 128, 165, 0.18);
+  --effect-shadow-cta-brand: 0 0 12px rgba(224, 96, 112, 0.32);
   --effect-shadow-task-overdue: 0 0 15px rgba(201, 92, 92, 0.06);
-  --effect-shadow-task-hover: 0 0 15px rgba(245, 158, 11, 0.18);
+  --effect-shadow-task-hover: 0 0 15px rgba(224, 96, 112, 0.20);
 }
 
 [data-theme="light"] {
-  --shell-frame-bg: #e2e8f0;
+  --shell-frame-bg: #f0eded;
   --surface-bg: var(--shell-frame-bg);
   --surface-card: rgba(255, 255, 255, 0.94);
-  --surface-card-hover: rgba(255, 255, 255, 0.99);
-  --surface-border: rgba(51, 65, 85, 0.14);
+  --surface-card-hover: rgba(245, 242, 240, 0.98);
+  --surface-border: #d8d2ce;
   --surface-highlight: rgba(255, 255, 255, 0.82);
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
+  --text-primary: #3a3a3a;
+  --text-secondary: #7a7a7a;
+  --text-muted: #8f8883;
+  --accent-primary: #d4726a;
+  --accent-secondary: #6a9ab8;
+  --accent-tertiary: #c08840;
+  --ring: #d4726a;
+  --data-primary: #d4726a;
+  --data-secondary: #6a9ab8;
+  --data-tertiary: #c08840;
+  --data-quaternary: #5a9068;
+  --data-muted: #a0aab4;
+  --data-danger: #c04848;
   --frame-bg: var(--shell-frame-bg);
-  --frame-border: rgba(100, 116, 139, 0.22);
+  --frame-border: rgba(106, 154, 184, 0.22);
   --sidebar-bg: var(--frame-bg);
   --sidebar-border: var(--frame-border);
-  --topbar-bg: #c0ccd9;
-  --topbar-border: rgba(71, 85, 105, 0.34);
-  --sidebar-hover: rgba(217, 119, 6, 0.10);
-  --sidebar-active-bg: rgba(217, 119, 6, 0.18);
-  --sidebar-active-text: #92400e;
-  --bg-glow-1: rgba(245, 158, 11, 0.09);
-  --bg-glow-2: rgba(100, 116, 139, 0.07);
-  --shell-inset-bg: #f1f5f9;
+  --topbar-bg: #e8e2de;
+  --topbar-border: rgba(106, 154, 184, 0.34);
+  --sidebar-hover: rgba(212, 114, 106, 0.10);
+  --sidebar-active-bg: rgba(212, 114, 106, 0.18);
+  --sidebar-active-text: #8f4f49;
+  --bg-glow-1: rgba(212, 114, 106, 0.09);
+  --bg-glow-2: rgba(106, 154, 184, 0.08);
+  --shell-inset-bg: #f5f2f0;
   --shell-inset-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.82),
     inset 0 -2px 0 rgba(148, 163, 184, 0.32);
-  --effect-text-shadow-logo: 0 0 8px rgba(217, 119, 6, 0.20);
+  --effect-text-shadow-logo: 0 0 8px rgba(212, 114, 106, 0.22);
   --effect-shadow-alert-error: 0 0 20px rgba(201, 92, 92, 0.08);
   --effect-shadow-alert-warning: 0 0 20px rgba(217, 119, 6, 0.10);
-  --effect-shadow-alert-info: 0 0 20px rgba(79, 143, 214, 0.09);
-  --effect-shadow-cta-brand: 0 0 12px rgba(217, 119, 6, 0.16);
+  --effect-shadow-alert-info: 0 0 20px rgba(106, 154, 184, 0.14);
+  --effect-shadow-cta-brand: 0 0 12px rgba(212, 114, 106, 0.20);
   --effect-shadow-task-overdue: 0 0 15px rgba(201, 92, 92, 0.06);
-  --effect-shadow-task-hover: 0 0 15px rgba(217, 119, 6, 0.10);
+  --effect-shadow-task-hover: 0 0 15px rgba(212, 114, 106, 0.12);
 }
 
 /* Nebula CRM Design Tokens */
 @theme {
   /* Brand Colors */
-  --color-nebula-violet: #f59e0b;
-  --color-nebula-fuchsia: #d97706;
-  --color-nebula-purple: #475569;
-  --color-nebula-pink: #fcd34d;
+  --color-nebula-violet: var(--accent-primary);
+  --color-nebula-fuchsia: var(--accent-secondary);
+  --color-nebula-purple: var(--data-muted);
+  --color-nebula-pink: var(--accent-tertiary);
+  --color-nebula-coral: var(--accent-primary);
+  --color-nebula-steel-blue: var(--accent-secondary);
 
   /* Status Colors */
   --color-status-success: #2f8f6a;
@@ -84,11 +106,28 @@
   --color-status-info: #4f8fd6;
 
   /* Opportunity Stage Color Groups */
-  --color-opportunity-intake: #6b7280;
-  --color-opportunity-triage: #4f7ecf;
-  --color-opportunity-waiting: #c18a2f;
-  --color-opportunity-review: #7664c7;
-  --color-opportunity-decision: #2f7f92;
+  --color-opportunity-intake: #6f7788;
+  --color-opportunity-triage: #6a9ab8;
+  --color-opportunity-waiting: #c08840;
+  --color-opportunity-review: #8a7aa5;
+  --color-opportunity-decision: #5f86a8;
+  --color-opportunity-won: var(--color-status-success);
+  --color-opportunity-lost: var(--color-status-error);
+  --color-opportunity-intake-light: color-mix(in srgb, var(--color-opportunity-intake) 66%, white);
+  --color-opportunity-triage-light: color-mix(in srgb, var(--color-opportunity-triage) 66%, white);
+  --color-opportunity-waiting-light: color-mix(in srgb, var(--color-opportunity-waiting) 66%, white);
+  --color-opportunity-review-light: color-mix(in srgb, var(--color-opportunity-review) 66%, white);
+  --color-opportunity-decision-light: color-mix(in srgb, var(--color-opportunity-decision) 66%, white);
+  --color-opportunity-won-light: color-mix(in srgb, var(--color-opportunity-won) 66%, white);
+  --color-opportunity-lost-light: color-mix(in srgb, var(--color-opportunity-lost) 66%, white);
+
+  /* Data Visualization Tokens */
+  --color-data-primary: var(--data-primary);
+  --color-data-secondary: var(--data-secondary);
+  --color-data-tertiary: var(--data-tertiary);
+  --color-data-quaternary: var(--data-quaternary);
+  --color-data-muted: var(--data-muted);
+  --color-data-danger: var(--data-danger);
 
   /* Glass Tokens — wired to CSS vars */
   --color-glass-border: var(--surface-border);
@@ -96,8 +135,9 @@
   --color-glass-bg-hover: var(--surface-card-hover);
 
   /* Glow Tokens */
-  --color-glow-violet: rgba(245, 158, 11, 0.24);
-  --color-glow-fuchsia: rgba(217, 119, 6, 0.16);
+  --color-glow-violet: color-mix(in srgb, var(--accent-primary) 34%, transparent);
+  --color-glow-fuchsia: color-mix(in srgb, var(--accent-secondary) 26%, transparent);
+  --color-ring: var(--ring);
 
   /* Text Tokens */
   --color-text-primary: var(--text-primary);
@@ -160,6 +200,23 @@ body {
   box-shadow:
     inset 0 1px 0 0 var(--surface-highlight),
     0 0 20px 0 var(--color-glow-violet);
+}
+
+.operational-panel {
+  box-shadow:
+    inset 0 1px 0 0 var(--surface-highlight),
+    0 14px 30px color-mix(in srgb, var(--frame-border) 36%, transparent);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.operational-panel:hover,
+.operational-panel:focus-within {
+  background: var(--surface-card-hover);
+  box-shadow:
+    inset 0 1px 0 0 var(--surface-highlight),
+    0 16px 34px color-mix(in srgb, var(--frame-border) 44%, transparent),
+    0 0 20px 0 var(--color-glow-violet);
+  transform: translateY(-1px);
 }
 
 /* Effect Utilities — centralize glows/shadows so theme changes stay token-driven */
@@ -266,17 +323,39 @@ body {
 }
 
 .dark .canvas-zone-break {
-  background: hsl(228 22% 7%);
+  background: color-mix(in srgb, var(--shell-frame-bg) 88%, #0f1724);
 }
 
 [data-theme="light"] .canvas-zone-break {
-  background: hsl(225 30% 97%);
+  background: #f5f2f0;
 }
 
 .canvas-chapter-overlay {
   position: relative;
   min-height: 200px;
   transition: opacity 150ms ease-in-out;
+}
+
+@media (max-width: 639px) {
+  .canvas-chapter-overlay {
+    max-height: none;
+  }
+}
+
+.mini-visual-fade {
+  animation: mini-visual-fade-in 150ms ease-in-out;
+}
+
+@keyframes mini-visual-fade-in {
+  from {
+    opacity: 0.45;
+    transform: translateY(1px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .flow-emphasis-normal {
@@ -305,7 +384,7 @@ body {
   background-color: color-mix(in srgb, var(--color-nebula-fuchsia) 8%, transparent);
 }
 
-/* Gradient Accent Top — slate/amber brand line */
+/* Gradient Accent Top — editorial coral/steel-blue brand line */
 .gradient-accent-top {
   position: relative;
   overflow: hidden;
@@ -327,7 +406,7 @@ body {
   border-radius: 1px 1px 0 0;
 }
 
-/* Gradient Accent Left — slate/amber brand line on left edge */
+/* Gradient Accent Left — editorial coral/steel-blue brand line on left edge */
 .gradient-accent-left {
   position: relative;
 }
@@ -353,7 +432,7 @@ body {
     90deg,
     rgba(63, 63, 70, 0.4) 0%,
     rgba(113, 113, 122, 0.3) 40%,
-    rgba(245, 158, 11, 0.16) 50%,
+    color-mix(in srgb, var(--accent-primary) 22%, transparent) 50%,
     rgba(113, 113, 122, 0.3) 60%,
     rgba(63, 63, 70, 0.4) 100%
   );
@@ -407,7 +486,15 @@ body {
 .sidebar-item-active {
   background: var(--sidebar-active-bg);
   color: var(--sidebar-active-text);
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.28);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-primary) 35%, transparent);
+}
+
+.shadow-brand-active {
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+.shadow-alert-blocked {
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-status-error) 28%, transparent);
 }
 
 .sidebar-item-active:hover {
@@ -510,12 +597,31 @@ body {
   animation: slide-in-left 200ms ease-out;
 }
 
+:where(
+  button,
+  a,
+  [role="button"],
+  [role="tab"],
+  select,
+  input,
+  textarea
+):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-nebula-violet) 82%, white 8%);
+  outline-offset: 2px;
+}
+
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
+  .sidebar-item,
+  .glass-card,
+  .operational-panel,
+  .mini-visual-fade,
+  .canvas-chapter-overlay,
+  .chat-panel,
   .lg-sidebar-offset,
   .animate-slide-in-left {
-    transition: none;
-    animation: none;
+    transition: none !important;
+    animation: none !important;
   }
 }

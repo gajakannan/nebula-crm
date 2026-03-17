@@ -9,29 +9,38 @@ public class DashboardService(IDashboardRepository dashboardRepo, BrokerScopeRes
 {
     private readonly ILogger<DashboardService> _logger = logger;
 
-    public Task<DashboardKpisDto> GetKpisAsync(int periodDays = 90, CancellationToken ct = default) =>
-        dashboardRepo.GetKpisAsync(periodDays, ct);
+    public Task<DashboardKpisDto> GetKpisAsync(ICurrentUserService user, int periodDays = 90, CancellationToken ct = default) =>
+        dashboardRepo.GetKpisAsync(user, periodDays, ct);
 
-    public Task<DashboardOpportunitiesDto> GetOpportunitiesAsync(int periodDays = 180, CancellationToken ct = default) =>
-        dashboardRepo.GetOpportunitiesAsync(periodDays, ct);
+    public Task<DashboardOpportunitiesDto> GetOpportunitiesAsync(ICurrentUserService user, int periodDays = 180, CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunitiesAsync(user, periodDays, ct);
 
-    public Task<OpportunityFlowDto> GetOpportunityFlowAsync(string entityType, int periodDays = 180, CancellationToken ct = default) =>
-        dashboardRepo.GetOpportunityFlowAsync(entityType, periodDays, ct);
+    public Task<OpportunityFlowDto> GetOpportunityFlowAsync(ICurrentUserService user, string entityType, int periodDays = 180, CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityFlowAsync(user, entityType, periodDays, ct);
 
-    public Task<OpportunityItemsDto> GetOpportunityItemsAsync(string entityType, string status, CancellationToken ct = default) =>
-        dashboardRepo.GetOpportunityItemsAsync(entityType, status, ct);
+    public Task<OpportunityItemsDto> GetOpportunityItemsAsync(ICurrentUserService user, string entityType, string status, CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityItemsAsync(user, entityType, status, ct);
 
-    public Task<OpportunityAgingDto> GetOpportunityAgingAsync(string entityType, int periodDays = 180, CancellationToken ct = default) =>
-        dashboardRepo.GetOpportunityAgingAsync(entityType, periodDays, ct);
+    public Task<OpportunityBreakdownDto> GetOpportunityBreakdownAsync(
+        ICurrentUserService user,
+        string entityType,
+        string status,
+        string groupBy,
+        int periodDays = 180,
+        CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityBreakdownAsync(user, entityType, status, groupBy, periodDays, ct);
 
-    public Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(int periodDays = 180, CancellationToken ct = default) =>
-        dashboardRepo.GetOpportunityHierarchyAsync(periodDays, ct);
+    public Task<OpportunityAgingDto> GetOpportunityAgingAsync(ICurrentUserService user, string entityType, int periodDays = 180, CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityAgingAsync(user, entityType, periodDays, ct);
 
-    public Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(int periodDays = 180, CancellationToken ct = default) =>
-        dashboardRepo.GetOpportunityOutcomesAsync(periodDays, ct);
+    public Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(ICurrentUserService user, int periodDays = 180, CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityHierarchyAsync(user, periodDays, ct);
 
-    public Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(string outcomeKey, int periodDays = 180, CancellationToken ct = default) =>
-        dashboardRepo.GetOpportunityOutcomeItemsAsync(outcomeKey, periodDays, ct);
+    public Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(ICurrentUserService user, int periodDays = 180, CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityOutcomesAsync(user, periodDays, ct);
+
+    public Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(ICurrentUserService user, string outcomeKey, int periodDays = 180, CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityOutcomeItemsAsync(user, outcomeKey, periodDays, ct);
 
     public async Task<NudgesResponseDto> GetNudgesAsync(Guid userId, ICurrentUserService user, CancellationToken ct = default)
     {

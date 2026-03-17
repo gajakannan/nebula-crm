@@ -24,6 +24,7 @@ public class AppDbContext : DbContext, IUnitOfWork
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<ActivityTimelineEvent> ActivityTimelineEvents => Set<ActivityTimelineEvent>();
     public DbSet<WorkflowTransition> WorkflowTransitions => Set<WorkflowTransition>();
+    public DbSet<WorkflowSlaThreshold> WorkflowSlaThresholds => Set<WorkflowSlaThreshold>();
     public DbSet<ReferenceTaskStatus> ReferenceTaskStatuses => Set<ReferenceTaskStatus>();
     public DbSet<ReferenceSubmissionStatus> ReferenceSubmissionStatuses => Set<ReferenceSubmissionStatus>();
     public DbSet<ReferenceRenewalStatus> ReferenceRenewalStatuses => Set<ReferenceRenewalStatus>();

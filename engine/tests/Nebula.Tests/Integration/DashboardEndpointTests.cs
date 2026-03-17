@@ -13,10 +13,12 @@ namespace Nebula.Tests.Integration;
 
 public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
 {
+    private readonly CustomWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
     public DashboardEndpointTests(CustomWebApplicationFactory factory)
     {
+        _factory = factory;
         var appFactory = factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
@@ -121,7 +123,60 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
             status.Buckets.Should().HaveCount(5);
             status.Buckets.Select(b => b.Key).Should().ContainInOrder("0-2", "3-5", "6-10", "11-20", "21+");
             status.Total.Should().Be(status.Buckets.Sum(b => b.Count));
+            if (status.Sla is not null)
+            {
+                status.Sla.WarningDays.Should().BeLessThan(status.Sla.TargetDays);
+                (status.Sla.OnTimeCount + status.Sla.ApproachingCount + status.Sla.OverdueCount)
+                    .Should().Be(status.Total);
+            }
         }
+    }
+
+    [Theory]
+    [InlineData("assignedUser")]
+    [InlineData("broker")]
+    [InlineData("program")]
+    [InlineData("lineOfBusiness")]
+    [InlineData("brokerState")]
+    public async Task GetOpportunityBreakdown_Returns200ForSupportedGroupByValues(string groupBy)
+    {
+        var response = await _client.GetAsync($"/dashboard/opportunities/submission/Received/breakdown?groupBy={groupBy}&periodDays=180");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var breakdown = await response.Content.ReadFromJsonAsync<OpportunityBreakdownDto>();
+        breakdown.Should().NotBeNull();
+        breakdown!.EntityType.Should().Be("submission");
+        breakdown.Status.Should().Be("Received");
+        breakdown.PeriodDays.Should().Be(180);
+        breakdown.Total.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    [Fact]
+    public async Task GetOpportunityBreakdown_InvalidGroupBy_Returns400()
+    {
+        var response = await _client.GetAsync("/dashboard/opportunities/submission/Received/breakdown?groupBy=invalid");
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetOpportunityBreakdown_Unauthenticated_Returns401()
+    {
+        var unauthenticatedFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddAuthentication(options =>
+                    {
+                        options.DefaultAuthenticateScheme = "NoAuth";
+                        options.DefaultChallengeScheme = "NoAuth";
+                    })
+                    .AddScheme<AuthenticationSchemeOptions, NoAuthHandler>("NoAuth", _ => { });
+            });
+        });
+
+        using var unauthenticatedClient = unauthenticatedFactory.CreateClient();
+        var response = await unauthenticatedClient.GetAsync("/dashboard/opportunities/submission/Received/breakdown?groupBy=broker");
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Theory]
@@ -263,5 +318,15 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
             var ticket = new AuthenticationTicket(principal, "FixedAdmin");
             return Task.FromResult(AuthenticateResult.Success(ticket));
         }
+    }
+
+    private sealed class NoAuthHandler(
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder)
+        : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+    {
+        protected override Task<AuthenticateResult> HandleAuthenticateAsync() =>
+            Task.FromResult(AuthenticateResult.Fail("Unauthenticated for test."));
     }
 }

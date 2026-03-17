@@ -34,21 +34,22 @@ This document is the working prioritization view for feature sequencing.
 | F0007 — Renewal Pipeline | MVP (planned) | Follows submission workflow foundation and shared transition patterns. |
 | F0008 — Broker Insights | MVP (planned) | Higher-value once core workflow and auth foundations are stable. |
 
-## Deprecated
+## Abandoned
 
 | Feature | Superseded By | Rationale |
 |---------|---------------|-----------|
-| [F0011 — Dashboard Opportunities Flow-First Modernization](./F0011-dashboard-opportunities-flow-modernization/README.md) | F0012 | F0012 absorbs all F0011 scope (connected flow, terminal outcomes, visual system, secondary insight rebalancing, responsive parity) and goes further by eliminating the panelized model entirely in favor of a flat infographic canvas. |
+| [F0010 — Dashboard Opportunities Refactor](./archive/F0010-dashboard-opportunities-refactor/README.md) | F0013 | F0010's Pipeline Board, Heatmap, Treemap, and Sunburst views are replaced by F0013's vertical timeline with contextual mini-visualizations. The insight views no longer fit the storytelling canvas direction. |
+| [F0011 — Dashboard Opportunities Flow-First Modernization](./archive/F0011-dashboard-opportunities-flow-modernization/README.md) | F0013 | F0011's connected flow and terminal outcomes concepts live on in F0013 but with a fundamentally different visual approach (vertical timeline + narrative callouts instead of connected flow cells). |
 
 ## Completed
 
 | Feature | Phase | Completion State |
 |---------|-------|------------------|
+| [F0013 — Dashboard Framed Storytelling Canvas](./F0013-dashboard-framed-storytelling-canvas/README.md) | MVP | Done (active folder retained via Decision A override; unresolved gate findings documented) |
 | [F0001 — Dashboard](./archive/F0001-dashboard/README.md) | MVP | Done and archived |
 | [F0002 — Broker & MGA Relationship Management](./archive/F0002-broker-relationship-management/README.md) | MVP | Done and archived (post-MVP hardening follow-ups tracked) |
 | [F0005 — IdP Migration: Keycloak → authentik](./archive/F0005-idp-migration/README.md) | Foundation | Done and archived |
 | [F0009 — Authentication + Role-Based Login](./archive/F0009-authentication-and-role-based-login/README.md) | Phase 1 | Done and archived |
-| [F0010 — Dashboard Opportunities Refactor (Pipeline Board + Insight Views)](./F0010-dashboard-opportunities-refactor/README.md) | MVP | Done |
 | [F0012 — Dashboard Storytelling Infographic Canvas (Flat Canvas + Collapsible Rails)](./archive/F0012-dashboard-storytelling-infographic-canvas/README.md) | MVP | Done and archived |
 
 ## Notes

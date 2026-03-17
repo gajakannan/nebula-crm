@@ -5,6 +5,7 @@ public class Submission : BaseEntity
     public Guid AccountId { get; set; }
     public Guid BrokerId { get; set; }
     public Guid? ProgramId { get; set; }
+    public string? LineOfBusiness { get; set; }
     public string CurrentStatus { get; set; } = "Received";
     public DateTime EffectiveDate { get; set; }
     public decimal PremiumEstimate { get; set; }

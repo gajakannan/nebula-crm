@@ -7,7 +7,10 @@ export function MyTasksWidget() {
   const { data, isLoading, isError, refetch } = useMyTasks();
 
   return (
-    <section className="canvas-section canvas-zone-default" aria-label="My tasks section">
+    <section
+      className="glass-card operational-panel rounded-xl p-4 md:p-5"
+      aria-label="My tasks section"
+    >
       <div className="mb-3">
         <h2 className="text-sm font-semibold text-text-primary">My Tasks</h2>
       </div>

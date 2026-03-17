@@ -2,7 +2,7 @@
 
 Auto-generated index of all user stories across feature folders.
 
-**Total Stories:** 41
+**Total Stories:** 47
 
 ---
 
@@ -71,11 +71,11 @@ Auto-generated index of all user stories across feature folders.
 
 | Story ID | Title | Priority | Phase | Persona |
 |----------|-------|----------|-------|---------|
-| [F0010-S0001](./F0010-dashboard-opportunities-refactor/F0010-S0001-replace-sankey-with-pipeline-board-default.md) | Replace Sankey default with Pipeline Board | High | MVP | Distribution User or Underwriter |
-| [F0010-S0002](./F0010-dashboard-opportunities-refactor/F0010-S0002-add-opportunity-aging-heatmap-view.md) | Add Opportunities Aging Heatmap view | High | MVP | Distribution User or Underwriter |
-| [F0010-S0003](./F0010-dashboard-opportunities-refactor/F0010-S0003-add-opportunity-composition-treemap-view.md) | Add Opportunities Composition Treemap view | Medium | MVP | Relationship Manager or Program Manager |
-| [F0010-S0004](./F0010-dashboard-opportunities-refactor/F0010-S0004-add-opportunity-hierarchy-sunburst-view.md) | Add Opportunities Hierarchy Sunburst view | Medium | MVP | Distribution Manager or Program Manager |
-| [F0010-S0005](./F0010-dashboard-opportunities-refactor/F0010-S0005-unify-drilldown-responsive-and-accessibility.md) | Unify drilldown, responsive layout, and accessibility across opportunities views | High | MVP | dashboard user on desktop, tablet, or phone |
+| [F0010-S0001](./archive/F0010-dashboard-opportunities-refactor/F0010-S0001-replace-sankey-with-pipeline-board-default.md) | Replace Sankey default with Pipeline Board | High | MVP | Distribution User or Underwriter |
+| [F0010-S0002](./archive/F0010-dashboard-opportunities-refactor/F0010-S0002-add-opportunity-aging-heatmap-view.md) | Add Opportunities Aging Heatmap view | High | MVP | Distribution User or Underwriter |
+| [F0010-S0003](./archive/F0010-dashboard-opportunities-refactor/F0010-S0003-add-opportunity-composition-treemap-view.md) | Add Opportunities Composition Treemap view | Medium | MVP | Relationship Manager or Program Manager |
+| [F0010-S0004](./archive/F0010-dashboard-opportunities-refactor/F0010-S0004-add-opportunity-hierarchy-sunburst-view.md) | Add Opportunities Hierarchy Sunburst view | Medium | MVP | Distribution Manager or Program Manager |
+| [F0010-S0005](./archive/F0010-dashboard-opportunities-refactor/F0010-S0005-unify-drilldown-responsive-and-accessibility.md) | Unify drilldown, responsive layout, and accessibility across opportunities views | High | MVP | dashboard user on desktop, tablet, or phone |
 
 ---
 
@@ -83,11 +83,11 @@ Auto-generated index of all user stories across feature folders.
 
 | Story ID | Title | Priority | Phase | Persona |
 |----------|-------|----------|-------|---------|
-| [F0011-S0001](./F0011-dashboard-opportunities-flow-modernization/F0011-S0001-replace-pipeline-board-with-connected-flow-default.md) | Replace Pipeline Board tiles with connected flow-first canvas default | High | MVP | Distribution User or Underwriter |
-| [F0011-S0002](./F0011-dashboard-opportunities-flow-modernization/F0011-S0002-add-terminal-outcomes-rail-and-drilldowns.md) | Add terminal outcomes rail and outcome drilldowns | High | MVP | Distribution Manager or Underwriter |
-| [F0011-S0003](./F0011-dashboard-opportunities-flow-modernization/F0011-S0003-apply-modern-opportunities-visual-system.md) | Apply modern opportunities visual system (dark depth + stage emphasis) | Medium | MVP | dashboard user |
-| [F0011-S0004](./F0011-dashboard-opportunities-flow-modernization/F0011-S0004-rebalance-secondary-insights-as-mini-views.md) | Rebalance secondary insights as mini-views | Medium | MVP | Relationship Manager or Program Manager |
-| [F0011-S0005](./F0011-dashboard-opportunities-flow-modernization/F0011-S0005-ensure-responsive-and-accessibility-parity.md) | Ensure responsive and accessibility parity for new opportunities flow | High | MVP | dashboard user on desktop, tablet, or phone |
+| [F0011-S0001](./archive/F0011-dashboard-opportunities-flow-modernization/F0011-S0001-replace-pipeline-board-with-connected-flow-default.md) | Replace Pipeline Board tiles with connected flow-first canvas default | High | MVP | Distribution User or Underwriter |
+| [F0011-S0002](./archive/F0011-dashboard-opportunities-flow-modernization/F0011-S0002-add-terminal-outcomes-rail-and-drilldowns.md) | Add terminal outcomes rail and outcome drilldowns | High | MVP | Distribution Manager or Underwriter |
+| [F0011-S0003](./archive/F0011-dashboard-opportunities-flow-modernization/F0011-S0003-apply-modern-opportunities-visual-system.md) | Apply modern opportunities visual system (dark depth + stage emphasis) | Medium | MVP | dashboard user |
+| [F0011-S0004](./archive/F0011-dashboard-opportunities-flow-modernization/F0011-S0004-rebalance-secondary-insights-as-mini-views.md) | Rebalance secondary insights as mini-views | Medium | MVP | Relationship Manager or Program Manager |
+| [F0011-S0005](./archive/F0011-dashboard-opportunities-flow-modernization/F0011-S0005-ensure-responsive-and-accessibility-parity.md) | Ensure responsive and accessibility parity for new opportunities flow | High | MVP | dashboard user on desktop, tablet, or phone |
 
 ---
 
@@ -103,11 +103,24 @@ Auto-generated index of all user stories across feature folders.
 
 ---
 
+## F0013 — Dashboard Framed Storytelling Canvas
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [F0013-S0000](./F0013-dashboard-framed-storytelling-canvas/F0013-S0000-editorial-palette-refresh-dark-and-light-themes.md) | Editorial palette refresh — dark & light themes | Critical | MVP | dashboard user |
+| [F0013-S0001](./F0013-dashboard-framed-storytelling-canvas/F0013-S0001-restore-framed-canvas-identity-with-three-layer-visual-hierarchy.md) | Restore framed canvas identity with three-layer visual hierarchy | Critical | MVP | dashboard user |
+| [F0013-S0002](./F0013-dashboard-framed-storytelling-canvas/F0013-S0002-build-timeline-bar-with-connected-stage-nodes-and-terminal-branches.md) | Build vertical timeline with connected stage nodes and terminal outcome branches | High | MVP | dashboard user |
+| [F0013-S0003](./F0013-dashboard-framed-storytelling-canvas/F0013-S0003-add-radial-donut-chart-popovers-at-each-timeline-stage-node.md) | Add contextual mini-visualizations at each timeline stage node | High | MVP | dashboard user |
+| [F0013-S0004](./F0013-dashboard-framed-storytelling-canvas/F0013-S0004-connect-chapter-controls-to-radial-popover-data-layers.md) | Connect chapter controls as uniform override for timeline visualizations | High | MVP | dashboard user |
+| [F0013-S0005](./F0013-dashboard-framed-storytelling-canvas/F0013-S0005-ensure-responsive-accessibility-and-performance-parity.md) | Ensure responsive, accessibility, and performance parity for framed storytelling canvas | Medium | MVP | dashboard user on any device or using assistive technology |
+
+---
+
 ## Summary by Phase
 
 | Phase | Count |
 |-------|-------|
-| MVP | 31 |
+| MVP | 37 |
 | MVP Hardening | 1 |
 | Phase 1 | 5 |
 | Unspecified | 4 |
@@ -118,9 +131,9 @@ Auto-generated index of all user stories across feature folders.
 
 | Priority | Count |
 |----------|-------|
-| Critical | 6 |
-| High | 23 |
-| Medium | 8 |
+| Critical | 8 |
+| High | 26 |
+| Medium | 9 |
 
 ---
 

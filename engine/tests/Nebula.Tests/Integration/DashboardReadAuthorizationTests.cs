@@ -35,6 +35,7 @@ public class DashboardReadAuthorizationTests : IClassFixture<CustomWebApplicatio
     [InlineData("/dashboard/kpis")]
     [InlineData("/dashboard/opportunities")]
     [InlineData("/dashboard/opportunities/flow?entityType=submission")]
+    [InlineData("/dashboard/opportunities/submission/Received/breakdown?groupBy=broker")]
     [InlineData("/dashboard/opportunities/outcomes")]
     [InlineData("/dashboard/opportunities/outcomes/bound/items")]
     [InlineData("/dashboard/opportunities/aging?entityType=submission")]

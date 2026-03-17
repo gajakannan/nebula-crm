@@ -66,7 +66,7 @@ public class RenewalService(
     }
 
     private static RenewalDto MapToDto(Renewal r) => new(
-        r.Id, r.AccountId, r.BrokerId, r.SubmissionId, r.CurrentStatus,
+        r.Id, r.AccountId, r.BrokerId, r.SubmissionId, r.LineOfBusiness, r.CurrentStatus,
         r.RenewalDate, r.AssignedToUserId, r.CreatedAt, r.CreatedByUserId, r.UpdatedAt, r.UpdatedByUserId);
 
     private static WorkflowTransitionRecordDto MapTransition(WorkflowTransition t) => new(

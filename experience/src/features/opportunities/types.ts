@@ -68,6 +68,28 @@ export interface OpportunityItemsDto {
   totalCount: number;
 }
 
+export type OpportunityBreakdownGroupBy =
+  | 'assignedUser'
+  | 'broker'
+  | 'program'
+  | 'lineOfBusiness'
+  | 'brokerState';
+
+export interface OpportunityBreakdownGroupDto {
+  key: string | null;
+  label: string;
+  count: number;
+}
+
+export interface OpportunityBreakdownDto {
+  entityType: OpportunityEntityType;
+  status: string;
+  groupBy: OpportunityBreakdownGroupBy;
+  periodDays: number;
+  groups: OpportunityBreakdownGroupDto[];
+  total: number;
+}
+
 // View mode for opportunities widget
 export type OpportunityViewMode = 'pipeline' | 'heatmap' | 'treemap' | 'sunburst';
 
@@ -78,11 +100,21 @@ export interface OpportunityAgingBucketDto {
   count: number;
 }
 
+export interface OpportunityAgingSlaDto {
+  warningDays: number;
+  targetDays: number;
+  totalCount: number;
+  onTimeCount: number;
+  approachingCount: number;
+  overdueCount: number;
+}
+
 export interface OpportunityAgingStatusDto {
   status: string;
   label: string;
   colorGroup: OpportunityColorGroup;
   displayOrder: number;
+  sla?: OpportunityAgingSlaDto | null;
   buckets: OpportunityAgingBucketDto[];
   total: number;
 }

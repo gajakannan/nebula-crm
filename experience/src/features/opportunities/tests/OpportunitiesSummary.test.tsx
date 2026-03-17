@@ -20,9 +20,9 @@ vi.mock('../hooks/useOpportunityAging', () => ({
   useOpportunityAging: (...args: unknown[]) => mockUseOpportunityAging(...args),
 }));
 
-const mockUseOpportunityHierarchy = vi.fn();
-vi.mock('../hooks/useOpportunityHierarchy', () => ({
-  useOpportunityHierarchy: (...args: unknown[]) => mockUseOpportunityHierarchy(...args),
+const mockUseOpportunityBreakdown = vi.fn();
+vi.mock('../hooks/useOpportunityBreakdown', () => ({
+  useOpportunityBreakdown: (...args: unknown[]) => mockUseOpportunityBreakdown(...args),
 }));
 
 const mockUseDashboardKpis = vi.fn();
@@ -133,13 +133,44 @@ describe('OpportunitiesSummary', () => {
       refetch: vi.fn(),
     });
     mockUseOpportunityAging.mockReturnValue({
-      data: null,
+      data: {
+        entityType: 'submission',
+        periodDays: 180,
+        statuses: [
+          {
+            status: 'Triaging',
+            label: 'Triaging',
+            colorGroup: 'triage',
+            displayOrder: 2,
+            sla: {
+              warningDays: 2,
+              targetDays: 5,
+              totalCount: 7,
+              onTimeCount: 3,
+              approachingCount: 2,
+              overdueCount: 2,
+            },
+            buckets: [],
+            total: 7,
+          },
+        ],
+      },
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
     });
-    mockUseOpportunityHierarchy.mockReturnValue({
-      data: null,
+    mockUseOpportunityBreakdown.mockReturnValue({
+      data: {
+        entityType: 'submission',
+        status: 'Received',
+        groupBy: 'lineOfBusiness',
+        periodDays: 180,
+        groups: [
+          { key: 'property', label: 'Property', count: 6 },
+          { key: 'casualty', label: 'Casualty', count: 4 },
+        ],
+        total: 10,
+      },
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
@@ -162,11 +193,12 @@ describe('OpportunitiesSummary', () => {
     expect(screen.getByRole('tab', { name: 'Flow' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Friction' })).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'Outcomes' })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Aging' })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Mix' })).toBeTruthy();
+    expect(screen.queryByRole('tab', { name: 'Aging' })).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Mix' })).toBeNull();
 
     expect(screen.getByRole('button', { name: 'Received stage, 10 opportunities' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Bound outcome, 12 exits/i })).toBeTruthy();
+    expect(screen.getByText(/2d warning/i)).toBeTruthy();
   });
 
   it('passes periodDays to KPI hook', () => {
@@ -177,25 +209,95 @@ describe('OpportunitiesSummary', () => {
     expect(mockUseDashboardKpis).toHaveBeenLastCalledWith(30);
   });
 
-  it('lazy-loads aging data only when aging chapter is selected', async () => {
+  it('supports keyboard chapter navigation with arrow keys', () => {
     render(<OpportunitiesSummary />);
-    expect(mockUseOpportunityAging).toHaveBeenCalledWith('submission', 180, { enabled: false });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Aging' }));
+    const flowTab = screen.getByRole('tab', { name: 'Flow' });
+    flowTab.focus();
+    fireEvent.keyDown(flowTab, { key: 'ArrowRight' });
+    expect(screen.getByRole('tab', { name: 'Friction' })).toHaveAttribute('aria-selected', 'true');
+
+    const frictionTab = screen.getByRole('tab', { name: 'Friction' });
+    fireEvent.keyDown(frictionTab, { key: 'ArrowRight' });
+    expect(screen.getByRole('tab', { name: 'Outcomes' })).toHaveAttribute('aria-selected', 'true');
+
+    const outcomesTab = screen.getByRole('tab', { name: 'Outcomes' });
+    fireEvent.keyDown(outcomesTab, { key: 'ArrowLeft' });
+    expect(screen.getByRole('tab', { name: 'Friction' })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('supports arrow-key navigation across stage nodes', () => {
+    render(<OpportunitiesSummary />);
+
+    const received = screen.getByRole('button', { name: /Received stage, 10 opportunities/i });
+    const triaging = screen.getByRole('button', { name: /Triaging stage, 7 opportunities/i });
+    received.focus();
+
+    fireEvent.keyDown(received, { key: 'ArrowDown' });
+    expect(triaging).toHaveFocus();
+
+    fireEvent.keyDown(triaging, { key: 'ArrowUp' });
+    expect(received).toHaveFocus();
+  });
+
+  it('hides per-stage alternate toggles during chapter override and restores in flow', async () => {
+    render(<OpportunitiesSummary />);
+    expect(screen.getByRole('button', { name: /cycle received mini visualization/i })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Friction' }));
+    expect(screen.queryByRole('button', { name: /cycle received mini visualization/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Outcomes' }));
+    expect(screen.queryByRole('button', { name: /cycle received mini visualization/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Flow' }));
 
     await waitFor(() => {
-      expect(mockUseOpportunityAging).toHaveBeenLastCalledWith('submission', 180, { enabled: true });
+      expect(screen.getByRole('button', { name: /cycle received mini visualization/i })).toBeTruthy();
     });
   });
 
-  it('lazy-loads mix data only when mix chapter is selected', async () => {
+  it('restores the previously selected flow mini-view after chapter overrides', async () => {
     render(<OpportunitiesSummary />);
-    expect(mockUseOpportunityHierarchy).toHaveBeenCalledWith(180, { enabled: false });
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Mix' }));
+    const cycleButton = screen.getByRole('button', { name: /cycle received mini visualization/i });
+    fireEvent.click(cycleButton);
+    expect(screen.getByText('Top brokers')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Friction' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Outcomes' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Flow' }));
 
     await waitFor(() => {
-      expect(mockUseOpportunityHierarchy).toHaveBeenLastCalledWith(180, { enabled: true });
+      expect(screen.getByText('Top brokers')).toBeTruthy();
+    });
+  });
+
+  it('enables breakdown requests lazily for the selected stage mini-view', async () => {
+    render(<OpportunitiesSummary />);
+
+    await waitFor(() => {
+      const receivedLobEnabled = mockUseOpportunityBreakdown.mock.calls.some((call) => {
+        const [, status, groupBy, , options] = call;
+        return status === 'Received' && groupBy === 'lineOfBusiness' && (options as { enabled?: boolean }).enabled === true;
+      });
+      expect(receivedLobEnabled).toBe(true);
+    });
+
+    const receivedBrokerEnabledBeforeCycle = mockUseOpportunityBreakdown.mock.calls.some((call) => {
+      const [, status, groupBy, , options] = call;
+      return status === 'Received' && groupBy === 'broker' && (options as { enabled?: boolean }).enabled === true;
+    });
+    expect(receivedBrokerEnabledBeforeCycle).toBe(false);
+
+    fireEvent.click(screen.getByRole('button', { name: /cycle received mini visualization/i }));
+
+    await waitFor(() => {
+      const receivedBrokerEnabled = mockUseOpportunityBreakdown.mock.calls.some((call) => {
+        const [, status, groupBy, , options] = call;
+        return status === 'Received' && groupBy === 'broker' && (options as { enabled?: boolean }).enabled === true;
+      });
+      expect(receivedBrokerEnabled).toBe(true);
     });
   });
 
@@ -210,5 +312,30 @@ describe('OpportunitiesSummary', () => {
     render(<OpportunitiesSummary />);
 
     expect(screen.getByText('Unable to load opportunity flow')).toBeTruthy();
+  });
+
+  it('renders empty timeline state with no popovers when all stage counts are zero', () => {
+    mockUseOpportunityFlow.mockReturnValue({
+      data: {
+        ...flowDto,
+        nodes: flowDto.nodes.map((node) => ({
+          ...node,
+          currentCount: 0,
+          inflowCount: 0,
+          outflowCount: 0,
+        })),
+        links: flowDto.links.map((link) => ({ ...link, count: 0 })),
+      },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    render(<OpportunitiesSummary />);
+
+    expect(screen.getByText('No activity in period')).toBeTruthy();
+    const received = screen.getByRole('button', { name: /Received stage, 0 opportunities/i });
+    fireEvent.click(received);
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

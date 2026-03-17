@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nebula.local/schemas/submission-update-request.schema.json",
+  "title": "SubmissionUpdateRequest",
+  "description": "Validation rules for updating a submission.",
+  "type": "object",
+  "properties": {
+    "programId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "lineOfBusiness": {
+      "anyOf": [
+        { "$ref": "https://nebula.local/schemas/line-of-business.schema.json" },
+        { "type": "null" }
+      ]
+    },
+    "currentStatus": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30
+    },
+    "effectiveDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "premiumEstimate": {
+      "type": "number",
+      "minimum": 0
+    },
+    "assignedTo": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "additionalProperties": false
+}

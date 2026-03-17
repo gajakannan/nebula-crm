@@ -3,25 +3,22 @@ release_posture:
   mode: public-preview-human-orchestrated
   summary: 'Phase B approved (2026-02-14). F0001 (Dashboard), F0002 (Broker Relationship
     Management), and F0009 (Authentication + Role-Based Login) are completed and
-    archived. Active implementation scope is F0003 (Task Center API), F0004 (Task
-    Center UI + Manager Assignment), and F0010 (Dashboard Opportunities Refactor).
+    archived. Active implementation scope is F0003 (Task Center API) and F0004 (Task
+    Center UI + Manager Assignment). F0013 (Dashboard Framed Storytelling Canvas)
+    is marked Done with active folder retained (Decision A override, 2026-03-17).
+    F0010 and F0011 are abandoned (superseded by F0013), and F0012 is archived.
     CI enforces strict infra and security gates at this stage.
 
     '
 current_stage: implementation
 implementation_scope:
-  active_feature: F0003-task-center, F0004-task-center-ui-and-assignment, F0010-dashboard-opportunities-refactor
+  active_feature: F0003-task-center, F0004-task-center-ui-and-assignment
   active_stories:
   - F0003-S0001
   - F0003-S0002
   - F0003-S0003
-  - F0010-S0001
-  - F0010-S0002
-  - F0010-S0003
-  - F0010-S0004
-  - F0010-S0005
-  note: "Implementation scope includes active F0003 and F0010 story execution;\
-    \ F0004 remains active with story decomposition pending."
+  note: "Implementation scope includes active F0003 story execution; F0004 remains\
+    \ active with story decomposition pending. F0013 is done with active folder retained."
 stages:
   framework-bootstrap:
     description: Framework scaffolding phase before solution implementation starts

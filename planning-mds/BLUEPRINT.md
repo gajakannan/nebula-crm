@@ -168,9 +168,10 @@ Status: This repository is currently focused on the agent builder framework. Pha
 - F0008: Broker Insights - Planned
 - [F0009: Authentication + Role-Based Login](features/archive/F0009-authentication-and-role-based-login/PRD.md) - Done (Archived; Phase 1)
 - [F0004: Task Center UI + Manager Assignment](features/F0004-task-center-ui-and-assignment/PRD.md) - Planned
-- [F0010: Dashboard Opportunities Refactor (Pipeline Board + Insight Views)](features/F0010-dashboard-opportunities-refactor/PRD.md) - Done
-- [F0011: Dashboard Opportunities Flow-First Modernization (Connected Pipeline + Terminal Outcomes)](features/F0011-dashboard-opportunities-flow-modernization/PRD.md) - Draft
+- [F0010: Dashboard Opportunities Refactor (Pipeline Board + Insight Views)](features/archive/F0010-dashboard-opportunities-refactor/PRD.md) - Abandoned (Superseded by F0013)
+- [F0011: Dashboard Opportunities Flow-First Modernization (Connected Pipeline + Terminal Outcomes)](features/archive/F0011-dashboard-opportunities-flow-modernization/PRD.md) - Abandoned (Superseded by F0013)
 - [F0012: Dashboard Storytelling Infographic Refactor (Unified Canvas + Collapsible Rails)](features/archive/F0012-dashboard-storytelling-infographic-canvas/PRD.md) - Done (Archived)
+- [F0013: Dashboard Framed Storytelling Canvas](features/F0013-dashboard-framed-storytelling-canvas/PRD.md) - Done (Active folder retained; Decision A override)
 
 ### 3.4 MVP Features and Stories (vertical-slice friendly)
 
@@ -207,18 +208,18 @@ Status: This repository is currently focused on the agent builder framework. Pha
 - [F0009-S0005: Seeded User Access Validation Matrix](features/archive/F0009-authentication-and-role-based-login/F0009-S0005-seeded-user-access-validation-matrix.md) - Done (Archived)
 
 **MVP Stories (Feature F0010: Dashboard Opportunities Refactor):**
-- [F0010-S0001: Replace Sankey default with Pipeline Board](features/F0010-dashboard-opportunities-refactor/F0010-S0001-replace-sankey-with-pipeline-board-default.md) - Done
-- [F0010-S0002: Add Opportunities Aging Heatmap view](features/F0010-dashboard-opportunities-refactor/F0010-S0002-add-opportunity-aging-heatmap-view.md) - Done
-- [F0010-S0003: Add Opportunities Composition Treemap view](features/F0010-dashboard-opportunities-refactor/F0010-S0003-add-opportunity-composition-treemap-view.md) - Done
-- [F0010-S0004: Add Opportunities Hierarchy Sunburst view](features/F0010-dashboard-opportunities-refactor/F0010-S0004-add-opportunity-hierarchy-sunburst-view.md) - Done
-- [F0010-S0005: Unify drilldown, responsive layout, and accessibility](features/F0010-dashboard-opportunities-refactor/F0010-S0005-unify-drilldown-responsive-and-accessibility.md) - Done
+- [F0010-S0001: Replace Sankey default with Pipeline Board](features/archive/F0010-dashboard-opportunities-refactor/F0010-S0001-replace-sankey-with-pipeline-board-default.md) - Done (Historical; superseded by F0013)
+- [F0010-S0002: Add Opportunities Aging Heatmap view](features/archive/F0010-dashboard-opportunities-refactor/F0010-S0002-add-opportunity-aging-heatmap-view.md) - Done (Historical; superseded by F0013)
+- [F0010-S0003: Add Opportunities Composition Treemap view](features/archive/F0010-dashboard-opportunities-refactor/F0010-S0003-add-opportunity-composition-treemap-view.md) - Done (Historical; superseded by F0013)
+- [F0010-S0004: Add Opportunities Hierarchy Sunburst view](features/archive/F0010-dashboard-opportunities-refactor/F0010-S0004-add-opportunity-hierarchy-sunburst-view.md) - Done (Historical; superseded by F0013)
+- [F0010-S0005: Unify drilldown, responsive layout, and accessibility](features/archive/F0010-dashboard-opportunities-refactor/F0010-S0005-unify-drilldown-responsive-and-accessibility.md) - Done (Historical; superseded by F0013)
 
 **MVP Stories (Feature F0011: Dashboard Opportunities Flow-First Modernization):**
-- [F0011-S0001: Replace Pipeline Board tiles with connected flow-first canvas default](features/F0011-dashboard-opportunities-flow-modernization/F0011-S0001-replace-pipeline-board-with-connected-flow-default.md) - Draft
-- [F0011-S0002: Add terminal outcomes rail and outcome drilldowns](features/F0011-dashboard-opportunities-flow-modernization/F0011-S0002-add-terminal-outcomes-rail-and-drilldowns.md) - Draft
-- [F0011-S0003: Apply modern opportunities visual system](features/F0011-dashboard-opportunities-flow-modernization/F0011-S0003-apply-modern-opportunities-visual-system.md) - Draft
-- [F0011-S0004: Rebalance secondary insights as mini-views](features/F0011-dashboard-opportunities-flow-modernization/F0011-S0004-rebalance-secondary-insights-as-mini-views.md) - Draft
-- [F0011-S0005: Ensure responsive and accessibility parity](features/F0011-dashboard-opportunities-flow-modernization/F0011-S0005-ensure-responsive-and-accessibility-parity.md) - Draft
+- [F0011-S0001: Replace Pipeline Board tiles with connected flow-first canvas default](features/archive/F0011-dashboard-opportunities-flow-modernization/F0011-S0001-replace-pipeline-board-with-connected-flow-default.md) - Abandoned (Not implemented; superseded by F0013)
+- [F0011-S0002: Add terminal outcomes rail and outcome drilldowns](features/archive/F0011-dashboard-opportunities-flow-modernization/F0011-S0002-add-terminal-outcomes-rail-and-drilldowns.md) - Abandoned (Not implemented; superseded by F0013)
+- [F0011-S0003: Apply modern opportunities visual system](features/archive/F0011-dashboard-opportunities-flow-modernization/F0011-S0003-apply-modern-opportunities-visual-system.md) - Abandoned (Not implemented; superseded by F0013)
+- [F0011-S0004: Rebalance secondary insights as mini-views](features/archive/F0011-dashboard-opportunities-flow-modernization/F0011-S0004-rebalance-secondary-insights-as-mini-views.md) - Abandoned (Not implemented; superseded by F0013)
+- [F0011-S0005: Ensure responsive and accessibility parity](features/archive/F0011-dashboard-opportunities-flow-modernization/F0011-S0005-ensure-responsive-and-accessibility-parity.md) - Abandoned (Not implemented; superseded by F0013)
 
 **MVP Stories (Feature F0012: Dashboard Storytelling Infographic Refactor):**
 - [F0012-S0001: Unify KPI strip and opportunities into one interactive story canvas](features/archive/F0012-dashboard-storytelling-infographic-canvas/F0012-S0001-unify-kpi-and-opportunities-into-single-story-canvas.md) - Done (Archived)
@@ -226,6 +227,14 @@ Status: This repository is currently focused on the agent builder framework. Pha
 - [F0012-S0003: Move Activity and My Tasks below the story canvas as traditional panels](features/archive/F0012-dashboard-storytelling-infographic-canvas/F0012-S0003-reflow-dashboard-layout-with-activity-and-tasks-below-canvas.md) - Done (Archived)
 - [F0012-S0004: Preserve collapsible left nav and right Neuron rail with adaptive canvas width](features/archive/F0012-dashboard-storytelling-infographic-canvas/F0012-S0004-support-collapsible-nav-and-neuron-rails-with-adaptive-canvas-width.md) - Done (Archived)
 - [F0012-S0005: Ensure responsive, accessibility, and performance parity for storytelling dashboard](features/archive/F0012-dashboard-storytelling-infographic-canvas/F0012-S0005-ensure-responsive-accessibility-and-performance-parity-for-story-canvas.md) - Done (Archived)
+
+**MVP Stories (Feature F0013: Dashboard Framed Storytelling Canvas):**
+- [F0013-S0000: Editorial palette refresh — dark & light themes](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0000-editorial-palette-refresh-dark-and-light-themes.md) - Done (Decision A override; prior QE/Code findings retained)
+- [F0013-S0001: Restore framed canvas identity with three-layer visual hierarchy](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0001-restore-framed-canvas-identity-with-three-layer-visual-hierarchy.md) - Done (Decision A override; prior QE/Code findings retained)
+- [F0013-S0002: Build vertical timeline with connected stage nodes and terminal outcome branches](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0002-build-timeline-bar-with-connected-stage-nodes-and-terminal-branches.md) - Done (Decision A override; prior QE/Code findings retained)
+- [F0013-S0003: Add contextual mini-visualizations at each timeline stage node](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0003-add-radial-donut-chart-popovers-at-each-timeline-stage-node.md) - Done (Decision A override; prior QE/Code findings retained)
+- [F0013-S0004: Connect chapter controls as uniform override for timeline visualizations](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0004-connect-chapter-controls-to-radial-popover-data-layers.md) - Done (Decision A override; prior QE/Code findings retained)
+- [F0013-S0005: Ensure responsive, accessibility, and performance parity for framed storytelling canvas](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0005-ensure-responsive-accessibility-and-performance-parity.md) - Done (Decision A override; prior QE/Code findings retained)
 
 **Story Index:** See `planning-mds/features/STORY-INDEX.md` for auto-generated summary of all stories (if generated).
 
@@ -252,7 +261,7 @@ Screen baseline details:
 
 ## 4) Phase B — Architect Spec (Public Baseline)
 
-**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0009/F0012; keep planning artifacts current during ongoing F0011/F0003/F0004 work.
+**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0009/F0012/F0013; keep planning artifacts current during ongoing F0003/F0004 work.
 
 This section defines the build-ready technical baseline for the reference implementation.
 

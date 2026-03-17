@@ -13,6 +13,7 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.CurrentStatus).IsRequired().HasMaxLength(30).HasDefaultValue("Received");
+        builder.Property(e => e.LineOfBusiness).HasMaxLength(50);
         builder.Property(e => e.EffectiveDate).IsRequired();
         builder.Property(e => e.PremiumEstimate).IsRequired().HasPrecision(18, 2);
         builder.Property(e => e.AssignedToUserId).IsRequired();

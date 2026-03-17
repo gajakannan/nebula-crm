@@ -16,6 +16,7 @@ public static class DevSeedData
     private static readonly string[] Industries = ["Manufacturing", "Healthcare", "Construction", "Retail", "Logistics", "Technology", "Hospitality", "Agriculture"];
     private static readonly string[] BrokerRoles = ["Primary", "Producer", "Account Manager", "Service", "Accounting"];
     private static readonly string[] TaskPriorities = ["Low", "Normal", "High", "Urgent"];
+    private static readonly string[] LineOfBusinessCodes = LineOfBusinessCatalog.Definitions.Select(definition => definition.Code).ToArray();
 
     private static readonly Dictionary<string, string[]> SubmissionNextStates = new(StringComparer.Ordinal)
     {
@@ -138,6 +139,7 @@ public static class DevSeedData
                 AccountId = account.Id,
                 BrokerId = broker.Id,
                 ProgramId = rng.NextDouble() < 0.7 ? programs[rng.Next(programs.Length)].Id : null,
+                LineOfBusiness = rng.NextDouble() < 0.1 ? null : LineOfBusinessCodes[rng.Next(LineOfBusinessCodes.Length)],
                 CurrentStatus = path[^1],
                 EffectiveDate = now.AddDays(rng.Next(-30, 180)),
                 PremiumEstimate = Math.Round((decimal)(rng.Next(12_000, 250_000) + rng.NextDouble()), 2),
@@ -208,6 +210,7 @@ public static class DevSeedData
                 AccountId = account.Id,
                 BrokerId = broker.Id,
                 SubmissionId = boundSubmissionIds.Count > 0 && rng.NextDouble() < 0.55 ? boundSubmissionIds[rng.Next(boundSubmissionIds.Count)] : null,
+                LineOfBusiness = rng.NextDouble() < 0.08 ? null : LineOfBusinessCodes[rng.Next(LineOfBusinessCodes.Length)],
                 CurrentStatus = path[^1],
                 RenewalDate = now.AddDays(rng.Next(-60, 180)),
                 AssignedToUserId = assignedTo,

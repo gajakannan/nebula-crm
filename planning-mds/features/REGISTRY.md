@@ -1,6 +1,6 @@
 # Feature Registry
 
-**Next Available Feature Number:** F0013
+**Next Available Feature Number:** F0014
 
 **Planning Views:**
 - Roadmap sequencing (`Now / Next / Later`): `planning-mds/features/ROADMAP.md`
@@ -13,13 +13,14 @@
 |------------|------|--------|-------|--------|
 | F0003 | Task Center + Reminders (API-only MVP) | Draft | MVP | `F0003-task-center/` |
 | F0004 | Task Center UI + Manager Assignment | Draft | Phase 1 | `F0004-task-center-ui-and-assignment/` |
-| F0010 | Dashboard Opportunities Refactor (Pipeline Board + Insight Views) | Done | MVP | `F0010-dashboard-opportunities-refactor/` |
+| F0013 | Dashboard Framed Storytelling Canvas | Done (Active folder retained; Decision A override) | MVP | `F0013-dashboard-framed-storytelling-canvas/` |
 
-## Deprecated Features
+## Abandoned Features
 
-| Feature ID | Name | Superseded By | Deprecated Date | Folder |
-|------------|------|---------------|-----------------|--------|
-| F0011 | Dashboard Opportunities Flow-First Modernization (Connected Pipeline + Terminal Outcomes) | F0012 | 2026-03-13 | `F0011-dashboard-opportunities-flow-modernization/` |
+| Feature ID | Name | Superseded By | Abandoned Date | Folder |
+|------------|------|---------------|----------------|--------|
+| F0010 | Dashboard Opportunities Refactor (Pipeline Board + Insight Views) | F0013 | 2026-03-14 | `archive/F0010-dashboard-opportunities-refactor/` |
+| F0011 | Dashboard Opportunities Flow-First Modernization (Connected Pipeline + Terminal Outcomes) | F0013 | 2026-03-14 | `archive/F0011-dashboard-opportunities-flow-modernization/` |
 
 ## Planned (Reserved IDs)
 

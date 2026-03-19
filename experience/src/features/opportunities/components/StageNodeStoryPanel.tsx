@@ -2,18 +2,21 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useOpportunityBreakdown } from '../hooks/useOpportunityBreakdown';
 import type {
+  DashboardOpportunitiesDto,
   OpportunityAgingStatusDto,
   OpportunityBreakdownGroupDto,
   OpportunityBreakdownGroupBy,
   OpportunityEntityType,
   OpportunityFlowNodeDto,
   OpportunityOutcomeDto,
+  OpportunityStatusCountDto,
 } from '../types';
 import type { StoryChapter } from './storyTypes';
 
 interface StageNodeStoryPanelProps {
   node: OpportunityFlowNodeDto;
   entityType: OpportunityEntityType;
+  opportunities?: DashboardOpportunitiesDto;
   periodDays: number;
   chapter: StoryChapter;
   outcomes: OpportunityOutcomeDto[];
@@ -82,6 +85,46 @@ function formatPct(part: number, total: number): string {
 
 function colorByIndex(index: number): string {
   return DATA_COLORS[index % DATA_COLORS.length];
+}
+
+function sumStatusCounts(
+  statuses: OpportunityStatusCountDto[] | undefined,
+  targetStatuses: string[],
+): number {
+  if (!statuses || targetStatuses.length === 0) {
+    return 0;
+  }
+
+  const lookup = new Set(targetStatuses.map((status) => status.toLowerCase()));
+  return statuses.reduce((sum, status) => (
+    lookup.has(status.status.toLowerCase()) ? sum + status.count : sum
+  ), 0);
+}
+
+function buildQuotePreparationMix(
+  opportunities: DashboardOpportunitiesDto | undefined,
+  fallbackSubmissionCount: number,
+) {
+  if (!opportunities) {
+    return {
+      submissions: Math.max(0, fallbackSubmissionCount),
+      renewals: 0,
+      total: Math.max(0, fallbackSubmissionCount),
+      hasLoadedData: false,
+    };
+  }
+
+  const submissions = sumStatusCounts(opportunities.submissions, ['QuotePreparation']);
+  // Renewals do not have a dedicated QuotePreparation state. Use the quoted renewal
+  // workload as the nearest workflow analogue for cross-entity mix storytelling.
+  const renewals = sumStatusCounts(opportunities.renewals, ['Quoted']);
+
+  return {
+    submissions,
+    renewals,
+    total: submissions + renewals,
+    hasLoadedData: true,
+  };
 }
 
 function allocateCounts(total: number, ratios: number[]): number[] {
@@ -540,6 +583,7 @@ function MiniVisual({ view, simplified }: { view: StageView; simplified: boolean
 export function StageNodeStoryPanel({
   node,
   entityType,
+  opportunities,
   periodDays,
   chapter,
   outcomes,
@@ -882,33 +926,51 @@ export function StageNodeStoryPanel({
         ],
       });
     } else if (profile === 'quotePreparation') {
+      const quotePreparationMix = buildQuotePreparationMix(opportunities, node.currentCount);
       const flowSegments: Segment[] = [
-        { label: 'Inflow', count: node.inflowCount, color: colorByIndex(0) },
-        { label: 'Outflow', count: node.outflowCount, color: colorByIndex(1) },
+        { label: 'Submissions', count: quotePreparationMix.submissions, color: colorByIndex(0) },
+        { label: 'Renewals', count: quotePreparationMix.renewals, color: colorByIndex(1) },
       ];
 
       push({
         id: 'quoteprep-stacked',
         kind: 'stacked',
-        label: 'Prep throughput',
-        summary: 'Inflow versus outflow in quote preparation.',
+        label: 'Submission vs renewal mix',
+        summary: quotePreparationMix.hasLoadedData
+          ? 'Submission versus renewal mix for quote-stage work.'
+          : 'Submission versus renewal mix is loading.',
         available: true,
-        count: node.currentCount,
+        count: quotePreparationMix.total,
         segments: flowSegments,
-        bullets: [
-          {
-            emphasis: `${node.inflowCount} entered prep`,
-            detail: 'items arriving for quote drafting.',
-          },
-          {
-            emphasis: `${node.outflowCount} exited prep`,
-            detail: 'items moved onward to quoted states.',
-          },
-          {
-            emphasis: `${node.currentCount} active in prep`,
-            detail: 'current preparation workload snapshot.',
-          },
-        ],
+        bullets: quotePreparationMix.hasLoadedData
+          ? [
+              {
+                emphasis: `${quotePreparationMix.submissions} submissions, ${quotePreparationMix.renewals} renewals`,
+                detail: 'active quote-stage mix in the selected window.',
+              },
+              {
+                emphasis: `${formatPct(quotePreparationMix.renewals, Math.max(quotePreparationMix.total, 1))} renewals`,
+                detail: 'renewal mix uses quoted-stage workload as the nearest analogue.',
+              },
+              {
+                emphasis: `${node.currentCount} submissions in prep`,
+                detail: 'current timeline stop volume for quote preparation.',
+              },
+            ]
+          : [
+              {
+                emphasis: `${node.currentCount} submissions in prep`,
+                detail: 'current quote-preparation workload.',
+              },
+              {
+                emphasis: 'Renewal mix loading',
+                detail: 'cross-entity analogue arrives with the stage summary query.',
+              },
+              {
+                emphasis: `${node.outflowCount} moved onward`,
+                detail: 'items advanced after prep work.',
+              },
+            ],
       });
 
       push({
@@ -1048,6 +1110,7 @@ export function StageNodeStoryPanel({
     boundCount,
     conversionRate,
     outcomes,
+    opportunities,
   ]);
 
   const availableViews = useMemo(() => {
@@ -1079,12 +1142,13 @@ export function StageNodeStoryPanel({
     });
   }, []);
 
-  // Eagerly request breakdowns for ALL candidate views so data is ready before toggling.
   useEffect(() => {
-    for (const view of candidateViews) {
-      requestBreakdownForView(view.id);
+    if (chapter !== 'flow') {
+      return;
     }
-  }, [candidateViews, requestBreakdownForView]);
+
+    requestBreakdownForView(selectedViewId);
+  }, [chapter, requestBreakdownForView, selectedViewId]);
 
   useEffect(() => {
     if (chapter === 'flow' && flowSelectedViewId && availableViews.some((view) => view.id === flowSelectedViewId)) {
@@ -1137,7 +1201,6 @@ export function StageNodeStoryPanel({
     const nextIndex = (activeIndex + 1) % availableViews.length;
     const nextViewId = availableViews[nextIndex].id;
     setSelectedViewId(nextViewId);
-    requestBreakdownForView(nextViewId);
     if (chapter === 'flow') {
       setFlowSelectedViewId(nextViewId);
     }

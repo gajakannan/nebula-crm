@@ -7,6 +7,7 @@ import { ChapterOverlayManager } from './ChapterOverlayManager';
 import { StageNodeStoryPanel } from './StageNodeStoryPanel';
 import type {
   OpportunityAgingDto,
+  DashboardOpportunitiesDto,
   OpportunityFlowDto,
   OpportunityFlowNodeDto,
   OpportunityOutcomeDto,
@@ -35,6 +36,7 @@ export interface OutcomeAnchor {
 
 interface ConnectedFlowProps {
   flow: OpportunityFlowDto;
+  opportunities?: DashboardOpportunitiesDto;
   outcomes: OpportunityOutcomeDto[];
   chapter: StoryChapter;
   periodDays: number;
@@ -106,6 +108,7 @@ function branchStroke(
 
 export function ConnectedFlow({
   flow,
+  opportunities,
   outcomes,
   chapter,
   periodDays,
@@ -363,6 +366,7 @@ export function ConnectedFlow({
                 <StageNodeStoryPanel
                   node={node}
                   entityType={flow.entityType}
+                  opportunities={opportunities}
                   periodDays={periodDays}
                   chapter={chapter}
                   outcomes={outcomes}

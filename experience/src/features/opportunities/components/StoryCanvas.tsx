@@ -3,6 +3,7 @@ import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { KpiCardsRow } from '@/features/kpis';
 import { cn } from '@/lib/utils';
+import { useDashboardOpportunities } from '../hooks/useDashboardOpportunities';
 import { useOpportunityFlow } from '../hooks/useOpportunityFlow';
 import { useOpportunityOutcomes } from '../hooks/useOpportunityOutcomes';
 import { useOpportunityAging } from '../hooks/useOpportunityAging';
@@ -21,6 +22,7 @@ export function StoryCanvas() {
   const [periodDays, setPeriodDays] = useState<(typeof PERIOD_WINDOWS)[number]>(180);
   const [chapter, setChapter] = useState<StoryChapter>('flow');
 
+  const opportunitiesQuery = useDashboardOpportunities(periodDays);
   const flowQuery = useOpportunityFlow('submission', periodDays);
   const outcomesQuery = useOpportunityOutcomes(periodDays);
   const agingQuery = useOpportunityAging('submission', periodDays);
@@ -154,15 +156,16 @@ export function StoryCanvas() {
         {flowQuery.data && (
           <ConnectedFlow
             flow={flowQuery.data}
+            opportunities={opportunitiesQuery.data}
             outcomes={outcomesQuery.data?.outcomes ?? []}
-              chapter={chapter}
-              periodDays={periodDays}
-              outcomesLoading={outcomesQuery.isLoading}
-              outcomesError={outcomesQuery.isError}
-              onRetryOutcomes={() => outcomesQuery.refetch()}
-              aging={agingQuery.data}
-            />
-          )}
+            chapter={chapter}
+            periodDays={periodDays}
+            outcomesLoading={outcomesQuery.isLoading}
+            outcomesError={outcomesQuery.isError}
+            onRetryOutcomes={() => outcomesQuery.refetch()}
+            aging={agingQuery.data}
+          />
+        )}
       </section>
     </section>
   );

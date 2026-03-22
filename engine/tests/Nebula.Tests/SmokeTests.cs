@@ -13,12 +13,12 @@ public class SmokeTests
 
         names.Should().Contain("Id");
         names.Should().Contain("CreatedAt");
-        names.Should().Contain("CreatedBy");
+        names.Should().Contain("CreatedByUserId");
         names.Should().Contain("UpdatedAt");
-        names.Should().Contain("UpdatedBy");
+        names.Should().Contain("UpdatedByUserId");
         names.Should().Contain("IsDeleted");
         names.Should().Contain("DeletedAt");
-        names.Should().Contain("DeletedBy");
+        names.Should().Contain("DeletedByUserId");
         names.Should().Contain("RowVersion");
     }
 
@@ -32,12 +32,12 @@ public class SmokeTests
     [Theory]
     [InlineData(typeof(Account), new[] { "Name", "Industry", "PrimaryState", "Region", "Status" })]
     [InlineData(typeof(MGA), new[] { "Name", "ExternalCode", "Status" })]
-    [InlineData(typeof(Nebula.Domain.Entities.Program), new[] { "Name", "ProgramCode", "MgaId", "ManagedBySubject" })]
-    [InlineData(typeof(Broker), new[] { "LegalName", "LicenseNumber", "State", "Status", "Email", "Phone", "ManagedBySubject", "MgaId", "PrimaryProgramId" })]
+    [InlineData(typeof(Nebula.Domain.Entities.Program), new[] { "Name", "ProgramCode", "MgaId", "ManagedByUserId" })]
+    [InlineData(typeof(Broker), new[] { "LegalName", "LicenseNumber", "State", "Status", "Email", "Phone", "BrokerTenantId", "ManagedByUserId", "MgaId", "PrimaryProgramId" })]
     [InlineData(typeof(Contact), new[] { "BrokerId", "AccountId", "FullName", "Email", "Phone", "Role" })]
-    [InlineData(typeof(Submission), new[] { "AccountId", "BrokerId", "ProgramId", "CurrentStatus", "EffectiveDate", "PremiumEstimate", "AssignedTo" })]
-    [InlineData(typeof(Renewal), new[] { "AccountId", "BrokerId", "SubmissionId", "CurrentStatus", "RenewalDate", "AssignedTo" })]
-    [InlineData(typeof(TaskItem), new[] { "Title", "Description", "Status", "Priority", "DueDate", "AssignedTo", "LinkedEntityType", "LinkedEntityId", "CompletedAt" })]
+    [InlineData(typeof(Submission), new[] { "AccountId", "BrokerId", "ProgramId", "LineOfBusiness", "CurrentStatus", "EffectiveDate", "PremiumEstimate", "AssignedToUserId" })]
+    [InlineData(typeof(Renewal), new[] { "AccountId", "BrokerId", "SubmissionId", "LineOfBusiness", "CurrentStatus", "RenewalDate", "AssignedToUserId" })]
+    [InlineData(typeof(TaskItem), new[] { "Title", "Description", "Status", "Priority", "DueDate", "AssignedToUserId", "LinkedEntityType", "LinkedEntityId", "CompletedAt" })]
     public void Domain_BaseEntityDescendant_HasExpectedProperties(Type entityType, string[] expectedProperties)
     {
         entityType.Should().BeDerivedFrom<BaseEntity>();
@@ -49,8 +49,8 @@ public class SmokeTests
     }
 
     [Theory]
-    [InlineData(typeof(ActivityTimelineEvent), new[] { "Id", "EntityType", "EntityId", "EventType", "EventPayloadJson", "EventDescription", "ActorSubject", "ActorDisplayName", "OccurredAt" })]
-    [InlineData(typeof(WorkflowTransition), new[] { "Id", "WorkflowType", "EntityId", "FromState", "ToState", "Reason", "ActorSubject", "OccurredAt" })]
+    [InlineData(typeof(ActivityTimelineEvent), new[] { "Id", "EntityType", "EntityId", "EventType", "EventPayloadJson", "EventDescription", "BrokerDescription", "ActorUserId", "ActorDisplayName", "OccurredAt" })]
+    [InlineData(typeof(WorkflowTransition), new[] { "Id", "WorkflowType", "EntityId", "FromState", "ToState", "Reason", "ActorUserId", "OccurredAt" })]
     public void Domain_AppendOnlyEntity_DoesNotInheritBaseEntity(Type entityType, string[] expectedProperties)
     {
         entityType.Should().NotBeDerivedFrom<BaseEntity>();
@@ -66,7 +66,8 @@ public class SmokeTests
     {
         typeof(UserProfile).Should().NotBeDerivedFrom<BaseEntity>();
         var names = typeof(UserProfile).GetProperties().Select(p => p.Name).ToList();
-        names.Should().Contain("Subject");
+        names.Should().Contain("IdpIssuer");
+        names.Should().Contain("IdpSubject");
         names.Should().Contain("Email");
         names.Should().Contain("DisplayName");
         names.Should().Contain("Department");

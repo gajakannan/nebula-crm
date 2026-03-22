@@ -74,7 +74,7 @@ export default function CreateBrokerPage() {
         </Link>
 
         <Card className="max-w-lg">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form noValidate onSubmit={handleSubmit} className="space-y-4">
             <TextInput
               label="Legal Name"
               required

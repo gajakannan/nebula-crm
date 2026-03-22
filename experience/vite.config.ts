@@ -83,12 +83,29 @@ export default defineConfig(() => {
     },
     test: {
       environment: 'jsdom',
+      environmentOptions: {
+        jsdom: {
+          url: 'http://localhost/',
+        },
+      },
       globals: true,
       setupFiles: ['./src/test-setup.ts'],
       include: ['src/**/*.test.{ts,tsx}'],
       exclude: ['tests/visual/**'],
       alias: {
         '@': path.resolve(__dirname, './src'),
+      },
+      coverage: {
+        provider: 'v8',
+        reportsDirectory: './coverage',
+        reporter: ['text', 'json-summary', 'json', 'lcov', 'html'],
+        include: ['src/**/*.{ts,tsx}'],
+        exclude: [
+          'src/**/*.d.ts',
+          'src/test-setup.ts',
+          'src/vite-env.d.ts',
+          'src/main.tsx',
+        ],
       },
     },
   }

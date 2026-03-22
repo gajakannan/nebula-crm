@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 
 namespace Nebula.Tests.Integration;
 
+[Collection(IntegrationTestCollection.Name)]
 public class DashboardReadAuthorizationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;

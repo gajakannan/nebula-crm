@@ -24,6 +24,7 @@ namespace Nebula.Tests.Integration;
 /// the real JWT bearer middleware executes (not the dev no-op handler). A local HMAC
 /// symmetric key replaces the authentik JWKS endpoint to avoid requiring a live IdP.
 /// </summary>
+[Collection(IntegrationTestCollection.Name)]
 public class JwtAudienceValidationTests : IClassFixture<JwtAudienceValidationFactory>
 {
     private const string ValidAudience = "nebula";

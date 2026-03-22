@@ -67,7 +67,8 @@ function wrapper({ children }: { children: ReactNode }) {
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
-  navigateSpy.mockClear();
+  vi.clearAllMocks();
+  navigateSpy.mockReset();
   vi.mocked(oidcUserManager.removeUser).mockResolvedValue(undefined);
   vi.mocked(oidcUserManager.clearStaleState).mockResolvedValue(undefined);
 });
@@ -129,12 +130,9 @@ describe('useSessionTeardown — reason: session_expired', () => {
 
     const { result } = renderHook(() => useSessionTeardown(), { wrapper });
 
-    // Must not throw
-    await expect(
-      act(async () => {
-        await result.current('session_expired');
-      }),
-    ).resolves.not.toThrow();
+    await act(async () => {
+      await result.current('session_expired');
+    });
 
     // OIDC state cleared despite fetch failure
     expect(oidcUserManager.removeUser).toHaveBeenCalledOnce();
@@ -155,11 +153,9 @@ describe('useSessionTeardown — reason: session_expired', () => {
 
     const { result } = renderHook(() => useSessionTeardown(), { wrapper });
 
-    await expect(
-      act(async () => {
-        await result.current('session_expired');
-      }),
-    ).resolves.not.toThrow();
+    await act(async () => {
+      await result.current('session_expired');
+    });
 
     expect(oidcUserManager.removeUser).toHaveBeenCalledOnce();
     expect(oidcUserManager.clearStaleState).toHaveBeenCalledOnce();
@@ -227,11 +223,9 @@ describe('useSessionTeardown — reason: logout', () => {
 
     const { result } = renderHook(() => useSessionTeardown(), { wrapper });
 
-    await expect(
-      act(async () => {
-        await result.current('logout');
-      }),
-    ).resolves.not.toThrow();
+    await act(async () => {
+      await result.current('logout');
+    });
 
     expect(oidcUserManager.removeUser).toHaveBeenCalledOnce();
     expect(oidcUserManager.clearStaleState).toHaveBeenCalledOnce();

@@ -41,7 +41,11 @@ export default function BrokerListPage() {
           </CardHeader>
 
           <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+            <label htmlFor="broker-directory-search" className="sr-only">
+              Search brokers
+            </label>
             <input
+              id="broker-directory-search"
               type="text"
               placeholder="Search by name or license..."
               value={search}
@@ -51,7 +55,11 @@ export default function BrokerListPage() {
               }}
               className="flex-1 rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-nebula-violet focus:outline-none focus:ring-1 focus:ring-nebula-violet"
             />
+            <label htmlFor="broker-directory-status" className="sr-only">
+              Filter brokers by status
+            </label>
             <select
+              id="broker-directory-status"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);

@@ -14,6 +14,7 @@ namespace Nebula.Tests.Integration;
 ///   3. Missing broker_tenant_id claim → 403 broker_scope_unresolvable
 ///   4. GET /dashboard/kpis returns 403 for BrokerUser (not in policy §2.10)
 /// </summary>
+[Collection(IntegrationTestCollection.Name)]
 public class BrokerUserAccessTests(CustomWebApplicationFactory factory)
     : IClassFixture<CustomWebApplicationFactory>, IDisposable
 {
@@ -161,10 +162,10 @@ public class BrokerUserAccessTests(CustomWebApplicationFactory factory)
         TestAuthHandler.TestNebulaRoles = ["Admin"];
         TestAuthHandler.TestBrokerTenantId = null;
 
-        var licenseNumber = $"TEST-{Guid.NewGuid():N[..8]}";
+        var licenseNumber = $"TEST-{Guid.NewGuid().ToString("N")[..8]}";
         var createResponse = await _client.PostAsJsonAsync("/brokers", new
         {
-            legalName = $"Test BrokerUser Broker {Guid.NewGuid():N[..4]}",
+            legalName = $"Test BrokerUser Broker {Guid.NewGuid().ToString("N")[..4]}",
             licenseNumber,
             state = "CA",
             email = (string?)null,

@@ -12,6 +12,7 @@ namespace Nebula.Tests.Integration;
 /// The authentik revocation call is skipped in Development mode because
 /// <c>Authentication:Authority</c> is not set, so no outbound HTTP is made.
 /// </summary>
+[Collection(IntegrationTestCollection.Name)]
 public class AuthEndpointTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
 {
     // The factory uses UseEnvironment("Development"), which means the JWT validation

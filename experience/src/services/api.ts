@@ -74,9 +74,21 @@ async function resolveToken(): Promise<string> {
   return getDevToken()
 }
 
+function resolveApiUrl(path: string): string {
+  if (/^https?:\/\//.test(path)) {
+    return path
+  }
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return new URL(`${API_BASE}${path}`, window.location.origin).toString()
+  }
+
+  return `${API_BASE}${path}`
+}
+
 async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const token = await resolveToken()
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(resolveApiUrl(path), {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -101,7 +113,7 @@ async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
 
 async function fetchApiNoBody(path: string, options?: RequestInit): Promise<void> {
   const token = await resolveToken()
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(resolveApiUrl(path), {
     ...options,
     headers: {
       'Content-Type': 'application/json',

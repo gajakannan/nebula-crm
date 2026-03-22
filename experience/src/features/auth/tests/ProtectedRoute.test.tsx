@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { ProtectedRoute } from '../ProtectedRoute';
@@ -21,7 +21,9 @@ import { ProtectedRoute } from '../ProtectedRoute';
 // Mock oidcUserManager
 // ---------------------------------------------------------------------------
 
-const mockGetUser = vi.fn();
+const { mockGetUser } = vi.hoisted(() => ({
+  mockGetUser: vi.fn(),
+}));
 
 vi.mock('../oidcUserManager', () => ({
   oidcUserManager: {
@@ -125,6 +127,8 @@ describe('ProtectedRoute', () => {
     expect(container.innerHTML).toBe('');
 
     // Resolve to unblock (cleanup)
-    resolveGetUser!(null);
+    await act(async () => {
+      resolveGetUser!(null);
+    });
   });
 });

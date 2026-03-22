@@ -59,7 +59,8 @@
       "Bash(docker info:*)",
       "Bash(~/.dotnet/tools/reportgenerator -reports:/tmp/nebula-coverage/*/coverage.cobertura.xml -targetdir:/tmp/nebula-coverage/report -reporttypes:TextSummary)",
       "Bash(./scripts/smoke-test.sh 2>&1)",
-      "Bash(./scripts/smoke-test.sh --user john.miller)"
+      "Bash(./scripts/smoke-test.sh --user john.miller)",
+      "Bash(docker run:*)"
     ]
   }
 }

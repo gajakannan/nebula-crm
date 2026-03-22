@@ -8,6 +8,7 @@ using Nebula.Application.DTOs;
 
 namespace Nebula.Tests.Integration;
 
+[Collection(IntegrationTestCollection.Name)]
 public class TaskEndpointTests(CustomWebApplicationFactory factory)
     : IClassFixture<CustomWebApplicationFactory>, IDisposable
 {
@@ -584,9 +585,11 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         // Now get the user ID from the DB
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Nebula.Infrastructure.Persistence.AppDbContext>();
+        const string issuer = "http://test.local/application/o/nebula/";
+        const string subject = "test-user-001";
         var profile = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
             db.Set<Nebula.Domain.Entities.UserProfile>()
-                .Where(u => u.IdpSubject == "test-user-001"));
+                .Where(u => u.IdpIssuer == issuer && u.IdpSubject == subject));
         return profile!.Id;
     }
 

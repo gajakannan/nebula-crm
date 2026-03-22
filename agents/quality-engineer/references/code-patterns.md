@@ -338,7 +338,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-dotnet@v3
-      - run: dotnet test /p:CollectCoverage=true
+      - run: dotnet test --collect:"XPlat Code Coverage"
       - run: dotnet test --filter Category=Integration
       - name: Upload coverage
         uses: codecov/codecov-action@v3

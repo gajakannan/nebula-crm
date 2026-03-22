@@ -16,6 +16,7 @@ using Nebula.Application.Common;
 
 namespace Nebula.Tests.Integration;
 
+[Collection(IntegrationTestCollection.Name)]
 public class DashboardPartialFailureTests : IClassFixture<CustomWebApplicationFactory>, IDisposable
 {
     private readonly Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> _faultFactory;

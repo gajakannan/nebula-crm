@@ -260,7 +260,7 @@ jobs:
         if: matrix.component == 'backend'
         run: |
           cd engine
-          dotnet test /p:CollectCoverage=true
+          dotnet test --collect:"XPlat Code Coverage"
 
       - name: Run Frontend Tests
         if: matrix.component == 'frontend'

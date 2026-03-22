@@ -671,8 +671,8 @@ dotnet stryker
 
 **Example:**
 ```bash
-dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
-reportgenerator -reports:coverage.cobertura.xml -targetdir:coverage-report
+dotnet test engine/tests/Nebula.Tests/Nebula.Tests.csproj --collect:"XPlat Code Coverage"
+reportgenerator -reports:"engine/tests/Nebula.Tests/TestResults/**/coverage.cobertura.xml" -targetdir:coverage-report
 ```
 
 ---
@@ -983,7 +983,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-dotnet@v3
-      - run: dotnet test /p:CollectCoverage=true
+      - run: dotnet test engine/tests/Nebula.Tests/Nebula.Tests.csproj --collect:"XPlat Code Coverage"
       - run: dotnet stryker  # Mutation testing
 
   ai-tests:

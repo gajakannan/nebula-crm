@@ -95,7 +95,7 @@ export function ContactFormModal({ brokerId, contact, open, onClose }: ContactFo
 
   return (
     <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Contact' : 'Add Contact'}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form noValidate onSubmit={handleSubmit} className="space-y-4">
         <TextInput
           label="Full Name"
           required

@@ -13,6 +13,7 @@ namespace Nebula.Tests.Integration;
 /// and the 10-item cap returned by GET /dashboard/nudges.
 /// F0001-S0005 acceptance criteria coverage.
 /// </summary>
+[Collection(IntegrationTestCollection.Name)]
 public class NudgePriorityTests(CustomWebApplicationFactory factory)
     : IClassFixture<CustomWebApplicationFactory>, IAsyncLifetime
 {
@@ -67,7 +68,7 @@ public class NudgePriorityTests(CustomWebApplicationFactory factory)
         var broker = new Broker
         {
             LegalName = "Nudge Priority Broker",
-            LicenseNumber = "NPT-001",
+            LicenseNumber = $"NPT-{Guid.NewGuid().ToString("N")[..8]}",
             State = "CA",
             Status = "Active",
             CreatedAt = now2,

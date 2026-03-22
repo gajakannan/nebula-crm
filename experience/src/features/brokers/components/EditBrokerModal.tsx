@@ -90,7 +90,7 @@ export function EditBrokerModal({ broker, open, onClose }: EditBrokerModalProps)
 
   return (
     <Modal open={open} onClose={onClose} title="Edit Broker">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form noValidate onSubmit={handleSubmit} className="space-y-4">
         <TextInput
           label="Legal Name"
           required

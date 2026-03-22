@@ -410,7 +410,7 @@ For code examples of common test patterns (Testing Error Scenarios, Testing Asyn
 | **Database** | xUnit + Testcontainers | `dotnet test --filter Category=Database` |
 | **API** | Bruno CLI | `bru run --env dev` |
 | **Load** | k6 | `k6 run load-test.js` |
-| **Coverage** | Coverlet | `dotnet test /p:CollectCoverage=true` |
+| **Coverage** | Coverlet | `dotnet test --collect:"XPlat Code Coverage"` |
 
 ### AI/Neuron (neuron/)
 
@@ -441,7 +441,7 @@ For code examples of common test patterns (Testing Error Scenarios, Testing Asyn
 ### Coverage Below Threshold
 **Symptom:** CI quality gate blocks merge due to coverage below 80%.
 **Cause:** New code added without corresponding tests, or tests don't exercise business logic paths.
-**Solution:** Run `dotnet test /p:CollectCoverage=true` (backend) or `npm run test:coverage` (frontend) locally. Focus coverage on domain and application layers, not infrastructure.
+**Solution:** Run the repo's standard backend coverage command (typically `dotnet test --collect:"XPlat Code Coverage"`) or `npm run test:coverage` (frontend) locally. Focus coverage on domain and application layers, not infrastructure.
 
 ### E2E Tests Slow or Timing Out
 **Symptom:** Playwright tests take too long or fail with timeout errors.

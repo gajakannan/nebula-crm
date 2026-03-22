@@ -13,7 +13,6 @@
 |------------|------|--------|-------|--------|
 | F0004 | Task Center UI + Manager Assignment | Draft | Phase 1 | `F0004-task-center-ui-and-assignment/` |
 | F0014 | DevOps Smoke Test Automation | In Progress | Infrastructure | `F0014-devops-smoke-test-automation/` |
-| F0015 | Frontend Quality Gates + Test Infrastructure | Draft | Infrastructure | `F0015-frontend-quality-gates-and-test-infrastructure/` |
 
 ## Abandoned Features
 
@@ -41,6 +40,7 @@
 | F0012 | Dashboard Storytelling Infographic Canvas (Flat Canvas + Collapsible Rails) | 2026-03-14 | `archive/F0012-dashboard-storytelling-infographic-canvas/` |
 | F0003 | Task Center + Reminders (API-only MVP) | 2026-03-20 | `archive/F0003-task-center/` |
 | F0013 | Dashboard Framed Storytelling Canvas | 2026-03-19 | `archive/F0013-dashboard-framed-storytelling-canvas/` |
+| F0015 | Frontend Quality Gates + Test Infrastructure | 2026-03-21 | `archive/F0015-frontend-quality-gates-and-test-infrastructure/` |
 
 ## Numbering Rules
 

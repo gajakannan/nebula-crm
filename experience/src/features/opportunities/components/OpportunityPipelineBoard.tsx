@@ -53,7 +53,7 @@ export function OpportunityPipelineBoard({
         <div className="overflow-x-auto pb-2">
           <div className="flex min-w-max items-center" role="list">
             {orderedStatuses.map((status, index) => (
-              <div key={status.status} className="flex items-center">
+              <div key={status.status} className="flex items-center" role="listitem">
                 <PipelineStageCard
                   status={status.status}
                   count={status.count}
@@ -137,7 +137,6 @@ function PipelineStageCard({
   const trigger = (
     <button
       type="button"
-      role="listitem"
       aria-label={`${statusLabel}: ${count} opportunities`}
       className={cn(
         'flex min-w-[7rem] flex-col items-center gap-1 rounded-lg border border-border-muted bg-surface-card px-3 py-2 text-center transition-colors hover:bg-surface-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nebula-violet/50',

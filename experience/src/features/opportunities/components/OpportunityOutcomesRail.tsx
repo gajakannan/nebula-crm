@@ -34,6 +34,7 @@ export function OpportunityOutcomesRail({
       </h3>
       <div className="space-y-2">
         {outcomes.map((outcome) => {
+          const percentLabel = outcome.percentOfTotal.toFixed(1);
           const trigger = (
             <button
               type="button"
@@ -41,14 +42,14 @@ export function OpportunityOutcomesRail({
                 'w-full rounded-md bg-surface-main/55 px-3 py-2 text-left transition hover:bg-surface-main/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-nebula-violet/45',
                 branchStyleClass(outcome.branchStyle),
               )}
-              aria-label={`${outcome.label}: ${outcome.count} exits, ${outcome.percentOfTotal}% of total`}
+              aria-label={`${outcome.label}: ${outcome.count} exits, ${percentLabel}% of total`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium text-text-primary">
                   {outcome.label}
                 </span>
                 <span className="text-xs text-text-muted">
-                  {outcome.percentOfTotal.toFixed(1)}%
+                  {percentLabel}%
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-between text-xs text-text-muted">

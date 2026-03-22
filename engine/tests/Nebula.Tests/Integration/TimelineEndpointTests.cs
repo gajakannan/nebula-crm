@@ -8,15 +8,18 @@ namespace Nebula.Tests.Integration;
 /// <summary>
 /// Integration tests for timeline pagination contract (F0002-S0007, G4).
 /// </summary>
+[Collection(IntegrationTestCollection.Name)]
 public class TimelineEndpointTests(CustomWebApplicationFactory factory)
     : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
-    private async Task<BrokerDto> CreateBrokerAsync(string license)
+    private async Task<BrokerDto> CreateBrokerAsync(string licensePrefix)
     {
+        var license = $"{licensePrefix}-{Guid.NewGuid().ToString("N")[..8]}";
         var response = await _client.PostAsJsonAsync("/brokers",
             new BrokerCreateDto("Timeline Test Broker", license, "CA", null, null));
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
         return (await response.Content.ReadFromJsonAsync<BrokerDto>())!;
     }
 

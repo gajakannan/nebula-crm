@@ -1,6 +1,6 @@
 # F0015 — Frontend Quality Gates + Test Infrastructure
 
-**Status:** Draft
+**Status:** Done (Archived 2026-03-21)
 **Priority:** High
 **Phase:** Infrastructure
 **Owner:** Architect + Frontend Developer + Quality Engineer + DevOps
@@ -21,9 +21,9 @@ Bring Nebula's actual frontend validation flow in line with the documented testi
 
 | ID | Title | Status |
 |----|-------|--------|
-| [F0015-S0001](./F0015-S0001-establish-frontend-test-infrastructure-and-commands.md) | Establish frontend test infrastructure and commands | Draft |
-| [F0015-S0002](./F0015-S0002-activate-nebula-frontend-quality-gates-and-evidence.md) | Activate Nebula frontend quality gates and evidence | Draft |
-| [F0015-S0003](./F0015-S0003-backfill-critical-frontend-coverage-and-record-full-validation-run.md) | Backfill critical frontend coverage and record one full validation run | Draft |
+| [F0015-S0001](./F0015-S0001-establish-frontend-test-infrastructure-and-commands.md) | Establish frontend test infrastructure and commands | Done |
+| [F0015-S0002](./F0015-S0002-activate-nebula-frontend-quality-gates-and-evidence.md) | Activate Nebula frontend quality gates and evidence | Done |
+| [F0015-S0003](./F0015-S0003-backfill-critical-frontend-coverage-and-record-full-validation-run.md) | Backfill critical frontend coverage and record one full validation run | Done |
 
 **Total Stories:** 3
-**Completed:** 0 / 3
+**Completed:** 3 / 3

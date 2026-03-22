@@ -120,9 +120,9 @@ Auto-generated index of all user stories across feature folders.
 
 | Story ID | Title | Priority | Phase | Persona |
 |----------|-------|----------|-------|---------|
-| [F0015-S0001](./F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0001-establish-frontend-test-infrastructure-and-commands.md) | Establish frontend test infrastructure and commands | Critical | Infrastructure | frontend engineer |
-| [F0015-S0002](./F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0002-activate-nebula-frontend-quality-gates-and-evidence.md) | Activate Nebula frontend quality gates and evidence | Critical | Infrastructure | release approver |
-| [F0015-S0003](./F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0003-backfill-critical-frontend-coverage-and-record-full-validation-run.md) | Backfill critical frontend coverage and record one full validation run | High | Infrastructure | quality engineer |
+| [F0015-S0001](./archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0001-establish-frontend-test-infrastructure-and-commands.md) | Establish frontend test infrastructure and commands | Critical | Infrastructure | frontend engineer |
+| [F0015-S0002](./archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0002-activate-nebula-frontend-quality-gates-and-evidence.md) | Activate Nebula frontend quality gates and evidence | Critical | Infrastructure | release approver |
+| [F0015-S0003](./archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0003-backfill-critical-frontend-coverage-and-record-full-validation-run.md) | Backfill critical frontend coverage and record one full validation run | High | Infrastructure | quality engineer |
 
 ---
 

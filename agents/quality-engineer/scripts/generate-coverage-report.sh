@@ -24,6 +24,8 @@
 # Notes:
 # - Coverage validation uses validate-test-coverage.py in this folder.
 # - This script runs each layer independently and prints a final summary.
+# - Backend fallback prefers the XPlat collector when `coverlet.collector`
+#   is referenced, and falls back to `coverlet.msbuild` for older repos.
 
 FRONTEND_DIR="${FRONTEND_DIR:-experience}"
 BACKEND_DIR="${BACKEND_DIR:-engine}"
@@ -85,6 +87,73 @@ find_package_manager() {
     echo "npm"
     return 0
   fi
+  return 1
+}
+
+make_temp_dir() {
+  base_dir="$1"
+  mkdir -p "$base_dir" || return 1
+
+  if command -v mktemp >/dev/null 2>&1; then
+    mktemp -d "${base_dir}/coverage.XXXXXX"
+    return $?
+  fi
+
+  temp_dir="${base_dir}/coverage.$$.${RANDOM:-0}"
+  mkdir -p "$temp_dir" || return 1
+  printf '%s\n' "$temp_dir"
+}
+
+dir_has_pattern() {
+  search_dir="$1"
+  pattern="$2"
+
+  if command -v rg >/dev/null 2>&1; then
+    rg -q "$pattern" "$search_dir" -g '*.csproj' -g '*.props' -g '*.targets'
+    return $?
+  fi
+
+  grep -R -E -q --include='*.csproj' --include='*.props' --include='*.targets' "$pattern" "$search_dir"
+}
+
+detect_backend_coverage_mode() {
+  search_dir="$1"
+
+  if dir_has_pattern "$search_dir" 'coverlet\.collector'; then
+    echo "collector"
+    return 0
+  fi
+
+  if dir_has_pattern "$search_dir" 'coverlet\.msbuild'; then
+    echo "msbuild"
+    return 0
+  fi
+
+  echo "none"
+}
+
+find_backend_test_target() {
+  search_dir="$1"
+  target=""
+
+  target=$(find "$search_dir" -maxdepth 3 -name '*.sln' -print | head -n 1)
+  if [ -n "$target" ]; then
+    printf '%s\n' "$target"
+    return 0
+  fi
+
+  target=$(find "$search_dir" -maxdepth 6 -name '*Tests*.csproj' -print | head -n 1)
+  if [ -n "$target" ]; then
+    printf '%s\n' "$target"
+    return 0
+  fi
+
+  target=$(find "$search_dir" -maxdepth 6 -name '*.csproj' -print | head -n 1)
+  if [ -n "$target" ]; then
+    printf '%s\n' "$target"
+    return 0
+  fi
+
   return 1
 }
 
@@ -247,13 +316,13 @@ fi
 
 if [ "$RUN_BACKEND" -eq 1 ]; then
   echo "--- Backend (${BACKEND_DIR}) ---"
+  BE_FILE=""
   if [ ! -d "$BACKEND_DIR" ]; then
     echo "SKIP: directory not found."
   else
+    BE_TARGET=$(find_backend_test_target "$BACKEND_DIR" || true)
     HAS_DOTNET_INPUT=0
-    if find "$BACKEND_DIR" -maxdepth 3 -name '*.sln' -print -quit | grep -q .; then
-      HAS_DOTNET_INPUT=1
-    elif find "$BACKEND_DIR" -maxdepth 5 -name '*.csproj' -print -quit | grep -q .; then
+    if [ -n "$BE_TARGET" ]; then
       HAS_DOTNET_INPUT=1
     fi
 
@@ -271,18 +340,49 @@ if [ "$RUN_BACKEND" -eq 1 ]; then
         RAN_ANY=1
       fi
     elif [ "$HAS_DOTNET_INPUT" -eq 1 ] && command -v dotnet >/dev/null 2>&1; then
-      echo "Running dotnet test with coverlet output."
-      (
-        cd "$BACKEND_DIR" || exit 2
-        dotnet test /p:CollectCoverage=true /p:CoverletOutput=coverage/ /p:CoverletOutputFormat=cobertura
-      )
-      rc=$?
-      if [ $rc -ne 0 ]; then
-        echo "FAIL: backend coverage command failed (exit ${rc})"
-        FAILED=1
-      else
-        RAN_ANY=1
-      fi
+      BE_MODE=$(detect_backend_coverage_mode "$BACKEND_DIR")
+      case "$BE_MODE" in
+        collector)
+          BE_RESULTS_DIR=$(make_temp_dir "${BACKEND_DIR}/TestResults")
+          if [ -z "$BE_RESULTS_DIR" ]; then
+            echo "FAIL: could not create backend coverage results directory."
+            FAILED=1
+          else
+            echo "Running dotnet test with XPlat Code Coverage collector."
+            dotnet test "$BE_TARGET" --collect:"XPlat Code Coverage" --results-directory "$BE_RESULTS_DIR" --disable-build-servers -m:1 -nodeReuse:false
+            rc=$?
+            if [ $rc -ne 0 ]; then
+              echo "FAIL: backend coverage command failed (exit ${rc})"
+              FAILED=1
+            else
+              RAN_ANY=1
+              BE_FILE=$(find "$BE_RESULTS_DIR" -type f \( -name 'coverage.cobertura.xml' -o -name 'coverage.xml' -o -name 'cobertura.xml' \) -print | head -n 1)
+            fi
+          fi
+          ;;
+        msbuild)
+          BE_RESULTS_DIR=$(make_temp_dir "${BACKEND_DIR}/coverage")
+          if [ -z "$BE_RESULTS_DIR" ]; then
+            echo "FAIL: could not create backend coverage output directory."
+            FAILED=1
+          else
+            echo "Running dotnet test with coverlet.msbuild output."
+            dotnet test "$BE_TARGET" /p:CollectCoverage=true /p:CoverletOutput="${BE_RESULTS_DIR}/" /p:CoverletOutputFormat=cobertura --disable-build-servers -m:1 -nodeReuse:false
+            rc=$?
+            if [ $rc -ne 0 ]; then
+              echo "FAIL: backend coverage command failed (exit ${rc})"
+              FAILED=1
+            else
+              RAN_ANY=1
+              BE_FILE=$(find "$BE_RESULTS_DIR" -type f \( -name 'coverage.cobertura.xml' -o -name 'coverage.xml' -o -name 'cobertura.xml' \) -print | head -n 1)
+            fi
+          fi
+          ;;
+        *)
+          echo "SKIP: no supported backend coverage package found (expected coverlet.collector or coverlet.msbuild)."
+          echo "      Set BACKEND_COVERAGE_CMD to use a project-specific coverage command."
+          ;;
+      esac
     else
       if [ "$HAS_DOTNET_INPUT" -ne 1 ]; then
         echo "SKIP: no .sln/.csproj found."
@@ -291,7 +391,6 @@ if [ "$RUN_BACKEND" -eq 1 ]; then
       fi
     fi
 
-    BE_FILE=$(find "$BACKEND_DIR" -type f \( -name 'coverage.cobertura.xml' -o -name 'coverage.xml' -o -name 'cobertura.xml' \) -print | head -n 1)
     if [ -n "$BE_FILE" ]; then
       run_validator "backend" "$BE_FILE" || true
     else
@@ -356,6 +455,10 @@ echo "=== Coverage Summary ==="
 if [ "$RAN_ANY" -eq 1 ]; then
   echo "At least one coverage job ran."
 else
+  if [ "$FAILED" -ne 0 ]; then
+    echo "Coverage generation failed before any coverage artifact was produced."
+    exit 1
+  fi
   if [ "$STRICT" -eq 1 ]; then
     echo "No coverage jobs ran. Check directories/tooling or pass custom commands."
     exit 2

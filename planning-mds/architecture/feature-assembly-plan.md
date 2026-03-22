@@ -14,7 +14,7 @@ Define the build order, role handoffs, and integration checkpoints for F0001 (Da
 
 ## F0015 — Frontend Quality Gates + Test Infrastructure
 
-**Updated:** 2026-03-21 — Planning kickoff; solution-side frontend validation feature created
+**Updated:** 2026-03-21 — Completed; solution-side frontend validation feature implemented with lifecycle evidence enforcement
 
 ### Dependencies
 
@@ -87,7 +87,7 @@ Step 2 (DevOps):     lifecycle gate activation + repeatable runtime execution pr
 | Architect | Yes | Accept solution-side gate architecture and boundary application |
 | Security Reviewer | No | No new authz/data-boundary contract is expected in scope |
 
-**Checkpoint F0015-A:** Nebula frontend validation is enforceable, evidence-backed, and repeatable in the approved runtime path.
+**Checkpoint F0015-A:** Achieved on 2026-03-21. Nebula frontend validation is enforceable, evidence-backed, and repeatable in the approved runtime path.
 
 ---
 

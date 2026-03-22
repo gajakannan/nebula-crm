@@ -15,6 +15,7 @@ using OpportunityProgram = Nebula.Domain.Entities.Program;
 
 namespace Nebula.Tests.Integration;
 
+[Collection(IntegrationTestCollection.Name)]
 public class DashboardScopeFilteringTests : IClassFixture<CustomWebApplicationFactory>, IAsyncLifetime
 {
     private const string Issuer = "http://test.local/application/o/nebula/";

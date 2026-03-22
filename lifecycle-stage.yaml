@@ -42,6 +42,7 @@ stages:
     - boundary_genericness
     - api_contract
     - solution_contract
+    - frontend_quality
     - infra_strict
     - security_planning_strict
   release-readiness:
@@ -50,6 +51,7 @@ stages:
     - boundary_genericness
     - api_contract
     - solution_contract
+    - frontend_quality
     - infra_strict
     - security_planning_strict
 gates:
@@ -75,6 +77,12 @@ gates:
     - python3
     - planning-mds/testing/validate-nebula-api-contract.py
     - planning-mds/api/nebula-api.yaml
+  frontend_quality:
+    description: Enforce solution-owned frontend validation evidence and coverage artifacts.
+    command:
+    - python3
+    - planning-mds/testing/validate-frontend-quality-gate.py
+    - planning-mds/operations/evidence/frontend-quality/latest-run.json
   infra_non_strict:
     description: Informational infrastructure baseline checks during bootstrap/planning.
     command:

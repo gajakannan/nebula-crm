@@ -8,7 +8,7 @@ export function ActivityFeed() {
 
   return (
     <section
-      className="glass-card operational-panel flex min-h-0 flex-col rounded-xl p-4 md:p-5"
+      className="operational-panel flex min-h-0 flex-col rounded-xl p-4 md:p-5"
       aria-label="Activity section"
     >
       <div className="mb-3 flex items-center justify-between">

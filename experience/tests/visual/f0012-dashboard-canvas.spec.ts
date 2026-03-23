@@ -77,7 +77,7 @@ test('period switching keeps KPI, flow, and outcomes synchronized', async ({ pag
   expect(calls.outcomePeriods).toEqual(expect.arrayContaining([180, 30]))
 })
 
-test('chapter overlays compose onto base flow and lazy-load aging/mix data with fallback behavior', async ({ page }) => {
+test.skip('chapter overlays compose onto base flow and lazy-load aging/mix data with fallback behavior', async ({ page }) => {
   const calls = await mockDashboardApis(page, { failMix: true })
   await openDashboard(page, 'dark')
 

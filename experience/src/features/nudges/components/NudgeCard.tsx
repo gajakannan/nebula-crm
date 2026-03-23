@@ -24,7 +24,7 @@ export function NudgeCard({ nudge, onDismiss }: NudgeCardProps) {
     <div
       role="alert"
       className={cn(
-        'glass-card operational-panel relative rounded-xl p-4',
+        'operational-panel relative rounded-xl p-4',
         variant === 'error' && 'fx-shadow-alert-error',
         variant === 'warning' && 'fx-shadow-alert-warning',
         variant === 'info' && 'fx-shadow-alert-info',

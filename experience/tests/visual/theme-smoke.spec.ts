@@ -116,7 +116,7 @@ async function mockNebulaApis(page: Page) {
     },
   )
 
-  await page.route('**/dashboard/kpis', async (route) => {
+  await page.route('**/dashboard/kpis?*', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

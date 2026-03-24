@@ -14,12 +14,14 @@ public class TaskServiceTests
     private readonly StubTimelineRepository _timelineRepo = new();
     private readonly StubUnitOfWork _unitOfWork = new();
     private readonly StubCurrentUserService _user = new(Guid.Parse("aaaa0000-0000-0000-0000-000000000001"));
+    private readonly StubUserProfileRepository _userProfileRepo = new();
 
     private TaskService CreateService() => new(
         _taskRepo,
         _timelineRepo,
         _unitOfWork,
         new StubAuthorizationService(),
+        _userProfileRepo,
         new BrokerScopeResolver(new StubBrokerRepository()),
         NullLogger<TaskService>.Instance);
 
@@ -61,11 +63,15 @@ public class TaskServiceTests
     [Fact]
     public async Task CreateAsync_SelfAssignmentViolation_ReturnsForbidden()
     {
+        // Non-manager users (e.g. DistributionUser) cannot assign tasks to others
+        var nonManagerUser = new StubCurrentUserService(
+            Guid.Parse("aaaa0000-0000-0000-0000-000000000002"),
+            roles: ["DistributionUser"]);
         var svc = CreateService();
         var otherUserId = Guid.NewGuid();
         var dto = new TaskCreateRequestDto("Test", null, null, null, otherUserId, null, null);
 
-        var (result, error) = await svc.CreateAsync(dto, _user);
+        var (result, error) = await svc.CreateAsync(dto, nonManagerUser);
 
         error.Should().Be("forbidden");
         result.Should().BeNull();
@@ -193,8 +199,10 @@ public class TaskServiceTests
     [Fact]
     public async Task UpdateAsync_ReassignToOther_ReturnsForbidden()
     {
+        // Only the task creator can reassign. Here the user is the assignee but NOT the creator.
         var svc = CreateService();
-        var task = SeedTask(_user.UserId, "Open");
+        var otherCreator = Guid.Parse("bbbb0000-0000-0000-0000-000000000099");
+        var task = SeedTaskWithCreator(_user.UserId, otherCreator, "Open");
         var dto = new TaskUpdateRequestDto(null, null, null, null, null, Guid.NewGuid());
         var present = Fields("assignedToUserId");
 
@@ -471,6 +479,310 @@ public class TaskServiceTests
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    //  F0004: Cross-User Assignment
+    // ═══════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task CreateAsync_ManagerAssignsToOther_Succeeds()
+    {
+        var managerUser = new StubCurrentUserService(
+            Guid.Parse("bbbb0000-0000-0000-0000-000000000001"),
+            roles: ["DistributionManager"]);
+        var assigneeId = Guid.Parse("cccc0000-0000-0000-0000-000000000001");
+        _userProfileRepo.Seed(new UserProfile
+        {
+            Id = assigneeId,
+            DisplayName = "Assignee User",
+            Email = "assignee@example.com",
+            Department = "Distribution",
+            IsActive = true,
+        });
+
+        var svc = CreateService();
+        var dto = new TaskCreateRequestDto("Cross-assign task", null, null, null, assigneeId, null, null);
+
+        var (result, error) = await svc.CreateAsync(dto, managerUser);
+
+        error.Should().BeNull();
+        result.Should().NotBeNull();
+        result!.AssignedToUserId.Should().Be(assigneeId);
+        result.CreatedByUserId.Should().Be(managerUser.UserId);
+        _unitOfWork.CommitCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateAsync_NonManagerAssignsToOther_ReturnsForbidden()
+    {
+        var distributionUser = new StubCurrentUserService(
+            Guid.Parse("dddd0000-0000-0000-0000-000000000001"),
+            roles: ["DistributionUser"]);
+        var otherUserId = Guid.NewGuid();
+
+        var svc = CreateService();
+        var dto = new TaskCreateRequestDto("Bad assign", null, null, null, otherUserId, null, null);
+
+        var (result, error) = await svc.CreateAsync(dto, distributionUser);
+
+        error.Should().Be("forbidden");
+        result.Should().BeNull();
+        _unitOfWork.CommitCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CreateAsync_AssignToInactiveUser_ReturnsInactiveAssignee()
+    {
+        var managerUser = new StubCurrentUserService(
+            Guid.Parse("bbbb0000-0000-0000-0000-000000000002"),
+            roles: ["Admin"]);
+        var inactiveUserId = Guid.Parse("cccc0000-0000-0000-0000-000000000002");
+        _userProfileRepo.Seed(new UserProfile
+        {
+            Id = inactiveUserId,
+            DisplayName = "Inactive User",
+            Email = "inactive@example.com",
+            Department = "Distribution",
+            IsActive = false,
+        });
+
+        var svc = CreateService();
+        var dto = new TaskCreateRequestDto("Inactive assign", null, null, null, inactiveUserId, null, null);
+
+        var (result, error) = await svc.CreateAsync(dto, managerUser);
+
+        error.Should().Be("inactive_assignee");
+        result.Should().BeNull();
+        _unitOfWork.CommitCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CreateAsync_AssignToNonExistent_ReturnsInvalidAssignee()
+    {
+        var managerUser = new StubCurrentUserService(
+            Guid.Parse("bbbb0000-0000-0000-0000-000000000003"),
+            roles: ["Admin"]);
+        var nonExistentUserId = Guid.NewGuid(); // not seeded in _userProfileRepo
+
+        var svc = CreateService();
+        var dto = new TaskCreateRequestDto("Ghost assign", null, null, null, nonExistentUserId, null, null);
+
+        var (result, error) = await svc.CreateAsync(dto, managerUser);
+
+        error.Should().Be("invalid_assignee");
+        result.Should().BeNull();
+        _unitOfWork.CommitCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CreateAsync_ManagerSelfAssign_StillWorks()
+    {
+        var managerUserId = Guid.Parse("bbbb0000-0000-0000-0000-000000000004");
+        var managerUser = new StubCurrentUserService(managerUserId, roles: ["DistributionManager"]);
+
+        var svc = CreateService();
+        var dto = new TaskCreateRequestDto("Self-assign by manager", null, null, null, managerUserId, null, null);
+
+        var (result, error) = await svc.CreateAsync(dto, managerUser);
+
+        error.Should().BeNull();
+        result.Should().NotBeNull();
+        result!.AssignedToUserId.Should().Be(managerUserId);
+        result.CreatedByUserId.Should().Be(managerUserId);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  F0004: Creator-Based Access
+    // ═══════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task UpdateAsync_CreatorEditsTitle_Succeeds()
+    {
+        // Manager created a task assigned to someone else — creator should be able to edit title
+        var creatorId = Guid.Parse("eeee0000-0000-0000-0000-000000000001");
+        var assigneeId = Guid.Parse("ffff0000-0000-0000-0000-000000000001");
+        var creatorUser = new StubCurrentUserService(creatorId, roles: ["DistributionManager"]);
+
+        var task = SeedTaskWithCreator(assigneeId, creatorId, "Open");
+        var svc = CreateService();
+        var dto = new TaskUpdateRequestDto("Updated by creator", null, null, null, null, null);
+        var present = Fields("title");
+
+        var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, creatorUser);
+
+        error.Should().BeNull();
+        result!.Title.Should().Be("Updated by creator");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_CreatorCannotChangeStatus_ReturnsStatusChangeRestricted()
+    {
+        // Manager created a task assigned to someone else — creator cannot change status
+        var creatorId = Guid.Parse("eeee0000-0000-0000-0000-000000000002");
+        var assigneeId = Guid.Parse("ffff0000-0000-0000-0000-000000000002");
+        var creatorUser = new StubCurrentUserService(creatorId, roles: ["DistributionManager"]);
+
+        var task = SeedTaskWithCreator(assigneeId, creatorId, "Open");
+        var svc = CreateService();
+        var dto = new TaskUpdateRequestDto(null, null, "InProgress", null, null, null);
+        var present = Fields("status");
+
+        var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, creatorUser);
+
+        error.Should().Be("status_change_restricted");
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_AssigneeCanChangeStatus_OnManagerCreatedTask()
+    {
+        // The assignee (not the creator) should be able to change status
+        var creatorId = Guid.Parse("eeee0000-0000-0000-0000-000000000003");
+        var assigneeId = Guid.Parse("ffff0000-0000-0000-0000-000000000003");
+        var assigneeUser = new StubCurrentUserService(assigneeId, roles: ["DistributionUser"]);
+
+        var task = SeedTaskWithCreator(assigneeId, creatorId, "Open");
+        var svc = CreateService();
+        var dto = new TaskUpdateRequestDto(null, null, "InProgress", null, null, null);
+        var present = Fields("status");
+
+        var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, assigneeUser);
+
+        error.Should().BeNull();
+        result!.Status.Should().Be("InProgress");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_CreatorReassigns_Succeeds()
+    {
+        // Creator should be able to change the assignee
+        var creatorId = Guid.Parse("eeee0000-0000-0000-0000-000000000004");
+        var assigneeId = Guid.Parse("ffff0000-0000-0000-0000-000000000004");
+        var newAssigneeId = Guid.Parse("aaaa1111-0000-0000-0000-000000000001");
+        var creatorUser = new StubCurrentUserService(creatorId, roles: ["DistributionManager"]);
+
+        _userProfileRepo.Seed(new UserProfile
+        {
+            Id = newAssigneeId,
+            DisplayName = "New Assignee",
+            Email = "new-assignee@example.com",
+            Department = "Distribution",
+            IsActive = true,
+        });
+
+        var task = SeedTaskWithCreator(assigneeId, creatorId, "Open");
+        var svc = CreateService();
+        var dto = new TaskUpdateRequestDto(null, null, null, null, null, newAssigneeId);
+        var present = Fields("assignedToUserId");
+
+        var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, creatorUser);
+
+        error.Should().BeNull();
+        result!.AssignedToUserId.Should().Be(newAssigneeId);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_CreatorReassigns_EmitsTaskReassignedEvent()
+    {
+        var creatorId = Guid.Parse("eeee0000-0000-0000-0000-000000000005");
+        var assigneeId = Guid.Parse("ffff0000-0000-0000-0000-000000000005");
+        var newAssigneeId = Guid.Parse("aaaa1111-0000-0000-0000-000000000002");
+        var creatorUser = new StubCurrentUserService(creatorId, roles: ["DistributionManager"]);
+
+        _userProfileRepo.Seed(new UserProfile
+        {
+            Id = newAssigneeId,
+            DisplayName = "New Assignee B",
+            Email = "new-assignee-b@example.com",
+            Department = "Distribution",
+            IsActive = true,
+        });
+
+        var task = SeedTaskWithCreator(assigneeId, creatorId, "Open");
+        var svc = CreateService();
+        var dto = new TaskUpdateRequestDto(null, null, null, null, null, newAssigneeId);
+        var present = Fields("assignedToUserId");
+
+        await svc.UpdateAsync(task.Id, dto, present, 0, creatorUser);
+
+        var evt = _timelineRepo.Events.Single();
+        evt.EventType.Should().Be("TaskReassigned");
+        evt.EventPayloadJson.Should().Contain("fromUserId");
+        evt.EventPayloadJson.Should().Contain("toUserId");
+        evt.EventPayloadJson.Should().Contain(newAssigneeId.ToString());
+    }
+
+    [Fact]
+    public async Task UpdateAsync_AssigneeCannotReassign_ReturnsForbidden()
+    {
+        // Assignee (non-creator) should NOT be able to change the assignee
+        var creatorId = Guid.Parse("eeee0000-0000-0000-0000-000000000006");
+        var assigneeId = Guid.Parse("ffff0000-0000-0000-0000-000000000006");
+        var otherUserId = Guid.NewGuid();
+        var assigneeUser = new StubCurrentUserService(assigneeId, roles: ["DistributionUser"]);
+
+        var task = SeedTaskWithCreator(assigneeId, creatorId, "Open");
+        var svc = CreateService();
+        var dto = new TaskUpdateRequestDto(null, null, null, null, null, otherUserId);
+        var present = Fields("assignedToUserId");
+
+        var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, assigneeUser);
+
+        error.Should().Be("forbidden");
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ReassignToInactive_ReturnsInactiveAssignee()
+    {
+        var creatorId = Guid.Parse("eeee0000-0000-0000-0000-000000000007");
+        var assigneeId = Guid.Parse("ffff0000-0000-0000-0000-000000000007");
+        var inactiveUserId = Guid.Parse("aaaa1111-0000-0000-0000-000000000003");
+        var creatorUser = new StubCurrentUserService(creatorId, roles: ["Admin"]);
+
+        _userProfileRepo.Seed(new UserProfile
+        {
+            Id = inactiveUserId,
+            DisplayName = "Inactive Target",
+            Email = "inactive-target@example.com",
+            Department = "Distribution",
+            IsActive = false,
+        });
+
+        var task = SeedTaskWithCreator(assigneeId, creatorId, "Open");
+        var svc = CreateService();
+        var dto = new TaskUpdateRequestDto(null, null, null, null, null, inactiveUserId);
+        var present = Fields("assignedToUserId");
+
+        var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, creatorUser);
+
+        error.Should().Be("inactive_assignee");
+        result.Should().BeNull();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  F0004: Delete by Creator
+    // ═══════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task DeleteAsync_CreatorCanDelete_Succeeds()
+    {
+        // Creator who is not the assignee should still be able to delete
+        var creatorId = Guid.Parse("eeee0000-0000-0000-0000-000000000008");
+        var assigneeId = Guid.Parse("ffff0000-0000-0000-0000-000000000008");
+        var creatorUser = new StubCurrentUserService(creatorId, roles: ["DistributionManager"]);
+
+        var task = SeedTaskWithCreator(assigneeId, creatorId, "Open");
+        var svc = CreateService();
+
+        var error = await svc.DeleteAsync(task.Id, creatorUser);
+
+        error.Should().BeNull();
+        task.IsDeleted.Should().BeTrue();
+        task.DeletedByUserId.Should().Be(creatorId);
+        _timelineRepo.Events.Should().ContainSingle(e => e.EventType == "TaskDeleted");
+        _unitOfWork.CommitCount.Should().Be(1);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     //  Helpers
     // ═══════════════════════════════════════════════════════════════════════
 
@@ -486,6 +798,26 @@ public class TaskServiceTests
             UpdatedAt = DateTime.UtcNow,
             CreatedByUserId = assignedToUserId,
             UpdatedByUserId = assignedToUserId,
+        };
+        _taskRepo.Seed(task);
+        return task;
+    }
+
+    /// <summary>
+    /// Seeds a task where the creator and assignee are different users (F0004 cross-user scenario).
+    /// </summary>
+    private TaskItem SeedTaskWithCreator(Guid assignedToUserId, Guid createdByUserId, string status)
+    {
+        var task = new TaskItem
+        {
+            Title = "Cross-User Task",
+            Status = status,
+            Priority = "Normal",
+            AssignedToUserId = assignedToUserId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            CreatedByUserId = createdByUserId,
+            UpdatedByUserId = createdByUserId,
         };
         _taskRepo.Seed(task);
         return task;
@@ -517,12 +849,27 @@ internal class StubTaskRepository : ITaskRepository
         Guid brokerId, int limit, CancellationToken ct = default) =>
         Task.FromResult<(IReadOnlyList<TaskItem>, int)>(([], 0));
 
+    public Task<(IReadOnlyList<TaskItem> Tasks, int TotalCount)> GetTaskListAsync(
+        TaskListQuery query, CancellationToken ct = default)
+    {
+        var items = _tasks.Values.Where(t => !t.IsDeleted);
+        if (query.View == "myWork")
+            items = items.Where(t => t.AssignedToUserId == query.CallerUserId);
+        else
+            items = items.Where(t => t.CreatedByUserId == query.CallerUserId && t.AssignedToUserId != query.CallerUserId);
+        var list = items.ToList();
+        return Task.FromResult<(IReadOnlyList<TaskItem>, int)>((list, list.Count));
+    }
+
     public Task AddAsync(TaskItem task, CancellationToken ct = default)
     {
         Added.Add(task);
         _tasks[task.Id] = task;
         return Task.CompletedTask;
     }
+
+    public Task<string?> ResolveLinkedEntityNameAsync(string? entityType, Guid? entityId, CancellationToken ct = default) =>
+        Task.FromResult<string?>(entityType is not null ? $"Test {entityType}" : null);
 }
 
 internal class StubTimelineRepository : ITimelineRepository
@@ -570,17 +917,31 @@ internal class StubCurrentUserService(
     public string? BrokerTenantId => brokerTenantId;
 }
 
+/// <summary>
+/// Stub authorization service that simulates Casbin OR semantics:
+/// allows if assignee == subjectId OR creator == subjectId.
+/// DistributionManager/Admin with create action always pass.
+/// </summary>
 internal class StubAuthorizationService : IAuthorizationService
 {
     public Task<bool> AuthorizeAsync(string userRole, string resourceType, string action,
         IDictionary<string, object>? resourceAttributes = null)
     {
-        // Simulate Casbin policy: task operations require assignee == subjectId
-        if (resourceAttributes is not null
-            && resourceAttributes.TryGetValue("assignee", out var assignee)
-            && resourceAttributes.TryGetValue("subjectId", out var subjectId))
+        if (resourceAttributes is not null)
         {
-            return Task.FromResult(Equals(assignee, subjectId));
+            var subjectId = resourceAttributes.TryGetValue("subjectId", out var sid) ? sid : null;
+            var assignee = resourceAttributes.TryGetValue("assignee", out var asg) ? asg : null;
+            var creator = resourceAttributes.TryGetValue("creator", out var crt) ? crt : null;
+
+            // Simulate OR semantics: allow if assignee == subjectId OR creator == subjectId
+            if (Equals(assignee, subjectId)) return Task.FromResult(true);
+            if (Equals(creator, subjectId)) return Task.FromResult(true);
+
+            // For create action: managers with 'true' condition always pass
+            if (action == "create" && (userRole == "DistributionManager" || userRole == "Admin"))
+                return Task.FromResult(true);
+
+            return Task.FromResult(false);
         }
         // Default allow (for roles without attribute conditions)
         return Task.FromResult(true);
@@ -598,4 +959,22 @@ internal class StubBrokerRepository : IBrokerRepository
     public Task UpdateAsync(Broker broker, CancellationToken ct = default) => Task.CompletedTask;
     public Task<bool> ExistsByLicenseAsync(string licenseNumber, CancellationToken ct = default) => Task.FromResult(false);
     public Task<bool> HasActiveSubmissionsOrRenewalsAsync(Guid brokerId, CancellationToken ct = default) => Task.FromResult(false);
+}
+
+internal class StubUserProfileRepository : IUserProfileRepository
+{
+    private readonly Dictionary<Guid, UserProfile> _profiles = new();
+
+    public void Seed(UserProfile profile) => _profiles[profile.Id] = profile;
+
+    public Task<UserProfile?> GetByIdAsync(Guid userId, CancellationToken ct = default) =>
+        Task.FromResult(_profiles.GetValueOrDefault(userId));
+
+    public Task<IReadOnlyList<UserProfile>> SearchAsync(string query, bool activeOnly, int limit, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<UserProfile>>(_profiles.Values
+            .Where(p => p.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase)
+                     || p.Email.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .Where(p => !activeOnly || p.IsActive)
+            .Take(limit)
+            .ToList());
 }

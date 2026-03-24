@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage'
 import BrokerListPage from './pages/BrokerListPage'
 import CreateBrokerPage from './pages/CreateBrokerPage'
 import BrokerDetailPage from './pages/BrokerDetailPage'
+import TaskCenterPage from './pages/TaskCenterPage'
 import NotFoundPage from './pages/NotFoundPage'
 import { UnauthorizedPage } from './pages/UnauthorizedPage'
 import { LoginPage } from './pages/LoginPage'
@@ -42,6 +43,8 @@ function AppInner() {
       <Route path="/brokers" element={<ProtectedRoute><BrokerListPage /></ProtectedRoute>} />
       <Route path="/brokers/new" element={<ProtectedRoute><CreateBrokerPage /></ProtectedRoute>} />
       <Route path="/brokers/:brokerId" element={<ProtectedRoute><BrokerDetailPage /></ProtectedRoute>} />
+      <Route path="/tasks" element={<ProtectedRoute><TaskCenterPage /></ProtectedRoute>} />
+      <Route path="/tasks/:taskId" element={<ProtectedRoute><TaskCenterPage /></ProtectedRoute>} />
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

@@ -4,6 +4,7 @@
  */
 const REGISTERED_ROUTES: Record<string, (id: string) => string> = {
   'Broker': (id) => `/brokers/${id}`,
+  'Task': (id) => `/tasks/${id}`,
 };
 
 export function canNavigateTo(entityType: string): boolean {

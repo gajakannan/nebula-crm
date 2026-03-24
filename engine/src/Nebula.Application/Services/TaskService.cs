@@ -12,6 +12,7 @@ public class TaskService(
     ITimelineRepository timelineRepo,
     IUnitOfWork unitOfWork,
     IAuthorizationService authz,
+    IUserProfileRepository userProfileRepo,
     BrokerScopeResolver scopeResolver,
     ILogger<TaskService> logger)
 {
@@ -30,7 +31,9 @@ public class TaskService(
     public async Task<TaskDto?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         var task = await taskRepo.GetByIdAsync(id, ct);
-        return task is null ? null : MapToDto(task);
+        if (task is null)
+            return null;
+        return await MapToDtoAsync(task, ct);
     }
 
     /// <summary>
@@ -48,7 +51,7 @@ public class TaskService(
         if (!await AuthorizeTaskAsync(user, "read", task))
             return (null, "not_found"); // Normalize to 404 — prevent IDOR
 
-        return (MapToDto(task), null);
+        return (await MapToDtoAsync(task, ct), null);
     }
 
     public async Task<MyTasksResponseDto> GetMyTasksAsync(
@@ -89,17 +92,113 @@ public class TaskService(
         return new MyTasksResponseDto(summaries, totalCount);
     }
 
-    // F0003-S0001: Create Task
+    // F0004: Paginated task list (GET /tasks)
+    public async Task<(TaskListResponseDto? Dto, string? ErrorCode)> GetTaskListAsync(
+        TaskListQuery query, ICurrentUserService user, CancellationToken ct = default)
+    {
+        // View authorization check:
+        // "assignedByMe" requires DistributionManager or Admin (only those roles appear
+        //  in F0004 policy with creator-based access). We do a Casbin read check with
+        //  creator == caller to determine eligibility.
+        if (query.View == "assignedByMe")
+        {
+            var creatorAttrs = new Dictionary<string, object>
+            {
+                ["assignee"] = "__no_assignee__",
+                ["creator"]  = user.UserId,
+                ["subjectId"] = user.UserId,
+            };
+            var viewAuthorized = false;
+            foreach (var role in user.Roles)
+            {
+                if (await authz.AuthorizeAsync(role, "task", "read", creatorAttrs))
+                {
+                    viewAuthorized = true;
+                    break;
+                }
+            }
+            if (!viewAuthorized)
+                return (null, "view_not_authorized");
+        }
+
+        var (tasks, totalCount) = await taskRepo.GetTaskListAsync(query, ct);
+        var today = DateTime.UtcNow.Date;
+
+        // Batch-resolve display names for assignees and creators
+        var userIds = tasks.SelectMany(t => new[] { t.AssignedToUserId, t.CreatedByUserId })
+            .Distinct()
+            .ToList();
+        var profiles = new Dictionary<Guid, string?>();
+        foreach (var uid in userIds)
+        {
+            if (!profiles.ContainsKey(uid))
+            {
+                var p = await userProfileRepo.GetByIdAsync(uid, ct);
+                profiles[uid] = p?.DisplayName;
+            }
+        }
+
+        // Batch-resolve linked entity names
+        var entityNames = new Dictionary<(string, Guid), string?>();
+        foreach (var t in tasks.Where(t => t.LinkedEntityType is not null && t.LinkedEntityId.HasValue))
+        {
+            var key = (t.LinkedEntityType!, t.LinkedEntityId!.Value);
+            if (!entityNames.ContainsKey(key))
+                entityNames[key] = await taskRepo.ResolveLinkedEntityNameAsync(t.LinkedEntityType, t.LinkedEntityId, ct);
+        }
+
+        var pageSize = Math.Max(1, Math.Min(query.PageSize, 100));
+        var page = Math.Max(1, query.Page);
+        var totalPages = totalCount == 0 ? 0 : (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        var items = tasks.Select(t => new TaskListItemDto(
+            t.Id, t.Title, t.Description, t.Status, t.Priority, t.DueDate,
+            t.AssignedToUserId, profiles.GetValueOrDefault(t.AssignedToUserId),
+            t.CreatedByUserId, profiles.GetValueOrDefault(t.CreatedByUserId),
+            t.LinkedEntityType, t.LinkedEntityId,
+            t.LinkedEntityType is not null && t.LinkedEntityId.HasValue
+                ? entityNames.GetValueOrDefault((t.LinkedEntityType, t.LinkedEntityId.Value))
+                : null,
+            t.DueDate.HasValue && t.DueDate.Value.Date < today && t.Status != "Done",
+            t.CreatedAt, t.UpdatedAt, t.CompletedAt))
+            .ToList();
+
+        return (new TaskListResponseDto(items, page, pageSize, totalCount, totalPages), null);
+    }
+
+    // F0003-S0001 / F0004: Create Task
+    // F0004: DistributionManager/Admin can assign to any active internal user.
     public async Task<(TaskDto? Dto, string? ErrorCode)> CreateAsync(
         TaskCreateRequestDto dto, ICurrentUserService user, CancellationToken ct = default)
     {
-        // Self-assignment guard
-        if (dto.AssignedToUserId != user.UserId)
+        // Determine if the caller is a manager-role (can cross-assign)
+        var isManager = user.Roles.Contains("DistributionManager") || user.Roles.Contains("Admin");
+
+        // Self-assignment guard: non-managers may only assign to themselves
+        if (!isManager && dto.AssignedToUserId != user.UserId)
             return (null, "forbidden");
+
+        // For managers assigning to others: validate the assignee exists and is active
+        if (isManager && dto.AssignedToUserId != user.UserId)
+        {
+            var assigneeProfile = await userProfileRepo.GetByIdAsync(dto.AssignedToUserId, ct);
+            if (assigneeProfile is null)
+                return (null, "invalid_assignee");
+            if (!assigneeProfile.IsActive)
+                return (null, "inactive_assignee");
+        }
 
         // LinkedEntity pairing guard (also validated by FluentValidation, but defense-in-depth)
         if ((dto.LinkedEntityType is not null) != (dto.LinkedEntityId is not null))
             return (null, "validation_error");
+
+        // Resolve display names for timeline payload
+        var assigneeProfile2 = dto.AssignedToUserId == user.UserId
+            ? null
+            : await userProfileRepo.GetByIdAsync(dto.AssignedToUserId, ct);
+        var assigneeDisplayName = dto.AssignedToUserId == user.UserId
+            ? user.DisplayName
+            : assigneeProfile2?.DisplayName;
 
         var now = DateTime.UtcNow;
         var task = new TaskItem
@@ -134,6 +233,9 @@ public class TaskService(
             {
                 title = task.Title,
                 assignedToUserId = task.AssignedToUserId,
+                assignedToDisplayName = assigneeDisplayName,
+                createdByUserId = user.UserId,
+                createdByDisplayName = user.DisplayName,
                 dueDate = task.DueDate,
                 linkedEntityType = task.LinkedEntityType,
                 linkedEntityId = task.LinkedEntityId,
@@ -142,11 +244,14 @@ public class TaskService(
 
         await unitOfWork.CommitAsync(ct);
 
-        return (MapToDto(task), null);
+        return (await MapToDtoAsync(task, ct), null);
     }
 
-    // F0003-S0002: Update Task
-    // Performs single fetch + Casbin auth + ownership guard + mutation (eliminates TOCTOU double-fetch).
+    // F0003-S0002 / F0004: Update Task
+    // F0004 additions:
+    //   - creator-based access (Casbin already handles via creator attr)
+    //   - status change restricted to assignee
+    //   - reassignment: only creator can change assignedToUserId; emits TaskReassigned
     public async Task<(TaskDto? Dto, string? ErrorCode, string? TransitionFrom, string? TransitionTo)> UpdateAsync(
         Guid taskId, TaskUpdateRequestDto dto, IReadOnlySet<string> presentFields,
         uint rowVersion, ICurrentUserService user, CancellationToken ct = default)
@@ -155,19 +260,19 @@ public class TaskService(
         if (task is null)
             return (null, "not_found", null, null);
 
-        // Casbin authorization (single fetch — no TOCTOU gap)
+        // Casbin authorization with both assignee and creator attributes
         if (!await AuthorizeTaskAsync(user, "update", task))
             return (null, "not_found", null, null); // Normalize to 404 — prevent IDOR
 
-        // Ownership guard (defense-in-depth — Casbin already checks assignee == subjectId)
-        if (task.AssignedToUserId != user.UserId)
-            return (null, "not_found", null, null);
+        // F0004: Only the assignee can change status
+        if (dto.Status is not null && task.AssignedToUserId != user.UserId)
+            return (null, "status_change_restricted", null, null);
 
-        // AssignedToUserId reassignment guard
-        if (dto.AssignedToUserId.HasValue && dto.AssignedToUserId.Value != user.UserId)
+        // F0004: Only the creator can reassign (change assignedToUserId)
+        if (dto.AssignedToUserId.HasValue && task.CreatedByUserId != user.UserId)
             return (null, "forbidden", null, null);
 
-        // Set RowVersion for optimistic concurrency (C-1 fix)
+        // Set RowVersion for optimistic concurrency
         task.RowVersion = rowVersion;
 
         var now = DateTime.UtcNow;
@@ -181,7 +286,21 @@ public class TaskService(
                 return (null, "invalid_status_transition", oldStatus, dto.Status);
         }
 
-        // Apply present fields
+        // Detect reassignment: assignedToUserId present and different from current
+        var isReassignment = dto.AssignedToUserId.HasValue
+            && dto.AssignedToUserId.Value != task.AssignedToUserId;
+
+        if (isReassignment)
+        {
+            // Validate new assignee exists and is active
+            var newAssigneeProfile = await userProfileRepo.GetByIdAsync(dto.AssignedToUserId!.Value, ct);
+            if (newAssigneeProfile is null)
+                return (null, "invalid_assignee", null, null);
+            if (!newAssigneeProfile.IsActive)
+                return (null, "inactive_assignee", null, null);
+        }
+
+        // Apply present fields (non-reassignment mutations)
         if (dto.Title is not null)
         {
             if (dto.Title != task.Title)
@@ -217,13 +336,8 @@ public class TaskService(
             task.DueDate = dto.DueDate;
         }
 
-        if (dto.AssignedToUserId.HasValue)
-        {
-            task.AssignedToUserId = dto.AssignedToUserId.Value;
-        }
-
         // CompletedAt handling for status transitions
-        var previousCompletedAt = task.CompletedAt; // Capture before clearing
+        var previousCompletedAt = task.CompletedAt;
         if (dto.Status is not null && dto.Status != oldStatus)
         {
             if (dto.Status == "Done")
@@ -240,7 +354,24 @@ public class TaskService(
         string eventDescription;
         string payloadJson;
 
-        if (dto.Status is not null && dto.Status != oldStatus && dto.Status == "Done")
+        if (isReassignment)
+        {
+            var oldAssigneeProfile = await userProfileRepo.GetByIdAsync(task.AssignedToUserId, ct);
+            var newAssigneeProfile = await userProfileRepo.GetByIdAsync(dto.AssignedToUserId!.Value, ct);
+
+            eventType = "TaskReassigned";
+            eventDescription = $"Task reassigned from {oldAssigneeProfile?.DisplayName ?? task.AssignedToUserId.ToString()} to {newAssigneeProfile?.DisplayName ?? dto.AssignedToUserId.Value.ToString()}";
+            payloadJson = JsonSerializer.Serialize(new
+            {
+                fromUserId = task.AssignedToUserId,
+                fromDisplayName = oldAssigneeProfile?.DisplayName,
+                toUserId = dto.AssignedToUserId!.Value,
+                toDisplayName = newAssigneeProfile?.DisplayName,
+            });
+
+            task.AssignedToUserId = dto.AssignedToUserId.Value;
+        }
+        else if (dto.Status is not null && dto.Status != oldStatus && dto.Status == "Done")
         {
             eventType = "TaskCompleted";
             eventDescription = "Task completed";
@@ -276,11 +407,11 @@ public class TaskService(
 
         await unitOfWork.CommitAsync(ct);
 
-        return (MapToDto(task), null, null, null);
+        return (await MapToDtoAsync(task, ct), null, null, null);
     }
 
-    // F0003-S0003: Delete Task (soft delete)
-    // Performs single fetch + Casbin auth + ownership guard + mutation (eliminates TOCTOU double-fetch).
+    // F0003-S0003 / F0004: Delete Task (soft delete)
+    // F0004: Creator can also delete (Casbin handles via creator attr).
     public async Task<string?> DeleteAsync(
         Guid taskId, ICurrentUserService user, CancellationToken ct = default)
     {
@@ -288,13 +419,9 @@ public class TaskService(
         if (task is null)
             return "not_found";
 
-        // Casbin authorization (single fetch — no TOCTOU gap)
+        // Casbin authorization with both assignee and creator attributes
         if (!await AuthorizeTaskAsync(user, "delete", task))
             return "not_found"; // Normalize to 404 — prevent IDOR
-
-        // Ownership guard (defense-in-depth)
-        if (task.AssignedToUserId != user.UserId)
-            return "not_found";
 
         var now = DateTime.UtcNow;
         task.IsDeleted = true;
@@ -323,13 +450,15 @@ public class TaskService(
 
     /// <summary>
     /// Check Casbin authorization for a task action against the fetched entity.
+    /// F0004: Hydrates both assignee AND creator attributes for the enforcer.
     /// Used by Update/Delete/GetById to avoid a second DB fetch (TOCTOU fix).
     /// </summary>
     private async Task<bool> AuthorizeTaskAsync(ICurrentUserService user, string action, TaskItem task)
     {
         var attrs = new Dictionary<string, object>
         {
-            ["assignee"] = task.AssignedToUserId,
+            ["assignee"]  = task.AssignedToUserId,
+            ["creator"]   = task.CreatedByUserId,
             ["subjectId"] = user.UserId,
         };
         foreach (var role in user.Roles)
@@ -340,10 +469,21 @@ public class TaskService(
         return false;
     }
 
-    private static TaskDto MapToDto(TaskItem t) => new(
-        t.Id, t.Title, t.Description, t.Status, t.Priority, t.DueDate,
-        t.AssignedToUserId, t.LinkedEntityType, t.LinkedEntityId,
-        t.CreatedAt, t.UpdatedAt, t.CompletedAt, t.RowVersion);
+    private async Task<TaskDto> MapToDtoAsync(TaskItem t, CancellationToken ct)
+    {
+        var assigneeProfile = await userProfileRepo.GetByIdAsync(t.AssignedToUserId, ct);
+        var creatorProfile = t.CreatedByUserId == t.AssignedToUserId
+            ? assigneeProfile
+            : await userProfileRepo.GetByIdAsync(t.CreatedByUserId, ct);
+        var linkedEntityName = await taskRepo.ResolveLinkedEntityNameAsync(t.LinkedEntityType, t.LinkedEntityId, ct);
+
+        return new TaskDto(
+            t.Id, t.Title, t.Description, t.Status, t.Priority, t.DueDate,
+            t.AssignedToUserId, assigneeProfile?.DisplayName,
+            t.CreatedByUserId, creatorProfile?.DisplayName,
+            t.LinkedEntityType, t.LinkedEntityId, linkedEntityName,
+            t.CreatedAt, t.UpdatedAt, t.CompletedAt, t.RowVersion);
+    }
 
     private void AuditBrokerUserRead(ICurrentUserService user, string resource, Guid? entityId, Guid? resolvedBrokerId = null)
     {

@@ -78,17 +78,19 @@ builder.Services.AddCors(options =>
 });
 
 // Rate Limiting
+var authRateLimit = builder.Configuration.GetValue("RateLimiting:AuthenticatedPermitLimit", 100);
+var anonRateLimit = builder.Configuration.GetValue("RateLimiting:AnonymousPermitLimit", 20);
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddFixedWindowLimiter("authenticated", opt =>
     {
-        opt.PermitLimit = 100;
+        opt.PermitLimit = authRateLimit;
         opt.Window = TimeSpan.FromMinutes(1);
     });
     options.AddFixedWindowLimiter("anonymous", opt =>
     {
-        opt.PermitLimit = 20;
+        opt.PermitLimit = anonRateLimit;
         opt.Window = TimeSpan.FromMinutes(1);
     });
 });
@@ -113,6 +115,7 @@ builder.Services.AddScoped<SubmissionService>();
 builder.Services.AddScoped<RenewalService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<TaskService>();
+builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TimelineService>();
 builder.Services.AddScoped<ReferenceDataService>();
 builder.Services.AddScoped<BrokerScopeResolver>();
@@ -234,6 +237,7 @@ app.MapSubmissionEndpoints();
 app.MapRenewalEndpoints();
 app.MapDashboardEndpoints();
 app.MapTaskEndpoints();
+app.MapUserEndpoints();
 app.MapTimelineEndpoints();
 
 app.Run();

@@ -25,5 +25,9 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
 
         builder.HasIndex(e => new { e.IdpIssuer, e.IdpSubject }).IsUnique()
             .HasDatabaseName("IX_UserProfiles_IdpIssuer_IdpSubject");
+
+        // F0004: Index for user search (assignee picker typeahead)
+        builder.HasIndex(e => e.DisplayName)
+            .HasDatabaseName("IX_UserProfiles_DisplayName");
     }
 }

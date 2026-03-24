@@ -10,6 +10,7 @@ namespace Nebula.Tests.Integration;
 /// Uses a role-less user (TestNebulaRoles = []) to verify all protected endpoints
 /// return 403 when the caller lacks the required permission.
 /// </summary>
+[Collection(IntegrationTestCollection.Name)]
 public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
     : IClassFixture<CustomWebApplicationFactory>, IDisposable
 {

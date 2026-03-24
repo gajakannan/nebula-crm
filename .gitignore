@@ -28,6 +28,9 @@ obj/
 *.suo
 *.csproj.user
 engine/src/Nebula.Api/out.xml
+TestResults/
+engine/coverage/
+coverage-report/
 
 # Node / React
 node_modules/
@@ -36,8 +39,13 @@ node_modules/
 dist/
 .next/
 build/
+experience/coverage/
 playwright-report/
 test-results/
+!planning-mds/operations/evidence/**/artifacts/playwright-report/
+!planning-mds/operations/evidence/**/artifacts/playwright-report/**
+!planning-mds/operations/evidence/**/artifacts/test-results/
+!planning-mds/operations/evidence/**/artifacts/test-results/**
 
 # Python
 __pycache__/
@@ -61,6 +69,8 @@ desktop.ini
 # Logs
 *.log
 logs/
+# Evidence logs are audit artifacts — un-ignore them
+!planning-mds/operations/evidence/**/*.log
 
 # Docker
 docker-compose.override.yml

@@ -39,5 +39,9 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
 
         builder.HasIndex(e => new { e.LinkedEntityType, e.LinkedEntityId })
             .HasDatabaseName("IX_Tasks_LinkedEntity");
+
+        // F0004: Composite index for "assignedByMe" view (CreatedByUserId) and "myWork" view overlap
+        builder.HasIndex(e => new { e.CreatedByUserId, e.AssignedToUserId })
+            .HasDatabaseName("IX_Tasks_CreatedByUserId_AssignedToUserId");
     }
 }

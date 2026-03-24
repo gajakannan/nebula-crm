@@ -25,6 +25,11 @@ vi.mock('../hooks/useOpportunityBreakdown', () => ({
   useOpportunityBreakdown: (...args: unknown[]) => mockUseOpportunityBreakdown(...args),
 }));
 
+const mockUseDashboardOpportunities = vi.fn();
+vi.mock('../hooks/useDashboardOpportunities', () => ({
+  useDashboardOpportunities: (...args: unknown[]) => mockUseDashboardOpportunities(...args),
+}));
+
 const mockUseDashboardKpis = vi.fn();
 vi.mock('@/features/kpis/hooks/useDashboardKpis', () => ({
   useDashboardKpis: (...args: unknown[]) => mockUseDashboardKpis(...args),
@@ -75,10 +80,34 @@ const flowDto = {
       emphasis: 'blocked' as const,
     },
     {
+      status: 'QuotePreparation',
+      label: 'Quote Preparation',
+      isTerminal: false,
+      displayOrder: 4,
+      colorGroup: 'decision' as const,
+      currentCount: 4,
+      inflowCount: 4,
+      outflowCount: 3,
+      avgDwellDays: 3.2,
+      emphasis: 'active' as const,
+    },
+    {
+      status: 'Quoted',
+      label: 'Quoted',
+      isTerminal: false,
+      displayOrder: 5,
+      colorGroup: 'decision' as const,
+      currentCount: 3,
+      inflowCount: 3,
+      outflowCount: 2,
+      avgDwellDays: 4.4,
+      emphasis: 'normal' as const,
+    },
+    {
       status: 'Bound',
       label: 'Bound',
       isTerminal: true,
-      displayOrder: 4,
+      displayOrder: 6,
       colorGroup: 'decision' as const,
       currentCount: 15,
       inflowCount: 5,
@@ -90,6 +119,23 @@ const flowDto = {
   links: [
     { sourceStatus: 'Received', targetStatus: 'Triaging', count: 12 },
     { sourceStatus: 'Triaging', targetStatus: 'InReview', count: 8 },
+    { sourceStatus: 'InReview', targetStatus: 'QuotePreparation', count: 4 },
+    { sourceStatus: 'QuotePreparation', targetStatus: 'Quoted', count: 3 },
+  ],
+};
+
+const opportunitiesDto = {
+  submissions: [
+    { status: 'Received', count: 10, colorGroup: 'intake' as const },
+    { status: 'Triaging', count: 7, colorGroup: 'triage' as const },
+    { status: 'InReview', count: 4, colorGroup: 'review' as const },
+    { status: 'QuotePreparation', count: 4, colorGroup: 'decision' as const },
+    { status: 'Quoted', count: 3, colorGroup: 'decision' as const },
+  ],
+  renewals: [
+    { status: 'Created', count: 6, colorGroup: 'intake' as const },
+    { status: 'InReview', count: 2, colorGroup: 'review' as const },
+    { status: 'Quoted', count: 3, colorGroup: 'decision' as const },
   ],
 };
 
@@ -175,6 +221,12 @@ describe('OpportunitiesSummary', () => {
       isError: false,
       refetch: vi.fn(),
     });
+    mockUseDashboardOpportunities.mockReturnValue({
+      data: opportunitiesDto,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
     mockUseDashboardKpis.mockReturnValue({
       data: {
         activeBrokers: 10,
@@ -207,6 +259,22 @@ describe('OpportunitiesSummary', () => {
     expect(mockUseDashboardKpis).toHaveBeenCalledWith(180);
     fireEvent.click(screen.getByRole('tab', { name: '30d' }));
     expect(mockUseDashboardKpis).toHaveBeenLastCalledWith(30);
+  });
+
+  it('passes the selected period to synchronized story hooks', () => {
+    render(<OpportunitiesSummary />);
+
+    expect(mockUseDashboardOpportunities).toHaveBeenCalledWith(180);
+    expect(mockUseOpportunityFlow).toHaveBeenCalledWith('submission', 180);
+    expect(mockUseOpportunityOutcomes).toHaveBeenCalledWith(180);
+    expect(mockUseOpportunityAging).toHaveBeenCalledWith('submission', 180);
+
+    fireEvent.click(screen.getByRole('tab', { name: '30d' }));
+
+    expect(mockUseDashboardOpportunities).toHaveBeenLastCalledWith(30);
+    expect(mockUseOpportunityFlow).toHaveBeenLastCalledWith('submission', 30);
+    expect(mockUseOpportunityOutcomes).toHaveBeenLastCalledWith(30);
+    expect(mockUseOpportunityAging).toHaveBeenLastCalledWith('submission', 30);
   });
 
   it('supports keyboard chapter navigation with arrow keys', () => {
@@ -271,6 +339,14 @@ describe('OpportunitiesSummary', () => {
     await waitFor(() => {
       expect(screen.getByText('Top brokers')).toBeTruthy();
     });
+  });
+
+  it('renders the quote preparation stage as a submission versus renewal mix', () => {
+    render(<OpportunitiesSummary />);
+
+    expect(screen.getByRole('button', { name: /Quote Preparation stage, 4 opportunities/i })).toBeTruthy();
+    expect(screen.getByText('Submission vs renewal mix')).toBeTruthy();
+    expect(screen.getByText(/4 submissions, 3 renewals/i)).toBeTruthy();
   });
 
   it('enables breakdown requests lazily for the selected stage mini-view', async () => {

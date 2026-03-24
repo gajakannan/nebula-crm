@@ -208,7 +208,7 @@ p, Admin,               dashboard_nudge, read, true
 # §2.8 Task — Manage Own Tasks
 # Ownership enforced at policy layer (resource-attribute check).
 # Enforcement point MUST hydrate r.obj.assignee before calling the enforcer (request on create; DB on read/update/delete).
-# Mapping: r.obj.assignee == Task.AssignedTo (domain field).
+# Mapping: r.obj.assignee == Task.AssignedToUserId (domain field, uuid per F0005).
 # Read-only in dashboard context. No create/update/delete from widget (F0001-S0003 out of scope).
 # Status filter (Open/InProgress only; Done excluded) enforced at query layer for /my/tasks.
 # Admin: own tasks only in MVP; cross-user task view is explicitly Future (F0001-S0003 Role Visibility).
@@ -239,6 +239,45 @@ p, Admin,               task, create, r.obj.assignee == r.sub.id
 p, Admin,               task, read,   r.obj.assignee == r.sub.id
 p, Admin,               task, update, r.obj.assignee == r.sub.id
 p, Admin,               task, delete, r.obj.assignee == r.sub.id
+
+# ─────────────────────────────────────────────────────────────────────────────
+# §2.6a Task — Manager Assignment (F0004 delta)
+# DistributionManager and Admin can create tasks assigned to any active internal user.
+# They can also read, update, and delete tasks they created (CreatedByUserId match).
+# These rules supplement, not replace, the self-assigned rules in §2.8.
+# The enforcer uses OR semantics: access is granted if ANY matching row's condition is met.
+# Status changes remain assignee-only (application layer guard, not Casbin).
+# ─────────────────────────────────────────────────────────────────────────────
+
+# DistributionManager — create (unrestricted, assignee validation at app layer)
+p, DistributionManager, task, create, true
+
+# DistributionManager — read/update/delete tasks they created
+p, DistributionManager, task, read,   r.obj.creator == r.sub.id
+p, DistributionManager, task, update, r.obj.creator == r.sub.id
+p, DistributionManager, task, delete, r.obj.creator == r.sub.id
+
+# Admin — create (unrestricted, assignee validation at app layer)
+p, Admin,               task, create, true
+
+# Admin — read/update/delete tasks they created
+p, Admin,               task, read,   r.obj.creator == r.sub.id
+p, Admin,               task, update, r.obj.creator == r.sub.id
+p, Admin,               task, delete, r.obj.creator == r.sub.id
+
+# ─────────────────────────────────────────────────────────────────────────────
+# §2.6b User — Search (F0004)
+# All internal roles can search UserProfile for display name resolution.
+# Sensitive fields (IdpIssuer, IdpSubject) are excluded from response.
+# Source: F0004-S0002, authorization-matrix.md §2.6b.
+# ─────────────────────────────────────────────────────────────────────────────
+
+p, DistributionUser,    user, search, true
+p, DistributionManager, user, search, true
+p, Underwriter,         user, search, true
+p, RelationshipManager, user, search, true
+p, ProgramManager,      user, search, true
+p, Admin,               user, search, true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # §2.9 Activity Timeline Event — Broker Events

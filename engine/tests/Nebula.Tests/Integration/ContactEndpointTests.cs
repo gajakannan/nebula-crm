@@ -5,14 +5,17 @@ using Nebula.Application.DTOs;
 
 namespace Nebula.Tests.Integration;
 
+[Collection(IntegrationTestCollection.Name)]
 public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
-    private async Task<BrokerDto> CreateBrokerAsync(string license)
+    private async Task<BrokerDto> CreateBrokerAsync(string licensePrefix)
     {
+        var license = $"{licensePrefix}-{Guid.NewGuid().ToString("N")[..8]}";
         var response = await _client.PostAsJsonAsync("/brokers",
             new BrokerCreateDto("Contact Test Broker", license, "CA", null, null));
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
         return (await response.Content.ReadFromJsonAsync<BrokerDto>())!;
     }
 
@@ -45,6 +48,71 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
     public async Task GetContact_NonExistent_Returns404()
     {
         var response = await _client.GetAsync($"/contacts/{Guid.NewGuid()}");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetContact_Existing_Returns200()
+    {
+        var created = await CreateContactAsync("get-contact");
+
+        var response = await _client.GetAsync($"/contacts/{created.Id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<ContactDto>();
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(created.Id);
+    }
+
+    [Fact]
+    public async Task UpdateContact_WithIfMatch_Returns200()
+    {
+        var created = await CreateContactAsync("update-contact");
+        var request = new HttpRequestMessage(HttpMethod.Put, $"/contacts/{created.Id}")
+        {
+            Content = JsonContent.Create(new ContactUpdateDto("Updated Name", "updated@test.com", "+14155550001", "Assistant")),
+        };
+        request.Headers.IfMatch.Add(new System.Net.Http.Headers.EntityTagHeaderValue($"\"{created.RowVersion}\""));
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<ContactDto>();
+        result.Should().NotBeNull();
+        result!.FullName.Should().Be("Updated Name");
+        result.Role.Should().Be("Assistant");
+    }
+
+    [Fact]
+    public async Task UpdateContact_MissingIfMatch_Returns428()
+    {
+        var created = await CreateContactAsync("missing-if-match");
+
+        var response = await _client.PutAsJsonAsync(
+            $"/contacts/{created.Id}",
+            new ContactUpdateDto("Updated Name", "updated@test.com", "+14155550002", "Assistant"));
+
+        ((int)response.StatusCode).Should().Be(428);
+    }
+
+    [Fact]
+    public async Task DeleteContact_Existing_Returns204()
+    {
+        var created = await CreateContactAsync("delete-contact");
+
+        var response = await _client.DeleteAsync($"/contacts/{created.Id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task DeleteContact_ThenGetReturns404()
+    {
+        var created = await CreateContactAsync("delete-then-get");
+        await _client.DeleteAsync($"/contacts/{created.Id}");
+
+        var response = await _client.GetAsync($"/contacts/{created.Id}");
+
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -84,4 +152,19 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
 
     private record JsonPaginatedContactList(
         IReadOnlyList<ContactDto> Data, int Page, int PageSize, int TotalCount, int TotalPages);
+
+    private async Task<ContactDto> CreateContactAsync(string key)
+    {
+        var broker = await CreateBrokerAsync($"CTT-{key}");
+        var response = await _client.PostAsJsonAsync("/contacts",
+            new ContactCreateDto(
+                broker.Id,
+                $"Contact {key}",
+                $"{key}@test.com",
+                "+14155559999",
+                "Primary"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        return (await response.Content.ReadFromJsonAsync<ContactDto>())!;
+    }
 }

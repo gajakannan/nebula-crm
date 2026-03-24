@@ -3,11 +3,13 @@ import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { KpiCardsRow } from '@/features/kpis';
 import { cn } from '@/lib/utils';
+import { useDashboardOpportunities } from '../hooks/useDashboardOpportunities';
 import { useOpportunityFlow } from '../hooks/useOpportunityFlow';
 import { useOpportunityOutcomes } from '../hooks/useOpportunityOutcomes';
 import { useOpportunityAging } from '../hooks/useOpportunityAging';
-import { ConnectedFlow } from './ConnectedFlow';
 import type { StoryChapter } from './storyTypes';
+import { MobilePipelineSummary } from './MobilePipelineSummary';
+import { VerticalTimeline } from './VerticalTimeline';
 
 const PERIOD_WINDOWS = [30, 90, 180, 365] as const;
 
@@ -21,6 +23,7 @@ export function StoryCanvas() {
   const [periodDays, setPeriodDays] = useState<(typeof PERIOD_WINDOWS)[number]>(180);
   const [chapter, setChapter] = useState<StoryChapter>('flow');
 
+  const opportunitiesQuery = useDashboardOpportunities(periodDays);
   const flowQuery = useOpportunityFlow('submission', periodDays);
   const outcomesQuery = useOpportunityOutcomes(periodDays);
   const agingQuery = useOpportunityAging('submission', periodDays);
@@ -100,7 +103,7 @@ export function StoryCanvas() {
                   onClick={() => setPeriodDays(windowDays)}
                   className={cn(
                     'rounded-full bg-surface-main/55 px-3 py-1 text-xs font-semibold text-text-secondary transition-colors',
-                    active && 'bg-nebula-violet/20 text-nebula-violet',
+                    active && 'story-pill-active',
                   )}
                 >
                   {windowDays}d
@@ -110,7 +113,7 @@ export function StoryCanvas() {
           </div>
 
           <div
-            className="inline-flex w-full max-w-full items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] lg:w-auto"
+            className="hidden w-full max-w-full items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] lg:inline-flex lg:w-auto"
             role="tablist"
             aria-label="Story chapters"
           >
@@ -128,7 +131,7 @@ export function StoryCanvas() {
                   onKeyDown={(event) => onChapterKeyDown(event, chapterIndex)}
                   className={cn(
                     'min-w-fit whitespace-nowrap rounded-full bg-surface-main/55 px-3 py-1 text-xs font-semibold text-text-secondary transition-colors',
-                    active && 'bg-nebula-violet/20 text-nebula-violet',
+                    active && 'story-pill-active',
                   )}
                 >
                   {chapterOption.label}
@@ -152,17 +155,28 @@ export function StoryCanvas() {
         )}
 
         {flowQuery.data && (
-          <ConnectedFlow
-            flow={flowQuery.data}
-            outcomes={outcomesQuery.data?.outcomes ?? []}
-              chapter={chapter}
-              periodDays={periodDays}
-              outcomesLoading={outcomesQuery.isLoading}
-              outcomesError={outcomesQuery.isError}
-              onRetryOutcomes={() => outcomesQuery.refetch()}
-              aging={agingQuery.data}
-            />
-          )}
+          <>
+            <div className="hidden lg:block">
+              <VerticalTimeline
+                flow={flowQuery.data}
+                opportunities={opportunitiesQuery.data}
+                outcomes={outcomesQuery.data?.outcomes ?? []}
+                chapter={chapter}
+                periodDays={periodDays}
+                outcomesLoading={outcomesQuery.isLoading}
+                outcomesError={outcomesQuery.isError}
+                onRetryOutcomes={() => outcomesQuery.refetch()}
+                aging={agingQuery.data}
+              />
+            </div>
+            <div className="lg:hidden">
+              <MobilePipelineSummary
+                flow={flowQuery.data}
+                outcomes={outcomesQuery.data?.outcomes ?? []}
+              />
+            </div>
+          </>
+        )}
       </section>
     </section>
   );

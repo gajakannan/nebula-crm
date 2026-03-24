@@ -166,6 +166,67 @@ public class DashboardRepositoryBreakdownAndAgingTests
         triaging.Sla.OnTimeCount.Should().Be(triaging.Total - triaging.Sla.ApproachingCount - triaging.Sla.OverdueCount);
     }
 
+    [Fact]
+    public async Task OpportunityWindowing_KeepsFlowBreakdownAndAgingAligned()
+    {
+        await using var db = CreateContext();
+        var now = DateTime.UtcNow;
+        var account = NewAccount();
+        var recentBroker = NewBroker("Atlas Brokerage", "CA");
+        var olderBroker = NewBroker("Beacon Brokerage", "TX");
+        var assignee = Guid.NewGuid();
+
+        db.Accounts.Add(account);
+        db.Brokers.AddRange(recentBroker, olderBroker);
+        db.ReferenceSubmissionStatuses.AddRange(
+            new ReferenceSubmissionStatus
+            {
+                Code = "Received",
+                DisplayName = "Received",
+                Description = "Received",
+                IsTerminal = false,
+                DisplayOrder = 1,
+                ColorGroup = "intake",
+            },
+            new ReferenceSubmissionStatus
+            {
+                Code = "Bound",
+                DisplayName = "Bound",
+                Description = "Bound",
+                IsTerminal = true,
+                DisplayOrder = 2,
+                ColorGroup = "won",
+            });
+
+        db.Submissions.AddRange(
+            NewSubmission(account.Id, recentBroker.Id, null, assignee, "Received", "Property", now.AddDays(-10)),
+            NewSubmission(account.Id, olderBroker.Id, null, assignee, "Received", "Property", now.AddDays(-45)));
+
+        await db.SaveChangesAsync();
+
+        var repository = new DashboardRepository(db);
+        var currentUser = new TestCurrentUserService(Guid.NewGuid(), ["Admin"], ["West"]);
+
+        var flow30 = await repository.GetOpportunityFlowAsync(currentUser, "submission", 30);
+        var breakdown30 = await repository.GetOpportunityBreakdownAsync(currentUser, "submission", "Received", "broker", 30);
+        var aging30 = await repository.GetOpportunityAgingAsync(currentUser, "submission", 30);
+
+        flow30.Nodes.Single(node => node.Status == "Received").CurrentCount.Should().Be(1);
+        breakdown30.Total.Should().Be(1);
+        breakdown30.Groups.Should().ContainSingle(group => group.Label == recentBroker.LegalName && group.Count == 1);
+        aging30.Statuses.Single(status => status.Status == "Received").Total.Should().Be(1);
+
+        var flow90 = await repository.GetOpportunityFlowAsync(currentUser, "submission", 90);
+        var breakdown90 = await repository.GetOpportunityBreakdownAsync(currentUser, "submission", "Received", "broker", 90);
+        var aging90 = await repository.GetOpportunityAgingAsync(currentUser, "submission", 90);
+
+        flow90.Nodes.Single(node => node.Status == "Received").CurrentCount.Should().Be(2);
+        breakdown90.Total.Should().Be(2);
+        breakdown90.Groups.Should().ContainEquivalentOf(new { Key = recentBroker.LegalName, Label = recentBroker.LegalName, Count = 1 });
+        breakdown90.Groups.Should().ContainEquivalentOf(new { Key = olderBroker.LegalName, Label = olderBroker.LegalName, Count = 1 });
+        aging90.Statuses.Single(status => status.Status == "Received").Total.Should().Be(2);
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

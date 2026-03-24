@@ -2,7 +2,7 @@
 
 Auto-generated index of all user stories across feature folders.
 
-**Total Stories:** 47
+**Total Stories:** 56
 
 ---
 
@@ -38,9 +38,9 @@ Auto-generated index of all user stories across feature folders.
 
 | Story ID | Title | Priority | Phase | Persona |
 |----------|-------|----------|-------|---------|
-| [F0003-S0001](./F0003-task-center/F0003-S0001-create-task.md) | Create a task (self-assigned) | High | MVP | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
-| [F0003-S0002](./F0003-task-center/F0003-S0002-update-task.md) | Update a task (self-assigned) | High | MVP | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
-| [F0003-S0003](./F0003-task-center/F0003-S0003-delete-task.md) | Soft delete a task (self-assigned) | Medium | MVP | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
+| [F0003-S0001](./archive/F0003-task-center/F0003-S0001-create-task.md) | Create a task (self-assigned) | High | MVP | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
+| [F0003-S0002](./archive/F0003-task-center/F0003-S0002-update-task.md) | Update a task (self-assigned) | High | MVP | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
+| [F0003-S0003](./archive/F0003-task-center/F0003-S0003-delete-task.md) | Soft delete a task (self-assigned) | Medium | MVP | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
 
 ---
 
@@ -107,12 +107,35 @@ Auto-generated index of all user stories across feature folders.
 
 | Story ID | Title | Priority | Phase | Persona |
 |----------|-------|----------|-------|---------|
-| [F0013-S0000](./F0013-dashboard-framed-storytelling-canvas/F0013-S0000-editorial-palette-refresh-dark-and-light-themes.md) | Editorial palette refresh — dark & light themes | Critical | MVP | dashboard user |
-| [F0013-S0001](./F0013-dashboard-framed-storytelling-canvas/F0013-S0001-restore-framed-canvas-identity-with-three-layer-visual-hierarchy.md) | Restore framed canvas identity with three-layer visual hierarchy | Critical | MVP | dashboard user |
-| [F0013-S0002](./F0013-dashboard-framed-storytelling-canvas/F0013-S0002-build-timeline-bar-with-connected-stage-nodes-and-terminal-branches.md) | Build vertical timeline with connected stage nodes and terminal outcome branches | High | MVP | dashboard user |
-| [F0013-S0003](./F0013-dashboard-framed-storytelling-canvas/F0013-S0003-add-radial-donut-chart-popovers-at-each-timeline-stage-node.md) | Add contextual mini-visualizations at each timeline stage node | High | MVP | dashboard user |
-| [F0013-S0004](./F0013-dashboard-framed-storytelling-canvas/F0013-S0004-connect-chapter-controls-to-radial-popover-data-layers.md) | Connect chapter controls as uniform override for timeline visualizations | High | MVP | dashboard user |
-| [F0013-S0005](./F0013-dashboard-framed-storytelling-canvas/F0013-S0005-ensure-responsive-accessibility-and-performance-parity.md) | Ensure responsive, accessibility, and performance parity for framed storytelling canvas | Medium | MVP | dashboard user on any device or using assistive technology |
+| [F0013-S0000](./archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0000-editorial-palette-refresh-dark-and-light-themes.md) | Editorial palette refresh — dark & light themes | Critical | MVP | dashboard user |
+| [F0013-S0001](./archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0001-restore-framed-canvas-identity-with-three-layer-visual-hierarchy.md) | Restore framed canvas identity with three-layer visual hierarchy | Critical | MVP | dashboard user |
+| [F0013-S0002](./archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0002-build-timeline-bar-with-connected-stage-nodes-and-terminal-branches.md) | Build vertical timeline with connected stage nodes and terminal outcome branches | High | MVP | dashboard user |
+| [F0013-S0003](./archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0003-add-radial-donut-chart-popovers-at-each-timeline-stage-node.md) | Add contextual mini-visualizations at each timeline stage node | High | MVP | dashboard user |
+| [F0013-S0004](./archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0004-connect-chapter-controls-to-radial-popover-data-layers.md) | Connect chapter controls as uniform override for timeline visualizations | High | MVP | dashboard user |
+| [F0013-S0005](./archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0005-ensure-responsive-accessibility-and-performance-parity.md) | Ensure responsive, accessibility, and performance parity for framed storytelling canvas | Medium | MVP | dashboard user on any device or using assistive technology |
+
+---
+
+## F0004 — Task Center UI + Manager Assignment
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [F0004-S0001](./F0004-task-center-ui-and-assignment/F0004-S0001-task-list-api-endpoint.md) | Paginated task list API with filters and views | Critical | Phase 1 | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
+| [F0004-S0002](./F0004-task-center-ui-and-assignment/F0004-S0002-user-search-api-endpoint.md) | User search API for assignee picker | High | Phase 1 | Distribution Manager or Admin |
+| [F0004-S0003](./F0004-task-center-ui-and-assignment/F0004-S0003-cross-user-task-authorization.md) | Cross-user task authorization for assign, reassign, and creator-based access | Critical | Phase 1 | Distribution Manager or Admin |
+| [F0004-S0004](./F0004-task-center-ui-and-assignment/F0004-S0004-task-center-list-and-filter-ui.md) | Task Center list view with tabs, filters, sort, and pagination | Critical | Phase 1 | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
+| [F0004-S0005](./F0004-task-center-ui-and-assignment/F0004-S0005-task-create-edit-ui-with-assignment.md) | Task create and edit UI with assignee picker for managers | High | Phase 1 | Distribution Manager or Admin |
+| [F0004-S0006](./F0004-task-center-ui-and-assignment/F0004-S0006-task-detail-panel-and-mobile-view.md) | Task detail side panel and mobile detail view | High | Phase 1 | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
+
+---
+
+## F0015 — Frontend Quality Gates + Test Infrastructure
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [F0015-S0001](./archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0001-establish-frontend-test-infrastructure-and-commands.md) | Establish frontend test infrastructure and commands | Critical | Infrastructure | frontend engineer |
+| [F0015-S0002](./archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0002-activate-nebula-frontend-quality-gates-and-evidence.md) | Activate Nebula frontend quality gates and evidence | Critical | Infrastructure | release approver |
+| [F0015-S0003](./archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0003-backfill-critical-frontend-coverage-and-record-full-validation-run.md) | Backfill critical frontend coverage and record one full validation run | High | Infrastructure | quality engineer |
 
 ---
 
@@ -120,9 +143,10 @@ Auto-generated index of all user stories across feature folders.
 
 | Phase | Count |
 |-------|-------|
+| Infrastructure | 3 |
 | MVP | 37 |
 | MVP Hardening | 1 |
-| Phase 1 | 5 |
+| Phase 1 | 11 |
 | Unspecified | 4 |
 
 ---
@@ -131,8 +155,8 @@ Auto-generated index of all user stories across feature folders.
 
 | Priority | Count |
 |----------|-------|
-| Critical | 8 |
-| High | 26 |
+| Critical | 13 |
+| High | 30 |
 | Medium | 9 |
 
 ---

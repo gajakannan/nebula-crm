@@ -1081,6 +1081,9 @@ namespace Nebula.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedByUserId", "AssignedToUserId")
+                        .HasDatabaseName("IX_Tasks_CreatedByUserId_AssignedToUserId");
+
                     b.HasIndex("DueDate", "Status")
                         .HasDatabaseName("IX_Tasks_DueDate_Status")
                         .HasFilter("\"IsDeleted\" = false AND \"Status\" != 'Done'");
@@ -1145,6 +1148,9 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DisplayName")
+                        .HasDatabaseName("IX_UserProfiles_DisplayName");
 
                     b.HasIndex("IdpIssuer", "IdpSubject")
                         .IsUnique()

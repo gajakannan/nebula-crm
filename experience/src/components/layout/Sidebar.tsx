@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
+  ClipboardList,
   PanelLeftClose,
   LogOut,
   ChevronRight,
@@ -13,6 +14,7 @@ import { useSidebar } from '@/hooks/useSidebar';
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
   { label: 'Brokers', href: '/brokers', icon: Users },
+  { label: 'Tasks', href: '/tasks', icon: ClipboardList },
 ];
 
 function isActive(href: string, pathname: string) {

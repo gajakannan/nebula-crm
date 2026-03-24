@@ -11,6 +11,7 @@ using Nebula.Application.DTOs;
 
 namespace Nebula.Tests.Integration;
 
+[Collection(IntegrationTestCollection.Name)]
 public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly CustomWebApplicationFactory _factory;
@@ -105,6 +106,26 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
                 node.Emphasis.Should().BeOneOf("normal", "active", "blocked", "bottleneck");
             }
         }
+    }
+
+    [Fact]
+    public async Task GetOpportunityFlow_InvalidEntityType_Returns400()
+    {
+        var response = await _client.GetAsync("/dashboard/opportunities/flow?entityType=invalid");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetOpportunityItems_Returns200WithCorrectShape()
+    {
+        var response = await _client.GetAsync("/dashboard/opportunities/submission/Received/items");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var items = await response.Content.ReadFromJsonAsync<OpportunityItemsDto>();
+        items.Should().NotBeNull();
+        items!.Items.Should().NotBeNull();
+        items.TotalCount.Should().BeGreaterThanOrEqualTo(0);
     }
 
     [Fact]

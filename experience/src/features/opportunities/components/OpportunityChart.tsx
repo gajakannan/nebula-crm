@@ -219,7 +219,9 @@ function buildLayout(
 
 export function OpportunityChart({ label, entityType, statuses, periodDays }: OpportunityChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(() =>
+    typeof window === 'undefined' ? 0 : Math.max(window.innerWidth, 320),
+  );
   const { data: flow, isLoading: flowLoading, isError: flowError } = useOpportunityFlow(
     entityType,
     periodDays,

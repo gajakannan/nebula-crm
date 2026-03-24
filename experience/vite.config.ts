@@ -5,7 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 export default defineConfig(() => {
-  const apiProxyTarget = 'http://localhost:5113'
+  const apiProxyTarget = process.env.NEBULA_API_PROXY_TARGET?.trim()
+    || process.env.VITE_API_PROXY_TARGET?.trim()
+    || 'http://localhost:5113'
   const apiProxyPaths = [
     // Keep OIDC callback (`/auth/callback`) on the frontend router.
     // Only logout should hit the API.
@@ -88,12 +90,29 @@ export default defineConfig(() => {
     },
     test: {
       environment: 'jsdom',
+      environmentOptions: {
+        jsdom: {
+          url: 'http://localhost/',
+        },
+      },
       globals: true,
       setupFiles: ['./src/test-setup.ts'],
       include: ['src/**/*.test.{ts,tsx}'],
       exclude: ['tests/visual/**'],
       alias: {
         '@': path.resolve(__dirname, './src'),
+      },
+      coverage: {
+        provider: 'v8',
+        reportsDirectory: './coverage',
+        reporter: ['text', 'json-summary', 'json', 'lcov', 'html'],
+        include: ['src/**/*.{ts,tsx}'],
+        exclude: [
+          'src/**/*.d.ts',
+          'src/test-setup.ts',
+          'src/vite-env.d.ts',
+          'src/main.tsx',
+        ],
       },
     },
   }

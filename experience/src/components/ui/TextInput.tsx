@@ -21,7 +21,7 @@ export function TextInput({ label, error, className, id, ...props }: TextInputPr
           'focus:outline-none focus:ring-1',
           error
             ? 'border-status-error focus:ring-status-error'
-            : 'focus:border-nebula-violet focus:ring-nebula-violet',
+            : 'focus:ring-nebula-violet',
           className,
         )}
         {...props}

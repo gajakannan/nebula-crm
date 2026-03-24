@@ -27,4 +27,18 @@ Each run folder should contain:
 - CI validates this requirement with:
   - `agents/frontend-developer/scripts/validate-frontend-ux-evidence.py`
 
+## Frontend Quality Gate Evidence
+
+- Solution-owned frontend validation evidence is tracked under:
+  - `planning-mds/operations/evidence/frontend-quality/`
+- The lifecycle gate consumes:
+  - `planning-mds/operations/evidence/frontend-quality/latest-run.json`
+- The manifest must distinguish:
+  - component
+  - integration
+  - accessibility
+  - coverage
+  - visual
+- The manifest must point to concrete artifacts, not review summaries alone.
+
 For execution requirements, see `agents/docs/MANUAL-ORCHESTRATION-RUNBOOK.md`.

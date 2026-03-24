@@ -22,9 +22,10 @@ export function TaskRow({ task }: TaskRowProps) {
       : null;
 
   return (
-    <div
+    <Link
+      to={`/tasks/${task.id}`}
       className={cn(
-        'flex items-center justify-between rounded-lg px-3 py-2.5 transition-all',
+        'flex items-center justify-between rounded-lg px-3 py-2.5 transition-all cursor-pointer',
         task.isOverdue
           ? 'bg-status-error/5 fx-shadow-task-overdue'
           : 'hover:bg-white/[0.03] fx-shadow-task-hover',
@@ -42,7 +43,11 @@ export function TaskRow({ task }: TaskRowProps) {
         {task.linkedEntityName && (
           <p className="mt-0.5 text-xs text-text-muted">
             {linkedPath ? (
-              <Link to={linkedPath} className="hover:text-nebula-violet">
+              <Link
+                to={linkedPath}
+                className="hover:text-nebula-violet"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {task.linkedEntityName}
               </Link>
             ) : (
@@ -67,6 +72,6 @@ export function TaskRow({ task }: TaskRowProps) {
           {task.status === 'InProgress' ? 'In Progress' : task.status}
         </Badge>
       </div>
-    </div>
+    </Link>
   );
 }

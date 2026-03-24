@@ -120,7 +120,7 @@ Architecture constraints:
 
 ## 3) Phase A — Product Manager Spec (Current Baseline)
 
-Status: This repository is currently focused on the agent builder framework. Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker Relationship Management), and F0009 (Authentication + Role-Based Login). Task write endpoints remain pending until F0003 is activated. Phase A remains the baseline spec and Phase B is approved.
+Status: This repository is currently focused on the agent builder framework. Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker Relationship Management), F0009 (Authentication + Role-Based Login), F0003 (Task Center API-only MVP), and F0015 (Frontend Quality Gates + Test Infrastructure). Phase A remains the baseline spec and Phase B is approved.
 
 ### 3.1 Vision + Non-Goals
 
@@ -161,17 +161,19 @@ Status: This repository is currently focused on the agent builder framework. Pha
 **MVP Features:**
 - [F0001: Dashboard](features/archive/F0001-dashboard/PRD.md) - Done (Archived)
 - [F0002: Broker & MGA Relationship Management](features/archive/F0002-broker-relationship-management/PRD.md) - Done (Archived)
-- [F0003: Task Center + Reminders](features/F0003-task-center/PRD.md) - Draft (API-only MVP)
+- [F0003: Task Center + Reminders](features/archive/F0003-task-center/PRD.md) - Done (API-only MVP, archived 2026-03-20)
 - [F0005: IdP Migration: Keycloak → authentik](features/archive/F0005-idp-migration/PRD.md) - Done (Archived)
 - F0006: Submission Intake Workflow - Planned
 - F0007: Renewal Pipeline - Planned
 - F0008: Broker Insights - Planned
 - [F0009: Authentication + Role-Based Login](features/archive/F0009-authentication-and-role-based-login/PRD.md) - Done (Archived; Phase 1)
-- [F0004: Task Center UI + Manager Assignment](features/F0004-task-center-ui-and-assignment/PRD.md) - Planned
+- [F0004: Task Center UI + Manager Assignment](features/F0004-task-center-ui-and-assignment/PRD.md) - Implementation-Ready (Phase 1)
+- [F0014: DevOps Smoke Test Automation](features/F0014-devops-smoke-test-automation/README.md) - In Progress (Infrastructure)
+- [F0015: Frontend Quality Gates + Test Infrastructure](features/archive/F0015-frontend-quality-gates-and-test-infrastructure/PRD.md) - Done (Archived)
 - [F0010: Dashboard Opportunities Refactor (Pipeline Board + Insight Views)](features/archive/F0010-dashboard-opportunities-refactor/PRD.md) - Abandoned (Superseded by F0013)
 - [F0011: Dashboard Opportunities Flow-First Modernization (Connected Pipeline + Terminal Outcomes)](features/archive/F0011-dashboard-opportunities-flow-modernization/PRD.md) - Abandoned (Superseded by F0013)
 - [F0012: Dashboard Storytelling Infographic Refactor (Unified Canvas + Collapsible Rails)](features/archive/F0012-dashboard-storytelling-infographic-canvas/PRD.md) - Done (Archived)
-- [F0013: Dashboard Framed Storytelling Canvas](features/F0013-dashboard-framed-storytelling-canvas/PRD.md) - Done (Active folder retained; Decision A override)
+- [F0013: Dashboard Framed Storytelling Canvas](features/archive/F0013-dashboard-framed-storytelling-canvas/PRD.md) - Done (Archived)
 
 ### 3.4 MVP Features and Stories (vertical-slice friendly)
 
@@ -196,9 +198,9 @@ Status: This repository is currently focused on the agent builder framework. Pha
 - [F0002-S0009: Adopt Native Casbin Enforcer](features/archive/F0002-broker-relationship-management/F0002-S0009-adopt-native-casbin-enforcer.md) - Done (Archived)
 
 **MVP Stories (Feature F0003: Task Center + Reminders — API-only):**
-- [F0003-S0001: Create Task](features/F0003-task-center/F0003-S0001-create-task.md) - Draft
-- [F0003-S0002: Update Task](features/F0003-task-center/F0003-S0002-update-task.md) - Draft
-- [F0003-S0003: Delete Task](features/F0003-task-center/F0003-S0003-delete-task.md) - Draft
+- [F0003-S0001: Create Task](features/archive/F0003-task-center/F0003-S0001-create-task.md) - ✅ Done
+- [F0003-S0002: Update Task](features/archive/F0003-task-center/F0003-S0002-update-task.md) - ✅ Done
+- [F0003-S0003: Delete Task](features/archive/F0003-task-center/F0003-S0003-delete-task.md) - ✅ Done
 
 **Phase 1 Stories (Feature F0009: Authentication + Role-Based Login):**
 - [F0009-S0001: Login Screen and OIDC Redirect](features/archive/F0009-authentication-and-role-based-login/F0009-S0001-login-screen-and-oidc-redirect.md) - Done (Archived)
@@ -206,6 +208,11 @@ Status: This repository is currently focused on the agent builder framework. Pha
 - [F0009-S0003: Role-Based Entry and Protected Navigation](features/archive/F0009-authentication-and-role-based-login/F0009-S0003-role-based-entry-and-protected-navigation.md) - Done (Archived)
 - [F0009-S0004: BrokerUser Access Boundaries](features/archive/F0009-authentication-and-role-based-login/F0009-S0004-broker-user-access-boundaries.md) - Done (Archived)
 - [F0009-S0005: Seeded User Access Validation Matrix](features/archive/F0009-authentication-and-role-based-login/F0009-S0005-seeded-user-access-validation-matrix.md) - Done (Archived)
+
+**Infrastructure Stories (Feature F0015: Frontend Quality Gates + Test Infrastructure):**
+- [F0015-S0001: Establish frontend test infrastructure and commands](features/archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0001-establish-frontend-test-infrastructure-and-commands.md) - Done (Archived)
+- [F0015-S0002: Activate Nebula frontend quality gates and evidence](features/archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0002-activate-nebula-frontend-quality-gates-and-evidence.md) - Done (Archived)
+- [F0015-S0003: Backfill critical frontend coverage and record one full validation run](features/archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0003-backfill-critical-frontend-coverage-and-record-full-validation-run.md) - Done (Archived)
 
 **MVP Stories (Feature F0010: Dashboard Opportunities Refactor):**
 - [F0010-S0001: Replace Sankey default with Pipeline Board](features/archive/F0010-dashboard-opportunities-refactor/F0010-S0001-replace-sankey-with-pipeline-board-default.md) - Done (Historical; superseded by F0013)
@@ -229,12 +236,12 @@ Status: This repository is currently focused on the agent builder framework. Pha
 - [F0012-S0005: Ensure responsive, accessibility, and performance parity for storytelling dashboard](features/archive/F0012-dashboard-storytelling-infographic-canvas/F0012-S0005-ensure-responsive-accessibility-and-performance-parity-for-story-canvas.md) - Done (Archived)
 
 **MVP Stories (Feature F0013: Dashboard Framed Storytelling Canvas):**
-- [F0013-S0000: Editorial palette refresh — dark & light themes](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0000-editorial-palette-refresh-dark-and-light-themes.md) - Done (Decision A override; prior QE/Code findings retained)
-- [F0013-S0001: Restore framed canvas identity with three-layer visual hierarchy](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0001-restore-framed-canvas-identity-with-three-layer-visual-hierarchy.md) - Done (Decision A override; prior QE/Code findings retained)
-- [F0013-S0002: Build vertical timeline with connected stage nodes and terminal outcome branches](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0002-build-timeline-bar-with-connected-stage-nodes-and-terminal-branches.md) - Done (Decision A override; prior QE/Code findings retained)
-- [F0013-S0003: Add contextual mini-visualizations at each timeline stage node](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0003-add-radial-donut-chart-popovers-at-each-timeline-stage-node.md) - Done (Decision A override; prior QE/Code findings retained)
-- [F0013-S0004: Connect chapter controls as uniform override for timeline visualizations](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0004-connect-chapter-controls-to-radial-popover-data-layers.md) - Done (Decision A override; prior QE/Code findings retained)
-- [F0013-S0005: Ensure responsive, accessibility, and performance parity for framed storytelling canvas](features/F0013-dashboard-framed-storytelling-canvas/F0013-S0005-ensure-responsive-accessibility-and-performance-parity.md) - Done (Decision A override; prior QE/Code findings retained)
+- [F0013-S0000: Editorial palette refresh — dark & light themes](features/archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0000-editorial-palette-refresh-dark-and-light-themes.md) - Done (Archived)
+- [F0013-S0001: Restore framed canvas identity with three-layer visual hierarchy](features/archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0001-restore-framed-canvas-identity-with-three-layer-visual-hierarchy.md) - Done (Archived)
+- [F0013-S0002: Build vertical timeline with connected stage nodes and terminal outcome branches](features/archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0002-build-timeline-bar-with-connected-stage-nodes-and-terminal-branches.md) - Done (Archived)
+- [F0013-S0003: Add contextual mini-visualizations at each timeline stage node](features/archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0003-add-radial-donut-chart-popovers-at-each-timeline-stage-node.md) - Done (Archived)
+- [F0013-S0004: Connect chapter controls as uniform override for timeline visualizations](features/archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0004-connect-chapter-controls-to-radial-popover-data-layers.md) - Done (Archived)
+- [F0013-S0005: Ensure responsive, accessibility, and performance parity for framed storytelling canvas](features/archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0005-ensure-responsive-accessibility-and-performance-parity.md) - Done (Archived)
 
 **Story Index:** See `planning-mds/features/STORY-INDEX.md` for auto-generated summary of all stories (if generated).
 
@@ -261,7 +268,7 @@ Screen baseline details:
 
 ## 4) Phase B — Architect Spec (Public Baseline)
 
-**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0009/F0012/F0013; keep planning artifacts current during ongoing F0003/F0004 work.
+**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0003/F0009/F0012/F0013; keep planning artifacts current during ongoing F0004 work.
 
 This section defines the build-ready technical baseline for the reference implementation.
 

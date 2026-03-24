@@ -74,7 +74,7 @@ export function NeuronPanel({ collapsed, fullscreen, onToggleFullscreen }: Neuro
                 }}
                 rows={4}
                 placeholder="Ask anything..."
-                className="w-full resize-none rounded-lg border border-surface-border bg-surface-card px-3 pb-10 pt-2 text-sm text-text-primary placeholder:text-text-muted focus:border-nebula-violet focus:outline-none focus:ring-1 focus:ring-nebula-violet"
+                className="w-full resize-none rounded-lg border border-surface-border bg-surface-card px-3 pb-10 pt-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-nebula-violet"
               />
               <div className="absolute inset-x-2 bottom-2 flex items-center justify-between">
                 <div className="flex items-center gap-1">

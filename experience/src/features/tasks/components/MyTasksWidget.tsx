@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useMyTasks } from '../hooks/useMyTasks';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorFallback } from '@/components/ui/ErrorFallback';
@@ -11,8 +12,11 @@ export function MyTasksWidget() {
       className="glass-card operational-panel rounded-xl p-4 md:p-5"
       aria-label="My tasks section"
     >
-      <div className="mb-3">
+      <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-text-primary">My Tasks</h2>
+        <Link to="/tasks" className="text-xs text-text-muted hover:text-nebula-violet transition-colors">
+          View all
+        </Link>
       </div>
 
       {isLoading && (

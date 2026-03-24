@@ -3,23 +3,36 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Nebula.Application.DTOs;
+using Nebula.Infrastructure.Persistence;
 
 namespace Nebula.Tests.Integration;
 
 [Collection(IntegrationTestCollection.Name)]
 public class TaskEndpointTests(CustomWebApplicationFactory factory)
-    : IClassFixture<CustomWebApplicationFactory>, IDisposable
+    : IClassFixture<CustomWebApplicationFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client = factory.CreateClient();
 
-    public void Dispose()
+    public async Task InitializeAsync()
+    {
+        // Clean tasks and timeline events before each test to prevent data accumulation
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.ExecuteSqlRawAsync(
+            "DELETE FROM \"ActivityTimelineEvents\" WHERE \"EntityType\" = 'Task'; " +
+            "DELETE FROM \"Tasks\";");
+    }
+
+    public Task DisposeAsync()
     {
         TestAuthHandler.TestSubject = "test-user-001";
         TestAuthHandler.TestRole = "Admin";
         TestAuthHandler.TestDisplayName = "Test User";
         TestAuthHandler.ResetF0009Overrides();
+        return Task.CompletedTask;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -60,6 +73,13 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
     [Fact]
     public async Task CreateTask_SelfAssignmentViolation_Returns403()
     {
+        // Non-manager roles cannot assign tasks to other users
+        TestAuthHandler.TestSubject = "test-user-nonadmin-selfassign";
+        TestAuthHandler.TestRole = "DistributionUser";
+        TestAuthHandler.TestNebulaRoles = ["DistributionUser"];
+        TestAuthHandler.TestDisplayName = "Non-Manager User";
+
+        var userId = await GetCurrentUserId();
         var otherUserId = Guid.NewGuid();
         var dto = new TaskCreateRequestDto("Bad assignment", null, null, null, otherUserId, null, null);
 
@@ -563,6 +583,342 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    //  F0004: GET /tasks — Task List
+    // ═══════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task GetTasks_MyWorkView_ReturnsOwnTasks()
+    {
+        // Create a task assigned to the current user, then verify it appears in myWork view
+        var userId = await GetCurrentUserId();
+        var uniqueTitle = $"MyWork-{Guid.NewGuid():N}";
+        var dto = new TaskCreateRequestDto(uniqueTitle, null, null, null, userId, null, null);
+        await _client.PostAsJsonAsync("/tasks", dto);
+
+        var response = await _client.GetAsync("/tasks?view=myWork");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.Should().Contain(uniqueTitle);
+        var result = await response.Content.ReadFromJsonAsync<TaskListResponseDto>();
+        result.Should().NotBeNull();
+        result!.Page.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetTasks_MyWorkDefault_WhenNoViewParam()
+    {
+        // Without ?view=, should default to myWork
+        var userId = await GetCurrentUserId();
+        var uniqueTitle = $"DefaultView-{Guid.NewGuid():N}";
+        var dto = new TaskCreateRequestDto(uniqueTitle, null, null, null, userId, null, null);
+        await _client.PostAsJsonAsync("/tasks", dto);
+
+        var response = await _client.GetAsync("/tasks");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.Should().Contain(uniqueTitle);
+    }
+
+    [Fact]
+    public async Task GetTasks_AssignedByMeView_Admin_ReturnsDelegatedTasks()
+    {
+        // Admin (user-001) creates a task assigned to user-002;
+        // then queries assignedByMe — should see that delegated task
+        TestAuthHandler.TestSubject = "test-user-001";
+        TestAuthHandler.TestRole = "Admin";
+        TestAuthHandler.TestDisplayName = "Admin User";
+
+        var user002Id = await GetOrCreateUserId("test-user-002", "Assignee User", "DistributionUser");
+        var user001Id = await GetCurrentUserId();
+
+        var uniqueTitle = $"Delegated-{Guid.NewGuid():N}";
+        var dto = new TaskCreateRequestDto(uniqueTitle, null, null, null, user002Id, null, null);
+        var createResp = await _client.PostAsJsonAsync("/tasks", dto);
+        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var response = await _client.GetAsync("/tasks?view=assignedByMe");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.Should().Contain(uniqueTitle);
+    }
+
+    [Fact]
+    public async Task GetTasks_AssignedByMeView_NonManager_Returns403()
+    {
+        TestAuthHandler.TestSubject = "test-user-nonadmin-001";
+        TestAuthHandler.TestRole = "DistributionUser";
+        TestAuthHandler.TestNebulaRoles = ["DistributionUser"];
+        TestAuthHandler.TestDisplayName = "Distribution User";
+
+        var response = await _client.GetAsync("/tasks?view=assignedByMe");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetTasks_Pagination_ReturnsCorrectPage()
+    {
+        var userId = await GetCurrentUserId();
+        // Create several tasks to exercise pagination
+        for (var i = 0; i < 3; i++)
+        {
+            var dto = new TaskCreateRequestDto($"Paginated-{Guid.NewGuid():N}", null, null, null, userId, null, null);
+            await _client.PostAsJsonAsync("/tasks", dto);
+        }
+
+        var response = await _client.GetAsync("/tasks?view=myWork&page=1&pageSize=2");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<TaskListResponseDto>();
+        result.Should().NotBeNull();
+        result!.Page.Should().Be(1);
+        result.PageSize.Should().Be(2);
+        result.TotalCount.Should().BeGreaterThanOrEqualTo(3);
+        result.TotalPages.Should().BeGreaterThanOrEqualTo(2);
+        result.Data.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task GetTasks_EmptyResult_ReturnsEmptyArray()
+    {
+        // Use a unique subject that has never had tasks created
+        TestAuthHandler.TestSubject = $"test-user-empty-{Guid.NewGuid():N}";
+        TestAuthHandler.TestRole = "DistributionUser";
+        TestAuthHandler.TestNebulaRoles = ["DistributionUser"];
+        TestAuthHandler.TestDisplayName = "Empty Tasks User";
+        // Trigger UserProfile creation
+        await _client.GetAsync("/my/tasks");
+
+        var response = await _client.GetAsync("/tasks?view=myWork");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<TaskListResponseDto>();
+        result.Should().NotBeNull();
+        result!.Data.Should().BeEmpty();
+        result.TotalCount.Should().Be(0);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  F0004: GET /users — User Search
+    // ═══════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task SearchUsers_ValidQuery_ReturnsMatches()
+    {
+        // Ensure at least the current user's profile is created by authenticating first
+        TestAuthHandler.TestSubject = "test-user-search-001";
+        TestAuthHandler.TestRole = "Admin";
+        TestAuthHandler.TestDisplayName = "Searchable Admin";
+        await _client.GetAsync("/my/tasks"); // trigger UserProfile upsert
+
+        // Search by partial display name — should return at least our test user
+        var response = await _client.GetAsync("/users?q=Searchable");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<UserSearchResponseDto>();
+        result.Should().NotBeNull();
+        result!.Users.Should().NotBeEmpty();
+        result.Users.Should().Contain(u => u.DisplayName.Contains("Searchable", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task SearchUsers_QueryTooShort_Returns400()
+    {
+        TestAuthHandler.TestSubject = "test-user-001";
+        TestAuthHandler.TestRole = "Admin";
+
+        var response = await _client.GetAsync("/users?q=a");
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task SearchUsers_ExternalUser_Returns403()
+    {
+        TestAuthHandler.TestRole = "ExternalUser";
+        TestAuthHandler.TestNebulaRoles = [];
+
+        var response = await _client.GetAsync("/users?q=test");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  F0004: Cross-User Assignment
+    // ═══════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task CreateTask_ManagerAssignsToOther_Returns201()
+    {
+        // Set up admin user (001) and create a target assignee (002)
+        TestAuthHandler.TestSubject = "test-user-001";
+        TestAuthHandler.TestRole = "Admin";
+        TestAuthHandler.TestDisplayName = "Admin User";
+
+        var assigneeId = await GetOrCreateUserId("test-user-002", "Assignee User", "DistributionUser");
+        var creatorId = await GetCurrentUserId();
+
+        var dto = new TaskCreateRequestDto(
+            $"Cross-Assign-{Guid.NewGuid():N}", null, null, null, assigneeId, null, null);
+
+        var response = await _client.PostAsJsonAsync("/tasks", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var result = await response.Content.ReadFromJsonAsync<TaskDto>();
+        result.Should().NotBeNull();
+        result!.AssignedToUserId.Should().Be(assigneeId);
+        result.CreatedByUserId.Should().Be(creatorId);
+        result.AssignedToUserId.Should().NotBe(result.CreatedByUserId);
+    }
+
+    [Fact]
+    public async Task CreateTask_NonManagerAssignsToOther_Returns403()
+    {
+        // Use a non-manager role
+        TestAuthHandler.TestSubject = "test-user-dist-001";
+        TestAuthHandler.TestRole = "DistributionUser";
+        TestAuthHandler.TestNebulaRoles = ["DistributionUser"];
+        TestAuthHandler.TestDisplayName = "Distribution User";
+
+        var otherUserId = Guid.NewGuid(); // someone else's ID (doesn't need to exist)
+        var dto = new TaskCreateRequestDto("Forbidden assign", null, null, null, otherUserId, null, null);
+
+        var response = await _client.PostAsJsonAsync("/tasks", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task CreateTask_ManagerSelfAssign_Returns201()
+    {
+        TestAuthHandler.TestSubject = "test-user-001";
+        TestAuthHandler.TestRole = "Admin";
+        TestAuthHandler.TestDisplayName = "Admin Self Assign";
+
+        var selfId = await GetCurrentUserId();
+        var dto = new TaskCreateRequestDto($"ManagerSelf-{Guid.NewGuid():N}", null, null, null, selfId, null, null);
+
+        var response = await _client.PostAsJsonAsync("/tasks", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var result = await response.Content.ReadFromJsonAsync<TaskDto>();
+        result!.AssignedToUserId.Should().Be(selfId);
+        result.CreatedByUserId.Should().Be(selfId);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  F0004: Creator-Based Update
+    // ═══════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task UpdateTask_CreatorEditsTitle_Returns200()
+    {
+        // Admin (user-001) creates a task for user-002, then edits its title as creator
+        TestAuthHandler.TestSubject = "test-user-001";
+        TestAuthHandler.TestRole = "Admin";
+        TestAuthHandler.TestDisplayName = "Admin Creator";
+
+        var assigneeId = await GetOrCreateUserId("test-user-002", "Assignee User", "DistributionUser");
+
+        var uniqueTitle = $"CreatorEdit-{Guid.NewGuid():N}";
+        var dto = new TaskCreateRequestDto(uniqueTitle, null, null, null, assigneeId, null, null);
+        var createResp = await _client.PostAsJsonAsync("/tasks", dto);
+        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        var created = await createResp.Content.ReadFromJsonAsync<TaskDto>();
+
+        // Edit the title as the creator (still user-001)
+        var response = await PutJsonAsync($"/tasks/{created!.Id}",
+            JsonSerializer.Serialize(new { title = "Creator Updated Title" }));
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<TaskDto>();
+        result!.Title.Should().Be("Creator Updated Title");
+    }
+
+    [Fact]
+    public async Task UpdateTask_CreatorChangesStatus_Returns403StatusChangeRestricted()
+    {
+        // Admin (user-001) creates a task for user-002, then attempts to change status as creator
+        TestAuthHandler.TestSubject = "test-user-001";
+        TestAuthHandler.TestRole = "Admin";
+        TestAuthHandler.TestDisplayName = "Admin Status Test";
+
+        var assigneeId = await GetOrCreateUserId("test-user-002", "Assignee User", "DistributionUser");
+
+        var dto = new TaskCreateRequestDto($"StatusChange-{Guid.NewGuid():N}", null, null, null, assigneeId, null, null);
+        var createResp = await _client.PostAsJsonAsync("/tasks", dto);
+        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        var created = await createResp.Content.ReadFromJsonAsync<TaskDto>();
+
+        // Attempt status change as creator (not assignee) — should be 403
+        var response = await PutJsonAsync($"/tasks/{created!.Id}",
+            JsonSerializer.Serialize(new { status = "InProgress" }));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task UpdateTask_AssigneeChangesStatus_Returns200()
+    {
+        // Admin (user-001) creates a task for user-002; user-002 changes status
+        TestAuthHandler.TestSubject = "test-user-001";
+        TestAuthHandler.TestRole = "Admin";
+        TestAuthHandler.TestDisplayName = "Admin Assigner";
+
+        var assigneeId = await GetOrCreateUserId("test-user-002", "Assignee User", "DistributionUser");
+
+        var dto = new TaskCreateRequestDto($"AssigneeStatus-{Guid.NewGuid():N}", null, null, null, assigneeId, null, null);
+        var createResp = await _client.PostAsJsonAsync("/tasks", dto);
+        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        var created = await createResp.Content.ReadFromJsonAsync<TaskDto>();
+
+        // Switch to user-002 (the assignee) and change status
+        TestAuthHandler.TestSubject = "test-user-002";
+        TestAuthHandler.TestRole = "DistributionUser";
+        TestAuthHandler.TestNebulaRoles = ["DistributionUser"];
+        TestAuthHandler.TestDisplayName = "Assignee User";
+
+        var response = await PutJsonAsync($"/tasks/{created!.Id}",
+            JsonSerializer.Serialize(new { status = "InProgress" }));
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<TaskDto>();
+        result!.Status.Should().Be("InProgress");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  F0004: Creator-Based Delete
+    // ═══════════════════════════════════════════════════════════════════════
+
+    [Fact]
+    public async Task DeleteTask_Creator_Returns204()
+    {
+        // Admin (user-001) creates a task for user-002, then deletes it as creator
+        TestAuthHandler.TestSubject = "test-user-001";
+        TestAuthHandler.TestRole = "Admin";
+        TestAuthHandler.TestDisplayName = "Admin Deleter";
+
+        var assigneeId = await GetOrCreateUserId("test-user-002", "Assignee User", "DistributionUser");
+
+        var dto = new TaskCreateRequestDto($"CreatorDelete-{Guid.NewGuid():N}", null, null, null, assigneeId, null, null);
+        var createResp = await _client.PostAsJsonAsync("/tasks", dto);
+        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        var created = await createResp.Content.ReadFromJsonAsync<TaskDto>();
+
+        // Delete as creator (still user-001)
+        var response = await _client.DeleteAsync($"/tasks/{created!.Id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        // Verify it is gone
+        var getResp = await _client.GetAsync($"/tasks/{created.Id}");
+        getResp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     //  Helpers
     // ═══════════════════════════════════════════════════════════════════════
 
@@ -586,7 +942,40 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<Nebula.Infrastructure.Persistence.AppDbContext>();
         const string issuer = "http://test.local/application/o/nebula/";
-        const string subject = "test-user-001";
+        var subject = TestAuthHandler.TestSubject;
+        var profile = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
+            db.Set<Nebula.Domain.Entities.UserProfile>()
+                .Where(u => u.IdpIssuer == issuer && u.IdpSubject == subject));
+        return profile!.Id;
+    }
+
+    /// <summary>
+    /// Switches to the specified user, triggers UserProfile upsert, queries the internal ID,
+    /// then restores the original auth handler state.
+    /// </summary>
+    private async Task<Guid> GetOrCreateUserId(string subject, string displayName, string role)
+    {
+        var prevSubject = TestAuthHandler.TestSubject;
+        var prevRole = TestAuthHandler.TestRole;
+        var prevName = TestAuthHandler.TestDisplayName;
+        var prevNebulaRoles = TestAuthHandler.TestNebulaRoles;
+
+        TestAuthHandler.TestSubject = subject;
+        TestAuthHandler.TestRole = role;
+        TestAuthHandler.TestDisplayName = displayName;
+        TestAuthHandler.TestNebulaRoles = [role];
+
+        // Trigger UserProfile upsert
+        await _client.GetAsync("/my/tasks");
+
+        TestAuthHandler.TestSubject = prevSubject;
+        TestAuthHandler.TestRole = prevRole;
+        TestAuthHandler.TestDisplayName = prevName;
+        TestAuthHandler.TestNebulaRoles = prevNebulaRoles;
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<Nebula.Infrastructure.Persistence.AppDbContext>();
+        const string issuer = "http://test.local/application/o/nebula/";
         var profile = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
             db.Set<Nebula.Domain.Entities.UserProfile>()
                 .Where(u => u.IdpIssuer == issuer && u.IdpSubject == subject));

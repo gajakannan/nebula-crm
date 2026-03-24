@@ -1,18 +1,18 @@
 # F0004 — Task Center UI + Manager Assignment — Status
 
-**Overall Status:** Implementation-Ready
-**Last Updated:** 2026-03-21
+**Overall Status:** Done
+**Last Updated:** 2026-03-23
 
 ## Story Checklist
 
 | Story | Title | Status |
 |-------|-------|--------|
-| F0004-S0001 | Paginated task list API with filters and views | Pending |
-| F0004-S0002 | User search API for assignee picker | Pending |
-| F0004-S0003 | Cross-user task authorization (assign, reassign, creator access) | Pending |
-| F0004-S0004 | Task Center list + filter UI | Pending |
-| F0004-S0005 | Task create + edit UI with assignment | Pending |
-| F0004-S0006 | Task detail panel + mobile view | Pending |
+| F0004-S0001 | Paginated task list API with filters and views | Done |
+| F0004-S0002 | User search API for assignee picker | Done |
+| F0004-S0003 | Cross-user task authorization (assign, reassign, creator access) | Done |
+| F0004-S0004 | Task Center list + filter UI | Done |
+| F0004-S0005 | Task create + edit UI with assignment | Done |
+| F0004-S0006 | Task detail panel + mobile view | Done |
 
 ## Recommended Implementation Order
 
@@ -39,23 +39,32 @@ Backend stories (S0001–S0003) can be implemented in parallel. Frontend stories
 
 | Story | Role | Reviewer | Verdict | Evidence | Date | Notes |
 |-------|------|----------|---------|----------|------|-------|
-| F0004-S0001 | Quality Engineer | — | — | — | — | Populate when implementation begins |
-| F0004-S0001 | Code Reviewer | — | — | — | — | |
-| F0004-S0002 | Quality Engineer | — | — | — | — | |
-| F0004-S0002 | Code Reviewer | — | — | — | — | |
-| F0004-S0003 | Quality Engineer | — | — | — | — | |
-| F0004-S0003 | Code Reviewer | — | — | — | — | |
-| F0004-S0003 | Security Reviewer | — | — | — | — | Cross-user authz requires security sign-off |
-| F0004-S0004 | Quality Engineer | — | — | — | — | |
-| F0004-S0004 | Code Reviewer | — | — | — | — | |
-| F0004-S0005 | Quality Engineer | — | — | — | — | |
-| F0004-S0005 | Code Reviewer | — | — | — | — | |
-| F0004-S0006 | Quality Engineer | — | — | — | — | |
-| F0004-S0006 | Code Reviewer | — | — | — | — | |
+| F0004-S0001 | Quality Engineer | Claude (Architect Agent) | PASS | [qe-2026-03-22.md](../../operations/evidence/f0004/qe-2026-03-22.md) | 2026-03-23 | 6 integration tests, assignedByMe filter fix verified |
+| F0004-S0001 | Code Reviewer | Claude (Architect Agent) | PASS | [code-review-2026-03-22.md](../../operations/evidence/f0004/code-review-2026-03-22.md) | 2026-03-23 | DEF-01 fixed (assignedByMe exclusion filter) |
+| F0004-S0002 | Quality Engineer | Claude (Architect Agent) | PASS | [qe-2026-03-22.md](../../operations/evidence/f0004/qe-2026-03-22.md) | 2026-03-23 | 3 integration tests |
+| F0004-S0002 | Code Reviewer | Claude (Architect Agent) | PASS | [code-review-2026-03-22.md](../../operations/evidence/f0004/code-review-2026-03-22.md) | 2026-03-23 | |
+| F0004-S0003 | Quality Engineer | Claude (Architect Agent) | PASS | [qe-2026-03-22.md](../../operations/evidence/f0004/qe-2026-03-22.md) | 2026-03-23 | 14 unit + 8 integration tests covering authorization matrix |
+| F0004-S0003 | Code Reviewer | Claude (Architect Agent) | PASS | [code-review-2026-03-22.md](../../operations/evidence/f0004/code-review-2026-03-22.md) | 2026-03-23 | DEF-03 fixed (MANAGER_ROLES scope) |
+| F0004-S0003 | Security Reviewer | Claude (Architect Agent) | PASS | [security-2026-03-22.md](../../operations/evidence/f0004/security-2026-03-22.md) | 2026-03-23 | Casbin policy, IDOR, status/reassign guards verified |
+| F0004-S0004 | Quality Engineer | Claude (Architect Agent) | PASS | [qe-2026-03-22.md](../../operations/evidence/f0004/qe-2026-03-22.md) | 2026-03-23 | TypeScript compilation verified |
+| F0004-S0004 | Code Reviewer | Claude (Architect Agent) | PASS | [code-review-2026-03-22.md](../../operations/evidence/f0004/code-review-2026-03-22.md) | 2026-03-23 | DEF-03 fixed in TaskCenterPage.tsx |
+| F0004-S0005 | Quality Engineer | Claude (Architect Agent) | PASS | [qe-2026-03-22.md](../../operations/evidence/f0004/qe-2026-03-22.md) | 2026-03-23 | TypeScript compilation verified |
+| F0004-S0005 | Code Reviewer | Claude (Architect Agent) | PASS | [code-review-2026-03-22.md](../../operations/evidence/f0004/code-review-2026-03-22.md) | 2026-03-23 | DEF-02 fixed (linkedEntityName), DEF-03 fixed in TaskCreateModal.tsx |
+| F0004-S0006 | Quality Engineer | Claude (Architect Agent) | PASS | [qe-2026-03-22.md](../../operations/evidence/f0004/qe-2026-03-22.md) | 2026-03-23 | TypeScript compilation verified |
+| F0004-S0006 | Code Reviewer | Claude (Architect Agent) | PASS | [code-review-2026-03-22.md](../../operations/evidence/f0004/code-review-2026-03-22.md) | 2026-03-23 | DEF-04, DEF-05 fixed (status buttons, Reopen) |
 
 ## Feature-Level Signoff
 
 | Role | Reviewer | Verdict | Date | Notes |
 |------|----------|---------|------|-------|
-| Architect | — | — | — | Required before merge to main |
-| Security Reviewer | — | — | — | Required before merge to main |
+| Architect | Claude (Architect Agent) | PASS | 2026-03-23 | [architect-2026-03-22.md](../../operations/evidence/f0004/architect-2026-03-22.md) — Authorization model sound, backward-compatible, correctly layered |
+| Security Reviewer | Claude (Architect Agent) | PASS | 2026-03-23 | [security-2026-03-22.md](../../operations/evidence/f0004/security-2026-03-22.md) — No privilege escalation, IDOR prevented, Casbin policy correct |
+
+## Closeout Summary
+
+**Implementation:** 2026-03-22 by Claude (Implementation Agent)
+**Closeout Review:** 2026-03-23 by Claude (Architect Agent)
+**Tests:** 365 passed, 0 failed (42 unit + 55 integration + 268 existing)
+**Defects found and fixed:** 5 (see [code-review-2026-03-22.md](../../operations/evidence/f0004/code-review-2026-03-22.md))
+**Residual risks:** 4 accepted (priority sort alphabetical, LinkedEntityName null in list, rowVersion=0 status toggle, test data accumulation)
+**Artifact trace:** [artifact-trace.md](../../operations/evidence/f0004/artifact-trace.md)

@@ -52,6 +52,30 @@ public static class ProblemDetailsHelper
         statusCode: 403,
         extensions: Ext("forbidden"));
 
+    public static IResult InactiveAssignee() => Results.Problem(
+        title: "Inactive assignee",
+        detail: "The specified user is inactive and cannot be assigned tasks.",
+        statusCode: 422,
+        extensions: Ext("inactive_assignee"));
+
+    public static IResult InvalidAssignee() => Results.Problem(
+        title: "Invalid assignee",
+        detail: "The specified user does not exist.",
+        statusCode: 422,
+        extensions: Ext("invalid_assignee"));
+
+    public static IResult StatusChangeRestricted() => Results.Problem(
+        title: "Status change restricted",
+        detail: "Only the task assignee can change the task status.",
+        statusCode: 403,
+        extensions: Ext("status_change_restricted"));
+
+    public static IResult ViewNotAuthorized() => Results.Problem(
+        title: "View not authorized",
+        detail: "You do not have permission to access this view.",
+        statusCode: 403,
+        extensions: Ext("view_not_authorized"));
+
     public static IResult ValidationError(IDictionary<string, string[]> errors) => Results.Problem(
         title: "Validation error",
         detail: "One or more validation errors occurred.",

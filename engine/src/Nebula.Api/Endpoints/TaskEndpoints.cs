@@ -29,6 +29,7 @@ public static class TaskEndpoints
             .RequireAuthorization()
             .RequireRateLimiting("authenticated");
 
+        group.MapGet("/", GetTaskList);
         group.MapGet("/{taskId:guid}", GetTaskById);
         group.MapPost("/", CreateTask);
         group.MapPut("/{taskId:guid}", UpdateTask);
@@ -62,7 +63,8 @@ public static class TaskEndpoints
         // Ownership condition: the list is already scoped to the caller; assignee == subjectId by definition.
         var attrs = new Dictionary<string, object>
         {
-            ["assignee"] = user.UserId,
+            ["assignee"]  = user.UserId,
+            ["creator"]   = user.UserId,
             ["subjectId"] = user.UserId,
         };
         var authorized = false;
@@ -76,6 +78,78 @@ public static class TaskEndpoints
         return Results.Ok(await svc.GetMyTasksAsync(user.UserId, user.DisplayName, effectiveLimit, user, ct));
     }
 
+    // F0004: GET /tasks — paginated, filtered task list
+    private static async Task<IResult> GetTaskList(
+        string? view,
+        string? status,
+        string? priority,
+        DateTime? dueDateFrom,
+        DateTime? dueDateTo,
+        bool? overdue,
+        Guid? assigneeId,
+        string? linkedEntityType,
+        Guid? createdById,
+        string? sort,
+        string? sortDir,
+        int? page,
+        int? pageSize,
+        TaskService svc,
+        ICurrentUserService user,
+        IAuthorizationService authz,
+        CancellationToken ct)
+    {
+        // Pre-check: caller must have task read access at all
+        var readAttrs = new Dictionary<string, object>
+        {
+            ["assignee"]  = user.UserId,
+            ["creator"]   = user.UserId,
+            ["subjectId"] = user.UserId,
+        };
+        var authorized = false;
+        foreach (var role in user.Roles)
+        {
+            if (await authz.AuthorizeAsync(role, "task", "read", readAttrs))
+            { authorized = true; break; }
+        }
+        if (!authorized) return ProblemDetailsHelper.Forbidden();
+
+        var effectiveView = view ?? "myWork";
+        if (effectiveView != "myWork" && effectiveView != "assignedByMe")
+            return ProblemDetailsHelper.ValidationError(
+                new Dictionary<string, string[]>
+                {
+                    ["view"] = ["View must be 'myWork' or 'assignedByMe'."],
+                });
+
+        // Parse multi-value query params (comma-separated)
+        var statusFilter = ParseMultiValue(status);
+        var priorityFilter = ParseMultiValue(priority);
+        var linkedEntityTypeFilter = ParseMultiValue(linkedEntityType);
+
+        var query = new TaskListQuery(
+            View: effectiveView,
+            CallerUserId: user.UserId,
+            StatusFilter: statusFilter,
+            PriorityFilter: priorityFilter,
+            DueDateFrom: dueDateFrom,
+            DueDateTo: dueDateTo,
+            Overdue: overdue,
+            AssigneeId: assigneeId,
+            LinkedEntityTypeFilter: linkedEntityTypeFilter,
+            CreatedById: createdById,
+            Sort: sort ?? "dueDate",
+            SortDir: sortDir ?? "asc",
+            Page: page ?? 1,
+            PageSize: Math.Min(pageSize ?? 20, MaxLimit));
+
+        var (result, error) = await svc.GetTaskListAsync(query, user, ct);
+        return error switch
+        {
+            "view_not_authorized" => ProblemDetailsHelper.ViewNotAuthorized(),
+            _ => Results.Ok(result),
+        };
+    }
+
     private static async Task<IResult> GetTaskById(
         Guid taskId, TaskService svc, ICurrentUserService user, CancellationToken ct)
     {
@@ -87,7 +161,7 @@ public static class TaskEndpoints
         return Results.Ok(task);
     }
 
-    // F0003-S0001: Create Task
+    // F0003-S0001 / F0004: Create Task
     private static async Task<IResult> CreateTask(
         TaskCreateRequestDto dto,
         IValidator<TaskCreateRequestDto> validator,
@@ -96,10 +170,13 @@ public static class TaskEndpoints
         IAuthorizationService authz,
         CancellationToken ct)
     {
-        // Casbin: task, create with assignee == subjectId
+        // Casbin: task, create.
+        // For managers, pass creator = user.UserId so the "true" condition fires.
+        // For all roles, also pass assignee so self-assign condition still works.
         var attrs = new Dictionary<string, object>
         {
-            ["assignee"] = dto.AssignedToUserId,
+            ["assignee"]  = dto.AssignedToUserId,
+            ["creator"]   = user.UserId,  // Creator is always the caller on create
             ["subjectId"] = user.UserId,
         };
         var authorized = false;
@@ -119,7 +196,9 @@ public static class TaskEndpoints
         var (result, error) = await svc.CreateAsync(dto, user, ct);
         return error switch
         {
-            "forbidden" => ProblemDetailsHelper.Forbidden(),
+            "forbidden"        => ProblemDetailsHelper.Forbidden(),
+            "invalid_assignee" => ProblemDetailsHelper.InvalidAssignee(),
+            "inactive_assignee" => ProblemDetailsHelper.InactiveAssignee(),
             "validation_error" => ProblemDetailsHelper.ValidationError(
                 new Dictionary<string, string[]>
                 {
@@ -129,7 +208,7 @@ public static class TaskEndpoints
         };
     }
 
-    // F0003-S0002: Update Task
+    // F0003-S0002 / F0004: Update Task
     private static async Task<IResult> UpdateTask(
         Guid taskId,
         HttpContext httpContext,
@@ -180,8 +259,11 @@ public static class TaskEndpoints
                 return ProblemDetailsHelper.InvalidStatusTransition(fromStatus!, toStatus!);
             return error switch
             {
-                "not_found" => ProblemDetailsHelper.NotFound("Task", taskId),
-                "forbidden" => ProblemDetailsHelper.Forbidden(),
+                "not_found"              => ProblemDetailsHelper.NotFound("Task", taskId),
+                "forbidden"              => ProblemDetailsHelper.Forbidden(),
+                "status_change_restricted" => ProblemDetailsHelper.StatusChangeRestricted(),
+                "invalid_assignee"       => ProblemDetailsHelper.InvalidAssignee(),
+                "inactive_assignee"      => ProblemDetailsHelper.InactiveAssignee(),
                 _ => Results.Ok(result),
             };
         }
@@ -191,7 +273,7 @@ public static class TaskEndpoints
         }
     }
 
-    // F0003-S0003: Delete Task
+    // F0003-S0003 / F0004: Delete Task
     private static async Task<IResult> DeleteTask(
         Guid taskId,
         TaskService svc,
@@ -199,11 +281,21 @@ public static class TaskEndpoints
         CancellationToken ct)
     {
         // Single fetch + Casbin auth + mutation inside service (TOCTOU fix).
+        // F0004: Service now also allows creator-based delete via Casbin policy.
         var error = await svc.DeleteAsync(taskId, user, ct);
         return error switch
         {
             "not_found" => ProblemDetailsHelper.NotFound("Task", taskId),
             _ => Results.NoContent(),
         };
+    }
+
+    /// <summary>Parse a comma-separated query string value into a string array, or null if empty.</summary>
+    private static string[]? ParseMultiValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+        var parts = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        return parts.Length == 0 ? null : parts;
     }
 }

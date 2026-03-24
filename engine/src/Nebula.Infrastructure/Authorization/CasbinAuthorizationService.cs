@@ -40,11 +40,13 @@ public sealed class CasbinAuthorizationService : IAuthorizationService
         string userRole, string resourceType, string action,
         IDictionary<string, object>? resourceAttributes = null)
     {
-        // When no attributes are provided, use distinct sentinel values for sub.id and obj.assignee
-        // so that condition expressions like "r.obj.assignee == r.sub.id" evaluate to false
-        // (deny-by-default). Using empty strings would cause "" == "" → true.
+        // When no attributes are provided, use distinct sentinel values for sub.id, obj.assignee,
+        // and obj.creator so that condition expressions like "r.obj.assignee == r.sub.id" and
+        // "r.obj.creator == r.sub.id" evaluate to false (deny-by-default).
+        // Using empty strings would cause "" == "" → true.
         const string noSubject = "__no_subject__";
         const string noAssignee = "__no_assignee__";
+        const string noCreator = "__no_creator__";
 
         var subId = resourceAttributes is not null
             && resourceAttributes.TryGetValue("subjectId", out var sid)
@@ -56,8 +58,13 @@ public sealed class CasbinAuthorizationService : IAuthorizationService
                 ? asg?.ToString() ?? noAssignee
                 : noAssignee;
 
+        var objCreator = resourceAttributes is not null
+            && resourceAttributes.TryGetValue("creator", out var crt)
+                ? crt?.ToString() ?? noCreator
+                : noCreator;
+
         var sub = new CasbinSubject(userRole, subId);
-        var obj = new CasbinObject(resourceType, objAssignee);
+        var obj = new CasbinObject(resourceType, objAssignee, objCreator);
 
         var result = _enforcer.Enforce(sub, obj, action);
         return Task.FromResult(result);
@@ -83,6 +90,6 @@ public sealed class CasbinAuthorizationService : IAuthorizationService
     /// <summary>Maps to r.sub in model.conf: r.sub.role, r.sub.id</summary>
     private sealed record CasbinSubject(string role, string id);
 
-    /// <summary>Maps to r.obj in model.conf: r.obj.type, r.obj.assignee</summary>
-    private sealed record CasbinObject(string type, string assignee);
+    /// <summary>Maps to r.obj in model.conf: r.obj.type, r.obj.assignee, r.obj.creator</summary>
+    private sealed record CasbinObject(string type, string assignee, string creator);
 }

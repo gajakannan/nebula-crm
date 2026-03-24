@@ -60,7 +60,14 @@
       "Bash(~/.dotnet/tools/reportgenerator -reports:/tmp/nebula-coverage/*/coverage.cobertura.xml -targetdir:/tmp/nebula-coverage/report -reporttypes:TextSummary)",
       "Bash(./scripts/smoke-test.sh 2>&1)",
       "Bash(./scripts/smoke-test.sh --user john.miller)",
-      "Bash(docker run:*)"
+      "Bash(docker run:*)",
+      "Bash(/tmp/domain_search_results.txt:*)",
+      "Read(//tmp/**)",
+      "Bash(2)",
+      "Bash(docker ps:*)",
+      "Bash(CI=true pnpm install)",
+      "Bash(npx vitest:*)",
+      "Bash(npx vite:*)"
     ]
   }
 }

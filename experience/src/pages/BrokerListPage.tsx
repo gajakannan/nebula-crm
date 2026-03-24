@@ -53,7 +53,7 @@ export default function BrokerListPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="flex-1 rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-nebula-violet focus:outline-none focus:ring-1 focus:ring-nebula-violet"
+              className="flex-1 rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-nebula-violet"
             />
             <label htmlFor="broker-directory-status" className="sr-only">
               Filter brokers by status
@@ -65,7 +65,7 @@ export default function BrokerListPage() {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-primary focus:border-nebula-violet focus:outline-none focus:ring-1 focus:ring-nebula-violet"
+              className="rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-nebula-violet"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>

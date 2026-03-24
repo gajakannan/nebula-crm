@@ -23,7 +23,7 @@ export function Select({ label, error, options, placeholder, className, id, ...p
           'focus:outline-none focus:ring-1',
           error
             ? 'border-status-error focus:ring-status-error'
-            : 'focus:border-nebula-violet focus:ring-nebula-violet',
+            : 'focus:ring-nebula-violet',
           className,
         )}
         {...props}

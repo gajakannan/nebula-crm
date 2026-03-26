@@ -4,6 +4,11 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { ThemeContext, useTheme, useThemeProvider } from './useTheme'
 
 describe('useThemeProvider', () => {
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    const value = useThemeProvider()
+    return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  }
+
   beforeEach(() => {
     localStorage.clear()
     document.documentElement.removeAttribute('data-theme')
@@ -27,12 +32,7 @@ describe('useThemeProvider', () => {
   it('reads the initial theme from local storage and exposes it through useTheme', () => {
     localStorage.setItem('nebula-theme', 'light')
 
-    const wrapper = ({ children }: { children: React.ReactNode }) => {
-      const value = useThemeProvider()
-      return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-    }
-
-    const { result } = renderHook(() => useTheme(), { wrapper })
+    const { result } = renderHook(() => useTheme(), { wrapper: Wrapper })
 
     expect(result.current.theme).toBe('light')
   })

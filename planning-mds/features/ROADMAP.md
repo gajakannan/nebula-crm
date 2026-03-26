@@ -18,7 +18,6 @@ This document is the working prioritization view for feature sequencing.
 
 | Feature | Phase | Why Now |
 |---------|-------|---------|
-| [F0004 — Task Center UI + Manager Assignment](./F0004-task-center-ui-and-assignment/README.md) | Phase 1 | UI rollout follows now that F0003 task API scope is implemented and stabilized. |
 | [F0014 — DevOps Smoke Test Automation](./F0014-devops-smoke-test-automation/README.md) | Infrastructure | Reduces DevOps verification friction — blueprint fixes and automation scripts. |
 | [F0006 — Submission Intake Workflow](./F0006-submission-intake-workflow/README.md) | CRM Release MVP | Establishes the single source of truth for new business intake, triage, and early routing. |
 | [F0016 — Account 360 & Insured Management](./F0016-account-360-and-insured-management/README.md) | CRM Release MVP | Adds insured-centric context required by underwriters and distribution users before deeper policy and renewal workflows land. |
@@ -62,6 +61,7 @@ This document is the working prioritization view for feature sequencing.
 
 | Feature | Phase | Completion State |
 |---------|-------|------------------|
+| [F0004 — Task Center UI + Manager Assignment](./archive/F0004-task-center-ui-and-assignment/README.md) | Phase 1 | Done and archived (2026-03-23) |
 | [F0015 — Frontend Quality Gates + Test Infrastructure](./archive/F0015-frontend-quality-gates-and-test-infrastructure/README.md) | Infrastructure | Done and archived (2026-03-21) |
 | [F0003 — Task Center + Reminders (API-only MVP)](./archive/F0003-task-center/README.md) | MVP | Done and archived |
 | [F0013 — Dashboard Framed Storytelling Canvas](./archive/F0013-dashboard-framed-storytelling-canvas/README.md) | MVP | Done and archived |

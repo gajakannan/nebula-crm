@@ -1,8 +1,9 @@
 # F0004 — Task Center UI + Manager Assignment
 
-**Status:** Implementation-Ready
+**Status:** Done (Archived 2026-03-23)
 **Priority:** High
 **Phase:** Phase 1
+**Archived:** 2026-03-23
 
 ## Overview
 
@@ -21,15 +22,15 @@ Dedicated Task Center UI at `/tasks` with list, filters, detail panel, and cross
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| [F0004-S0001](./F0004-S0001-task-list-api-endpoint.md) | Paginated task list API with filters and views | Critical | Pending |
-| [F0004-S0002](./F0004-S0002-user-search-api-endpoint.md) | User search API for assignee picker | High | Pending |
-| [F0004-S0003](./F0004-S0003-cross-user-task-authorization.md) | Cross-user task authorization (assign, reassign, creator access) | Critical | Pending |
-| [F0004-S0004](./F0004-S0004-task-center-list-and-filter-ui.md) | Task Center list + filter UI | Critical | Pending |
-| [F0004-S0005](./F0004-S0005-task-create-edit-ui-with-assignment.md) | Task create + edit UI with assignment | High | Pending |
-| [F0004-S0006](./F0004-S0006-task-detail-panel-and-mobile-view.md) | Task detail panel + mobile view | High | Pending |
+| [F0004-S0001](./F0004-S0001-task-list-api-endpoint.md) | Paginated task list API with filters and views | Critical | Done |
+| [F0004-S0002](./F0004-S0002-user-search-api-endpoint.md) | User search API for assignee picker | High | Done |
+| [F0004-S0003](./F0004-S0003-cross-user-task-authorization.md) | Cross-user task authorization (assign, reassign, creator access) | Critical | Done |
+| [F0004-S0004](./F0004-S0004-task-center-list-and-filter-ui.md) | Task Center list + filter UI | Critical | Done |
+| [F0004-S0005](./F0004-S0005-task-create-edit-ui-with-assignment.md) | Task create + edit UI with assignment | High | Done |
+| [F0004-S0006](./F0004-S0006-task-detail-panel-and-mobile-view.md) | Task detail panel + mobile view | High | Done |
 
 **Total Stories:** 6
-**Completed:** 0 / 6
+**Completed:** 6 / 6
 
 ## Key Decisions
 

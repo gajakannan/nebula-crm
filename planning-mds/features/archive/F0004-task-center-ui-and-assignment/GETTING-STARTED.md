@@ -14,9 +14,9 @@
 |------|-----------------|
 | [PRD.md](./PRD.md) | All product decisions — mental model, assignment rules, visibility, filters |
 | [IMPLEMENTATION-CONTRACT.md](./IMPLEMENTATION-CONTRACT.md) | API delta, Casbin policy changes, schema updates, UI component tree |
-| [authorization-matrix.md](../../security/authorization-matrix.md) §2.6a | F0004 authorization rules |
-| [policy.csv](../../security/policies/policy.csv) §2.6a, §2.6b | New Casbin policy rows |
-| [nebula-api.yaml](../../api/nebula-api.yaml) | Updated OpenAPI spec (v0.4.0) |
+| [authorization-matrix.md](../../../security/authorization-matrix.md) §2.6a | F0004 authorization rules |
+| [policy.csv](../../../security/policies/policy.csv) §2.6a, §2.6b | New Casbin policy rows |
+| [nebula-api.yaml](../../../api/nebula-api.yaml) | Updated OpenAPI spec (v0.4.0) |
 
 ## Implementation Order
 

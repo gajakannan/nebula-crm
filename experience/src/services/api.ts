@@ -126,6 +126,9 @@ async function fetchApiNoBody(path: string, options?: RequestInit): Promise<void
   if (!response.ok) {
     const problem = await response.json().catch(() => null)
     handleErrorIntercept(response.status, problem)
+    // Mirror fetchApi<T>: when auth handling triggers navigation, keep the
+    // caller pending so mutation flows do not continue as if delete succeeded.
+    return new Promise<void>(() => {})
   }
 }
 

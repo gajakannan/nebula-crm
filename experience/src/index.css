@@ -8,34 +8,27 @@
   --surface-card-hover: rgba(20, 27, 46, 0.88);
   --surface-border: rgba(139, 92, 255, 0.18);
   --surface-highlight: rgba(255, 255, 255, 0.08);
-
   --text-primary: #f5f7ff;
   --text-secondary: #a7b0c8;
   --text-muted: #6f7a96;
-
   --accent-primary: #ff4fd8;
   --accent-secondary: #8b5cff;
   --accent-tertiary: #5da8ff;
   --ring: #c084fc;
-
   --data-primary: #ff4fd8;
   --data-secondary: #8b5cff;
   --data-tertiary: #5da8ff;
   --data-quaternary: #7cf7c4;
   --data-muted: #2a3350;
   --data-danger: #ff5f7a;
-
   --frame-border: rgba(139, 92, 255, 0.16);
   --topbar-bg: rgba(7, 11, 22, 0.88);
   --topbar-border: rgba(93, 168, 255, 0.18);
-
   --sidebar-hover: rgba(139, 92, 255, 0.10);
   --sidebar-active-bg: rgba(255, 255, 255, 0.06);
-  --sidebar-active-text: #ffffff;
-
+  --sidebar-active-text: #fff;
   --bg-glow-1: rgba(255, 79, 216, 0.16);
   --bg-glow-2: rgba(93, 168, 255, 0.12);
-
   --shell-inset-bg: #0a1020;
 }
 

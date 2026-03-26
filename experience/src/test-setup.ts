@@ -10,6 +10,24 @@ import { server } from './mocks/server'
 
 expect.extend(toHaveNoViolations)
 
+const defaultOidcTestEnv = {
+  VITE_AUTH_MODE: 'oidc',
+  VITE_OIDC_AUTHORITY: 'https://auth.nebula.test/application/o/nebula/',
+  VITE_OIDC_CLIENT_ID: 'nebula-web',
+  VITE_OIDC_REDIRECT_URI: 'http://localhost/auth/callback',
+} satisfies Record<string, string>
+
+const viteEnv = import.meta.env as Record<string, string | boolean | undefined>
+
+for (const [key, value] of Object.entries(defaultOidcTestEnv)) {
+  if (!process.env[key]) {
+    process.env[key] = value
+  }
+  if (!viteEnv[key]) {
+    viteEnv[key] = process.env[key] ?? value
+  }
+}
+
 if (typeof window !== 'undefined' && !('ResizeObserver' in window)) {
   class ResizeObserver {
     observe() {}

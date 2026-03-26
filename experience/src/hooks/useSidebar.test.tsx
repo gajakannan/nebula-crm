@@ -13,6 +13,11 @@ function setViewportWidth(width: number) {
 }
 
 describe('useSidebarProvider', () => {
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    const value = useSidebarProvider()
+    return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
+  }
+
   beforeEach(() => {
     localStorage.clear()
     setViewportWidth(768)
@@ -58,12 +63,7 @@ describe('useSidebarProvider', () => {
   })
 
   it('exposes sidebar state through the context hook', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => {
-      const value = useSidebarProvider()
-      return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
-    }
-
-    const { result } = renderHook(() => useSidebar(), { wrapper })
+    const { result } = renderHook(() => useSidebar(), { wrapper: Wrapper })
 
     expect(result.current.collapsed).toBe(false)
     expect(result.current.mobileOpen).toBe(false)

@@ -17,6 +17,31 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import type { ReactNode } from 'react';
 
+const defaultOidcEnv = {
+  VITE_AUTH_MODE: 'oidc',
+  VITE_OIDC_AUTHORITY: 'https://auth.nebula.test/application/o/nebula/',
+  VITE_OIDC_CLIENT_ID: 'nebula-web',
+  VITE_OIDC_REDIRECT_URI: 'http://localhost/auth/callback',
+} as const;
+
+function setOidcEnv(
+  overrides: Partial<Record<keyof typeof defaultOidcEnv, string | undefined>> = {},
+) {
+  const viteEnv = import.meta.env as Record<string, string | boolean | undefined>;
+  const nextEnv = { ...defaultOidcEnv, ...overrides };
+
+  for (const [key, value] of Object.entries(nextEnv)) {
+    if (value === undefined) {
+      delete process.env[key];
+      delete viteEnv[key];
+      continue;
+    }
+
+    process.env[key] = value;
+    viteEnv[key] = value;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Mock oidcUserManager
 // ---------------------------------------------------------------------------
@@ -34,6 +59,7 @@ vi.mock('@/features/auth/oidcUserManager', () => ({
 // ---------------------------------------------------------------------------
 
 async function importLoginPage() {
+  vi.resetModules();
   const mod = await import('../../../pages/LoginPage');
   return mod.LoginPage;
 }
@@ -56,6 +82,7 @@ function renderWithRouter(ui: ReactNode, initialPath: string) {
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    setOidcEnv();
   });
 
   it('renders the Sign In button', async () => {
@@ -77,6 +104,20 @@ describe('LoginPage', () => {
     renderWithRouter(<LoginPage />, '/login?error=callback_failed');
 
     expect(screen.getByText(/could not be completed/i)).not.toBeNull();
+  });
+
+  it('shows misconfiguration error when OIDC env vars are missing', async () => {
+    setOidcEnv({
+      VITE_OIDC_AUTHORITY: undefined,
+      VITE_OIDC_CLIENT_ID: undefined,
+      VITE_OIDC_REDIRECT_URI: undefined,
+    });
+
+    const LoginPage = await importLoginPage();
+    renderWithRouter(<LoginPage />, '/login');
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/authentication is not configured/i);
+    expect(screen.queryByRole('button', { name: /sign in/i })).toBeNull();
   });
 
   it('calls oidcUserManager.signinRedirect() when Sign In is clicked', async () => {

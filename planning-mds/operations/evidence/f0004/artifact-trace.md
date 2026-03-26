@@ -7,16 +7,16 @@
 
 | Artifact | Path | Status |
 |----------|------|--------|
-| PRD | `planning-mds/features/F0004-task-center-ui-and-assignment/PRD.md` | Final |
-| STATUS | `planning-mds/features/F0004-task-center-ui-and-assignment/STATUS.md` | Updated 2026-03-22 |
-| IMPLEMENTATION-CONTRACT | `planning-mds/features/F0004-task-center-ui-and-assignment/IMPLEMENTATION-CONTRACT.md` | Final |
-| GETTING-STARTED | `planning-mds/features/F0004-task-center-ui-and-assignment/GETTING-STARTED.md` | Final |
-| F0004-S0001 | `planning-mds/features/F0004-task-center-ui-and-assignment/F0004-S0001-task-list-api-endpoint.md` | Final |
-| F0004-S0002 | `planning-mds/features/F0004-task-center-ui-and-assignment/F0004-S0002-user-search-api-endpoint.md` | Final |
-| F0004-S0003 | `planning-mds/features/F0004-task-center-ui-and-assignment/F0004-S0003-cross-user-task-authorization.md` | Final |
-| F0004-S0004 | `planning-mds/features/F0004-task-center-ui-and-assignment/F0004-S0004-task-center-list-and-filter-ui.md` | Final |
-| F0004-S0005 | `planning-mds/features/F0004-task-center-ui-and-assignment/F0004-S0005-task-create-edit-ui-with-assignment.md` | Final |
-| F0004-S0006 | `planning-mds/features/F0004-task-center-ui-and-assignment/F0004-S0006-task-detail-panel-and-mobile-view.md` | Final |
+| PRD | `planning-mds/features/archive/F0004-task-center-ui-and-assignment/PRD.md` | Final |
+| STATUS | `planning-mds/features/archive/F0004-task-center-ui-and-assignment/STATUS.md` | Updated 2026-03-22 |
+| IMPLEMENTATION-CONTRACT | `planning-mds/features/archive/F0004-task-center-ui-and-assignment/IMPLEMENTATION-CONTRACT.md` | Final |
+| GETTING-STARTED | `planning-mds/features/archive/F0004-task-center-ui-and-assignment/GETTING-STARTED.md` | Final |
+| F0004-S0001 | `planning-mds/features/archive/F0004-task-center-ui-and-assignment/F0004-S0001-task-list-api-endpoint.md` | Final |
+| F0004-S0002 | `planning-mds/features/archive/F0004-task-center-ui-and-assignment/F0004-S0002-user-search-api-endpoint.md` | Final |
+| F0004-S0003 | `planning-mds/features/archive/F0004-task-center-ui-and-assignment/F0004-S0003-cross-user-task-authorization.md` | Final |
+| F0004-S0004 | `planning-mds/features/archive/F0004-task-center-ui-and-assignment/F0004-S0004-task-center-list-and-filter-ui.md` | Final |
+| F0004-S0005 | `planning-mds/features/archive/F0004-task-center-ui-and-assignment/F0004-S0005-task-create-edit-ui-with-assignment.md` | Final |
+| F0004-S0006 | `planning-mds/features/archive/F0004-task-center-ui-and-assignment/F0004-S0006-task-detail-panel-and-mobile-view.md` | Final |
 
 ## Security Artifacts
 

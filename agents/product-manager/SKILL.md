@@ -179,18 +179,20 @@ If missing, create it from `agents/templates/tracker-governance-template.md` bef
 
 When a feature reaches final approved completion (`Done` with no remaining blocking work), Product Manager owns archive transition as part of closeout:
 
-1. Move feature folder from:
+1. **Apply Orphaned Story Rule** (per `TRACKER-GOVERNANCE.md`): verify all non-completed stories are either explicitly deferred in `STATUS.md` with a tracking link, or promoted to a new feature ID in `REGISTRY.md`. No story may be archived in `Not Started` or `In Progress` state without a rehoming decision.
+2. **Fill Closeout Summary** in `STATUS.md`: implementation date, test counts, defects found/fixed, residual risks, scope delivery, and phase 2 deferrals.
+3. Move feature folder from:
    - `planning-mds/features/F{NNNN}-{slug}/`
    - to `planning-mds/features/archive/F{NNNN}-{slug}/`
-2. Update tracker/docs links and status labels to archived paths/state:
+4. Update tracker/docs links and status labels to archived paths/state:
    - `planning-mds/features/REGISTRY.md`
    - `planning-mds/features/ROADMAP.md`
    - `planning-mds/BLUEPRINT.md`
-   - feature `README.md` and `STATUS.md` (if path/status references changed)
-3. Re-run story index and tracker validation after move:
+   - feature `README.md` (set `**Archived:** [date]`) and `STATUS.md` (if path/status references changed)
+5. Re-run story index and tracker validation after move:
    - `python3 agents/product-manager/scripts/generate-story-index.py planning-mds/features/`
    - `python3 agents/product-manager/scripts/validate-trackers.py`
-4. Do not declare closeout complete until archive transition validation passes.
+6. Do not declare closeout complete until archive transition validation passes.
 
 ## Tools & Permissions
 

@@ -1,6 +1,6 @@
 ---
 template: feature-status
-version: 1.0
+version: 1.1
 applies_to: product-manager
 ---
 
@@ -82,6 +82,16 @@ Every story in scope must have passing evidence for every role marked `Required 
 | F{NNNN}-S0002 | Quality Engineer | [Name/Agent] | [PASS | FAIL] | [file path(s) or report path(s)] | [YYYY-MM-DD] | [optional] |
 | F{NNNN}-S0002 | Code Reviewer | [Name/Agent] | [PASS | FAIL] | [file path(s) or report path(s)] | [YYYY-MM-DD] | [optional] |
 
+## Feature Signoff Summary (Optional — fill at closeout)
+
+Rollup of story-level provenance into a feature-level verdict. Useful for quick reference during archive review.
+
+| Role | Stories Reviewed | Verdict | Closeout Reference |
+|------|-----------------|---------|-------------------|
+| Quality Engineer | [all / list] | [PASS / PARTIAL] | [evidence path] |
+| Code Reviewer | [all / list] | [PASS / PARTIAL] | [evidence path] |
+| Security Reviewer | [all / list or N/A] | [PASS / N/A] | [evidence path] |
+
 ## Deferred Non-Blocking Follow-ups (Optional)
 
 Use this section only when the feature is still `Done` and deferred items are explicitly non-blocking.
@@ -89,6 +99,27 @@ Use this section only when the feature is still `Done` and deferred items are ex
 | Follow-up | Why deferred | Tracking link | Owner |
 |-----------|--------------|---------------|-------|
 | [Item] | [Rationale] | [Issue/Story/Doc] | [Role/Name] |
+
+## Closeout Summary (Fill at archive time)
+
+| Field | Value |
+|-------|-------|
+| Implementation completed | [YYYY-MM-DD] |
+| Closeout review date | [YYYY-MM-DD] |
+| Total stories | [N] |
+| Stories completed | [N / N] |
+| Test count (unit + integration) | [N] |
+| Defects found during review | [N] |
+| Defects fixed before closeout | [N] |
+| Residual risks | [None / list] |
+
+**Scope delivery:** [N / N acceptance criteria met]
+
+**Phase 2 deferrals (if any):**
+
+| Deferral | Severity | Tracking link |
+|----------|----------|---------------|
+| [Item] | [Low / Medium / High] | [Feature/Issue] |
 
 ## Tracker Sync Checklist
 

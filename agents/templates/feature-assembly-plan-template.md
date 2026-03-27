@@ -5,8 +5,12 @@
 **Status:** Draft
 
 > **Purpose:** This file is the implementation execution plan for the feature. It must contain enough detail — exact file paths, code signatures, logic flows, per-endpoint response tables — that a backend or frontend developer agent can implement the feature without cross-referencing architecture docs.
+>
+> **Depth expectation:** Placeholders like `{field count}` and `{summary}` must be replaced with actual values. "Existing Code" should state real field counts, method names, and precise change descriptions. "Step N" sections must include complete C# record/class definitions with all fields and types — not abbreviated signatures. If a developer agent would need to ask a clarifying question, the plan lacks sufficient detail.
 
 Use this template for solution feature planning. If generic framework work under `agents/**` is also required, track it separately rather than mixing it into the solution feature plan.
+
+**Note:** This template is oriented toward backend entity/service/endpoint features. For infrastructure-only features (DevOps scripts, CI workflows, tooling), adapt the structure: replace entity/DTO/endpoint sections with script modification specs, CLI argument definitions, and workflow step details. The depth expectation still applies — implementation-ready, not placeholder-level.
 
 ## Overview
 

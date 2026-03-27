@@ -62,6 +62,15 @@ This document defines how planning trackers stay current and trustworthy.
   - be listed under `Archived Features` in `REGISTRY.md`
   - appear in `ROADMAP.md` `Completed` section, not `Now/Next/Later`.
 
+## Orphaned Story Rule (Mandatory)
+
+Before marking a feature `Done` or moving to `Archived`, the PM must verify that all non-completed stories are either:
+
+1. **Explicitly deferred** in `STATUS.md` `Deferred Non-Blocking Follow-ups` with a tracking link to a new or existing feature, or
+2. **Promoted** to a new feature ID in `REGISTRY.md` if the scope warrants standalone tracking.
+
+No story file may be archived in a `Not Started` or `In Progress` state without a rehoming decision recorded in the closeout. This prevents future work from being silently buried in the archive.
+
 ## Story File Rules
 
 - Story files must follow `F{NNNN}-S{NNNN}-{slug}.md`.

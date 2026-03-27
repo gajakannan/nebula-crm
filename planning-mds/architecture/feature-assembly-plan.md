@@ -1,4 +1,4 @@
-# Feature Assembly Plan (F0001 + F0002 + F0006 + F0007 + F0009 + F0010 + F0012 + F0013 + F0015)
+# Feature Assembly Plan (F0001 + F0002 + F0006 + F0007 + F0009 + F0010 + F0012 + F0013 + F0014 + F0015)
 
 **Owner:** Architect
 **Status:** Approved
@@ -1828,3 +1828,52 @@ eval():   r.obj.assignee ("abc-123") == r.sub.id ("abc-123") → true
 ### Checkpoint
 
 **F0002-S0009-A:** All integration tests pass with native Casbin enforcer. Hand-rolled policy parser removed from runtime path. Behavioral parity confirmed.
+
+---
+
+## F0014 — DevOps Smoke Test Automation
+
+**Added:** 2026-03-27 — Architecture review complete; no new entities, APIs, workflows, or Casbin policies. Infrastructure/scripts feature only.
+
+> **Implementation Execution Plan:** [`feature-assembly-plan-F0014.md`](./feature-assembly-plan-F0014.md) — per-step implementation spec for S0002 (multi-role `--all-users` mode) and S0003 (CI workflow). Includes corrected BrokerUser assertion expectations (S0002 AC was wrong — BrokerUser has `task:read` ALLOW, not deny-all).
+
+### Dependencies
+
+| Dependency | Source | What F0014 Needs | Status |
+|------------|--------|------------------|--------|
+| Task CRUD API | F0003 | `/tasks`, `/my/tasks` endpoints | **Done** |
+| authentik blueprint | F0005 | ROPC + app-password tokens | **Done** (fixed in S0001) |
+| Casbin policy | F0005/platform | Role-based access boundaries | **Done** |
+| S0001 scripts | F0014-S0001 | `smoke-test.sh`, `dev-reset.sh` | **Done** |
+
+### Architecture Notes
+
+- **No application code changes** — all work is shell scripts and CI workflow configuration.
+- **Critical finding:** S0002 acceptance criteria for broker001 (BrokerUser) is incorrect. BrokerUser has `task:read` ALLOW in policy.csv (§2.10). Corrected expectations: GET /my/tasks → 200, POST/PUT/DELETE → 403.
+- **CI resource concern (S0003):** GitHub Actions `ubuntu-latest` has 7 GB RAM. Recommend starting only `db`, `authentik-server`, `authentik-worker`, `api` — skipping `temporal` and `temporal-ui` which smoke tests do not exercise.
+
+### DevOps Assembly Steps
+
+**Step 1 — S0002: Multi-role smoke test enhancement (DevOps Agent)**
+1. Add `--all-users` flag to `smoke-test.sh`
+2. Define role expectation matrix (4 users × expected role × crud mode)
+3. Per-user JWT claims verification (`aud`, `nebula_roles`, `sub`)
+4. Conditional test routing: full 9-test suite for internal roles, 4-test read-only suite for BrokerUser
+5. Continue-on-failure: one user failure does not abort others
+6. Unified multi-user summary with per-user pass/fail counts
+7. Update README.md and GETTING-STARTED.md with `--all-users` usage
+
+**Step 2 — S0003: CI smoke test workflow (DevOps Agent — Future)**
+1. Create `.github/workflows/smoke-test.yml`
+2. Trigger on PR + push to main, with concurrency group
+3. Start selective docker compose services (skip temporal)
+4. Health-check polling + blueprint wait
+5. Run `smoke-test.sh --all-users`
+6. Upload compose logs as artifact on failure
+7. Tear down stack with `if: always()`
+
+### Checkpoint
+
+**S0002:** `./scripts/smoke-test.sh --all-users` runs all 4 dev users with correct role-appropriate assertions. Single-user mode not regressed. Exit code 0 only if all pass.
+
+**S0003:** GitHub Actions workflow passes on `ubuntu-latest`. Stack starts, smoke tests run, failure logs uploaded, stack torn down.

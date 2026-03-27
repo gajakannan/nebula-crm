@@ -1,6 +1,6 @@
 ---
 template: acceptance-criteria-checklist
-version: 1.1
+version: 1.2
 applies_to: product-manager
 ---
 
@@ -22,6 +22,7 @@ Use this checklist to validate that acceptance criteria are clear, testable, and
 - [ ] Happy path covered
 - [ ] At least one error/edge case covered
 - [ ] Permission/authorization behavior specified (if relevant)
+- [ ] Role-based visibility is per-role exhaustive (for each role, what can they see/do — not just "authorized users only")
 
 ## 3) Data Validation
 
@@ -47,7 +48,10 @@ Use this checklist to validate that acceptance criteria are clear, testable, and
 
 ## 7) Audit & Timeline (If Applicable)
 
-- [ ] Mutations specify audit/timeline requirements
+- [ ] Every mutation specifies which timeline event type(s) it produces (e.g., `EntityCreated`, `EntityUpdated`)
+- [ ] Event payload structure defined or referenced (what data is captured in the event)
+- [ ] Event description template specified (human-readable text rendered at write time)
+- [ ] Append-only semantics confirmed for workflow transitions (if applicable)
 
 ## 8) Out of Scope
 

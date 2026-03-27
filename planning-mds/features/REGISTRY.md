@@ -12,7 +12,7 @@
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
 | F0006 | Submission Intake Workflow | In Refinement | CRM Release MVP | `F0006-submission-intake-workflow/` |
-| F0014 | DevOps Smoke Test Automation | In Progress | Infrastructure | `F0014-devops-smoke-test-automation/` |
+| F0014 | DevOps Smoke Test Automation | In Progress (3 stories — 1 Done, 2 remaining) | Infrastructure | `F0014-devops-smoke-test-automation/` |
 
 ## Abandoned Features
 

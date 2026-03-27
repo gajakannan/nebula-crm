@@ -67,7 +67,8 @@
       "Bash(docker ps:*)",
       "Bash(CI=true pnpm install)",
       "Bash(npx vitest:*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(sudo apt-get:*)"
     ]
   }
 }

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://nebula.local/schemas/submission.schema.json",
   "title": "Submission",
-  "description": "Submission workflow entity response contract.",
+  "description": "Submission detail response contract (F0006-S0003). Includes denormalized linked entity context and completeness evaluation.",
   "type": "object",
   "required": [
     "id",
@@ -10,10 +10,12 @@
     "brokerId",
     "currentStatus",
     "effectiveDate",
-    "premiumEstimate",
-    "assignedTo",
+    "assignedToUserId",
     "createdAt",
-    "updatedAt"
+    "createdByUserId",
+    "updatedAt",
+    "updatedByUserId",
+    "completeness"
   ],
   "properties": {
     "id": {
@@ -29,62 +31,91 @@
       "format": "uuid"
     },
     "programId": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "format": "uuid"
     },
     "lineOfBusiness": {
-      "anyOf": [
-        { "$ref": "https://nebula.local/schemas/line-of-business.schema.json" },
-        { "type": "null" }
-      ]
+      "type": ["string", "null"],
+      "maxLength": 50
     },
     "currentStatus": {
-      "type": "string"
+      "type": "string",
+      "enum": ["Received", "Triaging", "WaitingOnBroker", "ReadyForUWReview", "InReview", "Quoted", "BindRequested", "Bound", "Declined", "Withdrawn"]
     },
     "effectiveDate": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
+      "format": "date"
+    },
+    "expirationDate": {
+      "type": ["string", "null"],
       "format": "date"
     },
     "premiumEstimate": {
-      "type": [
-        "number",
-        "null"
-      ],
+      "type": ["number", "null"],
       "minimum": 0
     },
-    "assignedTo": {
-      "type": [
-        "string",
-        "null"
-      ],
+    "description": {
+      "type": ["string", "null"],
+      "maxLength": 2000
+    },
+    "assignedToUserId": {
+      "type": "string",
       "format": "uuid"
+    },
+    "accountName": {
+      "type": "string",
+      "description": "Denormalized from Account"
+    },
+    "accountRegion": {
+      "type": ["string", "null"],
+      "description": "Denormalized from Account"
+    },
+    "accountIndustry": {
+      "type": ["string", "null"],
+      "description": "Denormalized from Account"
+    },
+    "brokerName": {
+      "type": "string",
+      "description": "Denormalized from Broker"
+    },
+    "brokerLicenseNumber": {
+      "type": ["string", "null"],
+      "description": "Denormalized from Broker"
+    },
+    "programName": {
+      "type": ["string", "null"],
+      "description": "Denormalized from Program (nullable)"
+    },
+    "assignedToDisplayName": {
+      "type": ["string", "null"],
+      "description": "Denormalized from UserProfile"
+    },
+    "isStale": {
+      "type": "boolean",
+      "description": "Whether submission exceeds stale threshold for its current state"
+    },
+    "completeness": {
+      "$ref": "https://nebula.local/schemas/submission-completeness.schema.json"
+    },
+    "availableTransitions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Valid next states for the authenticated user based on current state and role"
     },
     "createdAt": {
       "type": "string",
       "format": "date-time"
     },
-    "createdBy": {
-      "type": [
-        "string",
-        "null"
-      ],
+    "createdByUserId": {
+      "type": "string",
       "format": "uuid"
     },
     "updatedAt": {
       "type": "string",
       "format": "date-time"
     },
-    "updatedBy": {
-      "type": [
-        "string",
-        "null"
-      ],
+    "updatedByUserId": {
+      "type": "string",
       "format": "uuid"
     }
   },

@@ -120,7 +120,7 @@ Architecture constraints:
 
 ## 3) Phase A — Product Manager Spec (Current Baseline)
 
-Status: This repository is currently focused on the agent builder framework. Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker Relationship Management), F0009 (Authentication + Role-Based Login), F0003 (Task Center API-only MVP), and F0015 (Frontend Quality Gates + Test Infrastructure). Phase A remains the baseline spec and Phase B is approved.
+Status: Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker Relationship Management), F0003 (Task Center API-only MVP), F0004 (Task Center UI + Manager Assignment), F0005 (IdP Migration), F0009 (Authentication + Role-Based Login), F0012 (Dashboard Storytelling Infographic Canvas), F0013 (Dashboard Framed Storytelling Canvas), and F0015 (Frontend Quality Gates + Test Infrastructure). Phase A remains the baseline spec and Phase B is approved.
 
 ### 3.1 Vision + Non-Goals
 
@@ -158,14 +158,19 @@ Status: This repository is currently focused on the agent builder framework. Pha
 
 **Note:** Features are organized as self-contained folders in `planning-mds/features/F{NNNN}-{slug}/` using the feature templates. Each folder includes `PRD.md`, `README.md`, `STATUS.md`, `GETTING-STARTED.md`, and colocated story files.
 
+**Planning Views:**
+- Feature inventory & ID tracker: `planning-mds/features/REGISTRY.md`
+- Roadmap sequencing (Now / Next / Later): `planning-mds/features/ROADMAP.md`
+- Story rollup index: `planning-mds/features/STORY-INDEX.md`
+- Governance contract: `planning-mds/features/TRACKER-GOVERNANCE.md`
+
 **MVP Features:**
 - [F0001: Dashboard](features/archive/F0001-dashboard/PRD.md) - Done (Archived)
 - [F0002: Broker & MGA Relationship Management](features/archive/F0002-broker-relationship-management/PRD.md) - Done (Archived)
 - [F0003: Task Center + Reminders](features/archive/F0003-task-center/PRD.md) - Done (API-only MVP, archived 2026-03-20)
 - [F0005: IdP Migration: Keycloak → authentik](features/archive/F0005-idp-migration/PRD.md) - Done (Archived)
-- F0006: Submission Intake Workflow - Planned
-- F0007: Renewal Pipeline - Planned
-- F0008: Broker Insights - Planned
+- [F0006: Submission Intake Workflow](features/F0006-submission-intake-workflow/PRD.md) - In Refinement (8 stories)
+- [F0007: Renewal Pipeline](features/F0007-renewal-pipeline/PRD.md) - Architecture Complete (7 stories; data model, API, workflow, Casbin, ADRs finalized 2026-03-26)
 - [F0009: Authentication + Role-Based Login](features/archive/F0009-authentication-and-role-based-login/PRD.md) - Done (Archived; Phase 1)
 - [F0004: Task Center UI + Manager Assignment](features/archive/F0004-task-center-ui-and-assignment/PRD.md) - Done (Archived 2026-03-23; Phase 1)
 - [F0014: DevOps Smoke Test Automation](features/F0014-devops-smoke-test-automation/README.md) - In Progress (Infrastructure)
@@ -174,6 +179,32 @@ Status: This repository is currently focused on the agent builder framework. Pha
 - [F0011: Dashboard Opportunities Flow-First Modernization (Connected Pipeline + Terminal Outcomes)](features/archive/F0011-dashboard-opportunities-flow-modernization/PRD.md) - Abandoned (Superseded by F0013)
 - [F0012: Dashboard Storytelling Infographic Refactor (Unified Canvas + Collapsible Rails)](features/archive/F0012-dashboard-storytelling-infographic-canvas/PRD.md) - Done (Archived)
 - [F0013: Dashboard Framed Storytelling Canvas](features/archive/F0013-dashboard-framed-storytelling-canvas/PRD.md) - Done (Archived)
+
+**CRM Release MVP (Planned):**
+- F0016: Account 360 & Insured Management - Planned
+- F0018: Policy Lifecycle & Policy 360 - Planned
+- F0019: Submission Quoting, Proposal & Approval Workflow - Planned
+- F0020: Document Management & ACORD Intake - Planned
+- F0021: Communication Hub & Activity Capture - Planned
+- F0022: Work Queues, Assignment Rules & Coverage Management - Planned
+- F0023: Global Search, Saved Views & Operational Reporting - Planned
+
+**CRM Release MVP+ (Planned):**
+- F0008: Broker Insights - Planned
+- F0017: Broker/MGA Hierarchy, Producer Ownership & Territory Management - Planned
+- F0024: Claims & Service Case Tracking - Planned
+- F0027: COI, ACORD & Outbound Document Generation - Planned
+- F0028: Carrier & Market Relationship Management - Planned
+
+**Brokerage Platform Expansion (Planned):**
+- F0025: Commission, Producer Splits & Revenue Tracking - Planned
+- F0026: Billing, Invoicing & Reconciliation - Planned
+- F0029: External Broker Collaboration Portal - Planned
+- F0030: Integration Hub & Data Exchange - Planned
+
+**Release Enablement / Platform Operations (Planned):**
+- F0031: Data Import, Deduplication & Go-Live Migration - Planned
+- F0032: Admin Configuration & Reference Data Console - Planned
 
 ### 3.4 MVP Features and Stories (vertical-slice friendly)
 
@@ -243,6 +274,25 @@ Status: This repository is currently focused on the agent builder framework. Pha
 - [F0013-S0004: Connect chapter controls as uniform override for timeline visualizations](features/archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0004-connect-chapter-controls-to-radial-popover-data-layers.md) - Done (Archived)
 - [F0013-S0005: Ensure responsive, accessibility, and performance parity for framed storytelling canvas](features/archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0005-ensure-responsive-accessibility-and-performance-parity.md) - Done (Archived)
 
+**CRM Release MVP Stories (Feature F0006: Submission Intake Workflow):**
+- [F0006-S0001: Submission pipeline list with intake status filtering](features/F0006-submission-intake-workflow/F0006-S0001-submission-pipeline-list-with-intake-status-filtering.md) - Draft
+- [F0006-S0002: Create submission for new business intake](features/F0006-submission-intake-workflow/F0006-S0002-create-submission-for-new-business-intake.md) - Draft
+- [F0006-S0003: Submission detail view with intake context](features/F0006-submission-intake-workflow/F0006-S0003-submission-detail-view-with-intake-context.md) - Draft
+- [F0006-S0004: Submission intake status transitions](features/F0006-submission-intake-workflow/F0006-S0004-submission-intake-status-transitions.md) - Draft
+- [F0006-S0005: Submission completeness evaluation](features/F0006-submission-intake-workflow/F0006-S0005-submission-completeness-evaluation.md) - Draft
+- [F0006-S0006: Submission ownership assignment and underwriting handoff](features/F0006-submission-intake-workflow/F0006-S0006-submission-ownership-assignment-and-underwriting-handoff.md) - Draft
+- [F0006-S0007: Submission activity timeline and audit trail](features/F0006-submission-intake-workflow/F0006-S0007-submission-activity-timeline-and-audit-trail.md) - Draft
+- [F0006-S0008: Stale submission visibility and follow-up flags](features/F0006-submission-intake-workflow/F0006-S0008-stale-submission-visibility-and-follow-up-flags.md) - Draft
+
+**CRM Release MVP Stories (Feature F0007: Renewal Pipeline):**
+- [F0007-S0001: Renewal pipeline list with due-window filtering](features/F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md) - Draft
+- [F0007-S0002: Renewal detail view with policy context and outreach history](features/F0007-renewal-pipeline/F0007-S0002-renewal-detail-view-with-policy-context.md) - Draft
+- [F0007-S0003: Renewal status transitions](features/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md) - Draft
+- [F0007-S0004: Renewal ownership assignment and handoff](features/F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md) - Draft
+- [F0007-S0005: Overdue renewal visibility and escalation flags](features/F0007-renewal-pipeline/F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md) - Draft
+- [F0007-S0006: Create renewal from expiring policy](features/F0007-renewal-pipeline/F0007-S0006-create-renewal-from-expiring-policy.md) - Draft
+- [F0007-S0007: Renewal activity timeline and audit trail](features/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md) - Draft
+
 **Story Index:** See `planning-mds/features/STORY-INDEX.md` for auto-generated summary of all stories (if generated).
 
 Reference examples also live under `planning-mds/examples/stories/`.
@@ -254,6 +304,11 @@ Reference examples also live under `planning-mds/examples/stories/`.
 - Broker List
 - Broker 360
 - Task Center (optional MVP)
+- Submission Pipeline List (F0006)
+- Submission Detail (F0006)
+- Create Submission (F0006)
+- Renewal Pipeline List (F0007)
+- Renewal Detail (F0007)
 - Admin minimal (roles/policies optional MVP)
 
 Screen baseline details:
@@ -268,7 +323,7 @@ Screen baseline details:
 
 ## 4) Phase B — Architect Spec (Public Baseline)
 
-**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0003/F0009/F0012/F0013; keep planning artifacts current during ongoing F0004 work.
+**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0003/F0004/F0005/F0009/F0012/F0013/F0015. Active work: F0006 (In Refinement), F0007 (Architecture Complete), F0014 (In Progress).
 
 This section defines the build-ready technical baseline for the reference implementation.
 

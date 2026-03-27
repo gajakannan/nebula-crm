@@ -39,6 +39,12 @@
 | `policy_denied` | 403 | Authenticated caller lacks authorization for the resource/action. | Authorization matrix + policy.csv |
 | `invalid_status_transition` | 409 | Task status transition is not allowed by the state machine (e.g. Open → Done). | F0003-S0002 |
 | `broker_scope_unresolvable` | 403 | Broker scope could not be resolved from `broker_tenant_id` (missing/unknown/ambiguous). | F0009 contract |
+| `duplicate_renewal` | 409 | An active (non-deleted, non-terminal) renewal already exists for this policy. | F0007-S0006 |
+| `invalid_account` | 400 | Referenced account does not exist or is soft-deleted. | F0006-S0002 |
+| `invalid_broker` | 400 | Referenced broker does not exist, is soft-deleted, or is inactive. | F0006-S0002 |
+| `invalid_program` | 400 | Referenced program does not exist or is soft-deleted. | F0006-S0002 |
+| `invalid_lob` | 400 | LineOfBusiness value is not in the known LOB set. | F0006-S0002 |
+| `invalid_assignee` | 400 | Target user does not exist, is inactive, or lacks the required role for the current submission state. | F0006-S0006 |
 
 ## Notes
 

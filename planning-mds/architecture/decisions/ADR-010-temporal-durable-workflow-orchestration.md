@@ -1,7 +1,7 @@
 # ADR-010: Adopt Temporal for Durable Long-Running CRM Workflows
 
-**Status:** Proposed
-**Date:** 2026-03-23
+**Status:** Accepted
+**Date:** 2026-03-26 (finalized during F0007 architecture review; originally proposed 2026-03-23)
 **Owners:** Architect
 **Related Features:** F0007, F0019
 
@@ -45,8 +45,32 @@ This ADR does not govern:
 - Adds a new runtime dependency and operating surface.
 - Requires worker deployment, monitoring, and Temporal-aware testing patterns.
 
+## F0007 Renewal Specifics
+
+F0007 MVP does **not** use Temporal for renewal workflows. Overdue and approaching detection is computed at query time from stored dates and `WorkflowSlaThreshold` thresholds. This avoids adding Temporal as a runtime dependency before the platform capability is proven.
+
+The planned Temporal integration (post-MVP) follows this pattern:
+
+- **Workflow:** `RenewalReminderWorkflow` with ID `renewal-reminder-{renewalId}`
+- **Task Queue:** `renewal-reminders`
+- **Signals:** `RenewalAdvanced(toState)`, `RenewalCancelled` — terminate the workflow when the renewal moves past Identified or is deleted
+- **Queries:** `GetNextReminderDate()` — returns the next scheduled action
+- **Activities:** `SendApproachingNotification`, `SendOverdueNotification`, `RecordEscalationEvent` — all idempotent (check for existing Task/Event before creating)
+- **Correlation:** A nullable `TemporalWorkflowId` column on the Renewal entity stores the Temporal workflow ID for queries and cancellation (added in the Temporal phase, not MVP)
+
+See the [F0007 README Architecture Specification](../../features/F0007-renewal-pipeline/README.md) for the full Temporal workflow design.
+
+## Conventions (to be applied when first Temporal workflow is implemented)
+
+- **Workflow ID format:** `{domain}-{purpose}-{entityId}` (e.g., `renewal-reminder-{uuid}`)
+- **Task Queue naming:** `{domain}-{purpose}` (e.g., `renewal-reminders`)
+- **Worker hosting:** Temporal workers run as a separate .NET worker service in the same Docker Compose stack
+- **Idempotent activities:** All activities must check for pre-existing side effects before executing
+- **Workflow correlation:** Store Temporal workflow ID on the business entity for status queries and cancellation
+- **Testing:** Temporal workflow tests use the Temporal test server; activities are unit-tested independently
+
 ## Follow-up
 
-- Define workflow registration and worker-hosting conventions.
+- ~~Define workflow registration and worker-hosting conventions.~~ Done (see Conventions above).
 - Reference this ADR from renewal and other long-running workflow PRDs.
-- Align `SOLUTION-PATTERNS.md` and runbooks with Temporal operating guidance.
+- Align `SOLUTION-PATTERNS.md` and runbooks with Temporal operating guidance when the first Temporal workflow ships.

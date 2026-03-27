@@ -31,7 +31,7 @@ Automated smoke tests and a one-command environment reset workflow for Nebula CR
 
 **Phase B status:** Complete — no new entities, APIs, workflows, or Casbin policies. Infrastructure/scripts feature.
 
-**Execution Plan:** [`feature-assembly-plan-F0014.md`](../../architecture/feature-assembly-plan-F0014.md)
+**Execution Plan:** [`feature-assembly-plan.md`](./feature-assembly-plan.md)
 
 ### Key Findings
 
@@ -52,4 +52,4 @@ Automated smoke tests and a one-command environment reset workflow for Nebula CR
 | JSON schemas | N/A — no new request/response models |
 | C4 diagrams | N/A — no container changes |
 | ADRs | None required — no architectural decisions with alternatives to evaluate |
-| Assembly plan | [`feature-assembly-plan-F0014.md`](../../architecture/feature-assembly-plan-F0014.md) |
+| Assembly plan | [`feature-assembly-plan.md`](./feature-assembly-plan.md) |

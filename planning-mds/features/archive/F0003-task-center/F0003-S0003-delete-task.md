@@ -109,7 +109,7 @@ Tasks are soft-deleted to preserve audit history while removing them from active
 
 ## Implementation Guidance (Architect)
 
-**Full technical spec:** [feature-assembly-plan-F0003.md](../../architecture/feature-assembly-plan-F0003.md) — Step 3
+**Full technical spec:** [feature-assembly-plan.md](./feature-assembly-plan.md) — Step 3
 
 ### No New DTOs
 Delete takes no request body. taskId comes from path parameter.

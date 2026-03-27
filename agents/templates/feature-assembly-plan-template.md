@@ -8,6 +8,8 @@
 >
 > **Depth expectation:** Placeholders like `{field count}` and `{summary}` must be replaced with actual values. "Existing Code" should state real field counts, method names, and precise change descriptions. "Step N" sections must include complete C# record/class definitions with all fields and types — not abbreviated signatures. If a developer agent would need to ask a clarifying question, the plan lacks sufficient detail.
 
+**Placement:** `planning-mds/features/F{NNNN}-{slug}/feature-assembly-plan.md` — colocated with the feature folder so it archives together with PRD, stories, and STATUS. The umbrella cross-feature sequencing plan at `planning-mds/architecture/feature-assembly-plan.md` references this file.
+
 Use this template for solution feature planning. If generic framework work under `agents/**` is also required, track it separately rather than mixing it into the solution feature plan.
 
 **Note:** This template is oriented toward backend entity/service/endpoint features. For infrastructure-only features (DevOps scripts, CI workflows, tooling), adapt the structure: replace entity/DTO/endpoint sections with script modification specs, CLI argument definitions, and workflow step details. The depth expectation still applies — implementation-ready, not placeholder-level.

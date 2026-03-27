@@ -16,7 +16,7 @@ Define the build order, role handoffs, and integration checkpoints for implement
 
 **Added:** 2026-03-27 — Architecture review complete; data model, API, workflow, Casbin, schemas, error codes, and timeline events finalized.
 
-> **Implementation Execution Plan:** [`feature-assembly-plan-F0006.md`](./feature-assembly-plan-F0006.md) — detailed per-step file paths, C# code, logic flows, Casbin enforcement, timeline events, HTTP responses, and integration checkpoints for the backend/frontend developer agents.
+> **Implementation Execution Plan:** [`feature-assembly-plan.md`](../features/F0006-submission-intake-workflow/feature-assembly-plan.md) — detailed per-step file paths, C# code, logic flows, Casbin enforcement, timeline events, HTTP responses, and integration checkpoints for the backend/frontend developer agents.
 
 ### Dependencies
 
@@ -161,7 +161,7 @@ Step 9 (QE):          comprehensive test coverage
 
 **Added:** 2026-03-26 — Architecture review complete; data model, API, workflow, Casbin, and ADRs finalized.
 
-> **Implementation Execution Plan:** [`feature-assembly-plan-F0007.md`](./feature-assembly-plan-F0007.md) — detailed per-step file paths, C# code, logic flows, Casbin enforcement, timeline events, HTTP responses, and integration checkpoints for the backend/frontend developer agents.
+> **Implementation Execution Plan:** [`feature-assembly-plan.md`](../features/F0007-renewal-pipeline/feature-assembly-plan.md) — detailed per-step file paths, C# code, logic flows, Casbin enforcement, timeline events, HTTP responses, and integration checkpoints for the backend/frontend developer agents.
 
 ### Dependencies
 
@@ -1835,7 +1835,7 @@ eval():   r.obj.assignee ("abc-123") == r.sub.id ("abc-123") → true
 
 **Added:** 2026-03-27 — Architecture review complete; no new entities, APIs, workflows, or Casbin policies. Infrastructure/scripts feature only.
 
-> **Implementation Execution Plan:** [`feature-assembly-plan-F0014.md`](./feature-assembly-plan-F0014.md) — per-step implementation spec for S0002 (multi-role `--all-users` mode) and S0003 (CI workflow). Includes corrected BrokerUser assertion expectations (S0002 AC was wrong — BrokerUser has `task:read` ALLOW, not deny-all).
+> **Implementation Execution Plan:** [`feature-assembly-plan.md`](../features/F0014-devops-smoke-test-automation/feature-assembly-plan.md) — per-step implementation spec for S0002 (multi-role `--all-users` mode) and S0003 (CI workflow). Includes corrected BrokerUser assertion expectations (S0002 AC was wrong — BrokerUser has `task:read` ALLOW, not deny-all).
 
 ### Dependencies
 

@@ -42,7 +42,7 @@ Lightweight index for a feature folder. Place as `README.md` inside each feature
 ## Architecture Review (Optional — fill after Phase B)
 
 **Phase B status:** [Complete / In Progress / N/A]
-**Execution Plan:** [`feature-assembly-plan-F{NNNN}.md`](../../architecture/feature-assembly-plan-F{NNNN}.md)
+**Execution Plan:** [`feature-assembly-plan.md`](./feature-assembly-plan.md)
 
 ### Key Findings
 
@@ -59,4 +59,4 @@ Lightweight index for a feature folder. Place as `README.md` inside each feature
 | JSON schemas | [Updated / N/A — reason] |
 | C4 diagrams | [Updated / N/A — reason] |
 | ADRs | [ADR-NNN created / None required — reason] |
-| Assembly plan | [`feature-assembly-plan-F{NNNN}.md`](../../architecture/feature-assembly-plan-F{NNNN}.md) |
+| Assembly plan | [`feature-assembly-plan.md`](./feature-assembly-plan.md) |

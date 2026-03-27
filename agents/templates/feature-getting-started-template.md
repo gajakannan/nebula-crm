@@ -1,6 +1,6 @@
 ---
 template: feature-getting-started
-version: 1.0
+version: 1.1
 applies_to: product-manager
 ---
 
@@ -56,6 +56,27 @@ Steps to confirm the feature works end-to-end:
 | Backend | `engine/src/...` | [What this file does] |
 | Frontend | `experience/src/...` | [What this file does] |
 
+## Dev User Credentials (If feature introduces or depends on auth flows)
+
+Document any credentials, tokens, or auth configuration developers need to test this feature:
+
+| Username | Role | Credential / Token Key |
+|----------|------|----------------------|
+| [username] | [Role] | [token or password] |
+
+Manual token acquisition example (if applicable):
+```bash
+# Example ROPC token acquisition
+curl -X POST http://localhost:9000/application/o/token/ \
+  -d "grant_type=password&client_id=example&username=user&password=token-key&scope=openid"
+```
+
 ## Notes
 
 - [Any gotchas, workarounds, or context that helps implementers]
+
+**Rich gotchas encouraged.** Document specific failure modes and their solutions, not just "things to know." Examples of valuable gotchas:
+- Auth-specific behaviors (e.g., "password grant requires app-password tokens, not login passwords")
+- Health endpoint URLs that differ across services
+- Exit code conventions for scripts
+- Timing-sensitive operations (e.g., "blueprint needs 5s after worker starts")

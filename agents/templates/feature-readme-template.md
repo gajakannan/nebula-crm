@@ -1,6 +1,6 @@
 ---
 template: feature-readme
-version: 1.0
+version: 1.1
 applies_to: product-manager
 ---
 
@@ -13,8 +13,9 @@ Lightweight index for a feature folder. Place as `README.md` inside each feature
 # F{NNNN} — [Feature Name]
 
 **Status:** [Draft | In Progress | Complete | Archived]
+**Archived:** [YYYY-MM-DD — fill when status is Archived, omit otherwise]
 **Priority:** [Critical | High | Medium | Low]
-**Phase:** [MVP | Phase 1 | Phase 2 | Future]
+**Phase:** [MVP | Phase 1 | Phase 2 | Infrastructure | Future]
 
 ## Overview
 
@@ -37,3 +38,25 @@ Lightweight index for a feature folder. Place as `README.md` inside each feature
 
 **Total Stories:** [count]
 **Completed:** [count] / [total]
+
+## Architecture Review (Optional — fill after Phase B)
+
+**Phase B status:** [Complete / In Progress / N/A]
+**Execution Plan:** [`feature-assembly-plan-F{NNNN}.md`](../../architecture/feature-assembly-plan-F{NNNN}.md)
+
+### Key Findings
+
+[List any significant findings from the architecture review: requirement corrections, feasibility concerns, cross-feature dependencies, or deviations from expected patterns.]
+
+### Architecture Artifacts
+
+| Artifact | Status |
+|----------|--------|
+| Data model / ERD | [Updated / N/A — reason] |
+| API contract (OpenAPI) | [Updated / N/A — reason] |
+| Workflow state machine | [Updated / N/A — reason] |
+| Casbin policy | [Updated / N/A — reason] |
+| JSON schemas | [Updated / N/A — reason] |
+| C4 diagrams | [Updated / N/A — reason] |
+| ADRs | [ADR-NNN created / None required — reason] |
+| Assembly plan | [`feature-assembly-plan-F{NNNN}.md`](../../architecture/feature-assembly-plan-F{NNNN}.md) |

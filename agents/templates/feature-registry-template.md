@@ -1,6 +1,6 @@
 ---
 template: feature-registry
-version: 1.0
+version: 1.1
 applies_to: product-manager
 ---
 
@@ -23,8 +23,24 @@ Tracks all features by ID, name, and status. Place as `REGISTRY.md` at `planning
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
-| F0001 | [Feature name] | [Draft / In Progress / Complete] | [MVP / Phase 1 / ...] | `F0001-{slug}/` |
-| F0002 | [Feature name] | [Draft / In Progress / Complete] | [MVP / Phase 1 / ...] | `F0002-{slug}/` |
+| F0001 | [Feature name] | [Draft / In Progress / In Refinement / Architecture Complete / Complete] | [MVP / Phase 1 / Infrastructure / ...] | `F0001-{slug}/` |
+| F0002 | [Feature name] | [Draft / In Progress / In Refinement / Architecture Complete / Complete] | [MVP / Phase 1 / Infrastructure / ...] | `F0002-{slug}/` |
+
+## Abandoned Features
+
+Features that were superseded by a different approach before completion.
+
+| Feature ID | Name | Superseded By | Abandoned Date | Folder |
+|------------|------|---------------|----------------|--------|
+| [F{NNNN}] | [Feature name] | [F{NNNN}] | [YYYY-MM-DD] | `archive/F{NNNN}-{slug}/` |
+
+## Planned (Reserved IDs)
+
+Features with allocated IDs that are not yet in active development. Tracks future headroom.
+
+| Feature ID | Name | Status | Phase | Folder |
+|------------|------|--------|-------|--------|
+| [F{NNNN}] | [Feature name] | [Planned / Architecture Complete / In Refinement] | [Phase] | `F{NNNN}-{slug}/` |
 
 ## Archived Features
 

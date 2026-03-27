@@ -2,7 +2,7 @@
 
 Auto-generated index of all user stories across feature folders.
 
-**Total Stories:** 71
+**Total Stories:** 74
 
 ---
 
@@ -158,6 +158,16 @@ Auto-generated index of all user stories across feature folders.
 
 ---
 
+## F0014 — DevOps Smoke Test Automation
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [F0014-S0001](./F0014-devops-smoke-test-automation/F0014-S0001-blueprint-ropc-fixes-and-smoke-scripts.md) | Blueprint ROPC fixes and smoke test scripts | Critical | Infrastructure | DevOps engineer verifying a Nebula deployment |
+| [F0014-S0002](./F0014-devops-smoke-test-automation/F0014-S0002-multi-role-smoke-test-verification.md) | Multi-role smoke test verification | High | Infrastructure | DevOps engineer verifying a Nebula deployment |
+| [F0014-S0003](./F0014-devops-smoke-test-automation/F0014-S0003-ci-smoke-test-integration.md) | CI smoke test integration | Medium | Future | development team member |
+
+---
+
 ## F0015 — Frontend Quality Gates + Test Infrastructure
 
 | Story ID | Title | Priority | Phase | Persona |
@@ -173,7 +183,8 @@ Auto-generated index of all user stories across feature folders.
 | Phase | Count |
 |-------|-------|
 | CRM Release MVP | 15 |
-| Infrastructure | 3 |
+| Future | 1 |
+| Infrastructure | 5 |
 | MVP | 37 |
 | MVP Hardening | 1 |
 | Phase 1 | 11 |
@@ -185,9 +196,9 @@ Auto-generated index of all user stories across feature folders.
 
 | Priority | Count |
 |----------|-------|
-| Critical | 21 |
-| High | 37 |
-| Medium | 9 |
+| Critical | 22 |
+| High | 38 |
+| Medium | 10 |
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 template: user-story
-version: 1.1
+version: 1.2
 applies_to: product-manager
 ---
 
@@ -20,7 +20,7 @@ The `Story ID` value must match the filename prefix exactly.
 **Feature:** [F0001 — Feature Name]
 **Title:** [Short descriptive title]
 **Priority:** [Critical | High | Medium | Low]
-**Phase:** [MVP | Phase 1 | Phase 2 | Future]
+**Phase:** [MVP | Phase 1 | Phase 2 | Infrastructure | Future]
 
 ## User Story
 
@@ -82,6 +82,13 @@ Use Given/When/Then or a checklist. Be specific and testable.
 **Related Stories:**
 - [Story ID] — [Relationship]
 
+## Business Rules (Optional — include when story has domain constraints)
+
+Explicit domain constraints, system behavior contracts, or platform-specific rules that are not obvious from the acceptance criteria. Number each rule for easy reference.
+
+1. [Rule name:] [Description of the constraint and why it exists]
+2. [Rule name:] [Description]
+
 ## Out of Scope
 
 - [Explicit non-goal]
@@ -122,6 +129,15 @@ Minimum expected provenance roles for any completed story:
 - `Code Reviewer`
 
 ---
+
+## Infrastructure / Non-Standard Story Guidance
+
+Not all stories follow the typical entity → service → endpoint pattern. Infrastructure stories (DevOps scripts, CI workflows, tooling) are a valid variant. When writing infrastructure stories:
+
+- The story template still applies — use all sections, but mark inapplicable ones (e.g., "Permissions enforced (N/A — CLI tooling, no server-side auth changes)").
+- "Data Requirements" may describe script inputs/outputs rather than entity fields.
+- "Role-Based Visibility" may describe who can execute the tool rather than ABAC policies.
+- "Definition of Done" items like "Audit/timeline logged" may be N/A — state why.
 
 ## Example Library
 

@@ -1,6 +1,6 @@
 ---
 template: tracker-governance
-version: 1.0
+version: 1.1
 applies_to: product-manager, architect, code-reviewer, quality-engineer
 ---
 
@@ -24,7 +24,7 @@ This document defines how planning trackers stay current and trustworthy.
 ## Ownership
 
 - Product Manager: updates tracker docs during planning changes.
-- Architect: validates tracker consistency at planning-to-build handoff and defines required signoff roles.
+- Architect: validates tracker consistency at planning-to-build handoff. Owns the required signoff matrix at planning time — sets which roles are mandatory for each feature's completion.
 - Implementers: update feature `STATUS.md` when story state changes.
 - Code Reviewer: blocks approval when tracker drift is detected.
 - Quality Engineer: validates acceptance criteria coverage and records test signoff evidence.
@@ -38,7 +38,10 @@ This document defines how planning trackers stay current and trustworthy.
 - Minimum required roles for features marked `Done` or moved to archive:
   - `Quality Engineer`
   - `Code Reviewer`
-- Architect adds risk-based required roles (for example: `Security Reviewer`, `DevOps`, `Architect`).
+- Architect adds additional required roles based on risk/scope:
+  - `Security Reviewer` — for authn/authz, access control, identity/session, secrets, sensitive data boundaries, or policy changes
+  - `DevOps` — for runtime/deployability or environment-contract changes
+  - `Architect` — when architecture-sensitive exceptions or tradeoffs require explicit acceptance
 - Every required role must have story-level provenance entries for every story in scope with:
   - pass verdict (`PASS` or `APPROVED`)
   - reviewer identity
@@ -58,10 +61,20 @@ This document defines how planning trackers stay current and trustworthy.
 
 - Feature lifecycle states: `Draft` -> `In Progress` -> `Done` -> `Archived`.
 - `Done` means implementation complete and signoff evidence captured in `STATUS.md`.
+- `Done` may include a `Deferred Non-Blocking Follow-ups` section in `STATUS.md`; deferments must not change overall completion state.
 - Archived features must:
   - live under `planning-mds/features/archive/`
   - be listed under `Archived Features` in `REGISTRY.md`
   - appear in `ROADMAP.md` under `Completed`, not `Now/Next/Later`.
+
+## Orphaned Story Rule (Mandatory)
+
+Before marking a feature `Done` or moving to `Archived`, the PM must verify that all non-completed stories are either:
+
+1. **Explicitly deferred** in `STATUS.md` `Deferred Non-Blocking Follow-ups` with a tracking link to a new or existing feature, or
+2. **Promoted** to a new feature ID in `REGISTRY.md` if the scope warrants standalone tracking.
+
+No story file may be archived in a `Not Started` or `In Progress` state without a rehoming decision recorded in the closeout. This prevents future work from being silently buried in the archive.
 
 ## Story File Rules
 

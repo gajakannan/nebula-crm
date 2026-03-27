@@ -86,7 +86,7 @@ Use this template for solution feature planning. If generic framework work under
 - EventType: `{EventType}`
 - EntityType: `{Entity}`, EntityId: `{entity}.Id`
 - EventDescription: `$"{template}"`
-- BrokerDescription: `null` (InternalOnly) or `$"{broker-safe template}"`
+- ExternalDescription: `null` (InternalOnly) or `$"{external-safe template}"`
 - EventPayloadJson: per `activity-event-payloads.schema.json` → `{definition name}`
 
 ### HTTP Responses

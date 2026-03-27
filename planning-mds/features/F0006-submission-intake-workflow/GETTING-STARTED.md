@@ -2,12 +2,63 @@
 
 ## Prerequisites
 
-- [ ] Read the current release framing in [COMMERCIAL-PC-CRM-RELEASE-PLAN.md](../COMMERCIAL-PC-CRM-RELEASE-PLAN.md)
-- [ ] Review upstream broker, auth, and task workflows already implemented
-- [ ] Refine this feature into stories and an implementation contract before coding
+- [ ] Read the [PRD](./PRD.md) and understand the scope boundary (F0006 ends at ReadyForUWReview; F0019 owns downstream)
+- [ ] Review upstream features already implemented: F0002 (Broker), F0009 (Auth), F0003/F0004 (Task Center)
+- [ ] Ensure F0016 (Account) entity exists at minimum as a stub (Id, Name, Region)
+- [ ] Review ADR-011 (workflow state machines) and existing Casbin policy.csv §2.3 (submission policies)
+- [ ] Review the submission workflow states in BLUEPRINT §4.3
+
+## Services to Run
+
+```bash
+# Full local stack
+docker compose up -d postgres authentik
+dotnet run --project engine/src/Nebula.Api
+cd experience && pnpm dev
+```
+
+## Environment Variables
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `Authentication__Authority` | authentik OIDC issuer | `http://localhost:9000/application/o/nebula/` |
+| `Authentication__Audience` | JWT audience claim | `nebula` |
+| `ConnectionStrings__Default` | PostgreSQL connection | See docker-compose |
+
+## Seed Data
+
+- **ReferenceSubmissionStatus**: Seed intake states (Received, Triaging, WaitingOnBroker, ReadyForUWReview) plus downstream states (InReview, Quoted, BindRequested, Bound, Declined, Withdrawn) with terminal flags and display metadata
+- **Stale thresholds**: Seed configurable thresholds (Received=48h, Triaging=48h, WaitingOnBroker=72h)
+- **Accounts**: At least one test account with Region set
+- **Brokers**: At least one test broker with matching BrokerRegion
+- **Users**: lisa.wong (DistributionUser), john.miller (Underwriter), akadmin (Admin)
 
 ## How to Verify
 
-1. Confirm the feature scope is limited to intake, triage, completeness, and first routing.
-2. Break the feature into implementation-ready stories with acceptance criteria.
-3. Validate tracker sync after refinement.
+1. Authenticate as `lisa.wong` (DistributionUser)
+2. Create a submission linked to a test account and broker
+3. Verify submission appears in pipeline list in Received status
+4. Open submission detail — verify completeness panel shows field status
+5. Transition to Triaging → verify timeline event and status badge update
+6. Assign to `john.miller` (Underwriter)
+7. Fill required fields (LOB, etc.) → verify completeness passes
+8. Transition to ReadyForUWReview → verify completeness guard enforced
+9. Authenticate as `john.miller` → verify submission visible in ReadyForUWReview
+10. Verify stale flag appears on a submission left in Received for > 48 hours
+
+## Key Files
+
+| Layer | Path | Purpose |
+|-------|------|---------|
+| Backend | `engine/src/Nebula.Api/Submissions/` | Submission endpoints and services |
+| Backend | `engine/src/Nebula.Domain/Submissions/` | Submission entity and workflow rules |
+| Backend | `engine/src/Nebula.Infrastructure/Submissions/` | EF repository and configuration |
+| Frontend | `experience/src/pages/submissions/` | Submission pipeline list and detail pages |
+| Frontend | `experience/src/components/submissions/` | Submission-specific components |
+| Planning | `planning-mds/security/policies/policy.csv` | Casbin ABAC policies §2.3 |
+
+## Notes
+
+- Region alignment (Account.Region in broker's BrokerRegion set) is enforced on create — test with mismatched regions to verify the `region_mismatch` error
+- Document completeness (F0020) is a soft dependency — if F0020 is not deployed, document checks are skipped gracefully
+- The stale threshold clock uses the last WorkflowTransition.OccurredAt, not the submission's UpdatedAt

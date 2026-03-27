@@ -2,7 +2,7 @@
 
 Auto-generated index of all user stories across feature folders.
 
-**Total Stories:** 56
+**Total Stories:** 71
 
 ---
 
@@ -44,6 +44,19 @@ Auto-generated index of all user stories across feature folders.
 
 ---
 
+## F0004 — Task Center UI + Manager Assignment
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [F0004-S0001](./archive/F0004-task-center-ui-and-assignment/F0004-S0001-task-list-api-endpoint.md) | Paginated task list API with filters and views | Critical | Phase 1 | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
+| [F0004-S0002](./archive/F0004-task-center-ui-and-assignment/F0004-S0002-user-search-api-endpoint.md) | User search API for assignee picker | High | Phase 1 | Distribution Manager or Admin |
+| [F0004-S0003](./archive/F0004-task-center-ui-and-assignment/F0004-S0003-cross-user-task-authorization.md) | Cross-user task authorization for assign, reassign, and creator-based access | Critical | Phase 1 | Distribution Manager or Admin |
+| [F0004-S0004](./archive/F0004-task-center-ui-and-assignment/F0004-S0004-task-center-list-and-filter-ui.md) | Task Center list view with tabs, filters, sort, and pagination | Critical | Phase 1 | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
+| [F0004-S0005](./archive/F0004-task-center-ui-and-assignment/F0004-S0005-task-create-edit-ui-with-assignment.md) | Task create and edit UI with assignee picker for managers | High | Phase 1 | Distribution Manager or Admin |
+| [F0004-S0006](./archive/F0004-task-center-ui-and-assignment/F0004-S0006-task-detail-panel-and-mobile-view.md) | Task detail side panel (desktop/tablet) and full-page detail (mobile) | High | Phase 1 | - |
+
+---
+
 ## F0005 — IdP Migration
 
 | Story ID | Title | Priority | Phase | Persona |
@@ -52,6 +65,35 @@ Auto-generated index of all user stories across feature folders.
 | [F0005-S0002](./archive/F0005-idp-migration/F0005-S0002-claims-normalization-backend.md) | F0005-S0002 — Claims Normalization Layer + Principal Key (Backend) | Must-complete before F0001/F0002 backend implementation | - | - |
 | [F0005-S0003](./archive/F0005-idp-migration/F0005-S0003-frontend-oidc-flow.md) | F0005-S0003 — Frontend OIDC Flow Update | Required before real login flow is implemented; dev-auth.ts fix is immediate | - | - |
 | [F0005-S0004](./archive/F0005-idp-migration/F0005-S0004-principal-key-data-model.md) | F0005-S0004 — Data Model Principal Key Rename | Must-complete before F0001/F0002 entity implementation | - | - |
+
+---
+
+## F0006 — Submission Intake Workflow
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [F0006-S0001](./F0006-submission-intake-workflow/F0006-S0001-submission-pipeline-list-with-intake-status-filtering.md) | Submission pipeline list with intake status filtering | Critical | CRM Release MVP | distribution user or distribution manager |
+| [F0006-S0002](./F0006-submission-intake-workflow/F0006-S0002-create-submission-for-new-business-intake.md) | Create submission for new business intake | Critical | CRM Release MVP | distribution user |
+| [F0006-S0003](./F0006-submission-intake-workflow/F0006-S0003-submission-detail-view-with-intake-context.md) | Submission detail view with intake context | Critical | CRM Release MVP | distribution user or underwriter |
+| [F0006-S0004](./F0006-submission-intake-workflow/F0006-S0004-submission-intake-status-transitions.md) | Submission intake status transitions | Critical | CRM Release MVP | distribution user or distribution manager |
+| [F0006-S0005](./F0006-submission-intake-workflow/F0006-S0005-submission-completeness-evaluation.md) | Submission completeness evaluation | High | CRM Release MVP | distribution user |
+| [F0006-S0006](./F0006-submission-intake-workflow/F0006-S0006-submission-ownership-assignment-and-underwriting-handoff.md) | Submission ownership assignment and underwriting handoff | High | CRM Release MVP | distribution user or distribution manager |
+| [F0006-S0007](./F0006-submission-intake-workflow/F0006-S0007-submission-activity-timeline-and-audit-trail.md) | Submission activity timeline and audit trail | High | CRM Release MVP | distribution user, underwriter, or distribution manager |
+| [F0006-S0008](./F0006-submission-intake-workflow/F0006-S0008-stale-submission-visibility-and-follow-up-flags.md) | Stale submission visibility and follow-up flags | High | CRM Release MVP | distribution manager |
+
+---
+
+## F0007 — Renewal Pipeline
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [F0007-S0001](./F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md) | Renewal pipeline list with due-window filtering | Critical | CRM Release MVP | distribution user or distribution manager |
+| [F0007-S0002](./F0007-renewal-pipeline/F0007-S0002-renewal-detail-view-with-policy-context.md) | Renewal detail view with policy context and outreach history | Critical | CRM Release MVP | distribution user or underwriter |
+| [F0007-S0003](./F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md) | Renewal status transitions | Critical | CRM Release MVP | distribution user or underwriter |
+| [F0007-S0004](./F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md) | Renewal ownership assignment and handoff | High | CRM Release MVP | distribution manager |
+| [F0007-S0005](./F0007-renewal-pipeline/F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md) | Overdue renewal visibility and escalation flags | High | CRM Release MVP | distribution manager |
+| [F0007-S0006](./F0007-renewal-pipeline/F0007-S0006-create-renewal-from-expiring-policy.md) | Create renewal from expiring policy | Critical | CRM Release MVP | distribution user |
+| [F0007-S0007](./F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md) | Renewal activity timeline and audit trail | High | CRM Release MVP | distribution user, underwriter, or distribution manager |
 
 ---
 
@@ -116,19 +158,6 @@ Auto-generated index of all user stories across feature folders.
 
 ---
 
-## F0004 — Task Center UI + Manager Assignment
-
-| Story ID | Title | Priority | Phase | Persona |
-|----------|-------|----------|-------|---------|
-| [F0004-S0001](./archive/F0004-task-center-ui-and-assignment/F0004-S0001-task-list-api-endpoint.md) | Paginated task list API with filters and views | Critical | Phase 1 | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
-| [F0004-S0002](./archive/F0004-task-center-ui-and-assignment/F0004-S0002-user-search-api-endpoint.md) | User search API for assignee picker | High | Phase 1 | Distribution Manager or Admin |
-| [F0004-S0003](./archive/F0004-task-center-ui-and-assignment/F0004-S0003-cross-user-task-authorization.md) | Cross-user task authorization for assign, reassign, and creator-based access | Critical | Phase 1 | Distribution Manager or Admin |
-| [F0004-S0004](./archive/F0004-task-center-ui-and-assignment/F0004-S0004-task-center-list-and-filter-ui.md) | Task Center list view with tabs, filters, sort, and pagination | Critical | Phase 1 | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
-| [F0004-S0005](./archive/F0004-task-center-ui-and-assignment/F0004-S0005-task-create-edit-ui-with-assignment.md) | Task create and edit UI with assignee picker for managers | High | Phase 1 | Distribution Manager or Admin |
-| [F0004-S0006](./archive/F0004-task-center-ui-and-assignment/F0004-S0006-task-detail-panel-and-mobile-view.md) | Task detail side panel and mobile detail view | High | Phase 1 | Distribution User, Underwriter, Relationship Manager, Program Manager, Distribution Manager, or Admin |
-
----
-
 ## F0015 — Frontend Quality Gates + Test Infrastructure
 
 | Story ID | Title | Priority | Phase | Persona |
@@ -143,6 +172,7 @@ Auto-generated index of all user stories across feature folders.
 
 | Phase | Count |
 |-------|-------|
+| CRM Release MVP | 15 |
 | Infrastructure | 3 |
 | MVP | 37 |
 | MVP Hardening | 1 |
@@ -155,8 +185,8 @@ Auto-generated index of all user stories across feature folders.
 
 | Priority | Count |
 |----------|-------|
-| Critical | 13 |
-| High | 30 |
+| Critical | 21 |
+| High | 37 |
 | Medium | 9 |
 
 ---

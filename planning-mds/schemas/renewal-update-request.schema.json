@@ -2,35 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://nebula.local/schemas/renewal-update-request.schema.json",
   "title": "RenewalUpdateRequest",
-  "description": "Validation rules for updating a renewal.",
+  "description": "DEPRECATED — F0007 redesign removes generic renewal updates. Renewals are modified through transitions (POST /renewals/{id}/transitions) and assignment (PUT /renewals/{id}/assignment). This schema is retained for backward compatibility reference only.",
   "type": "object",
-  "properties": {
-    "submissionId": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "format": "uuid"
-    },
-    "lineOfBusiness": {
-      "anyOf": [
-        { "$ref": "https://nebula.local/schemas/line-of-business.schema.json" },
-        { "type": "null" }
-      ]
-    },
-    "currentStatus": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 30
-    },
-    "renewalDate": {
-      "type": "string",
-      "format": "date"
-    },
-    "assignedTo": {
-      "type": "string",
-      "format": "uuid"
-    }
-  },
-  "additionalProperties": false
+  "properties": {},
+  "additionalProperties": false,
+  "deprecated": true
 }

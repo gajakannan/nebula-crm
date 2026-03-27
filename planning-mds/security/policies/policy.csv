@@ -118,38 +118,91 @@ p, Admin,            contact, update, true
 p, Admin,            contact, delete, true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §2.3 Submission — Read / Transition
-# Transitions must follow workflow rules (BLUEPRINT §4.3).
+# §2.3 Submission — Read / Create / Update / Transition / Assign (F0006 update)
+# Transitions must follow workflow rules (BLUEPRINT §4.3, PRD transition matrix).
+# Per-transition role authorization is enforced at the application layer (ADR-011).
+# Casbin gates the broad action; app service gates specific from→to pairs.
 # DistributionUser scope: assigned opportunities only. DistributionManager: region-scoped.
+#
+# Actions:
+#   read       — view submission list/detail
+#   create     — create new submission (auto-assigns creator)
+#   update     — edit submission fields (description, LOB, premium, etc.)
+#   transition — advance submission through workflow states
+#   assign     — assign/reassign submission ownership
 # ─────────────────────────────────────────────────────────────────────────────
 
+# DistributionUser — read (own), create (self-assign), update (own), transition (intake), assign (own only)
 p, DistributionUser,    submission, read,       true
+p, DistributionUser,    submission, create,     true
+p, DistributionUser,    submission, update,     true
 p, DistributionUser,    submission, transition, true
+p, DistributionUser,    submission, assign,     true
+
+# DistributionManager — read (region), create, update (region), transition (all intake), assign (any in scope)
 p, DistributionManager, submission, read,       true
+p, DistributionManager, submission, create,     true
+p, DistributionManager, submission, update,     true
 p, DistributionManager, submission, transition, true
+p, DistributionManager, submission, assign,     true
+
+# Underwriter — read (assigned + team), transition (downstream states only, F0019)
 p, Underwriter,         submission, read,       true
 p, Underwriter,         submission, transition, true
+
+# RelationshipManager — read only (own accounts/brokers)
 p, RelationshipManager, submission, read,       true
+
+# ProgramManager — read only (own programs)
 p, ProgramManager,      submission, read,       true
+
+# Admin — full access
 p, Admin,               submission, read,       true
+p, Admin,               submission, create,     true
+p, Admin,               submission, update,     true
 p, Admin,               submission, transition, true
+p, Admin,               submission, assign,     true
 
 # ─────────────────────────────────────────────────────────────────────────────
-# §2.4 Renewal — Read / Transition
-# Transitions must follow workflow rules (BLUEPRINT §4.3).
+# §2.4 Renewal — Read / Create / Transition / Assign (F0007 update)
+# Transitions must follow workflow rules — see F0007 README transition matrix.
+# Per-transition role authorization is enforced at the application layer (ADR-011).
+# Casbin gates the broad action; app service gates specific from→to pairs.
 # DistributionUser scope: assigned opportunities only. DistributionManager: region-scoped.
+#
+# Actions:
+#   read       — view renewal list/detail
+#   create     — create renewal from expiring policy
+#   transition — advance renewal through workflow states
+#   assign     — assign/reassign renewal ownership
 # ─────────────────────────────────────────────────────────────────────────────
 
+# DistributionUser — read (own), create (self-assign), transition (Identified→Outreach, Outreach→InReview)
 p, DistributionUser,    renewal, read,       true
+p, DistributionUser,    renewal, create,     true
 p, DistributionUser,    renewal, transition, true
+
+# DistributionManager — read (all in region), create, transition (same as DistributionUser), assign (any in scope)
 p, DistributionManager, renewal, read,       true
+p, DistributionManager, renewal, create,     true
 p, DistributionManager, renewal, transition, true
+p, DistributionManager, renewal, assign,     true
+
+# Underwriter — read (assigned + team), transition (InReview→Quoted/Lost, Quoted→Completed/Lost)
 p, Underwriter,         renewal, read,       true
 p, Underwriter,         renewal, transition, true
+
+# RelationshipManager — read only (own accounts/brokers)
 p, RelationshipManager, renewal, read,       true
+
+# ProgramManager — read only
 p, ProgramManager,      renewal, read,       true
+
+# Admin — full access
 p, Admin,               renewal, read,       true
+p, Admin,               renewal, create,     true
 p, Admin,               renewal, transition, true
+p, Admin,               renewal, assign,     true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # §2.5 Dashboard — KPI Cards

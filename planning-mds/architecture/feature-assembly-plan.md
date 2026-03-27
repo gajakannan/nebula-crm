@@ -1,14 +1,310 @@
-# Feature Assembly Plan (F0001 + F0002 + F0009 + F0010 + F0012 + F0013 + F0015)
+# Feature Assembly Plan (F0001 + F0002 + F0006 + F0007 + F0009 + F0010 + F0012 + F0013 + F0015)
 
 **Owner:** Architect
 **Status:** Approved
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-27
 
 ## Goal
 
-Define the build order, role handoffs, and integration checkpoints for F0001 (Dashboard), F0002 (Broker Relationship Management), F0009 (Authentication + Role-Based Login), F0010 (Dashboard Opportunities Refactor), F0012 (Dashboard Storytelling Infographic Canvas), F0013 (Dashboard Framed Storytelling Canvas), and F0015 (Frontend Quality Gates + Test Infrastructure).
+Define the build order, role handoffs, and integration checkpoints for implemented and planned features.
 
 **Note:** F0010 frontend (Pipeline Board) and F0011 are abandoned — superseded by F0012, then F0013. F0012 is archived — superseded by F0013. Backend endpoints from F0010 and F0012 carry forward into F0013. See individual feature sections for details.
+
+---
+
+## F0006 — Submission Intake Workflow
+
+**Added:** 2026-03-27 — Architecture review complete; data model, API, workflow, Casbin, schemas, error codes, and timeline events finalized.
+
+> **Implementation Execution Plan:** [`feature-assembly-plan-F0006.md`](./feature-assembly-plan-F0006.md) — detailed per-step file paths, C# code, logic flows, Casbin enforcement, timeline events, HTTP responses, and integration checkpoints for the backend/frontend developer agents.
+
+### Dependencies
+
+| Dependency | Source | What F0006 Needs | Status |
+|------------|--------|------------------|--------|
+| Account entity (stub) | F0016 | AccountId, Name, Region, Industry | **Check if exists; stub if needed** |
+| Broker entity | F0002 | BrokerId, LegalName, BrokerRegion set | **Done** |
+| User search API | F0004-S0002 | Assignee picker for ownership | **Done** |
+| Task linked entity | F0003/F0004 | LinkedEntityType=Submission on Task | **Done** |
+| WorkflowSlaThreshold | ADR-009 | Stale thresholds per intake state | **Seed required** |
+| Document metadata | F0020 | Document completeness checks | **Soft dependency — soft-skip if unavailable** |
+
+### Architecture Notes
+
+- **Data model:** Submission entity expanded with Description, ExpirationDate; PremiumEstimate made nullable. UserProfile navigation added for assignee denormalization.
+- **Workflow:** 4 intake states (Received→Triaging→WaitingOnBroker/ReadyForUWReview) with completeness and assignment guards on →ReadyForUWReview. WorkflowStateMachine rewritten to 10-state model (F0006 intake + F0019 downstream).
+- **Stale detection:** Query-time computation from WorkflowSlaThreshold + last WorkflowTransition.OccurredAt.
+- **Completeness:** Field checks (5 required fields) + document checks (soft-skipped when F0020 unavailable). Used as read-side projection and transition guard.
+- **Casbin:** Existing §2.3 policies extended with `create`, `update`, `assign` actions (already in policy.csv).
+- **API:** 7 submission endpoints (list, create, detail, update, transition, assignment, timeline).
+
+### Backend Assembly Steps
+
+**Step 1 — Migration: add columns, seed data (Backend Developer)**
+1. Add Description (varchar 2000 NULL), ExpirationDate (date NULL) columns
+2. Alter PremiumEstimate to nullable
+3. Add AccountId, BrokerId, EffectiveDate indexes
+4. Seed WorkflowSlaThreshold for intake states (Received=48h, Triaging=48h, WaitingOnBroker=72h)
+5. Re-seed ReferenceSubmissionStatus (10 states)
+6. Seed sample submissions for dev/test
+
+**Step 2 — Domain and application services (Backend Developer)**
+1. Submission entity + UserProfile nav prop
+2. OpportunityStatusCatalog: align to 10 submission statuses
+3. WorkflowStateMachine: rewrite submission transitions
+4. SubmissionService: Create (region validation, auto-assignment, timeline event), Update (changed fields tracking), List (ABAC-scoped, stale), Transition (completeness+role guards), Assign (role validation), Completeness evaluation
+5. DTOs: rewrite SubmissionDto, SubmissionCreateDto, SubmissionUpdateDto; new list-item, assignment, completeness, list-query DTOs
+6. Validators: rewrite create/update; new assignment validator
+
+**Step 3 — API endpoints (Backend Developer)**
+1. `GET /submissions` — paginated list with filters (S0001)
+2. `POST /submissions` — create with region validation (S0002)
+3. `GET /submissions/{id}` — detail with completeness + transitions (S0003)
+4. `PUT /submissions/{id}` — update mutable fields (S0003)
+5. `POST /submissions/{id}/transitions` — transition with guards (S0004)
+6. `PUT /submissions/{id}/assignment` — assign/reassign (S0006)
+7. `GET /submissions/{id}/timeline` — paginated timeline (S0007)
+
+**Step 4 — Integration testing (Backend Developer + QE)**
+1. Smoke test: full intake lifecycle (Create → Triage → WaitOnBroker → ReadyForUWReview)
+2. Region alignment validation
+3. Completeness guard enforcement
+4. Role-gated transition enforcement
+5. Assignment validation (underwriter requirement in ReadyForUWReview)
+6. Stale detection with configured thresholds
+
+### Frontend Assembly Steps
+
+**Step 5 — Submission pipeline list (Frontend Developer)**
+1. Feature slice: `experience/src/features/submissions/`
+2. API hooks: `useSubmissions()`, `useSubmissionDetail()`, `useSubmissionCreate()`, `useSubmissionTransition()`, `useSubmissionAssignment()`, `useSubmissionTimeline()`
+3. Pipeline list page with status/broker/LOB/owner/stale filters, sort, pagination
+4. Stale indicator badges on list rows
+5. Row click → detail navigation
+
+**Step 6 — Submission detail view (Frontend Developer)**
+1. Submission header (status badge, account, broker, LOB, effective date, assigned user)
+2. Completeness panel (field checks + document checks with status indicators)
+3. Timeline section with paginated feed
+4. Action bar: transition buttons filtered by user role + current state
+5. Assignment picker (reuse F0004 user search pattern)
+
+**Step 7 — Create submission form (Frontend Developer)**
+1. Account picker, Broker picker with region validation feedback
+2. Effective date, LOB dropdown, optional fields
+3. Region mismatch error shown inline
+4. On success → navigate to detail view
+
+**Step 8 — Dashboard integration (Frontend Developer)**
+1. Stale submission nudge card with count and link to filtered pipeline list
+2. Extend existing nudge framework (F0001-S0005 pattern)
+
+### QA Assembly Steps
+
+**Step 9 — Test coverage (Quality Engineer)**
+1. Backend: workflow transition matrix (all valid + invalid pairs)
+2. Backend: completeness guard (missing fields, missing underwriter)
+3. Backend: region alignment validation
+4. Backend: stale detection with configured thresholds
+5. Backend: ABAC scoping (distribution user sees own, manager sees region, admin sees all)
+6. Frontend: pipeline list filtering and sorting
+7. Frontend: detail view completeness panel and action bar state
+8. E2E: full intake lifecycle from creation through ReadyForUWReview handoff
+
+### Dependency Order
+
+```
+Step 0 (Architect):   architecture review + spec finalization ← DONE
+Step 1 (Backend):     migration, seed data, Account stub if needed
+Step 2 (Backend):     domain entity + catalog + state machine + services + DTOs + validators
+Step 3 (Backend):     API endpoints with Casbin enforcement
+Step 4 (Backend+QE):  integration testing + smoke tests
+  ──── Backend checkpoint: all 7 API endpoints passing ────
+Step 5 (Frontend):    pipeline list
+Step 6 (Frontend):    detail view + transitions + assignment + completeness
+Step 7 (Frontend):    create submission form
+Step 8 (Frontend):    dashboard nudge card
+  ──── Frontend checkpoint: full UI flow verified ────
+Step 9 (QE):          comprehensive test coverage
+```
+
+### Integration Checkpoints
+
+| Checkpoint | Gate | Owner | Criteria |
+|------------|------|-------|----------|
+| F0006-A | Backend API ready | Backend Dev | All 7 endpoints pass smoke tests; intake transitions validated; Casbin enforcement verified; completeness guard tested |
+| F0006-B | Frontend pipeline ready | Frontend Dev | Pipeline list renders with filters; detail view shows completeness and timeline; create form validates region |
+| F0006-C | Full integration | QE | E2E intake lifecycle passes; stale detection verified; role-based access confirmed |
+
+### Signoff Role Matrix
+
+| Role | Required | Rationale |
+|------|----------|-----------|
+| Quality Engineer | Yes | Workflow transitions, completeness guards, stale detection, and ABAC scoping require structured validation |
+| Code Reviewer | Yes | State machine rewrite, region validation, and completeness logic require independent review |
+| Security Reviewer | Yes | Cross-role visibility, assignment authorization, and ABAC policy extensions |
+| DevOps | No | No new infrastructure in MVP |
+| Architect | Yes | Workflow design, completeness policy, state machine alignment |
+
+### Risks and Blockers
+
+| Item | Severity | Mitigation | Owner |
+|------|----------|------------|-------|
+| F0016 (Account) not ready before F0006 starts | High | Check if Account entity exists; implement stub migration if needed | Architect + Backend |
+| WorkflowStateMachine has old states not in F0006+F0019 model | Medium | Step 2 rewrites to 10-state model; migration maps existing records | Backend |
+| Stale detection N+1 performance on list endpoint | Medium | Batch-load thresholds; use window function for last transition per submission | Backend |
+| F0020 (Document Management) not available | Low | Document completeness shows "unavailable"; field completeness enforced; transition guard soft-skips documents | Backend |
+
+---
+
+## F0007 — Renewal Pipeline
+
+**Added:** 2026-03-26 — Architecture review complete; data model, API, workflow, Casbin, and ADRs finalized.
+
+> **Implementation Execution Plan:** [`feature-assembly-plan-F0007.md`](./feature-assembly-plan-F0007.md) — detailed per-step file paths, C# code, logic flows, Casbin enforcement, timeline events, HTTP responses, and integration checkpoints for the backend/frontend developer agents.
+
+### Dependencies
+
+| Dependency | Source | What F0007 Needs | Status |
+|------------|--------|------------------|--------|
+| Policy entity (stub) | F0018 | PolicyId, ExpirationDate, LOB, AccountId, BrokerId, PolicyNumber, Carrier | **Must implement before F0007** |
+| Account entity | F0016 | AccountId, Name, Industry, PrimaryState | Assumed available (placeholder or stub) |
+| Broker entity | F0002 | BrokerId, LegalName, LicenseNumber, State | **Done** |
+| User search API | F0004-S0002 | Assignee picker for ownership | **Done** |
+| Task linked entity | F0003/F0004 | LinkedEntityType=Renewal on Task | **Done** |
+| WorkflowSlaThreshold | ADR-009 + ADR-014 | Per-LOB renewal timing thresholds | **Migration required** |
+
+### F0018 Dependency Stub Strategy
+
+F0018 (Policy Lifecycle) is sequenced before F0007 in the release plan. F0007 requires a minimum Policy entity (see data-model.md §6.2). Two approaches:
+
+1. **Preferred:** F0018 implements its full entity before F0007 starts. F0007 consumes the Policy read service.
+2. **Fallback:** If F0018 is delayed, implement a minimal Policy stub (Migration 006 in data-model.md) with the fields F0007 needs. F0018 extends this stub when it lands.
+
+### Architecture Notes
+
+- **Data model:** Renewal entity redesigned (data-model.md §6). PolicyId required, one active renewal per policy (filtered unique index). 6-status lifecycle replaces old 8-status model.
+- **Workflow:** State machine with role-gated transitions (F0007 README). Transitions are atomic (renewal update + WorkflowTransition + ActivityTimelineEvent in single transaction per ADR-011).
+- **Timing:** Overdue/approaching detection is query-time computation from stored dates and WorkflowSlaThreshold (ADR-014). No Temporal dependency in MVP.
+- **Casbin:** New `create` and `assign` actions added to policy.csv §2.4. Per-transition role checks at application layer.
+- **API:** 6 renewal endpoints (list, create, detail, transition, assignment, timeline). WorkflowTransitionRequest extended with conditional fields.
+
+### Backend Assembly Steps
+
+**Step 1 — Migrations and seed data (Backend Developer)**
+1. Migration 006: Create Policy table (stub) if F0018 not yet landed
+2. Migration 007: Restructure Renewals table (drop old columns, add new), re-seed ReferenceRenewalStatus (6 values)
+3. Migration 008: Extend WorkflowSlaThreshold with LineOfBusiness column, seed renewal timing thresholds
+4. Seed sample policies and renewals for dev/test
+
+**Step 2 — Domain and application services (Backend Developer)**
+1. Renewal entity + repository with filtered unique index enforcement
+2. RenewalService: create from policy (inherits fields, computes TargetOutreachDate, validates one-active-per-policy)
+3. RenewalTransitionService: validate allowed transitions, role guards, conditional field checks, atomic transition+audit
+4. RenewalAssignmentService: role-based assignment rules, timeline event creation
+5. RenewalQueryService: list with due-window filtering, urgency computation, ABAC scoping
+6. Casbin policy enforcement for create/assign actions
+
+**Step 3 — API endpoints (Backend Developer)**
+1. `GET /renewals` — list with filters (S0001)
+2. `POST /renewals` — create from policy (S0006)
+3. `GET /renewals/{id}` — detail with policy context, available transitions (S0002)
+4. `POST /renewals/{id}/transitions` — transition with conditional fields (S0003)
+5. `PUT /renewals/{id}/assignment` — assign/reassign (S0004)
+6. `GET /renewals/{id}/timeline` — paginated timeline (S0007)
+
+**Step 4 — Integration testing (Backend Developer + QE)**
+1. Smoke test: full lifecycle (create → Outreach → InReview → Quoted → Completed)
+2. Overdue detection with LOB-specific thresholds
+3. Duplicate renewal rejection
+4. Role-gated transition enforcement
+5. Assignment validation (role compatibility, terminal state rejection)
+
+### Frontend Assembly Steps
+
+**Step 5 — Renewal pipeline list (Frontend Developer)**
+1. Feature slice: `experience/src/features/renewals/`
+2. API hooks: `useRenewals()`, `useRenewalDetail()`, `useRenewalTransition()`, `useRenewalAssignment()`, `useRenewalTimeline()`
+3. Pipeline list page with due-window filters, status/LOB/owner filters, sort, pagination
+4. Overdue/approaching badges on list rows
+5. Row click → detail navigation
+
+**Step 6 — Renewal detail view (Frontend Developer)**
+1. Renewal header (status, owner, LOB, urgency badge)
+2. Policy section (reads from F0018 API)
+3. Account/broker context sections
+4. Timeline section with paginated feed
+5. Action bar: transition buttons filtered by user role + current state
+6. Assignment picker (reuse F0004 user search pattern)
+
+**Step 7 — Dashboard integration (Frontend Developer)**
+1. Renewal nudge card: overdue + approaching counts with link to filtered pipeline list
+2. Extend existing nudge framework (F0001-S0005 pattern)
+
+### QA Assembly Steps
+
+**Step 8 — Test coverage (Quality Engineer)**
+1. Backend: workflow transition matrix (all valid + invalid pairs)
+2. Backend: conditional field validation (Lost reason, Completed policy link)
+3. Backend: one-active-renewal-per-policy constraint
+4. Backend: overdue/approaching computation with different LOB thresholds
+5. Backend: ABAC scoping (distribution user sees own, manager sees region, underwriter sees assigned)
+6. Frontend: pipeline list filtering and sorting
+7. Frontend: detail view data display and action bar state
+8. E2E: full lifecycle from creation through completion or loss
+
+### Dependency Order
+
+```
+Step 0 (Architect):   architecture review + spec finalization ← DONE
+Step 1 (Backend):     migrations, seed data, Policy stub if needed
+Step 2 (Backend):     domain services + Casbin enforcement
+Step 3 (Backend):     API endpoints
+Step 4 (Backend+QE):  integration testing + smoke tests
+  ──── Backend checkpoint: all API endpoints passing ────
+Step 5 (Frontend):    pipeline list
+Step 6 (Frontend):    detail view + transitions + assignment
+Step 7 (Frontend):    dashboard nudge card
+  ──── Frontend checkpoint: full UI flow verified ────
+Step 8 (QE):          comprehensive test coverage
+```
+
+### Integration Checkpoints
+
+| Checkpoint | Gate | Owner | Criteria |
+|------------|------|-------|----------|
+| F0007-A | Backend API ready | Backend Dev | All 6 endpoints pass smoke tests; workflow transitions validated; Casbin enforcement verified |
+| F0007-B | Frontend pipeline ready | Frontend Dev | Pipeline list renders with filters; detail view shows policy context and timeline |
+| F0007-C | Full integration | QE | E2E lifecycle test passes; overdue detection verified; role-based access confirmed |
+
+### F0022 Integration Surface (Future)
+
+F0022 (Work Queues) will add rule-based queue routing for renewals. F0007 MVP uses manual assignment only. The integration surface:
+
+- F0022 consumes `RenewalCreated` events to route new renewals to queues
+- F0022 may call `PUT /renewals/{id}/assignment` to auto-assign from queue
+- F0007's `assign` Casbin action provides the authorization foundation for F0022's automated assignment
+
+No code changes needed in F0007 for F0022 — the API and authorization model are already extensible.
+
+### Signoff Role Matrix
+
+| Role | Required | Rationale |
+|------|----------|-----------|
+| Quality Engineer | Yes | Renewal timing, workflow transitions, and overdue detection require structured validation |
+| Code Reviewer | Yes | Workflow state machine, timing logic, and API behavior require independent review |
+| Security Reviewer | Yes | Cross-role visibility, handoff authorization, and ABAC policy extensions |
+| DevOps | No | No new infrastructure in MVP (Temporal is future phase) |
+| Architect | Yes | Workflow orchestration, state machine design, and ADR-009/014 extensions |
+
+### Risks and Blockers
+
+| Item | Severity | Mitigation | Owner |
+|------|----------|------------|-------|
+| F0018 (Policy) not ready before F0007 starts | High | Implement Policy stub migration (006) with minimum fields; F0018 extends later | Architect + Backend |
+| Overdue computation performance at scale (>10K renewals) | Medium | Partial index on TargetOutreachDate WHERE status=Identified; consider materialized view if needed | Backend |
+| WorkflowSlaThreshold LOB extension breaks existing submission thresholds | Low | Existing entries have NULL LineOfBusiness; migration is additive only | Backend |
+| ReferenceRenewalStatus seed data change breaks existing renewal records | Medium | Migration 007 must update any existing renewal records to map old→new statuses | Backend |
 
 ---
 

@@ -38,6 +38,7 @@ node_modules/
 **/.pnpm-store/
 dist/
 .next/
+.vite/vitest/**
 build/
 experience/coverage/
 playwright-report/
@@ -77,3 +78,5 @@ docker-compose.override.yml
 
 # Security reports
 security-reports/
+
+

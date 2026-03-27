@@ -11,6 +11,7 @@
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
+| F0006 | Submission Intake Workflow | In Refinement | CRM Release MVP | `F0006-submission-intake-workflow/` |
 | F0014 | DevOps Smoke Test Automation | In Progress | Infrastructure | `F0014-devops-smoke-test-automation/` |
 
 ## Abandoned Features
@@ -24,8 +25,7 @@
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
-| F0006 | Submission Intake Workflow | Planned | MVP | `F0006-submission-intake-workflow/` |
-| F0007 | Renewal Pipeline | Planned | MVP | `F0007-renewal-pipeline/` |
+| F0007 | Renewal Pipeline | Architecture Complete | CRM Release MVP | `F0007-renewal-pipeline/` |
 | F0008 | Broker Insights | Planned | MVP | `F0008-broker-insights/` |
 | F0016 | Account 360 & Insured Management | Planned | CRM Release MVP | `F0016-account-360-and-insured-management/` |
 | F0017 | Broker/MGA Hierarchy, Producer Ownership & Territory Management | Planned | CRM Release MVP+ | `F0017-broker-mga-hierarchy-and-producer-ownership/` |

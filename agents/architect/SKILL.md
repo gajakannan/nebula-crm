@@ -112,8 +112,15 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
    - Confirm caching strategy exists (in-memory vs external, cache-aside vs write-through) or create an ADR
 
 10) **Orchestrate implementation kickoff (Phase C)**
-   - Create/update `planning-mds/architecture/application-assembly-plan.md`
-   - Create/update `planning-mds/architecture/feature-assembly-plan.md` for slice work
+   - Create/update `planning-mds/architecture/application-assembly-plan.md` for the umbrella architecture summary
+   - **Create a dedicated per-feature execution plan** at `planning-mds/architecture/feature-assembly-plan-F{NNNN}.md` using the template at `agents/templates/feature-assembly-plan-template.md`. This file is the primary deliverable consumed by implementation agents — it must be self-contained and implementation-ready:
+     - **Per-step file tables:** exact paths for new and modified files in each layer (Domain, Application, Infrastructure, Api)
+     - **Code signatures:** full C# record/class definitions for entities, DTOs, validators, and service method signatures
+     - **Logic flows:** numbered step-by-step service method logic with guard conditions, error codes, timestamp/audit field handling, and timeline event emission
+     - **Per-endpoint detail:** Casbin enforcement pattern (resource, action, attribute hydration), HTTP response tables (status, body, condition), and endpoint registration code
+     - **Migration SQL:** raw SQL for filtered/expression indexes, seed data, and schema changes that cannot be expressed via EF Core fluent API
+     - **Integration checkpoints:** specific, testable criteria per build phase (not generic checklists)
+   - Reference the execution plan from the umbrella `feature-assembly-plan.md` section for the feature
    - Define backend/frontend/AI/QA/DevOps handoffs and sequencing
    - Set integration checkpoints and completion criteria
    - Include frontend guardrails when applicable: semantic theme token usage, no raw palette UI classes, `lint:theme`, and light/dark visual smoke coverage for key screens
@@ -366,8 +373,9 @@ Before declaring work complete, verify each deliverable:
 5. Cross-check ERD entities and relationships against data model tables — every entity in the tables must appear in the ERD
 6. Verify C4 L2 container diagram reflects all services present in docker-compose (or equivalent)
 7. Validate tracker consistency when planning trackers were touched during architecture updates (manually or by delegating `agents/product-manager/scripts/validate-trackers.py`)
-8. If inconsistencies found → fix, re-validate
-9. Only declare Definition of Done when all cross-checks pass
+8. Verify feature assembly execution plan (`feature-assembly-plan-F{NNNN}.md`) exists and is implementation-ready: every API endpoint has a corresponding Step with file paths, code signatures, logic flow, Casbin pattern, and HTTP response table. Cross-check against OpenAPI endpoints — no endpoint should be missing from the plan.
+9. If inconsistencies found → fix, re-validate
+10. Only declare Definition of Done when all cross-checks pass
 
 ## Definition of Done
 
@@ -386,6 +394,7 @@ Before declaring work complete, verify each deliverable:
 - NFRs measurable
 - ADRs recorded for major decisions
 - Validation strategy documented (JSON Schema for both frontend and backend)
+- **Feature assembly execution plan** created at `planning-mds/architecture/feature-assembly-plan-F{NNNN}.md` with implementation-level detail (per-step file paths, code signatures, logic flows, Casbin per-endpoint, HTTP response tables, migration SQL, integration checkpoints). Referenced from umbrella `feature-assembly-plan.md`.
 - Tracker-governance checks pass when planning trackers changed
 - No TODOs remain
 

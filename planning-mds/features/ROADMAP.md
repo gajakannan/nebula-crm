@@ -19,7 +19,7 @@ This document is the working prioritization view for feature sequencing.
 | Feature | Phase | Why Now |
 |---------|-------|---------|
 | [F0014 — DevOps Smoke Test Automation](./F0014-devops-smoke-test-automation/README.md) | Infrastructure | Reduces DevOps verification friction — blueprint fixes and automation scripts. |
-| [F0006 — Submission Intake Workflow](./F0006-submission-intake-workflow/README.md) | CRM Release MVP | Establishes the single source of truth for new business intake, triage, and early routing. |
+| [F0006 — Submission Intake Workflow](./F0006-submission-intake-workflow/README.md) | CRM Release MVP | In Refinement (8 stories, workflow, completeness policy, stale detection). Establishes the single source of truth for new business intake, triage, and early routing. |
 | [F0016 — Account 360 & Insured Management](./F0016-account-360-and-insured-management/README.md) | CRM Release MVP | Adds insured-centric context required by underwriters and distribution users before deeper policy and renewal workflows land. |
 | [F0020 — Document Management & ACORD Intake](./F0020-document-management-and-acord-intake/README.md) | CRM Release MVP | Removes document chasing and supports completeness checks for submissions and underwriting review. |
 
@@ -29,7 +29,7 @@ This document is the working prioritization view for feature sequencing.
 |---------|-------|----------|
 | [F0018 — Policy Lifecycle & Policy 360](./F0018-policy-lifecycle-and-policy-360/README.md) | CRM Release MVP | Introduces policy truth needed for account context, servicing, and renewal workflows. |
 | [F0019 — Submission Quoting, Proposal & Approval Workflow](./F0019-submission-quoting-proposal-and-approval/README.md) | CRM Release MVP | Completes intake-to-quote-to-bind operations; intake alone is insufficient for a commercial P&C CRM. |
-| [F0007 — Renewal Pipeline](./F0007-renewal-pipeline/README.md) | CRM Release MVP | Becomes materially more valuable once policies, documents, and submission flow foundations are in place. |
+| [F0007 — Renewal Pipeline](./F0007-renewal-pipeline/README.md) | CRM Release MVP | Architecture Complete (7 stories, data model, API, workflow, Casbin, ADRs finalized 2026-03-26). Depends on F0018 Policy stub. |
 | [F0021 — Communication Hub & Activity Capture](./F0021-communication-hub-and-activity-capture/README.md) | CRM Release MVP | Creates the communication system of record for broker interactions, underwriting follow-up, and audit history. |
 | [F0022 — Work Queues, Assignment Rules & Coverage Management](./F0022-work-queues-assignment-rules-and-coverage-management/README.md) | CRM Release MVP | Adds operational routing, backup coverage, and workload balancing beyond personal task lists. |
 | [F0023 — Global Search, Saved Views & Operational Reporting](./F0023-global-search-saved-views-and-operational-reporting/README.md) | CRM Release MVP | Provides cross-object findability, operational visibility, and daily management reporting required for adoption. |

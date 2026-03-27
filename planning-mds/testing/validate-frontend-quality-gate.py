@@ -26,7 +26,7 @@ REQUIRED_TOP_LEVEL_ARTIFACTS = (
     "artifact_trace",
     "gate_decisions",
 )
-REQUIRED_COVERAGE_ARTIFACTS = (
+GENERATED_COVERAGE_ARTIFACTS = (
     "experience/coverage/lcov.info",
     "experience/coverage/coverage-summary.json",
 )
@@ -74,6 +74,11 @@ def require_existing_directory(root: Path, label: str, path_value: str, errors: 
         errors.append(f"{label} directory missing: {path_value}")
 
 
+def is_generated_artifact(path_value: str) -> bool:
+    """Return True for artifacts produced by build/test runs that are gitignored."""
+    return path_value.startswith("experience/coverage/")
+
+
 def validate_layer(root: Path, layer_name: str, layer: Dict, errors: List[str]) -> List[str]:
     if not isinstance(layer, dict):
         errors.append(f"Layer '{layer_name}' must be an object")
@@ -93,6 +98,8 @@ def validate_layer(root: Path, layer_name: str, layer: Dict, errors: List[str]) 
         return []
 
     for artifact in artifacts:
+        if is_generated_artifact(artifact):
+            continue  # declared but gitignored — skip disk check
         require_existing_file(root, f"Layer '{layer_name}'", artifact, errors)
 
     return artifacts
@@ -131,11 +138,11 @@ def validate_manifest(data: Dict, root: Path) -> List[str]:
         str(normalize_repo_path(path_value, root).relative_to(root))
         for path_value in layer_artifacts.get("coverage", [])
     }
-    for required_coverage_artifact in REQUIRED_COVERAGE_ARTIFACTS:
-        if required_coverage_artifact not in coverage_paths:
+    for generated_artifact in GENERATED_COVERAGE_ARTIFACTS:
+        if generated_artifact not in coverage_paths:
             errors.append(
-                "Coverage layer must reference required artifact: "
-                f"{required_coverage_artifact}"
+                "Coverage layer must declare generated artifact: "
+                f"{generated_artifact}"
             )
 
     return errors

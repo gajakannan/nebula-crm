@@ -1,0 +1,65 @@
+name: Smoke Test (Full Stack)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel older runs on same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start Nebula stack
+        run: |
+          docker compose up -d --build db authentik-server authentik-worker api
+        env:
+          COMPOSE_PROJECT_NAME: nebula-ci-${{ github.run_id }}
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for API..."
+          for i in $(seq 1 45); do
+            curl -sf -o /dev/null http://localhost:8080/healthz 2>/dev/null && break
+            sleep 2
+          done
+          echo "Waiting for authentik..."
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:9000/-/health/live/ 2>/dev/null && break
+            sleep 2
+          done
+          # Blueprint application delay
+          sleep 5
+
+      - name: Run multi-role smoke tests
+        run: ./scripts/smoke-test.sh --all-users
+
+      - name: Collect service logs on failure
+        if: failure()
+        run: |
+          docker compose logs --tail 50 2>&1 > /tmp/compose-logs.txt
+        env:
+          COMPOSE_PROJECT_NAME: nebula-ci-${{ github.run_id }}
+
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-failure-logs
+          path: /tmp/compose-logs.txt
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v
+        env:
+          COMPOSE_PROJECT_NAME: nebula-ci-${{ github.run_id }}

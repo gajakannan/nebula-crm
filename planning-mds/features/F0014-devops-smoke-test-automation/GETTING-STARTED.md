@@ -38,6 +38,7 @@ docker compose up -d --build
 2. Observe 9/9 smoke tests pass with exit code 0
 3. Run `./scripts/smoke-test.sh --user john.miller` — verify Underwriter access
 4. Run `./scripts/smoke-test.sh --user akadmin` — verify Admin access
+5. Run `./scripts/smoke-test.sh --all-users` — verify all 4 dev users with role assertions (31 total tests)
 
 ## Dev User Credentials (ROPC)
 
@@ -58,9 +59,10 @@ curl -X POST http://localhost:9000/application/o/token/ \
 
 | Layer | Path | Purpose |
 |-------|------|---------|
-| Script | `scripts/smoke-test.sh` | 9-test API smoke suite (auth, CRUD, transitions, timeline) |
+| Script | `scripts/smoke-test.sh` | 9-test API smoke suite + multi-role `--all-users` mode (31 tests) |
 | Script | `scripts/dev-reset.sh` | Clean teardown → rebuild → health wait → smoke test |
 | Blueprint | `docker/authentik/blueprints/nebula-dev.yaml` | authentik dev provisioning (users, tokens, OAuth2Provider) |
+| CI | `.github/workflows/smoke-test.yml` | GitHub Actions merge gate — runs `--all-users` on PR and push to main |
 
 ## Notes
 

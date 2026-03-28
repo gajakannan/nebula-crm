@@ -49,6 +49,10 @@ services:
       test:
         - "CMD-SHELL"
         - "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:9000/-/health/live/', timeout=2).read(); print('ok')\""
+      # Fresh-volume boot runs authentik migrations before gunicorn is ready.
+      # Without a grace period, Docker marks the container unhealthy and compose
+      # aborts dependents even though the server becomes healthy a bit later.
+      start_period: 5m
       interval: 10s
       timeout: 5s
       retries: 18

@@ -127,7 +127,7 @@ The dashboard widgets require real tasks to exist. MVP supports self-assigned ta
 
 ## Implementation Guidance (Architect)
 
-**Full technical spec:** [feature-assembly-plan-F0003.md](../../architecture/feature-assembly-plan-F0003.md) — Step 1
+**Full technical spec:** [feature-assembly-plan.md](./feature-assembly-plan.md) — Step 1
 
 ### New DTO
 - `TaskCreateRequestDto` (record): Title, Description?, Priority?, DueDate?, AssignedToUserId, LinkedEntityType?, LinkedEntityId?

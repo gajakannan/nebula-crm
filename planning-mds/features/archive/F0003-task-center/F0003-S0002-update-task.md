@@ -139,7 +139,7 @@ Tasks evolve as work progresses. MVP supports self-updates to status, due date, 
 
 ## Implementation Guidance (Architect)
 
-**Full technical spec:** [feature-assembly-plan-F0003.md](../../architecture/feature-assembly-plan-F0003.md) — Step 2
+**Full technical spec:** [feature-assembly-plan.md](./feature-assembly-plan.md) — Step 2
 
 ### New DTO
 - `TaskUpdateRequestDto` (record): Title?, Description?, Status?, Priority?, DueDate?, AssignedToUserId?

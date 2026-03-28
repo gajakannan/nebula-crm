@@ -38,8 +38,26 @@ jobs:
             curl -sf -o /dev/null http://localhost:9000/-/health/live/ 2>/dev/null && break
             sleep 2
           done
-          # Blueprint application delay
-          sleep 5
+          echo "Waiting for authentik blueprint/token readiness..."
+          for i in $(seq 1 120); do
+            code=$(curl -s -o /tmp/token.json -w "%{http_code}" -X POST http://localhost:9000/application/o/token/ \
+              -d "grant_type=password&client_id=nebula&username=lisa.wong&password=nebula-dev-token&scope=openid profile email nebula_roles broker_tenant_id" \
+              2>/dev/null || true)
+            if [ "$code" = "200" ]; then
+              echo "authentik blueprint/token ready (attempt $i)"
+              break
+            fi
+            if [ "$i" -eq 1 ] || [ $(( i % 5 )) -eq 0 ]; then
+              echo "authentik blueprint/token not ready yet (attempt $i/120, HTTP ${code:-000})"
+            fi
+            sleep 2
+          done
+          if [ "$code" != "200" ]; then
+            echo "Timed out waiting for authentik blueprint/token readiness"
+            echo "Last HTTP status: ${code:-000}"
+            [ -f /tmp/token.json ] && cat /tmp/token.json
+            exit 1
+          fi
 
       - name: Run multi-role smoke tests
         run: ./scripts/smoke-test.sh --all-users

@@ -29,6 +29,8 @@ SCOPES="openid profile email nebula_roles broker_tenant_id"
 # All dev users share this app-password token key (seeded by blueprint)
 APP_PASSWORD="${APP_PASSWORD:-nebula-dev-token}"
 TEST_USER="${TEST_USER:-lisa.wong}"
+TOKEN_WAIT_ATTEMPTS="${TOKEN_WAIT_ATTEMPTS:-120}"
+TOKEN_WAIT_DELAY_SECONDS="${TOKEN_WAIT_DELAY_SECONDS:-2}"
 COMPOSE_PROJECT_DIR="${COMPOSE_PROJECT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 ALL_USERS=false
 
@@ -113,31 +115,51 @@ json_field() { echo "$1" | python3 -c "import sys,json; print(json.load(sys.stdi
 acquire_token() {
   local user="$1"
   echo "==> Acquiring JWT for ${user}..."
-  local token_resp
-  token_resp=$(curl -sf -X POST "$TOKEN_ENDPOINT" \
-    -d "grant_type=password&client_id=${CLIENT_ID}&username=${user}&password=${APP_PASSWORD}&scope=${SCOPES}" 2>&1) || {
-    echo "  FAIL: Could not acquire token for ${user}. Response: $token_resp"
-    echo ""
-    echo "  Troubleshooting:"
-    echo "    1. Is authentik healthy?  curl ${AUTHENTIK_BASE}/-/health/live/"
-    echo "    2. Was the blueprint applied? Check: docker compose logs authentik-worker | grep -i blueprint"
-    echo "    3. Does the user exist?   docker compose exec authentik-server ak shell -c \"from authentik.core.models import User; print(User.objects.filter(username='${user}').exists())\""
-    echo "    4. Does the app-password token exist?  Check blueprint for authentik_core.token entries"
-    return 1
-  }
+  local token_resp="" token_code="" token_body="" attempt
+  for attempt in $(seq 1 "$TOKEN_WAIT_ATTEMPTS"); do
+    token_resp=$(curl -s -w "\n%{http_code}" -X POST "$TOKEN_ENDPOINT" \
+      -d "grant_type=password&client_id=${CLIENT_ID}&username=${user}&password=${APP_PASSWORD}&scope=${SCOPES}" 2>/dev/null || true)
+    token_code=$(http_code "$token_resp")
+    token_body=$(http_body "$token_resp")
 
-  TOKEN=$(echo "$token_resp" | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
-  echo "  Token acquired (${#TOKEN} chars)"
-  AUTH="Authorization: Bearer $TOKEN"
+    if [[ "$token_code" == "200" ]]; then
+      TOKEN=$(echo "$token_body" | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+      echo "  Token acquired (${#TOKEN} chars)"
+      AUTH="Authorization: Bearer $TOKEN"
 
-  CLAIMS_JSON=$(python3 -c "
+      CLAIMS_JSON=$(python3 -c "
 import json, base64, sys
 parts = sys.argv[1].split('.')
 payload = parts[1] + '=' * (4 - len(parts[1]) % 4)
 d = json.loads(base64.urlsafe_b64decode(payload))
 print(json.dumps({'sub': d.get('sub'), 'aud': d.get('aud'), 'nebula_roles': d.get('nebula_roles', [])}))" "$TOKEN")
-  echo "  Claims: $CLAIMS_JSON"
+      echo "  Claims: $CLAIMS_JSON"
+      echo ""
+      return 0
+    fi
+
+    if [[ "$attempt" -lt "$TOKEN_WAIT_ATTEMPTS" ]]; then
+      if [[ "$attempt" -eq 1 || $(( attempt % 5 )) -eq 0 ]]; then
+        echo "  Token endpoint not ready yet (attempt ${attempt}/${TOKEN_WAIT_ATTEMPTS}, HTTP ${token_code:-000})"
+      fi
+      sleep "$TOKEN_WAIT_DELAY_SECONDS"
+    fi
+  done
+
+  echo "  FAIL: Could not acquire token for ${user} after ${TOKEN_WAIT_ATTEMPTS} attempts."
+  echo "  Last HTTP status: ${token_code:-000}"
+  if [[ -n "$token_body" ]]; then
+    echo "  Last response body: $token_body"
+  else
+    echo "  Last response body: <empty>"
+  fi
   echo ""
+  echo "  Troubleshooting:"
+  echo "    1. Is authentik healthy?  curl ${AUTHENTIK_BASE}/-/health/live/"
+  echo "    2. Was the blueprint applied? Check: docker compose logs authentik-worker | grep -i blueprint"
+  echo "    3. Does the user exist?   docker compose exec authentik-server ak shell -c \"from authentik.core.models import User; print(User.objects.filter(username='${user}').exists())\""
+  echo "    4. Does the app-password token exist?  Check blueprint for authentik_core.token entries"
+  return 1
 }
 
 # ── Claims Verification ────────────────────────────────────────────────
@@ -199,7 +221,7 @@ resolve_user_id() {
 # ── Full CRUD Suite (9 tests) ───────────────────────────────────────────
 # Requires: TOKEN, AUTH, USER_ID globals set
 run_full_crud_suite() {
-  local task_id task2_id
+  local task_id task2_id task_row_version task2_row_version
 
   # ── 1. GET /my/tasks ──────────────────────────────────────────────────
   echo "[1/9] GET /my/tasks"
@@ -219,7 +241,8 @@ run_full_crud_suite() {
   if [[ "$CODE" == "201" ]]; then
     task_id=$(json_field "$BODY" "id")
     TASK_STATUS=$(json_field "$BODY" "status")
-    pass "201 Created (id=$task_id, status=$TASK_STATUS)"
+    task_row_version=$(json_field "$BODY" "rowVersion")
+    pass "201 Created (id=$task_id, status=$TASK_STATUS, rowVersion=$task_row_version)"
   else
     fail "Expected 201, got $CODE" "$BODY"
     echo "  ABORT: Cannot continue CRUD tests without created task"
@@ -235,29 +258,32 @@ run_full_crud_suite() {
   CODE=$(http_code "$RESP"); BODY=$(http_body "$RESP")
   if [[ "$CODE" == "200" ]]; then
     TITLE=$(json_field "$BODY" "title")
-    pass "200 OK (title=$TITLE)"
+    task_row_version=$(json_field "$BODY" "rowVersion")
+    pass "200 OK (title=$TITLE, rowVersion=$task_row_version)"
   else
     fail "Expected 200, got $CODE" "$BODY"
   fi
 
   # ── 4. PUT /tasks/{id} — Open → InProgress ──────────────────────────
   echo "[4/9] PUT /tasks/{id} (Open -> InProgress)"
-  RESP=$(http PUT "/tasks/$task_id" -d '{"status":"InProgress"}')
+  RESP=$(http PUT "/tasks/$task_id" -H "If-Match: \"$task_row_version\"" -d '{"status":"InProgress"}')
   CODE=$(http_code "$RESP"); BODY=$(http_body "$RESP")
   if [[ "$CODE" == "200" ]]; then
     NEW_STATUS=$(json_field "$BODY" "status")
-    [[ "$NEW_STATUS" == "InProgress" ]] && pass "200 OK (status=InProgress)" || fail "Status mismatch" "expected InProgress, got $NEW_STATUS"
+    task_row_version=$(json_field "$BODY" "rowVersion")
+    [[ "$NEW_STATUS" == "InProgress" ]] && pass "200 OK (status=InProgress, rowVersion=$task_row_version)" || fail "Status mismatch" "expected InProgress, got $NEW_STATUS"
   else
     fail "Expected 200, got $CODE" "$BODY"
   fi
 
   # ── 5. PUT /tasks/{id} — InProgress → Done ──────────────────────────
   echo "[5/9] PUT /tasks/{id} (InProgress -> Done)"
-  RESP=$(http PUT "/tasks/$task_id" -d '{"status":"Done"}')
+  RESP=$(http PUT "/tasks/$task_id" -H "If-Match: \"$task_row_version\"" -d '{"status":"Done"}')
   CODE=$(http_code "$RESP"); BODY=$(http_body "$RESP")
   if [[ "$CODE" == "200" ]]; then
     COMPLETED_AT=$(json_field "$BODY" "completedAt")
-    [[ -n "$COMPLETED_AT" ]] && pass "200 OK (completedAt=$COMPLETED_AT)" || fail "completedAt missing" "$BODY"
+    task_row_version=$(json_field "$BODY" "rowVersion")
+    [[ -n "$COMPLETED_AT" ]] && pass "200 OK (completedAt=$COMPLETED_AT, rowVersion=$task_row_version)" || fail "completedAt missing" "$BODY"
   else
     fail "Expected 200, got $CODE" "$BODY"
   fi
@@ -266,7 +292,8 @@ run_full_crud_suite() {
   echo "[6/9] PUT — invalid transition (Open -> Done)"
   RESP2=$(http POST "/tasks" -d "{\"title\":\"Transition guard test\",\"assignedToUserId\":\"$USER_ID\"}")
   task2_id=$(json_field "$(http_body "$RESP2")" "id")
-  RESP=$(http PUT "/tasks/$task2_id" -d '{"status":"Done"}')
+  task2_row_version=$(json_field "$(http_body "$RESP2")" "rowVersion")
+  RESP=$(http PUT "/tasks/$task2_id" -H "If-Match: \"$task2_row_version\"" -d '{"status":"Done"}')
   CODE=$(http_code "$RESP"); BODY=$(http_body "$RESP")
   if [[ "$CODE" == "409" ]]; then
     ERR_CODE=$(json_field "$BODY" "code")
@@ -311,9 +338,21 @@ run_full_crud_suite() {
 }
 
 # ── Read-Only Suite (4 tests) ───────────────────────────────────────────
-# For users with task:read but no task:create/update/delete (e.g., BrokerUser)
+# For users with task:read but no task:create/update/delete (e.g., BrokerUser).
+# Update/delete on existing tasks are intentionally normalized to 404 to prevent IDOR.
 run_read_only_suite() {
-  local fake_uuid="00000000-0000-0000-0000-000000000000"
+  local existing_task existing_task_id existing_task_row_version
+  existing_task=$(docker compose exec -T db psql -U postgres -d nebula -t -A -F '|' -c \
+    "SELECT \"Id\", xmin::text FROM \"Tasks\" WHERE \"IsDeleted\" = false ORDER BY \"CreatedAt\" DESC LIMIT 1;" 2>/dev/null | tail -1 | tr -d '[:space:]')
+
+  if [[ -z "$existing_task" ]]; then
+    fail "Read-only fixture missing" "no active task found for BrokerUser authorization checks"
+    fail "Test 3/4 skipped" "depends on read-only fixture task"
+    fail "Test 4/4 skipped" "depends on read-only fixture task"
+    return 1
+  fi
+
+  IFS='|' read -r existing_task_id existing_task_row_version <<< "$existing_task"
 
   # ── 1. GET /my/tasks → 200 OK ───────────────────────────────────────
   echo "[1/4] GET /my/tasks (read-only)"
@@ -336,24 +375,24 @@ run_read_only_suite() {
     fail "Expected 403, got $CODE" "$(http_body "$RESP")"
   fi
 
-  # ── 3. PUT /tasks/{fake-uuid} → 403 Forbidden ───────────────────────
-  echo "[3/4] PUT /tasks/{fake-uuid} (expect 403)"
-  RESP=$(http PUT "/tasks/$fake_uuid" -d '{"status":"InProgress"}')
+  # ── 3. PUT /tasks/{id} → 404 Not Found (IDOR normalized) ─────────────
+  echo "[3/4] PUT /tasks/{id} (expect 404)"
+  RESP=$(http PUT "/tasks/$existing_task_id" -H "If-Match: \"$existing_task_row_version\"" -d '{"status":"InProgress"}')
   CODE=$(http_code "$RESP")
-  if [[ "$CODE" == "403" ]]; then
-    pass "403 Forbidden (update denied)"
+  if [[ "$CODE" == "404" ]]; then
+    pass "404 Not Found (update denied via IDOR normalization)"
   else
-    fail "Expected 403, got $CODE" "$(http_body "$RESP")"
+    fail "Expected 404, got $CODE" "$(http_body "$RESP")"
   fi
 
-  # ── 4. DELETE /tasks/{fake-uuid} → 403 Forbidden ────────────────────
-  echo "[4/4] DELETE /tasks/{fake-uuid} (expect 403)"
-  RESP=$(http DELETE "/tasks/$fake_uuid")
+  # ── 4. DELETE /tasks/{id} → 404 Not Found (IDOR normalized) ──────────
+  echo "[4/4] DELETE /tasks/{id} (expect 404)"
+  RESP=$(http DELETE "/tasks/$existing_task_id")
   CODE=$(http_code "$RESP")
-  if [[ "$CODE" == "403" ]]; then
-    pass "403 Forbidden (delete denied)"
+  if [[ "$CODE" == "404" ]]; then
+    pass "404 Not Found (delete denied via IDOR normalization)"
   else
-    fail "Expected 403, got $CODE" "$(http_body "$RESP")"
+    fail "Expected 404, got $CODE" "$(http_body "$RESP")"
   fi
 }
 

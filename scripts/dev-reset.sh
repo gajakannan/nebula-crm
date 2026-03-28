@@ -24,12 +24,20 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKIP_SMOKE=false
+TEST_USER="${TEST_USER:-lisa.wong}"
+AUTHENTIK_BASE="${AUTHENTIK_BASE:-http://localhost:9000}"
+TOKEN_ENDPOINT="${AUTHENTIK_BASE}/application/o/token/"
+CLIENT_ID="${CLIENT_ID:-nebula}"
+SCOPES="${SCOPES:-openid profile email nebula_roles broker_tenant_id}"
+APP_PASSWORD="${APP_PASSWORD:-nebula-dev-token}"
+TOKEN_WAIT_ATTEMPTS="${TOKEN_WAIT_ATTEMPTS:-120}"
+TOKEN_WAIT_DELAY_SECONDS="${TOKEN_WAIT_DELAY_SECONDS:-2}"
 SMOKE_ARGS=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --skip-smoke)  SKIP_SMOKE=true; shift ;;
-    --user)        SMOKE_ARGS+=(--user "$2"); shift 2 ;;
+    --user)        TEST_USER="$2"; SMOKE_ARGS+=(--user "$2"); shift 2 ;;
     --help|-h)
       sed -n '2,/^$/p' "$0" | sed 's/^# \?//'
       exit 0 ;;
@@ -79,6 +87,39 @@ wait_healthy db 30 || exit 2
 wait_healthy authentik-server 60 || exit 2
 wait_healthy authentik-worker 60 || exit 2
 
+http_code() { echo "$1" | tail -1; }
+http_body() { echo "$1" | sed '$d'; }
+
+wait_for_token_ready() {
+  local user="$1" max_attempts="${2:-$TOKEN_WAIT_ATTEMPTS}"
+  local resp code body=""
+  for i in $(seq 1 "$max_attempts"); do
+    resp=$(curl -s -w "\n%{http_code}" -X POST "$TOKEN_ENDPOINT" \
+      -d "grant_type=password&client_id=${CLIENT_ID}&username=${user}&password=${APP_PASSWORD}&scope=${SCOPES}" 2>/dev/null || true)
+    code=$(http_code "$resp")
+    body=$(http_body "$resp")
+    if [[ "$code" == "200" ]]; then
+      echo "  authentik blueprint/token ready (attempt $i)"
+      return 0
+    fi
+    if [[ "$i" -eq 1 || $(( i % 5 )) -eq 0 ]]; then
+      echo "  Waiting for blueprint/token readiness (attempt $i/$max_attempts, HTTP ${code:-000})..."
+    fi
+    sleep "$TOKEN_WAIT_DELAY_SECONDS"
+  done
+
+  echo "  TIMEOUT: authentik blueprint/token not ready after $((max_attempts * TOKEN_WAIT_DELAY_SECONDS))s"
+  echo "  Last HTTP status: ${code:-000}"
+  if [[ -n "$body" ]]; then
+    echo "  Last response body: $body"
+  else
+    echo "  Last response body: <empty>"
+  fi
+  echo "  Logs:"
+  docker compose logs authentik-worker --tail 20 2>&1 | sed 's/^/    /'
+  return 1
+}
+
 # API doesn't have a healthcheck in compose, so poll the endpoint
 echo "  Waiting for API healthz..."
 for i in $(seq 1 45); do
@@ -95,9 +136,8 @@ for i in $(seq 1 45); do
 done
 echo ""
 
-# Wait a few seconds for authentik blueprints to be fully applied by the worker
-echo "  Waiting for blueprint application..."
-sleep 5
+echo "  Waiting for blueprint/token readiness..."
+wait_for_token_ready "$TEST_USER" "$TOKEN_WAIT_ATTEMPTS" || exit 2
 
 # ── Step 4: Service summary ────────────────────────────────────────────
 echo "==> Service status:"

@@ -1,0 +1,78 @@
+name: QE API Validation (Bruno)
+
+on:
+  pull_request:
+    paths:
+      - 'engine/**'
+      - 'bruno/**'
+      - 'scripts/run-bruno.sh'
+  workflow_dispatch:
+
+jobs:
+  bruno-api-validation:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nebula
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      ConnectionStrings__DefaultConnection: Host=localhost;Port=5433;Database=nebula;Username=postgres;Password=postgres
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Start API
+        run: |
+          dotnet run --project engine/src/Nebula.Api/Nebula.Api.csproj &
+          sleep 15
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8080/healthz > /dev/null 2>&1; then
+              echo "API is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API did not become healthy"
+          exit 1
+
+      - name: Run Bruno collection
+        env:
+          BRUNO_ENV: ci
+          NEBULA_API_BASE_URL: http://localhost:8080
+        run: bash scripts/run-bruno.sh
+
+      - name: Upload Bruno reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bruno-reports
+          path: planning-mds/operations/evidence/f0033/artifacts/bruno/

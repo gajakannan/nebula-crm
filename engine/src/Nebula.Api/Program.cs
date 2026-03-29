@@ -5,15 +5,26 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using FluentValidation;
+using Serilog;
+using Serilog.Events;
 using Nebula.Infrastructure;
 using Nebula.Infrastructure.Persistence;
 using Nebula.Application.Common;
 using Nebula.Application.Services;
 using Nebula.Application.Validators;
 using Nebula.Api.Endpoints;
+using Nebula.Api.Logging;
 using Nebula.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Serilog — structured logging baseline (F0033-S0001)
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -217,6 +228,25 @@ app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Serilog request context enrichment and completion logging (F0033-S0001)
+app.UseMiddleware<RequestLogContextMiddleware>();
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate =
+        "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+    options.GetLevel = (httpContext, elapsed, ex) =>
+        ex is not null || httpContext.Response.StatusCode >= 500
+            ? LogEventLevel.Error
+            : LogEventLevel.Information;
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("TraceId", System.Diagnostics.Activity.Current?.TraceId.ToString() ?? string.Empty);
+        diagnosticContext.Set("StatusCode", httpContext.Response.StatusCode);
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value ?? string.Empty);
+    };
+});
+
 app.UseRateLimiter();
 
 // OpenAPI/Swagger in Development

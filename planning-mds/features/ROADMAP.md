@@ -21,6 +21,7 @@ This document is the working prioritization view for feature sequencing.
 | [F0006 — Submission Intake Workflow](./F0006-submission-intake-workflow/README.md) | CRM Release MVP | In Refinement (8 stories, workflow, completeness policy, stale detection). Establishes the single source of truth for new business intake, triage, and early routing. |
 | [F0016 — Account 360 & Insured Management](./F0016-account-360-and-insured-management/README.md) | CRM Release MVP | Adds insured-centric context required by underwriters and distribution users before deeper policy and renewal workflows land. |
 | [F0020 — Document Management & ACORD Intake](./F0020-document-management-and-acord-intake/README.md) | CRM Release MVP | Removes document chasing and supports completeness checks for submissions and underwriting review. |
+| [F0033 — Structured Logging and QE Toolchain Activation](./F0033-structured-logging-and-qe-toolchain-activation/README.md) | Infrastructure | Activates Serilog, Bruno, Lighthouse CI, Pact, and SonarQube so release evidence and debugging keep pace with the growing CRM surface. |
 
 ## Next
 
@@ -60,7 +61,7 @@ This document is the working prioritization view for feature sequencing.
 
 | Feature | Phase | Completion State |
 |---------|-------|------------------|
-| [F0014 — DevOps Smoke Test Automation](./F0014-devops-smoke-test-automation/PRD.md) | Infrastructure | Done (2026-03-27) — 3 stories: blueprint fixes, multi-role smoke test, CI workflow |
+| [F0014 — DevOps Smoke Test Automation](./archive/F0014-devops-smoke-test-automation/PRD.md) | Infrastructure | Done and archived (2026-03-28) — 3 stories: blueprint fixes, multi-role smoke test, CI workflow |
 | [F0004 — Task Center UI + Manager Assignment](./archive/F0004-task-center-ui-and-assignment/README.md) | Phase 1 | Done and archived (2026-03-23) |
 | [F0015 — Frontend Quality Gates + Test Infrastructure](./archive/F0015-frontend-quality-gates-and-test-infrastructure/README.md) | Infrastructure | Done and archived (2026-03-21) |
 | [F0003 — Task Center + Reminders (API-only MVP)](./archive/F0003-task-center/README.md) | MVP | Done and archived |

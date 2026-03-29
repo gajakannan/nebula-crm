@@ -68,7 +68,8 @@
       "Bash(CI=true pnpm install)",
       "Bash(npx vitest:*)",
       "Bash(npx vite:*)",
-      "Bash(sudo apt-get:*)"
+      "Bash(sudo apt-get:*)",
+      "Bash(pnpm --dir experience dlx node -e \"console.log\\(process.platform\\)\")"
     ]
   }
 }

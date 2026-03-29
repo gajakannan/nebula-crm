@@ -173,7 +173,7 @@ Status: Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker 
 - [F0007: Renewal Pipeline](features/F0007-renewal-pipeline/PRD.md) - Architecture Complete (7 stories; data model, API, workflow, Casbin, ADRs finalized 2026-03-26)
 - [F0009: Authentication + Role-Based Login](features/archive/F0009-authentication-and-role-based-login/PRD.md) - Done (Archived; Phase 1)
 - [F0004: Task Center UI + Manager Assignment](features/archive/F0004-task-center-ui-and-assignment/PRD.md) - Done (Archived 2026-03-23; Phase 1)
-- [F0014: DevOps Smoke Test Automation](features/F0014-devops-smoke-test-automation/PRD.md) - In Progress (Infrastructure; 3 stories — 1 Done, 2 remaining)
+- [F0014: DevOps Smoke Test Automation](features/archive/F0014-devops-smoke-test-automation/PRD.md) - Done (Archived 2026-03-28; Infrastructure)
 - [F0015: Frontend Quality Gates + Test Infrastructure](features/archive/F0015-frontend-quality-gates-and-test-infrastructure/PRD.md) - Done (Archived)
 - [F0010: Dashboard Opportunities Refactor (Pipeline Board + Insight Views)](features/archive/F0010-dashboard-opportunities-refactor/PRD.md) - Abandoned (Superseded by F0013)
 - [F0011: Dashboard Opportunities Flow-First Modernization (Connected Pipeline + Terminal Outcomes)](features/archive/F0011-dashboard-opportunities-flow-modernization/PRD.md) - Abandoned (Superseded by F0013)
@@ -205,6 +205,7 @@ Status: Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker 
 **Release Enablement / Platform Operations (Planned):**
 - F0031: Data Import, Deduplication & Go-Live Migration - Planned
 - F0032: Admin Configuration & Reference Data Console - Planned
+- [F0033: Structured Logging and QE Toolchain Activation](features/F0033-structured-logging-and-qe-toolchain-activation/PRD.md) - In Progress
 
 ### 3.4 MVP Features and Stories (vertical-slice friendly)
 
@@ -245,10 +246,17 @@ Status: Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker 
 - [F0015-S0002: Activate Nebula frontend quality gates and evidence](features/archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0002-activate-nebula-frontend-quality-gates-and-evidence.md) - Done (Archived)
 - [F0015-S0003: Backfill critical frontend coverage and record one full validation run](features/archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0003-backfill-critical-frontend-coverage-and-record-full-validation-run.md) - Done (Archived)
 
-**Infrastructure Stories (Feature F0014: DevOps Smoke Test Automation):**
-- [F0014-S0001: Blueprint ROPC fixes and smoke test scripts](features/F0014-devops-smoke-test-automation/F0014-S0001-blueprint-ropc-fixes-and-smoke-scripts.md) - Done
-- [F0014-S0002: Multi-role smoke test verification](features/F0014-devops-smoke-test-automation/F0014-S0002-multi-role-smoke-test-verification.md) - Not Started
-- [F0014-S0003: CI smoke test integration](features/F0014-devops-smoke-test-automation/F0014-S0003-ci-smoke-test-integration.md) - Not Started (Future)
+**Infrastructure Stories (Feature F0014: DevOps Smoke Test Automation — Archived):**
+- [F0014-S0001: Blueprint ROPC fixes and smoke test scripts](features/archive/F0014-devops-smoke-test-automation/F0014-S0001-blueprint-ropc-fixes-and-smoke-scripts.md) - Done (Archived)
+- [F0014-S0002: Multi-role smoke test verification](features/archive/F0014-devops-smoke-test-automation/F0014-S0002-multi-role-smoke-test-verification.md) - Done (Archived)
+- [F0014-S0003: CI smoke test integration](features/archive/F0014-devops-smoke-test-automation/F0014-S0003-ci-smoke-test-integration.md) - Done (Archived)
+
+**Infrastructure Stories (Feature F0033: Structured Logging and QE Toolchain Activation):**
+- [F0033-S0001: Establish Serilog structured logging baseline](features/F0033-structured-logging-and-qe-toolchain-activation/F0033-S0001-establish-serilog-structured-logging-baseline.md) - In Progress
+- [F0033-S0002: Activate Bruno API validation path](features/F0033-structured-logging-and-qe-toolchain-activation/F0033-S0002-activate-bruno-api-validation-path.md) - In Progress
+- [F0033-S0003: Activate Lighthouse CI performance gate](features/F0033-structured-logging-and-qe-toolchain-activation/F0033-S0003-activate-lighthouse-ci-performance-gate.md) - In Progress
+- [F0033-S0004: Establish broker list contract testing with Pact](features/F0033-structured-logging-and-qe-toolchain-activation/F0033-S0004-establish-broker-list-contract-testing-with-pact.md) - In Progress
+- [F0033-S0005: Activate SonarQube Community quality reporting](features/F0033-structured-logging-and-qe-toolchain-activation/F0033-S0005-activate-sonarqube-community-quality-reporting.md) - In Progress
 
 **MVP Stories (Feature F0010: Dashboard Opportunities Refactor):**
 - [F0010-S0001: Replace Sankey default with Pipeline Board](features/archive/F0010-dashboard-opportunities-refactor/F0010-S0001-replace-sankey-with-pipeline-board-default.md) - Done (Historical; superseded by F0013)
@@ -328,7 +336,7 @@ Screen baseline details:
 
 ## 4) Phase B — Architect Spec (Public Baseline)
 
-**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0003/F0004/F0005/F0009/F0012/F0013/F0015. Active work: F0006 (In Refinement), F0007 (Architecture Complete), F0014 (In Progress).
+**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0003/F0004/F0005/F0009/F0012/F0013/F0014/F0015. Active work: F0006 (In Refinement), F0007 (Architecture Complete), F0033 (In Progress).
 
 This section defines the build-ready technical baseline for the reference implementation.
 

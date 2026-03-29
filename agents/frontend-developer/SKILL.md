@@ -3,7 +3,7 @@ name: developing-frontend
 description: "Implements frontend UI components, forms, state management, and API integration using React, TypeScript, and Tailwind CSS. Activates when building UI, creating components, implementing screens, adding forms, integrating APIs, or fixing frontend issues. Does not handle backend APIs or business logic (backend-developer), AI features (ai-engineer), infrastructure (devops), or UI/UX design decisions (architect)."
 compatibility: ["manual-orchestration-contract"]
 metadata:
-  allowed-tools: "Read Write Edit Bash(npm:*) Bash(npx:*) Bash(python:*)"
+  allowed-tools: "Read Write Edit Bash(pnpm:*) Bash(npx:*) Bash(python:*)"
   version: "2.4.0"
   author: "Nebula Framework Team"
   tags: ["frontend", "react", "typescript"]
@@ -202,7 +202,7 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 - **Forms:**
   - **Manual forms:** React Hook Form + AJV (JSON Schema validation)
   - **Dynamic forms:** RJSF (React JSON Schema Form) - auto-generates forms from schemas
-- **Routing:** React Router v6
+- **Routing:** React Router v7
 - **HTTP Client:** Fetch API or Axios
 - **Testing:** Vitest + React Testing Library + jest-axe
 - **E2E Testing:** Playwright (Quality Engineer owns this)

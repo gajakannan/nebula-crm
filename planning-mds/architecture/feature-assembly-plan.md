@@ -1,8 +1,8 @@
-# Feature Assembly Plan (F0001 + F0002 + F0006 + F0007 + F0009 + F0010 + F0012 + F0013 + F0014 + F0015)
+# Feature Assembly Plan (F0001 + F0002 + F0006 + F0007 + F0009 + F0010 + F0012 + F0013 + F0014 + F0015 + F0033)
 
 **Owner:** Architect
 **Status:** Approved
-**Last Updated:** 2026-03-27
+**Last Updated:** 2026-03-28
 
 ## Goal
 
@@ -1877,3 +1877,79 @@ eval():   r.obj.assignee ("abc-123") == r.sub.id ("abc-123") → true
 **S0002:** `./scripts/smoke-test.sh --all-users` runs all 4 dev users with correct role-appropriate assertions. Single-user mode not regressed. Exit code 0 only if all pass.
 
 **S0003:** GitHub Actions workflow passes on `ubuntu-latest`. Stack starts, smoke tests run, failure logs uploaded, stack torn down.
+
+---
+
+## F0033 — Structured Logging and QE Toolchain Activation
+
+**Added:** 2026-03-28 — Architecture review complete; solution activation feature for observability and QE stack already approved in solution patterns.
+
+> **Implementation Execution Plan:** [`feature-assembly-plan.md`](../features/F0033-structured-logging-and-qe-toolchain-activation/feature-assembly-plan.md) — per-step implementation spec for Serilog, Bruno, Lighthouse CI, Pact, and SonarQube Community activation.
+
+### Dependencies
+
+| Dependency | Source | What F0033 Needs | Status |
+|------------|--------|------------------|--------|
+| API runtime | `engine/src/Nebula.Api` | Logging bootstrap point and representative endpoints | **Done** |
+| Frontend quality foundation | F0015 | Existing frontend validation and coverage baseline | **Done** |
+| Smoke-test auth/bootstrap | F0014 / F0005 / F0009 | Seeded users, dev tokens, and stable local stack assumptions | **Done** |
+| Solution patterns | `planning-mds/architecture/SOLUTION-PATTERNS.md` | Approved stack decisions for Serilog, Bruno, Lighthouse, Pact, Sonar | **Done** |
+
+### Architecture Notes
+
+- **Solution activation, not framework drift:** The stack decisions already exist. F0033 makes them executable in the repo.
+- **Opt-in QE services:** Pact Broker and SonarQube must live in `docker-compose.qe.yml`, not the default always-on stack.
+- **Representative-first rollout:** Broker list is the first Pact slice. Bruno and Lighthouse also start with intentionally narrow, reviewable route/resource coverage.
+- **Auth guardrail preserved:** Lighthouse on protected routes must use an explicit perf-only runtime profile. The production `VITE_AUTH_MODE=dev` guard remains intact.
+
+### Assembly Steps
+
+**Step 1 — S0001: Serilog baseline (Backend Developer)**
+1. Add Serilog packages and appsettings configuration
+2. Bootstrap `UseSerilog()` in `Program.cs`
+3. Add request/user context enrichment middleware
+4. Add logging verification tests
+
+**Step 2 — S0002: Bruno collections (Quality Engineer + DevOps)**
+1. Commit Bruno collection/env layout
+2. Add `run-bruno.sh`
+3. Add representative requests (`/healthz`, `/brokers`, `/my/tasks`)
+4. Add CI workflow and stable artifact path
+
+**Step 3 — S0003: Lighthouse CI (Frontend Developer + DevOps)**
+1. Commit `lighthouserc.json`
+2. Add `run-lhci.sh` and package scripts
+3. Define approved route set and thresholds
+4. Add CI workflow and artifact upload path
+
+**Step 4 — S0004: Pact contract slice (Frontend Developer + Backend Developer)**
+1. Add frontend consumer contract for broker list
+2. Add backend provider verification
+3. Add optional broker publication path and QE overlay service
+4. Add CI verification workflow
+
+**Step 5 — S0005: SonarQube Community (DevOps + Quality Engineer)**
+1. Add optional SonarQube service to QE overlay
+2. Add `run-sonar.sh`
+3. Wire backend/frontend coverage import paths
+4. Add CI analysis workflow and documented quality gate
+
+### Signoff Role Matrix
+
+| Role | Required | Rationale |
+|------|----------|-----------|
+| Quality Engineer | Yes | The feature activates QE tooling itself and needs execution evidence. |
+| Code Reviewer | Yes | Runtime logging and cross-tool workflow changes need independent review. |
+| Security Reviewer | Yes | Log redaction and new tool/service exposure boundaries must be reviewed. |
+| DevOps | Yes | Compose overlays, workflows, and runtime entry points are core scope. |
+| Architect | Yes | Cross-cutting activation sequencing and guardrails require architectural signoff. |
+
+### Checkpoint
+
+**F0033-A:** API emits trace-correlated structured logs through Serilog.
+
+**F0033-B:** Bruno and Lighthouse both produce stable local/CI artifacts.
+
+**F0033-C:** Broker list Pact contract is generated and provider-verified.
+
+**F0033-D:** SonarQube Community ingests backend + frontend coverage in one analysis flow.

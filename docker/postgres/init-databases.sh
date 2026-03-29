@@ -14,4 +14,10 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
     SELECT 'CREATE DATABASE temporal_visibility'
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'temporal_visibility')\gexec
+
+    SELECT 'CREATE DATABASE pactbroker'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'pactbroker')\gexec
+
+    SELECT 'CREATE DATABASE sonarqube'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'sonarqube')\gexec
 EOSQL

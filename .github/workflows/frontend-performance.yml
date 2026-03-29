@@ -1,0 +1,45 @@
+name: Frontend Performance (Lighthouse CI)
+
+on:
+  pull_request:
+    paths:
+      - 'experience/**'
+      - 'scripts/run-lhci.sh'
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm --dir experience install --frozen-lockfile
+
+      - name: Start dev server (perf-only auth mode)
+        run: |
+          VITE_AUTH_MODE=dev pnpm --dir experience dev --port 5173 &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:5173 > /dev/null 2>&1 && break
+            sleep 2
+          done
+
+      - name: Run Lighthouse CI
+        run: pnpm --dir experience exec lhci autorun --config=./lighthouserc.json
+        working-directory: experience
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: planning-mds/operations/evidence/f0033/artifacts/lighthouse/

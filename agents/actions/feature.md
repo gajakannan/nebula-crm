@@ -68,8 +68,9 @@ If a validation command fails with runtime symptoms (for example connection refu
    - Required backend/frontend/AI changes for this feature only
    - Integration checkpoints and dependency order
    - Test and release checklist for the vertical slice
-4. **Output artifact:**
-   - `planning-mds/architecture/feature-assembly-plan.md` (use `agents/templates/feature-assembly-plan-template.md`)
+4. **Output artifacts:**
+   - `planning-mds/features/F{NNNN}-{slug}/feature-assembly-plan.md` (canonical per-feature execution plan; use `agents/templates/feature-assembly-plan-template.md`)
+   - Update `planning-mds/architecture/feature-assembly-plan.md` to reference the feature-local plan from the umbrella cross-feature sequencing view
 5. **Initialize signoff requirements in feature status:**
    - Update `planning-mds/features/F{NNNN}-{slug}/STATUS.md` section `Required Signoff Roles`
    - Mark baseline required roles as `Yes`: `Quality Engineer`, `Code Reviewer`
@@ -218,7 +219,8 @@ Mandatory preflight before implementation validation runs:
 #### 1e. DevOps (Feature Deployability Check)
 1. **Activate DevOps agent** by reading `agents/devops/SKILL.md`
 2. **Read context:**
-   - Feature assembly plan (`planning-mds/architecture/feature-assembly-plan.md`)
+   - Feature assembly plan (`planning-mds/features/F{NNNN}-{slug}/feature-assembly-plan.md`)
+   - Umbrella sequencing/reference plan (`planning-mds/architecture/feature-assembly-plan.md`) when cross-feature dependency context is needed
    - Existing deployment artifacts (`docker-compose*.yml`, Dockerfiles, runtime configs)
    - Feature-specific runtime requirements from backend/frontend/AI outputs
 3. **Execute responsibilities (feature-scoped):**

@@ -1,0 +1,86 @@
+name: SonarQube Community Analysis
+
+on:
+  pull_request:
+    paths:
+      - 'engine/**'
+      - 'experience/src/**'
+  workflow_dispatch:
+
+jobs:
+  sonarqube:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nebula
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      ConnectionStrings__DefaultConnection: Host=localhost;Port=5433;Database=nebula;Username=postgres;Password=postgres
+      ASPNETCORE_ENVIRONMENT: Development
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Setup Java (required by SonarScanner)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dotnet-sonarscanner
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Install frontend dependencies
+        run: pnpm --dir experience install --frozen-lockfile
+
+      - name: Run backend tests with coverage
+        run: dotnet test engine/tests/Nebula.Tests/Nebula.Tests.csproj --collect:"XPlat Code Coverage"
+
+      - name: Run frontend tests with coverage
+        run: pnpm --dir experience test:coverage
+
+      - name: Begin SonarScanner analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"nebula-crm" \
+            /d:sonar.host.url="${SONAR_HOST_URL:-http://localhost:9001}" \
+            /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
+            /d:sonar.javascript.lcov.reportPaths="experience/coverage/lcov.info" \
+            ${SONAR_TOKEN:+/d:sonar.token="$SONAR_TOKEN"}
+
+      - name: Build solution
+        run: dotnet build engine/Nebula.slnx
+
+      - name: End SonarScanner analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end ${SONAR_TOKEN:+/d:sonar.token="$SONAR_TOKEN"}

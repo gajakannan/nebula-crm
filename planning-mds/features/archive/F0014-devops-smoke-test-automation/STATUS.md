@@ -1,7 +1,8 @@
 # F0014 — DevOps Smoke Test Automation — Status
 
-**Overall Status:** Done
-**Last Updated:** 2026-03-27
+**Overall Status:** Archived
+**Last Updated:** 2026-03-28
+**Archived:** 2026-03-28
 
 ## Story Checklist
 
@@ -56,6 +57,29 @@
 | F0014-S0002 | Code Reviewer | Architect Agent | PASS | Reviewed: backward-compatible refactor (single-user mode unchanged), suite extraction, claims verification via python3/sys.argv (no shell injection), continue-on-failure with explicit counter tracking. | 2026-03-27 | No regressions to S0001 behavior. |
 | F0014-S0003 | Code Reviewer | Architect Agent | PASS | Reviewed: concurrency group cancels stale runs, selective service start (skips temporal), `COMPOSE_PROJECT_NAME` isolation, `if: always()` teardown, `if: failure()` log upload. | 2026-03-27 | Standard GHA patterns, no secrets required. |
 
+## Feature-Level Signoff
+
+| Role | Reviewer | Verdict | Date | Notes |
+|------|----------|---------|------|-------|
+| Product Manager | Claude (PM Agent) | ARCHIVE | 2026-03-28 | 7/7 acceptance criteria met, 4/4 success criteria met, 0 product gaps, 2 non-blocking follow-ups documented |
+
+## Closeout Summary
+
+**Implementation:** 2026-03-20 – 2026-03-27 by Claude (Implementation Agent)
+**Closeout Review:** 2026-03-28 by Claude (PM Agent)
+**Tests:** Self-verifying — smoke-test.sh IS the test suite (9 single-user + 31 multi-role = 40 total assertions)
+**Defects found and fixed:** 1 (S0002 BrokerUser expectation corrected from 403 to 200 on GET per Casbin policy.csv)
+**Residual risks:** 2 accepted (CI runner 7 GB RAM marginal; branch protection rule requires manual GitHub UI step)
+
+## PM Closeout
+
+**PM Review:** 2026-03-28 by Claude (PM Agent — PM Closeout Pass)
+**PRD Acceptance Criteria:** 7/7 met
+**PRD Success Criteria:** 4/4 met
+**Scope Delivered:** 3/3 stories (100%)
+**Product Gaps:** 0
+**Non-Blocking Follow-ups:** 2 documented below (branch protection rule, CI runner memory validation)
+
 ## Deferred Non-Blocking Follow-ups
 
 | Follow-up | Why deferred | Tracking link | Owner |
@@ -65,8 +89,9 @@
 
 ## Tracker Sync Checklist
 
-- [x] `planning-mds/features/REGISTRY.md` status/path aligned
-- [x] `planning-mds/features/ROADMAP.md` section aligned (`Now/Next/Later/Completed`)
-- [x] `planning-mds/features/STORY-INDEX.md` regenerated
-- [x] `planning-mds/BLUEPRINT.md` feature/story status links aligned
+- [x] `planning-mds/features/REGISTRY.md` status/path aligned (moved to Archived section, 2026-03-28)
+- [x] `planning-mds/features/ROADMAP.md` section aligned (Completed → "Done and archived")
+- [x] `planning-mds/features/STORY-INDEX.md` links updated to archive path
+- [x] `planning-mds/BLUEPRINT.md` feature/story links updated to archive path
 - [x] Every required signoff role has story-level `PASS` entries with reviewer, date, and evidence
+- [x] Feature folder moved to `planning-mds/features/archive/F0014-devops-smoke-test-automation/` (2026-03-28)

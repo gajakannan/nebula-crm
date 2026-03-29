@@ -79,4 +79,9 @@ docker-compose.override.yml
 # Security reports
 security-reports/
 
-
+# QE toolchain artifacts (F0033)
+.sonarqube/
+.lighthouseci/
+experience/.lighthouseci/
+experience/pacts/
+planning-mds/operations/evidence/f0033/artifacts/

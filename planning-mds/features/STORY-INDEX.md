@@ -2,7 +2,7 @@
 
 Auto-generated index of all user stories across feature folders.
 
-**Total Stories:** 74
+**Total Stories:** 79
 
 ---
 
@@ -162,9 +162,9 @@ Auto-generated index of all user stories across feature folders.
 
 | Story ID | Title | Priority | Phase | Persona |
 |----------|-------|----------|-------|---------|
-| [F0014-S0001](./F0014-devops-smoke-test-automation/F0014-S0001-blueprint-ropc-fixes-and-smoke-scripts.md) | Blueprint ROPC fixes and smoke test scripts | Critical | Infrastructure | DevOps engineer verifying a Nebula deployment |
-| [F0014-S0002](./F0014-devops-smoke-test-automation/F0014-S0002-multi-role-smoke-test-verification.md) | Multi-role smoke test verification | High | Infrastructure | DevOps engineer verifying a Nebula deployment |
-| [F0014-S0003](./F0014-devops-smoke-test-automation/F0014-S0003-ci-smoke-test-integration.md) | CI smoke test integration | Medium | Future | development team member |
+| [F0014-S0001](./archive/F0014-devops-smoke-test-automation/F0014-S0001-blueprint-ropc-fixes-and-smoke-scripts.md) | Blueprint ROPC fixes and smoke test scripts | Critical | Infrastructure | DevOps engineer verifying a Nebula deployment |
+| [F0014-S0002](./archive/F0014-devops-smoke-test-automation/F0014-S0002-multi-role-smoke-test-verification.md) | Multi-role smoke test verification | High | Infrastructure | DevOps engineer verifying a Nebula deployment |
+| [F0014-S0003](./archive/F0014-devops-smoke-test-automation/F0014-S0003-ci-smoke-test-integration.md) | CI smoke test integration | Medium | Infrastructure | development team member |
 
 ---
 
@@ -178,13 +178,25 @@ Auto-generated index of all user stories across feature folders.
 
 ---
 
+## F0033 — Structured Logging and QE Toolchain Activation
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [F0033-S0001](./F0033-structured-logging-and-qe-toolchain-activation/F0033-S0001-establish-serilog-structured-logging-baseline.md) | Establish Serilog structured logging baseline | Critical | Infrastructure | DevOps engineer or backend engineer |
+| [F0033-S0002](./F0033-structured-logging-and-qe-toolchain-activation/F0033-S0002-activate-bruno-api-validation-path.md) | Activate Bruno API validation path | High | Infrastructure | quality engineer |
+| [F0033-S0003](./F0033-structured-logging-and-qe-toolchain-activation/F0033-S0003-activate-lighthouse-ci-performance-gate.md) | Activate Lighthouse CI performance gate | High | Infrastructure | release approver or frontend engineer |
+| [F0033-S0004](./F0033-structured-logging-and-qe-toolchain-activation/F0033-S0004-establish-broker-list-contract-testing-with-pact.md) | Establish broker list contract testing with Pact | High | Infrastructure | frontend or backend engineer |
+| [F0033-S0005](./F0033-structured-logging-and-qe-toolchain-activation/F0033-S0005-activate-sonarqube-community-quality-reporting.md) | Activate SonarQube Community quality reporting | High | Infrastructure | release approver or code reviewer |
+
+---
+
 ## Summary by Phase
 
 | Phase | Count |
 |-------|-------|
 | CRM Release MVP | 15 |
 | Future | 1 |
-| Infrastructure | 5 |
+| Infrastructure | 10 |
 | MVP | 37 |
 | MVP Hardening | 1 |
 | Phase 1 | 11 |
@@ -196,8 +208,8 @@ Auto-generated index of all user stories across feature folders.
 
 | Priority | Count |
 |----------|-------|
-| Critical | 22 |
-| High | 38 |
+| Critical | 23 |
+| High | 42 |
 | Medium | 10 |
 
 ---

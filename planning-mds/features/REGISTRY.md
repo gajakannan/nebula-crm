@@ -12,7 +12,6 @@
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
 | F0006 | Submission Intake Workflow | In Refinement | CRM Release MVP | `F0006-submission-intake-workflow/` |
-| F0033 | Structured Logging and QE Toolchain Activation | In Progress | Infrastructure | `F0033-structured-logging-and-qe-toolchain-activation/` |
 
 ## Abandoned Features
 
@@ -59,6 +58,7 @@
 | F0015 | Frontend Quality Gates + Test Infrastructure | 2026-03-21 | `archive/F0015-frontend-quality-gates-and-test-infrastructure/` |
 | F0004 | Task Center UI + Manager Assignment | 2026-03-23 | `archive/F0004-task-center-ui-and-assignment/` |
 | F0014 | DevOps Smoke Test Automation | 2026-03-28 | `archive/F0014-devops-smoke-test-automation/` |
+| F0033 | Structured Logging and QE Toolchain Activation | 2026-03-30 | `archive/F0033-structured-logging-and-qe-toolchain-activation/` |
 
 ## Numbering Rules
 

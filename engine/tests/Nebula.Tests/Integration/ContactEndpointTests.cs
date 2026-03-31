@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using FluentAssertions;
+using Shouldly;
 using Nebula.Application.DTOs;
 
 namespace Nebula.Tests.Integration;
@@ -15,7 +15,7 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
         var license = $"{licensePrefix}-{Guid.NewGuid().ToString("N")[..8]}";
         var response = await _client.PostAsJsonAsync("/brokers",
             new BrokerCreateDto("Contact Test Broker", license, "CA", null, null));
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         return (await response.Content.ReadFromJsonAsync<BrokerDto>())!;
     }
 
@@ -27,10 +27,10 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
         var dto = new ContactCreateDto(broker.Id, "Jane Doe", "jane@example.com", "+14155551111", "Primary");
         var response = await _client.PostAsJsonAsync("/contacts", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<ContactDto>();
-        result.Should().NotBeNull();
-        result!.FullName.Should().Be("Jane Doe");
+        result.ShouldNotBeNull();
+        result!.FullName.ShouldBe("Jane Doe");
     }
 
     [Fact]
@@ -41,14 +41,14 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
             new ContactCreateDto(broker.Id, "Filter Test", "filter@test.com", "+14155552222", null));
 
         var response = await _client.GetAsync($"/contacts?brokerId={broker.Id}");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task GetContact_NonExistent_Returns404()
     {
         var response = await _client.GetAsync($"/contacts/{Guid.NewGuid()}");
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -58,10 +58,10 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
 
         var response = await _client.GetAsync($"/contacts/{created.Id}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<ContactDto>();
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(created.Id);
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(created.Id);
     }
 
     [Fact]
@@ -76,11 +76,11 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
 
         var response = await _client.SendAsync(request);
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<ContactDto>();
-        result.Should().NotBeNull();
-        result!.FullName.Should().Be("Updated Name");
-        result.Role.Should().Be("Assistant");
+        result.ShouldNotBeNull();
+        result!.FullName.ShouldBe("Updated Name");
+        result.Role.ShouldBe("Assistant");
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
             $"/contacts/{created.Id}",
             new ContactUpdateDto("Updated Name", "updated@test.com", "+14155550002", "Assistant"));
 
-        ((int)response.StatusCode).Should().Be(428);
+        ((int)response.StatusCode).ShouldBe(428);
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
 
         var response = await _client.DeleteAsync($"/contacts/{created.Id}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
 
         var response = await _client.GetAsync($"/contacts/{created.Id}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     // ── F0002 G3: paginated envelope + RowVersion ───────────────────────────
@@ -125,14 +125,14 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
             new ContactCreateDto(broker.Id, "Paged Contact", "paged@test.com", "+14155553333", null));
 
         var response = await _client.GetAsync($"/contacts?brokerId={broker.Id}");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var json = await response.Content.ReadFromJsonAsync<JsonPaginatedContactList>();
-        json.Should().NotBeNull();
-        json!.Data.Should().NotBeEmpty();
-        json.TotalCount.Should().BeGreaterThanOrEqualTo(1);
-        json.Page.Should().Be(1);
-        json.TotalPages.Should().BeGreaterThanOrEqualTo(1);
+        json.ShouldNotBeNull();
+        json!.Data.ShouldNotBeEmpty();
+        json.TotalCount.ShouldBeGreaterThanOrEqualTo(1);
+        json.Page.ShouldBe(1);
+        json.TotalPages.ShouldBeGreaterThanOrEqualTo(1);
     }
 
     [Fact]
@@ -142,12 +142,12 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
         var dto = new ContactCreateDto(broker.Id, "RV Test", "rv@test.com", "+14155554444", null);
 
         var response = await _client.PostAsJsonAsync("/contacts", dto);
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         var result = await response.Content.ReadFromJsonAsync<ContactDto>();
-        result.Should().NotBeNull();
+        result.ShouldNotBeNull();
         // RowVersion is a uint returned in response — default value 0 on creation is valid.
-        result!.RowVersion.Should().BeGreaterThanOrEqualTo(0u);
+        result!.RowVersion.ShouldBeGreaterThanOrEqualTo(0u);
     }
 
     private record JsonPaginatedContactList(
@@ -164,7 +164,7 @@ public class ContactEndpointTests(CustomWebApplicationFactory factory) : IClassF
                 "+14155559999",
                 "Primary"));
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         return (await response.Content.ReadFromJsonAsync<ContactDto>())!;
     }
 }

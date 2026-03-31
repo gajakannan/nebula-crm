@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -53,8 +53,8 @@ public class JwtAudienceValidationTests : IClassFixture<JwtAudienceValidationFac
         var response = await client.GetAsync("/brokers");
 
         // Assert — middleware must reject before the handler executes
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
-            because: "tokens with aud != 'nebula' must be rejected by JWT middleware (F-003)");
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized,
+            "tokens with aud != 'nebula' must be rejected by JWT middleware (F-003)");
     }
 
     [Fact]
@@ -69,8 +69,8 @@ public class JwtAudienceValidationTests : IClassFixture<JwtAudienceValidationFac
         var response = await client.GetAsync("/brokers");
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
-            because: "tokens without an aud claim must be rejected by JWT middleware (F-003)");
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized,
+            "tokens without an aud claim must be rejected by JWT middleware (F-003)");
     }
 
     [Fact]
@@ -89,8 +89,8 @@ public class JwtAudienceValidationTests : IClassFixture<JwtAudienceValidationFac
 
         // Assert — audience check passed; response is NOT 401
         // (may be 200, 403, 500, etc. depending on downstream handler — audience was accepted)
-        response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized,
-            because: "a token with aud = 'nebula' must pass JWT audience validation");
+        response.StatusCode.ShouldNotBe(HttpStatusCode.Unauthorized,
+            "a token with aud = 'nebula' must pass JWT audience validation");
     }
 
     // ------------------------------------------------------------------

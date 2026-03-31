@@ -1,5 +1,5 @@
 using System.Text.Json;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Nebula.Api.Helpers;
@@ -24,8 +24,8 @@ public class ProblemDetailsHelperTests
 
         var (statusCode, payload) = await ExecuteAsync(result);
 
-        statusCode.Should().Be(StatusCodes.Status409Conflict);
-        payload.GetProperty("code").GetString().Should().Be(code);
+        statusCode.ShouldBe(StatusCodes.Status409Conflict);
+        payload.GetProperty("code").GetString().ShouldBe(code);
     }
 
     [Fact]
@@ -38,10 +38,10 @@ public class ProblemDetailsHelperTests
 
         var (statusCode, payload) = await ExecuteAsync(result);
 
-        statusCode.Should().Be(StatusCodes.Status400BadRequest);
-        payload.GetProperty("code").GetString().Should().Be("validation_error");
+        statusCode.ShouldBe(StatusCodes.Status400BadRequest);
+        payload.GetProperty("code").GetString().ShouldBe("validation_error");
         payload.GetProperty("errors").GetProperty("toState")[0].GetString()
-            .Should().Be("'To State' must not be empty.");
+            .ShouldBe("'To State' must not be empty.");
     }
 
     private static async Task<(int StatusCode, JsonElement Payload)> ExecuteAsync(IResult result)

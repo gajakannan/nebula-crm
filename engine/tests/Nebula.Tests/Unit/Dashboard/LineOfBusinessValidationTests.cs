@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Nebula.Application.DTOs;
 using Nebula.Application.Validators;
 
@@ -14,7 +14,7 @@ public class LineOfBusinessValidationTests
 
         var result = validator.Validate(model);
 
-        result.IsValid.Should().BeTrue();
+        result.IsValid.ShouldBeTrue();
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public class LineOfBusinessValidationTests
 
         var result = validator.Validate(model);
 
-        result.IsValid.Should().BeTrue();
+        result.IsValid.ShouldBeTrue();
     }
 
     [Fact]
@@ -36,8 +36,10 @@ public class LineOfBusinessValidationTests
 
         var result = validator.Validate(model);
 
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainSingle(error => error.PropertyName == "LineOfBusiness");
+        result.IsValid.ShouldBeFalse();
+        var lobError = result.Errors.Single(error => error.PropertyName == "LineOfBusiness");
+        lobError.ShouldNotBeNull();
+        result.Errors.Count(error => error.PropertyName == "LineOfBusiness").ShouldBe(1);
     }
 
     private static SubmissionCreateDto ValidModel() => new(

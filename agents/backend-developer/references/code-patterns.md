@@ -579,7 +579,7 @@ var customer = await _context.Customers
 ### Unit Tests (Domain & Application)
 ```csharp
 using Xunit;
-using FluentAssertions;
+using Shouldly;
 
 public class CustomerTests
 {
@@ -593,7 +593,7 @@ public class CustomerTests
         customer.Activate();
 
         // Assert
-        customer.Status.Should().Be(CustomerStatus.Active);
+        customer.Status.ShouldBe(CustomerStatus.Active);
     }
 
     [Fact]
@@ -603,8 +603,7 @@ public class CustomerTests
         var customer = new Customer { IsDeleted = true };
 
         // Act & Assert
-        customer.Invoking(b => b.Activate())
-            .Should().Throw<InvalidOperationException>();
+        Should.Throw<InvalidOperationException>(() => customer.Activate());
     }
 }
 ```
@@ -613,7 +612,7 @@ public class CustomerTests
 ```csharp
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
-using FluentAssertions;
+using Shouldly;
 
 public class CustomerEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {
@@ -639,10 +638,10 @@ public class CustomerEndpointTests : IClassFixture<WebApplicationFactory<Program
         var response = await _client.PostAsJsonAsync("/api/customers", dto);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var customer = await response.Content.ReadFromJsonAsync<Customer>();
-        customer.Should().NotBeNull();
-        customer!.Name.Should().Be("Test Customer");
+        customer.ShouldNotBeNull();
+        customer!.Name.ShouldBe("Test Customer");
     }
 
     [Fact]
@@ -660,7 +659,7 @@ public class CustomerEndpointTests : IClassFixture<WebApplicationFactory<Program
         var response = await _client.PostAsJsonAsync("/api/customers", dto);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 }
 ```

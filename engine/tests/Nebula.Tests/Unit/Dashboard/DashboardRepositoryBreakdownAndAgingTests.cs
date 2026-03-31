@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Microsoft.EntityFrameworkCore;
 using Nebula.Application.Common;
 using Nebula.Domain.Entities;
@@ -45,22 +45,22 @@ public class DashboardRepositoryBreakdownAndAgingTests
         var lineOfBusiness = await repository.GetOpportunityBreakdownAsync(currentUser, "submission", "Received", "lineofbusiness", 180);
         var brokerState = await repository.GetOpportunityBreakdownAsync(currentUser, "submission", "Received", "brokerstate", 180);
 
-        assignedUser.Total.Should().Be(3);
-        assignedUser.Groups.Should().ContainEquivalentOf(new { Key = "Alice Agent", Label = "Alice Agent", Count = 2 });
-        assignedUser.Groups.Should().ContainEquivalentOf(new { Key = "Bob Broker", Label = "Bob Broker", Count = 1 });
+        assignedUser.Total.ShouldBe(3);
+        assignedUser.Groups.ShouldContain(g => g.Key == "Alice Agent" && g.Label == "Alice Agent" && g.Count == 2);
+        assignedUser.Groups.ShouldContain(g => g.Key == "Bob Broker" && g.Label == "Bob Broker" && g.Count == 1);
 
-        broker.Groups.Should().ContainEquivalentOf(new { Key = "Atlas Brokerage", Label = "Atlas Brokerage", Count = 1 });
-        broker.Groups.Should().ContainEquivalentOf(new { Key = "Beacon Brokerage", Label = "Beacon Brokerage", Count = 2 });
+        broker.Groups.ShouldContain(g => g.Key == "Atlas Brokerage" && g.Label == "Atlas Brokerage" && g.Count == 1);
+        broker.Groups.ShouldContain(g => g.Key == "Beacon Brokerage" && g.Label == "Beacon Brokerage" && g.Count == 2);
 
-        program.Groups.Should().ContainEquivalentOf(new { Key = "Property Shield", Label = "Property Shield", Count = 2 });
-        program.Groups.Should().ContainEquivalentOf(new { Key = "Liability Prime", Label = "Liability Prime", Count = 1 });
+        program.Groups.ShouldContain(g => g.Key == "Property Shield" && g.Label == "Property Shield" && g.Count == 2);
+        program.Groups.ShouldContain(g => g.Key == "Liability Prime" && g.Label == "Liability Prime" && g.Count == 1);
 
-        lineOfBusiness.Groups.Should().ContainEquivalentOf(new { Key = "Property", Label = "Property", Count = 1 });
-        lineOfBusiness.Groups.Should().ContainEquivalentOf(new { Key = "CommercialAuto", Label = "Commercial Auto", Count = 1 });
-        lineOfBusiness.Groups.Should().ContainEquivalentOf(new { Key = (string?)null, Label = "Unknown", Count = 1 });
+        lineOfBusiness.Groups.ShouldContain(g => g.Key == "Property" && g.Label == "Property" && g.Count == 1);
+        lineOfBusiness.Groups.ShouldContain(g => g.Key == "CommercialAuto" && g.Label == "Commercial Auto" && g.Count == 1);
+        lineOfBusiness.Groups.ShouldContain(g => g.Key == null && g.Label == "Unknown" && g.Count == 1);
 
-        brokerState.Groups.Should().ContainEquivalentOf(new { Key = "CA", Label = "CA", Count = 1 });
-        brokerState.Groups.Should().ContainEquivalentOf(new { Key = "TX", Label = "TX", Count = 2 });
+        brokerState.Groups.ShouldContain(g => g.Key == "CA" && g.Label == "CA" && g.Count == 1);
+        brokerState.Groups.ShouldContain(g => g.Key == "TX" && g.Label == "TX" && g.Count == 2);
     }
 
     [Fact]
@@ -95,10 +95,10 @@ public class DashboardRepositoryBreakdownAndAgingTests
         var currentUser = new TestCurrentUserService(Guid.NewGuid(), ["Admin"], ["West"]);
         var programBreakdown = await repository.GetOpportunityBreakdownAsync(currentUser, "renewal", "Created", "program", 180);
 
-        programBreakdown.Total.Should().Be(3);
-        programBreakdown.Groups.Should().ContainEquivalentOf(new { Key = "Property Shield", Label = "Property Shield", Count = 1 });
-        programBreakdown.Groups.Should().ContainEquivalentOf(new { Key = "Liability Prime", Label = "Liability Prime", Count = 1 });
-        programBreakdown.Groups.Should().ContainEquivalentOf(new { Key = (string?)null, Label = "Unknown", Count = 1 });
+        programBreakdown.Total.ShouldBe(3);
+        programBreakdown.Groups.ShouldContain(g => g.Key == "Property Shield" && g.Label == "Property Shield" && g.Count == 1);
+        programBreakdown.Groups.ShouldContain(g => g.Key == "Liability Prime" && g.Label == "Liability Prime" && g.Count == 1);
+        programBreakdown.Groups.ShouldContain(g => g.Key == null && g.Label == "Unknown" && g.Count == 1);
     }
 
     [Fact]
@@ -156,14 +156,14 @@ public class DashboardRepositoryBreakdownAndAgingTests
         var result = await repository.GetOpportunityAgingAsync(currentUser, "submission", 180);
         var triaging = result.Statuses.Single(status => status.Status == "Triaging");
 
-        triaging.Total.Should().Be(4);
-        triaging.Sla.Should().NotBeNull();
-        triaging.Sla!.WarningDays.Should().Be(2);
-        triaging.Sla.TargetDays.Should().Be(5);
-        triaging.Sla.OnTimeCount.Should().Be(1);
-        triaging.Sla.ApproachingCount.Should().Be(2);
-        triaging.Sla.OverdueCount.Should().Be(1);
-        triaging.Sla.OnTimeCount.Should().Be(triaging.Total - triaging.Sla.ApproachingCount - triaging.Sla.OverdueCount);
+        triaging.Total.ShouldBe(4);
+        triaging.Sla.ShouldNotBeNull();
+        triaging.Sla!.WarningDays.ShouldBe(2);
+        triaging.Sla.TargetDays.ShouldBe(5);
+        triaging.Sla.OnTimeCount.ShouldBe(1);
+        triaging.Sla.ApproachingCount.ShouldBe(2);
+        triaging.Sla.OverdueCount.ShouldBe(1);
+        triaging.Sla.OnTimeCount.ShouldBe(triaging.Total - triaging.Sla.ApproachingCount - triaging.Sla.OverdueCount);
     }
 
     [Fact]
@@ -211,20 +211,22 @@ public class DashboardRepositoryBreakdownAndAgingTests
         var breakdown30 = await repository.GetOpportunityBreakdownAsync(currentUser, "submission", "Received", "broker", 30);
         var aging30 = await repository.GetOpportunityAgingAsync(currentUser, "submission", 30);
 
-        flow30.Nodes.Single(node => node.Status == "Received").CurrentCount.Should().Be(1);
-        breakdown30.Total.Should().Be(1);
-        breakdown30.Groups.Should().ContainSingle(group => group.Label == recentBroker.LegalName && group.Count == 1);
-        aging30.Statuses.Single(status => status.Status == "Received").Total.Should().Be(1);
+        flow30.Nodes.Single(node => node.Status == "Received").CurrentCount.ShouldBe(1);
+        breakdown30.Total.ShouldBe(1);
+        var singleGroup = breakdown30.Groups.Single(group => group.Label == recentBroker.LegalName && group.Count == 1);
+        singleGroup.ShouldNotBeNull();
+        breakdown30.Groups.Count().ShouldBe(1);
+        aging30.Statuses.Single(status => status.Status == "Received").Total.ShouldBe(1);
 
         var flow90 = await repository.GetOpportunityFlowAsync(currentUser, "submission", 90);
         var breakdown90 = await repository.GetOpportunityBreakdownAsync(currentUser, "submission", "Received", "broker", 90);
         var aging90 = await repository.GetOpportunityAgingAsync(currentUser, "submission", 90);
 
-        flow90.Nodes.Single(node => node.Status == "Received").CurrentCount.Should().Be(2);
-        breakdown90.Total.Should().Be(2);
-        breakdown90.Groups.Should().ContainEquivalentOf(new { Key = recentBroker.LegalName, Label = recentBroker.LegalName, Count = 1 });
-        breakdown90.Groups.Should().ContainEquivalentOf(new { Key = olderBroker.LegalName, Label = olderBroker.LegalName, Count = 1 });
-        aging90.Statuses.Single(status => status.Status == "Received").Total.Should().Be(2);
+        flow90.Nodes.Single(node => node.Status == "Received").CurrentCount.ShouldBe(2);
+        breakdown90.Total.ShouldBe(2);
+        breakdown90.Groups.ShouldContain(g => g.Key == recentBroker.LegalName && g.Label == recentBroker.LegalName && g.Count == 1);
+        breakdown90.Groups.ShouldContain(g => g.Key == olderBroker.LegalName && g.Label == olderBroker.LegalName && g.Count == 1);
+        aging90.Statuses.Single(status => status.Status == "Received").Total.ShouldBe(2);
     }
 
     private static AppDbContext CreateContext()

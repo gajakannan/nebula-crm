@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.DependencyInjection;
 using Nebula.Application.DTOs;
 using Nebula.Domain.Entities;
@@ -132,19 +132,19 @@ public class NudgePriorityTests(CustomWebApplicationFactory factory)
     public async Task GetNudges_ReturnsAllThreeTypes_InPriorityOrder()
     {
         var response = await _client.GetAsync("/dashboard/nudges");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<NudgesResponseDto>();
-        result.Should().NotBeNull();
+        result.ShouldNotBeNull();
 
         var nudges = result!.Nudges;
 
         // All three seeded nudge types must be present.
-        nudges.Should().Contain(n => n.NudgeType == "OverdueTask",
+        nudges.ShouldContain(n => n.NudgeType == "OverdueTask",
             "an overdue task was seeded for the test user");
-        nudges.Should().Contain(n => n.NudgeType == "StaleSubmission",
+        nudges.ShouldContain(n => n.NudgeType == "StaleSubmission",
             "a 10-day-old submission (>5 day threshold) was seeded for the test user");
-        nudges.Should().Contain(n => n.NudgeType == "UpcomingRenewal",
+        nudges.ShouldContain(n => n.NudgeType == "UpcomingRenewal",
             "a renewal due in 7 days was seeded for the test user");
 
         // Verify strict priority ordering: OverdueTask index < StaleSubmission index < UpcomingRenewal index.
@@ -158,9 +158,9 @@ public class NudgePriorityTests(CustomWebApplicationFactory factory)
             .Select((n, i) => (n, i))
             .First(x => x.n.NudgeType == "UpcomingRenewal").i;
 
-        overdueIdx.Should().BeLessThan(staleIdx,
+        overdueIdx.ShouldBeLessThan(staleIdx,
             "OverdueTask (priority 1) must appear before StaleSubmission (priority 2)");
-        staleIdx.Should().BeLessThan(upcomingIdx,
+        staleIdx.ShouldBeLessThan(upcomingIdx,
             "StaleSubmission (priority 2) must appear before UpcomingRenewal (priority 3)");
     }
 
@@ -168,10 +168,10 @@ public class NudgePriorityTests(CustomWebApplicationFactory factory)
     public async Task GetNudges_NeverExceedsTenItems()
     {
         var response = await _client.GetAsync("/dashboard/nudges");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<NudgesResponseDto>();
-        result!.Nudges.Count.Should().BeLessThanOrEqualTo(10,
+        result!.Nudges.Count.ShouldBeLessThanOrEqualTo(10,
             "server must cap nudges at 10 to allow client dismiss-and-replace from the pool");
     }
 
@@ -182,13 +182,13 @@ public class NudgePriorityTests(CustomWebApplicationFactory factory)
         // Repository falls back to CreatedAt → 10 days in status, which exceeds the 5-day threshold.
         // This test confirms the submission appears as StaleSubmission (not filtered out).
         var response = await _client.GetAsync("/dashboard/nudges");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<NudgesResponseDto>();
         var stale = result!.Nudges.FirstOrDefault(n => n.NudgeType == "StaleSubmission");
 
-        stale.Should().NotBeNull("submission with CreatedAt 10 days ago must produce a StaleSubmission nudge (>5 day threshold)");
-        stale!.UrgencyValue.Should().BeGreaterThanOrEqualTo(10,
+        stale.ShouldNotBeNull("submission with CreatedAt 10 days ago must produce a StaleSubmission nudge (>5 day threshold)");
+        stale!.UrgencyValue.ShouldBeGreaterThanOrEqualTo(10,
             "UrgencyValue (DaysInStatus) should reflect 10 days since the submission entered its current status");
     }
 }

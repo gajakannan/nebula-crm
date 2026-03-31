@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Nebula.Infrastructure.Authorization;
 
 namespace Nebula.Tests.Unit;
@@ -58,7 +58,7 @@ public class CasbinAuthorizationServiceTests
     public async Task BrokerPolicy_MatchesPolicyCsv(string role, string resource, string action, bool expected)
     {
         var result = await _sut.AuthorizeAsync(role, resource, action);
-        result.Should().Be(expected, because: $"{role} should {(expected ? "be allowed" : "be denied")} {resource}:{action}");
+        result.ShouldBe(expected, $"{role} should {(expected ? "be allowed" : "be denied")} {resource}:{action}");
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -91,7 +91,7 @@ public class CasbinAuthorizationServiceTests
     public async Task ContactPolicy_MatchesPolicyCsv(string role, string resource, string action, bool expected)
     {
         var result = await _sut.AuthorizeAsync(role, resource, action);
-        result.Should().Be(expected, because: $"{role} should {(expected ? "be allowed" : "be denied")} {resource}:{action}");
+        result.ShouldBe(expected, $"{role} should {(expected ? "be allowed" : "be denied")} {resource}:{action}");
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -110,7 +110,7 @@ public class CasbinAuthorizationServiceTests
     public async Task TimelineEventRead_MatchesPolicyCsv(string role, bool expected)
     {
         var result = await _sut.AuthorizeAsync(role, "timeline_event", "read");
-        result.Should().Be(expected, because: $"{role} should {(expected ? "be allowed" : "be denied")} timeline_event:read");
+        result.ShouldBe(expected, $"{role} should {(expected ? "be allowed" : "be denied")} timeline_event:read");
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -133,7 +133,7 @@ public class CasbinAuthorizationServiceTests
             ["subjectId"] = userId,
         };
         var result = await _sut.AuthorizeAsync(role, "task", "read", attrs);
-        result.Should().BeTrue(because: $"{role} reading own task should be allowed");
+        result.ShouldBeTrue($"{role} reading own task should be allowed");
     }
 
     [Theory]
@@ -147,7 +147,7 @@ public class CasbinAuthorizationServiceTests
             ["subjectId"] = Guid.NewGuid().ToString(),
         };
         var result = await _sut.AuthorizeAsync(role, "task", "read", attrs);
-        result.Should().BeFalse(because: $"{role} reading another user's task should be denied");
+        result.ShouldBeFalse($"{role} reading another user's task should be denied");
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public class CasbinAuthorizationServiceTests
         // When no resource attributes are provided, condition-based policies
         // must deny (sentinel values prevent "" == "" → true match)
         var result = await _sut.AuthorizeAsync("Admin", "task", "read");
-        result.Should().BeFalse(because: "task:read without attributes must deny (condition can't be evaluated)");
+        result.ShouldBeFalse("task:read without attributes must deny (condition can't be evaluated)");
     }
 
     [Theory]
@@ -171,7 +171,7 @@ public class CasbinAuthorizationServiceTests
             ["subjectId"] = userId,
         };
         var result = await _sut.AuthorizeAsync(role, "task", "create", attrs);
-        result.Should().BeTrue();
+        result.ShouldBeTrue();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -188,7 +188,7 @@ public class CasbinAuthorizationServiceTests
     public async Task ExternalUser_AllResources_Denied(string resource, string action)
     {
         var result = await _sut.AuthorizeAsync("ExternalUser", resource, action);
-        result.Should().BeFalse(because: "ExternalUser has no policy lines — implicit deny");
+        result.ShouldBeFalse("ExternalUser has no policy lines — implicit deny");
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -199,21 +199,21 @@ public class CasbinAuthorizationServiceTests
     public async Task UnknownRole_DeniedByDefault()
     {
         var result = await _sut.AuthorizeAsync("NonExistentRole", "broker", "read");
-        result.Should().BeFalse(because: "unknown roles must be denied by default");
+        result.ShouldBeFalse("unknown roles must be denied by default");
     }
 
     [Fact]
     public async Task UnknownAction_DeniedByDefault()
     {
         var result = await _sut.AuthorizeAsync("Admin", "broker", "nonexistent_action");
-        result.Should().BeFalse(because: "unknown actions must be denied by default");
+        result.ShouldBeFalse("unknown actions must be denied by default");
     }
 
     [Fact]
     public async Task UnknownResource_DeniedByDefault()
     {
         var result = await _sut.AuthorizeAsync("Admin", "nonexistent_resource", "read");
-        result.Should().BeFalse(because: "unknown resources must be denied by default");
+        result.ShouldBeFalse("unknown resources must be denied by default");
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -232,7 +232,7 @@ public class CasbinAuthorizationServiceTests
     public async Task DashboardPolicy_MatchesPolicyCsv(string role, string resource, bool expected)
     {
         var result = await _sut.AuthorizeAsync(role, resource, "read");
-        result.Should().Be(expected, because: $"{role} should {(expected ? "be allowed" : "be denied")} {resource}:read");
+        result.ShouldBe(expected, $"{role} should {(expected ? "be allowed" : "be denied")} {resource}:read");
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -244,6 +244,6 @@ public class CasbinAuthorizationServiceTests
     {
         // If the constructor throws, this test fails — validates embedded resources load correctly
         var service = new CasbinAuthorizationService();
-        service.Should().NotBeNull();
+        service.ShouldNotBeNull();
     }
 }

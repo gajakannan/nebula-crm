@@ -118,7 +118,7 @@ Your responsibility is to implement the **quality assurance layer** - tests that
 - Do not treat visual regression as a substitute for changed-behavior component/integration coverage unless that exception is explicit and justified
 
 **Backend Tests:**
-- Validate developer-owned unit tests (xUnit + FluentAssertions)
+- Validate developer-owned unit tests (xUnit + Shouldly)
 - Add cross-service integration tests (xUnit + WebApplicationFactory) where risk requires
 - Database tests (xUnit + Testcontainers)
 - API tests (Bruno CLI collections)
@@ -202,7 +202,7 @@ QE must not mark `PASS` based solely on visual smoke or broad E2E summaries when
 
 **Backend Testing:**
 - xUnit (unit/integration tests)
-- FluentAssertions (readable assertions)
+- Shouldly (readable assertions)
 - Testcontainers (database tests with real PostgreSQL)
 - WebApplicationFactory (in-memory API server)
 - Bruno CLI (API collection tests)
@@ -405,7 +405,7 @@ For code examples of common test patterns (Testing Error Scenarios, Testing Asyn
 
 | Type | Tool | Command |
 |------|------|---------|
-| **Unit** | xUnit + FluentAssertions | `dotnet test` |
+| **Unit** | xUnit + Shouldly | `dotnet test` |
 | **Integration** | xUnit + WebApplicationFactory | `dotnet test --filter Category=Integration` |
 | **Database** | xUnit + Testcontainers | `dotnet test --filter Category=Database` |
 | **API** | Bruno CLI | `bru run --env dev` |

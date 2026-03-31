@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -40,70 +40,70 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetKpis_Returns200WithCorrectShape()
     {
         var response = await _client.GetAsync("/dashboard/kpis");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var kpis = await response.Content.ReadFromJsonAsync<DashboardKpisDto>();
-        kpis.Should().NotBeNull();
-        kpis!.ActiveBrokers.Should().BeGreaterThanOrEqualTo(0);
-        kpis.OpenSubmissions.Should().BeGreaterThanOrEqualTo(0);
+        kpis.ShouldNotBeNull();
+        kpis!.ActiveBrokers.ShouldBeGreaterThanOrEqualTo(0);
+        kpis.OpenSubmissions.ShouldBeGreaterThanOrEqualTo(0);
     }
 
     [Fact]
     public async Task GetKpis_WithPeriodDays_Returns200()
     {
         var response = await _client.GetAsync("/dashboard/kpis?periodDays=30");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var kpis = await response.Content.ReadFromJsonAsync<DashboardKpisDto>();
-        kpis.Should().NotBeNull();
+        kpis.ShouldNotBeNull();
     }
 
     [Fact]
     public async Task GetOpportunities_Returns200WithCorrectShape()
     {
         var response = await _client.GetAsync("/dashboard/opportunities");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var opportunities = await response.Content.ReadFromJsonAsync<DashboardOpportunitiesDto>();
-        opportunities.Should().NotBeNull();
-        opportunities!.Submissions.Should().NotBeNull();
-        opportunities.Renewals.Should().NotBeNull();
+        opportunities.ShouldNotBeNull();
+        opportunities!.Submissions.ShouldNotBeNull();
+        opportunities.Renewals.ShouldNotBeNull();
     }
 
     [Fact]
     public async Task GetOpportunities_WithPeriodDays_Returns200()
     {
         var response = await _client.GetAsync("/dashboard/opportunities?periodDays=90");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var opportunities = await response.Content.ReadFromJsonAsync<DashboardOpportunitiesDto>();
-        opportunities.Should().NotBeNull();
+        opportunities.ShouldNotBeNull();
     }
 
     [Fact]
     public async Task GetOpportunityFlow_Returns200WithCorrectShape()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/flow?entityType=submission&periodDays=180");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var flow = await response.Content.ReadFromJsonAsync<OpportunityFlowDto>();
-        flow.Should().NotBeNull();
-        flow!.EntityType.Should().Be("submission");
-        flow.Nodes.Should().NotBeNull();
-        flow.Links.Should().NotBeNull();
+        flow.ShouldNotBeNull();
+        flow!.EntityType.ShouldBe("submission");
+        flow.Nodes.ShouldNotBeNull();
+        flow.Links.ShouldNotBeNull();
 
         foreach (var node in flow.Nodes)
         {
             if (node.AvgDwellDays is not null)
-                node.AvgDwellDays.Should().BeGreaterThanOrEqualTo(0);
+                node.AvgDwellDays.Value.ShouldBeGreaterThanOrEqualTo(0);
 
             if (node.IsTerminal)
             {
-                node.Emphasis.Should().BeNull();
+                node.Emphasis.ShouldBeNull();
             }
             else
             {
-                node.Emphasis.Should().BeOneOf("normal", "active", "blocked", "bottleneck");
+                node.Emphasis.ShouldBeOneOf("normal", "active", "blocked", "bottleneck");
             }
         }
     }
@@ -113,42 +113,43 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
     {
         var response = await _client.GetAsync("/dashboard/opportunities/flow?entityType=invalid");
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task GetOpportunityItems_Returns200WithCorrectShape()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/submission/Received/items");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var items = await response.Content.ReadFromJsonAsync<OpportunityItemsDto>();
-        items.Should().NotBeNull();
-        items!.Items.Should().NotBeNull();
-        items.TotalCount.Should().BeGreaterThanOrEqualTo(0);
+        items.ShouldNotBeNull();
+        items!.Items.ShouldNotBeNull();
+        items.TotalCount.ShouldBeGreaterThanOrEqualTo(0);
     }
 
     [Fact]
     public async Task GetOpportunityAging_Returns200WithCorrectShape()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/aging?entityType=submission&periodDays=180");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var aging = await response.Content.ReadFromJsonAsync<OpportunityAgingDto>();
-        aging.Should().NotBeNull();
-        aging!.EntityType.Should().Be("submission");
-        aging.PeriodDays.Should().Be(180);
-        aging.Statuses.Should().NotBeNull();
+        aging.ShouldNotBeNull();
+        aging!.EntityType.ShouldBe("submission");
+        aging.PeriodDays.ShouldBe(180);
+        aging.Statuses.ShouldNotBeNull();
         foreach (var status in aging.Statuses)
         {
-            status.Buckets.Should().HaveCount(5);
-            status.Buckets.Select(b => b.Key).Should().ContainInOrder("0-2", "3-5", "6-10", "11-20", "21+");
-            status.Total.Should().Be(status.Buckets.Sum(b => b.Count));
+            status.Buckets.Count().ShouldBe(5);
+            status.Buckets.Select(b => b.Key).ToList()
+                .SequenceEqual(new[] { "0-2", "3-5", "6-10", "11-20", "21+" }).ShouldBeTrue();
+            status.Total.ShouldBe(status.Buckets.Sum(b => b.Count));
             if (status.Sla is not null)
             {
-                status.Sla.WarningDays.Should().BeLessThan(status.Sla.TargetDays);
+                status.Sla.WarningDays.ShouldBeLessThan(status.Sla.TargetDays);
                 (status.Sla.OnTimeCount + status.Sla.ApproachingCount + status.Sla.OverdueCount)
-                    .Should().Be(status.Total);
+                    .ShouldBe(status.Total);
             }
         }
     }
@@ -162,21 +163,21 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetOpportunityBreakdown_Returns200ForSupportedGroupByValues(string groupBy)
     {
         var response = await _client.GetAsync($"/dashboard/opportunities/submission/Received/breakdown?groupBy={groupBy}&periodDays=180");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var breakdown = await response.Content.ReadFromJsonAsync<OpportunityBreakdownDto>();
-        breakdown.Should().NotBeNull();
-        breakdown!.EntityType.Should().Be("submission");
-        breakdown.Status.Should().Be("Received");
-        breakdown.PeriodDays.Should().Be(180);
-        breakdown.Total.Should().BeGreaterThanOrEqualTo(0);
+        breakdown.ShouldNotBeNull();
+        breakdown!.EntityType.ShouldBe("submission");
+        breakdown.Status.ShouldBe("Received");
+        breakdown.PeriodDays.ShouldBe(180);
+        breakdown.Total.ShouldBeGreaterThanOrEqualTo(0);
     }
 
     [Fact]
     public async Task GetOpportunityBreakdown_InvalidGroupBy_Returns400()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/submission/Received/breakdown?groupBy=invalid");
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -197,7 +198,7 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
 
         using var unauthenticatedClient = unauthenticatedFactory.CreateClient();
         var response = await unauthenticatedClient.GetAsync("/dashboard/opportunities/submission/Received/breakdown?groupBy=broker");
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     [Theory]
@@ -206,53 +207,53 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetOpportunityAging_SupportsEntityTypes(string entityType)
     {
         var response = await _client.GetAsync($"/dashboard/opportunities/aging?entityType={entityType}");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var aging = await response.Content.ReadFromJsonAsync<OpportunityAgingDto>();
-        aging!.EntityType.Should().Be(entityType);
+        aging!.EntityType.ShouldBe(entityType);
     }
 
     [Fact]
     public async Task GetOpportunityAging_InvalidEntityType_Returns400()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/aging?entityType=invalid");
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task GetOpportunityHierarchy_Returns200WithCorrectShape()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/hierarchy?periodDays=180");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var hierarchy = await response.Content.ReadFromJsonAsync<OpportunityHierarchyDto>();
-        hierarchy.Should().NotBeNull();
-        hierarchy!.PeriodDays.Should().Be(180);
-        hierarchy.Root.Should().NotBeNull();
-        hierarchy.Root.Id.Should().Be("root");
-        hierarchy.Root.Children.Should().NotBeNull();
-        hierarchy.Root.Children.Should().HaveCount(2);
-        hierarchy.Root.Children![0].Id.Should().Be("submission");
-        hierarchy.Root.Children[1].Id.Should().Be("renewal");
+        hierarchy.ShouldNotBeNull();
+        hierarchy!.PeriodDays.ShouldBe(180);
+        hierarchy.Root.ShouldNotBeNull();
+        hierarchy.Root.Id.ShouldBe("root");
+        hierarchy.Root.Children.ShouldNotBeNull();
+        hierarchy.Root.Children!.Count.ShouldBe(2);
+        hierarchy.Root.Children![0].Id.ShouldBe("submission");
+        hierarchy.Root.Children[1].Id.ShouldBe("renewal");
     }
 
     [Fact]
     public async Task GetOpportunityHierarchy_ChildCountsRollUp()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/hierarchy");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var hierarchy = await response.Content.ReadFromJsonAsync<OpportunityHierarchyDto>();
         var root = hierarchy!.Root;
 
         // Root count should equal sum of entity type children
-        root.Count.Should().Be(root.Children!.Sum(c => c.Count));
+        root.Count.ShouldBe(root.Children!.Sum(c => c.Count));
 
         // Each entity type count should equal sum of color group children
         foreach (var entityNode in root.Children!)
         {
             if (entityNode.Children is { Count: > 0 })
-                entityNode.Count.Should().Be(entityNode.Children.Sum(c => c.Count));
+                entityNode.Count.ShouldBe(entityNode.Children.Sum(c => c.Count));
         }
     }
 
@@ -260,57 +261,57 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetOpportunityOutcomes_Returns200WithCorrectShape()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/outcomes?periodDays=180");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var outcomes = await response.Content.ReadFromJsonAsync<OpportunityOutcomesDto>();
-        outcomes.Should().NotBeNull();
-        outcomes!.PeriodDays.Should().Be(180);
-        outcomes.Outcomes.Should().NotBeNull();
-        outcomes.Outcomes.Should().Contain(o => o.Key == "bound");
-        outcomes.Outcomes.Should().Contain(o => o.Key == "no_quote");
-        outcomes.Outcomes.Should().Contain(o => o.Key == "declined");
-        outcomes.Outcomes.Should().Contain(o => o.Key == "expired");
-        outcomes.Outcomes.Should().Contain(o => o.Key == "lost_competitor");
+        outcomes.ShouldNotBeNull();
+        outcomes!.PeriodDays.ShouldBe(180);
+        outcomes.Outcomes.ShouldNotBeNull();
+        outcomes.Outcomes.ShouldContain(o => o.Key == "bound");
+        outcomes.Outcomes.ShouldContain(o => o.Key == "no_quote");
+        outcomes.Outcomes.ShouldContain(o => o.Key == "declined");
+        outcomes.Outcomes.ShouldContain(o => o.Key == "expired");
+        outcomes.Outcomes.ShouldContain(o => o.Key == "lost_competitor");
     }
 
     [Fact]
     public async Task GetOpportunityOutcomeItems_Returns200WithCorrectShape()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/outcomes/bound/items?periodDays=180");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var items = await response.Content.ReadFromJsonAsync<OpportunityItemsDto>();
-        items.Should().NotBeNull();
-        items!.Items.Should().NotBeNull();
-        items.TotalCount.Should().BeGreaterThanOrEqualTo(0);
+        items.ShouldNotBeNull();
+        items!.Items.ShouldNotBeNull();
+        items.TotalCount.ShouldBeGreaterThanOrEqualTo(0);
     }
 
     [Fact]
     public async Task GetOpportunityOutcomeItems_InvalidOutcomeKey_Returns400()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/outcomes/invalid/items?periodDays=180");
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task GetNudges_Returns200()
     {
         var response = await _client.GetAsync("/dashboard/nudges");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task GetMyTasks_Returns200()
     {
         var response = await _client.GetAsync("/my/tasks");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task GetTimelineEvents_Returns200()
     {
         var response = await _client.GetAsync("/timeline/events?entityType=Broker");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     private sealed class FixedAdminAuthHandler(

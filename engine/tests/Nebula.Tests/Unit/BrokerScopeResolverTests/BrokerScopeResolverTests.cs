@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Nebula.Application.Common;
 using Nebula.Application.Interfaces;
 using Nebula.Application.Services;
@@ -30,7 +30,7 @@ public class BrokerScopeResolverTests
 
         var result = await resolver.ResolveAsync(user);
 
-        result.Should().Be(brokerId);
+        result.ShouldBe(brokerId);
     }
 
     // -----------------------------------------------------------------------
@@ -44,9 +44,7 @@ public class BrokerScopeResolverTests
         var user = new StubCurrentUserService(brokerTenantId: "tenant-no-match");
         var resolver = new BrokerScopeResolver(repo);
 
-        Func<Task> act = async () => await resolver.ResolveAsync(user);
-
-        await act.Should().ThrowAsync<BrokerScopeUnresolvableException>();
+        await Should.ThrowAsync<BrokerScopeUnresolvableException>(async () => await resolver.ResolveAsync(user));
     }
 
     [Fact]
@@ -57,9 +55,7 @@ public class BrokerScopeResolverTests
         var user = new StubCurrentUserService(brokerTenantId: "tenant-ambiguous");
         var resolver = new BrokerScopeResolver(repo);
 
-        Func<Task> act = async () => await resolver.ResolveAsync(user);
-
-        await act.Should().ThrowAsync<BrokerScopeUnresolvableException>();
+        await Should.ThrowAsync<BrokerScopeUnresolvableException>(async () => await resolver.ResolveAsync(user));
     }
 
     // -----------------------------------------------------------------------
@@ -73,9 +69,7 @@ public class BrokerScopeResolverTests
         var user = new StubCurrentUserService(brokerTenantId: null);
         var resolver = new BrokerScopeResolver(repo);
 
-        Func<Task> act = async () => await resolver.ResolveAsync(user);
-
-        await act.Should().ThrowAsync<BrokerScopeUnresolvableException>();
+        await Should.ThrowAsync<BrokerScopeUnresolvableException>(async () => await resolver.ResolveAsync(user));
     }
 
     [Fact]
@@ -85,9 +79,7 @@ public class BrokerScopeResolverTests
         var user = new StubCurrentUserService(brokerTenantId: "");
         var resolver = new BrokerScopeResolver(repo);
 
-        Func<Task> act = async () => await resolver.ResolveAsync(user);
-
-        await act.Should().ThrowAsync<BrokerScopeUnresolvableException>();
+        await Should.ThrowAsync<BrokerScopeUnresolvableException>(async () => await resolver.ResolveAsync(user));
     }
 
     [Fact]
@@ -99,7 +91,7 @@ public class BrokerScopeResolverTests
 
         try { await resolver.ResolveAsync(user); } catch { }
 
-        repo.CallCount.Should().Be(0, because: "scope guard must short-circuit before hitting the DB");
+        repo.CallCount.ShouldBe(0, "scope guard must short-circuit before hitting the DB");
     }
 }
 

@@ -83,7 +83,7 @@ The submission pipeline list is the primary operating view for intake users. It 
 **Roles that can view the submission pipeline list:**
 - Distribution User — Submissions within assigned opportunity scope
 - Distribution Manager — Submissions within region scope
-- Underwriter — Submissions assigned to them or accessible by team scope (read-only)
+- Underwriter — Submissions assigned to them (read-only)
 - Relationship Manager — Submissions for own accounts/brokers (read-only)
 - Program Manager — Submissions within own programs (read-only)
 - Admin — All submissions (unscoped)

@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using FluentAssertions;
+using Shouldly;
 using Nebula.Application.DTOs;
 
 namespace Nebula.Tests.Integration;
@@ -36,7 +36,7 @@ public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
     {
         SetNoRolesContext();
         var response = await _client.GetAsync("/brokers");
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
         SetNoRolesContext();
         var response = await _client.PostAsJsonAsync("/brokers",
             new BrokerCreateDto("Auth Test", "AUTH-001", "CA", null, null));
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
     {
         SetNoRolesContext();
         var response = await _client.GetAsync($"/brokers/{Guid.NewGuid()}");
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
     {
         SetNoRolesContext();
         var response = await _client.DeleteAsync($"/brokers/{Guid.NewGuid()}");
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
     {
         SetNoRolesContext();
         var response = await _client.PostAsync($"/brokers/{Guid.NewGuid()}/reactivate", null);
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     // ── Contact endpoints ───────────────────────────────────────────────────
@@ -78,7 +78,7 @@ public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
     {
         SetNoRolesContext();
         var response = await _client.GetAsync("/contacts");
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
         SetNoRolesContext();
         var response = await _client.PostAsJsonAsync("/contacts",
             new ContactCreateDto(Guid.NewGuid(), "Test", "t@t.com", "+11234567890", null));
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
     {
         SetNoRolesContext();
         var response = await _client.DeleteAsync($"/contacts/{Guid.NewGuid()}");
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     // ── Timeline endpoint ───────────────────────────────────────────────────
@@ -104,6 +104,6 @@ public class BrokerAuthorizationTests(CustomWebApplicationFactory factory)
     {
         SetNoRolesContext();
         var response = await _client.GetAsync("/timeline/events?entityType=Broker");
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 }

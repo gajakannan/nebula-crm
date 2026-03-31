@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using FluentAssertions;
+using Shouldly;
 using Nebula.Application.DTOs;
 
 namespace Nebula.Tests.Integration;
@@ -17,11 +17,11 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
 
         var response = await _client.PostAsJsonAsync("/brokers", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<BrokerDto>();
-        result.Should().NotBeNull();
-        result!.LegalName.Should().Be("Test Broker LLC");
-        result.Status.Should().Be("Pending");
+        result.ShouldNotBeNull();
+        result!.LegalName.ShouldBe("Test Broker LLC");
+        result.Status.ShouldBe("Pending");
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
         var dto2 = new BrokerCreateDto("Second Broker", "DUP-LIC-001", "CA", null, null);
         var response = await _client.PostAsJsonAsync("/brokers", dto2);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
     }
 
     [Fact]
@@ -44,11 +44,11 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
 
         var response = await _client.GetAsync("/brokers?page=1&pageSize=10");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var json = await response.Content.ReadFromJsonAsync<JsonPaginatedBrokerList>();
-        json.Should().NotBeNull();
-        json!.Data.Should().NotBeEmpty();
-        json.TotalCount.Should().BeGreaterThanOrEqualTo(1);
+        json.ShouldNotBeNull();
+        json!.Data.ShouldNotBeEmpty();
+        json.TotalCount.ShouldBeGreaterThanOrEqualTo(1);
     }
 
     [Fact]
@@ -60,14 +60,14 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
 
         var response = await _client.GetAsync($"/brokers/{created!.Id}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task GetBroker_NonExistentId_Returns404()
     {
         var response = await _client.GetAsync($"/brokers/{Guid.NewGuid()}");
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
         request.Headers.IfMatch.Add(new System.Net.Http.Headers.EntityTagHeaderValue($"\"{created.RowVersion}\""));
 
         var response = await _client.SendAsync(request);
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
         var created = await create.Content.ReadFromJsonAsync<BrokerDto>();
 
         var response = await _client.DeleteAsync($"/brokers/{created!.Id}");
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
     {
         var dto = new BrokerCreateDto("Bad Broker", "BAD-001", "INVALID", null, null);
         var response = await _client.PostAsJsonAsync("/brokers", dto);
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     // ── F0002-S0005: deactivation sets Status=Inactive ─────────────────────
@@ -119,10 +119,10 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
 
         // Admin can see deactivated brokers — verify Status=Inactive
         var get = await _client.GetAsync($"/brokers/{created.Id}");
-        get.StatusCode.Should().Be(HttpStatusCode.OK);
+        get.StatusCode.ShouldBe(HttpStatusCode.OK);
         var broker = await get.Content.ReadFromJsonAsync<BrokerDto>();
-        broker!.Status.Should().Be("Inactive");
-        broker.IsDeactivated.Should().BeTrue();
+        broker!.Status.ShouldBe("Inactive");
+        broker.IsDeactivated.ShouldBeTrue();
     }
 
     // ── F0002-S0008: reactivation endpoint ─────────────────────────────────
@@ -136,11 +136,11 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
         await _client.DeleteAsync($"/brokers/{created!.Id}");
 
         var response = await _client.PostAsync($"/brokers/{created.Id}/reactivate", null);
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var result = await response.Content.ReadFromJsonAsync<BrokerDto>();
-        result!.Status.Should().Be("Active");
-        result.IsDeactivated.Should().BeFalse();
+        result!.Status.ShouldBe("Active");
+        result.IsDeactivated.ShouldBeFalse();
     }
 
     [Fact]
@@ -152,14 +152,14 @@ public class BrokerEndpointTests(CustomWebApplicationFactory factory) : IClassFi
 
         var response = await _client.PostAsync($"/brokers/{created!.Id}/reactivate", null);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
     }
 
     [Fact]
     public async Task ReactivateBroker_NonExistent_Returns404()
     {
         var response = await _client.PostAsync($"/brokers/{Guid.NewGuid()}/reactivate", null);
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     private record JsonPaginatedBrokerList(

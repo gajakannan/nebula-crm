@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using FluentAssertions;
+using Shouldly;
 using Nebula.Application.DTOs;
 
 namespace Nebula.Tests.Integration;
@@ -19,7 +19,7 @@ public class TimelineEndpointTests(CustomWebApplicationFactory factory)
         var license = $"{licensePrefix}-{Guid.NewGuid().ToString("N")[..8]}";
         var response = await _client.PostAsJsonAsync("/brokers",
             new BrokerCreateDto("Timeline Test Broker", license, "CA", null, null));
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         return (await response.Content.ReadFromJsonAsync<BrokerDto>())!;
     }
 
@@ -31,15 +31,15 @@ public class TimelineEndpointTests(CustomWebApplicationFactory factory)
         var response = await _client.GetAsync(
             $"/timeline/events?entityType=Broker&entityId={broker.Id}&page=1&pageSize=50");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var json = await response.Content.ReadFromJsonAsync<JsonPaginatedTimelineList>();
-        json.Should().NotBeNull();
-        json!.Data.Should().NotBeNull();
-        json.Page.Should().Be(1);
-        json.PageSize.Should().Be(50);
-        json.TotalCount.Should().BeGreaterThanOrEqualTo(1); // BrokerCreated event exists
-        json.TotalPages.Should().BeGreaterThanOrEqualTo(1);
+        json.ShouldNotBeNull();
+        json!.Data.ShouldNotBeNull();
+        json.Page.ShouldBe(1);
+        json.PageSize.ShouldBe(50);
+        json.TotalCount.ShouldBeGreaterThanOrEqualTo(1); // BrokerCreated event exists
+        json.TotalPages.ShouldBeGreaterThanOrEqualTo(1);
     }
 
     [Fact]
@@ -50,9 +50,9 @@ public class TimelineEndpointTests(CustomWebApplicationFactory factory)
         var response = await _client.GetAsync(
             $"/timeline/events?entityType=Broker&entityId={broker.Id}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var json = await response.Content.ReadFromJsonAsync<JsonPaginatedTimelineList>();
-        json!.PageSize.Should().Be(50);
+        json!.PageSize.ShouldBe(50);
     }
 
     [Fact]
@@ -63,10 +63,10 @@ public class TimelineEndpointTests(CustomWebApplicationFactory factory)
         var response = await _client.GetAsync(
             $"/timeline/events?entityType=Broker&entityId={broker.Id}&page=2&pageSize=50");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var json = await response.Content.ReadFromJsonAsync<JsonPaginatedTimelineList>();
-        json!.Data.Should().BeEmpty();
-        json.Page.Should().Be(2);
+        json!.Data.ShouldBeEmpty();
+        json.Page.ShouldBe(2);
     }
 
     private record JsonPaginatedTimelineList(

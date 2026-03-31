@@ -162,7 +162,7 @@ Your responsibility is to implement the **service layer** (engine/) based on req
 - **Authorization:** Casbin with ABAC
 - **Validation:** NJsonSchema (JSON Schema validator)
 - **Workflow Engine:** Temporal.io
-- **Testing:** xUnit + FluentAssertions + Testcontainers
+- **Testing:** xUnit + Shouldly + Testcontainers
 - **Logging:** Serilog with structured logging
 
 **Prohibited Actions:**

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Microsoft.EntityFrameworkCore;
 using Nebula.Application.Common;
 using Nebula.Infrastructure.Persistence;
@@ -122,16 +122,16 @@ public class DashboardRepositoryKpiTests
         var ninetyDayKpis = await repository.GetKpisAsync(adminUser, 90);
         var thirtyDayKpis = await repository.GetKpisAsync(adminUser, 30);
 
-        ninetyDayKpis.ActiveBrokers.Should().Be(2);
-        thirtyDayKpis.ActiveBrokers.Should().Be(2);
-        ninetyDayKpis.OpenSubmissions.Should().Be(1);
-        thirtyDayKpis.OpenSubmissions.Should().Be(1);
+        ninetyDayKpis.ActiveBrokers.ShouldBe(2);
+        thirtyDayKpis.ActiveBrokers.ShouldBe(2);
+        ninetyDayKpis.OpenSubmissions.ShouldBe(1);
+        thirtyDayKpis.OpenSubmissions.ShouldBe(1);
 
-        ninetyDayKpis.RenewalRate.Should().Be(50.0);
-        thirtyDayKpis.RenewalRate.Should().Be(0.0);
+        ninetyDayKpis.RenewalRate.ShouldBe(50.0);
+        thirtyDayKpis.RenewalRate.ShouldBe(0.0);
 
-        ninetyDayKpis.AvgTurnaroundDays.Should().Be(25.0);
-        thirtyDayKpis.AvgTurnaroundDays.Should().Be(10.0);
+        ninetyDayKpis.AvgTurnaroundDays.ShouldBe(25.0);
+        thirtyDayKpis.AvgTurnaroundDays.ShouldBe(10.0);
     }
 
     [Fact]
@@ -190,8 +190,8 @@ public class DashboardRepositoryKpiTests
         var defaultWindowKpis = await repository.GetKpisAsync(adminUser, 0);
         var maxWindowKpis = await repository.GetKpisAsync(adminUser, 1000);
 
-        defaultWindowKpis.RenewalRate.Should().Be(100.0);
-        maxWindowKpis.RenewalRate.Should().Be(50.0);
+        defaultWindowKpis.RenewalRate.ShouldBe(100.0);
+        maxWindowKpis.RenewalRate.ShouldBe(50.0);
     }
 
     private static AppDbContext CreateContext()

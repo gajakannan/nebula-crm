@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Nebula.Application.DTOs;
 using Nebula.Application.Interfaces;
 using Nebula.Application.Services;
@@ -38,10 +38,10 @@ public class WorkflowServiceTests
 
         var result = await service.GetByIdAsync(submission.Id);
 
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(submission.Id);
-        result.CurrentStatus.Should().Be("Received");
-        result.LineOfBusiness.Should().Be("Cyber");
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(submission.Id);
+        result.CurrentStatus.ShouldBe("Received");
+        result.LineOfBusiness.ShouldBe("Cyber");
     }
 
     [Fact]
@@ -65,9 +65,9 @@ public class WorkflowServiceTests
 
         var result = await service.GetTransitionsAsync(submissionId);
 
-        result.Should().ContainSingle();
-        result[0].WorkflowType.Should().Be("Submission");
-        result[0].Reason.Should().Be("Initial review");
+        result.Count().ShouldBe(1);
+        result[0].WorkflowType.ShouldBe("Submission");
+        result[0].Reason.ShouldBe("Initial review");
     }
 
     [Fact]
@@ -81,8 +81,8 @@ public class WorkflowServiceTests
             new WorkflowTransitionRequestDto("Triaging", "review"),
             _user);
 
-        result.Should().BeNull();
-        error.Should().Be("not_found");
+        result.ShouldBeNull();
+        error.ShouldBe("not_found");
     }
 
     [Fact]
@@ -111,11 +111,11 @@ public class WorkflowServiceTests
             new WorkflowTransitionRequestDto("Binding", "too early"),
             _user);
 
-        result.Should().BeNull();
-        error.Should().Be("invalid_transition");
-        seeded.CurrentStatus.Should().Be("Received");
-        _transitionRepo.Items.Should().BeEmpty();
-        _timelineRepo.Events.Should().BeEmpty();
+        result.ShouldBeNull();
+        error.ShouldBe("invalid_transition");
+        seeded.CurrentStatus.ShouldBe("Received");
+        _transitionRepo.Items.ShouldBeEmpty();
+        _timelineRepo.Events.ShouldBeEmpty();
     }
 
     [Fact]
@@ -144,17 +144,17 @@ public class WorkflowServiceTests
             new WorkflowTransitionRequestDto("Triaging", "queue"),
             _user);
 
-        error.Should().BeNull();
-        result.Should().NotBeNull();
-        result!.FromState.Should().Be("Received");
-        result.ToState.Should().Be("Triaging");
-        seeded.CurrentStatus.Should().Be("Triaging");
-        seeded.UpdatedByUserId.Should().Be(_user.UserId);
-        _transitionRepo.Items.Should().ContainSingle();
-        _timelineRepo.Events.Should().ContainSingle(e =>
-            e.EntityType == "Submission" &&
-            e.EventType == "SubmissionTransitioned" &&
-            e.ActorUserId == _user.UserId);
+        error.ShouldBeNull();
+        result.ShouldNotBeNull();
+        result!.FromState.ShouldBe("Received");
+        result.ToState.ShouldBe("Triaging");
+        seeded.CurrentStatus.ShouldBe("Triaging");
+        seeded.UpdatedByUserId.ShouldBe(_user.UserId);
+        _transitionRepo.Items.Count.ShouldBe(1);
+        var timelineEvent = _timelineRepo.Events.ShouldHaveSingleItem();
+        timelineEvent.EntityType.ShouldBe("Submission");
+        timelineEvent.EventType.ShouldBe("SubmissionTransitioned");
+        timelineEvent.ActorUserId.ShouldBe(_user.UserId);
     }
 
     [Fact]
@@ -182,10 +182,10 @@ public class WorkflowServiceTests
 
         var result = await service.GetByIdAsync(renewal.Id);
 
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(renewal.Id);
-        result.CurrentStatus.Should().Be("Created");
-        result.LineOfBusiness.Should().Be("Property");
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(renewal.Id);
+        result.CurrentStatus.ShouldBe("Created");
+        result.LineOfBusiness.ShouldBe("Property");
     }
 
     [Fact]
@@ -208,9 +208,9 @@ public class WorkflowServiceTests
 
         var result = await service.GetTransitionsAsync(renewalId);
 
-        result.Should().ContainSingle();
-        result[0].WorkflowType.Should().Be("Renewal");
-        result[0].ToState.Should().Be("DataReview");
+        result.Count().ShouldBe(1);
+        result[0].WorkflowType.ShouldBe("Renewal");
+        result[0].ToState.ShouldBe("DataReview");
     }
 
     [Fact]
@@ -224,8 +224,8 @@ public class WorkflowServiceTests
             new WorkflowTransitionRequestDto("DataReview", "seed"),
             _user);
 
-        result.Should().BeNull();
-        error.Should().Be("not_found");
+        result.ShouldBeNull();
+        error.ShouldBe("not_found");
     }
 
     [Fact]
@@ -253,11 +253,11 @@ public class WorkflowServiceTests
             new WorkflowTransitionRequestDto("Negotiation", "too early"),
             _user);
 
-        result.Should().BeNull();
-        error.Should().Be("invalid_transition");
-        seeded.CurrentStatus.Should().Be("Created");
-        _transitionRepo.Items.Should().BeEmpty();
-        _timelineRepo.Events.Should().BeEmpty();
+        result.ShouldBeNull();
+        error.ShouldBe("invalid_transition");
+        seeded.CurrentStatus.ShouldBe("Created");
+        _transitionRepo.Items.ShouldBeEmpty();
+        _timelineRepo.Events.ShouldBeEmpty();
     }
 
     [Fact]
@@ -285,15 +285,15 @@ public class WorkflowServiceTests
             new WorkflowTransitionRequestDto("DataReview", "start"),
             _user);
 
-        error.Should().BeNull();
-        result.Should().NotBeNull();
-        result!.FromState.Should().Be("Created");
-        result.ToState.Should().Be("DataReview");
-        seeded.CurrentStatus.Should().Be("DataReview");
-        _transitionRepo.Items.Should().ContainSingle();
-        _timelineRepo.Events.Should().ContainSingle(e =>
-            e.EntityType == "Renewal" &&
-            e.EventType == "RenewalTransitioned");
+        error.ShouldBeNull();
+        result.ShouldNotBeNull();
+        result!.FromState.ShouldBe("Created");
+        result.ToState.ShouldBe("DataReview");
+        seeded.CurrentStatus.ShouldBe("DataReview");
+        _transitionRepo.Items.Count.ShouldBe(1);
+        var timelineEvent = _timelineRepo.Events.ShouldHaveSingleItem();
+        timelineEvent.EntityType.ShouldBe("Renewal");
+        timelineEvent.EventType.ShouldBe("RenewalTransitioned");
     }
 }
 

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Nebula.Domain.Entities;
 
 namespace Nebula.Tests;
@@ -11,22 +11,22 @@ public class SmokeTests
         var properties = typeof(BaseEntity).GetProperties();
         var names = properties.Select(p => p.Name).ToList();
 
-        names.Should().Contain("Id");
-        names.Should().Contain("CreatedAt");
-        names.Should().Contain("CreatedByUserId");
-        names.Should().Contain("UpdatedAt");
-        names.Should().Contain("UpdatedByUserId");
-        names.Should().Contain("IsDeleted");
-        names.Should().Contain("DeletedAt");
-        names.Should().Contain("DeletedByUserId");
-        names.Should().Contain("RowVersion");
+        names.ShouldContain("Id");
+        names.ShouldContain("CreatedAt");
+        names.ShouldContain("CreatedByUserId");
+        names.ShouldContain("UpdatedAt");
+        names.ShouldContain("UpdatedByUserId");
+        names.ShouldContain("IsDeleted");
+        names.ShouldContain("DeletedAt");
+        names.ShouldContain("DeletedByUserId");
+        names.ShouldContain("RowVersion");
     }
 
     [Fact]
     public void Domain_BaseEntity_GeneratesNewGuidById()
     {
         var entity = new TestEntity();
-        entity.Id.Should().NotBeEmpty();
+        entity.Id.ShouldNotBe(Guid.Empty);
     }
 
     [Theory]
@@ -40,11 +40,11 @@ public class SmokeTests
     [InlineData(typeof(TaskItem), new[] { "Title", "Description", "Status", "Priority", "DueDate", "AssignedToUserId", "LinkedEntityType", "LinkedEntityId", "CompletedAt" })]
     public void Domain_BaseEntityDescendant_HasExpectedProperties(Type entityType, string[] expectedProperties)
     {
-        entityType.Should().BeDerivedFrom<BaseEntity>();
+        entityType.IsSubclassOf(typeof(BaseEntity)).ShouldBeTrue();
         var names = entityType.GetProperties().Select(p => p.Name).ToList();
         foreach (var prop in expectedProperties)
         {
-            names.Should().Contain(prop, because: $"{entityType.Name} should have property {prop}");
+            names.ShouldContain(prop, $"{entityType.Name} should have property {prop}");
         }
     }
 
@@ -53,38 +53,38 @@ public class SmokeTests
     [InlineData(typeof(WorkflowTransition), new[] { "Id", "WorkflowType", "EntityId", "FromState", "ToState", "Reason", "ActorUserId", "OccurredAt" })]
     public void Domain_AppendOnlyEntity_DoesNotInheritBaseEntity(Type entityType, string[] expectedProperties)
     {
-        entityType.Should().NotBeDerivedFrom<BaseEntity>();
+        entityType.IsSubclassOf(typeof(BaseEntity)).ShouldBeFalse();
         var names = entityType.GetProperties().Select(p => p.Name).ToList();
         foreach (var prop in expectedProperties)
         {
-            names.Should().Contain(prop, because: $"{entityType.Name} should have property {prop}");
+            names.ShouldContain(prop, $"{entityType.Name} should have property {prop}");
         }
     }
 
     [Fact]
     public void Domain_UserProfile_HasOwnAuditFieldsNotBaseEntity()
     {
-        typeof(UserProfile).Should().NotBeDerivedFrom<BaseEntity>();
+        typeof(UserProfile).IsSubclassOf(typeof(BaseEntity)).ShouldBeFalse();
         var names = typeof(UserProfile).GetProperties().Select(p => p.Name).ToList();
-        names.Should().Contain("IdpIssuer");
-        names.Should().Contain("IdpSubject");
-        names.Should().Contain("Email");
-        names.Should().Contain("DisplayName");
-        names.Should().Contain("Department");
-        names.Should().Contain("RegionsJson");
-        names.Should().Contain("RolesJson");
-        names.Should().Contain("IsActive");
-        names.Should().Contain("CreatedAt");
-        names.Should().Contain("UpdatedAt");
+        names.ShouldContain("IdpIssuer");
+        names.ShouldContain("IdpSubject");
+        names.ShouldContain("Email");
+        names.ShouldContain("DisplayName");
+        names.ShouldContain("Department");
+        names.ShouldContain("RegionsJson");
+        names.ShouldContain("RolesJson");
+        names.ShouldContain("IsActive");
+        names.ShouldContain("CreatedAt");
+        names.ShouldContain("UpdatedAt");
     }
 
     [Fact]
     public void Domain_BrokerRegion_HasCompositePKProperties()
     {
-        typeof(BrokerRegion).Should().NotBeDerivedFrom<BaseEntity>();
+        typeof(BrokerRegion).IsSubclassOf(typeof(BaseEntity)).ShouldBeFalse();
         var names = typeof(BrokerRegion).GetProperties().Select(p => p.Name).ToList();
-        names.Should().Contain("BrokerId");
-        names.Should().Contain("Region");
+        names.ShouldContain("BrokerId");
+        names.ShouldContain("Region");
     }
 
     [Theory]
@@ -93,11 +93,11 @@ public class SmokeTests
     [InlineData(typeof(ReferenceRenewalStatus), new[] { "Code", "DisplayName", "Description", "IsTerminal", "DisplayOrder", "ColorGroup" })]
     public void Domain_ReferenceEntity_HasCodeAndDisplayFields(Type entityType, string[] expectedProperties)
     {
-        entityType.Should().NotBeDerivedFrom<BaseEntity>();
+        entityType.IsSubclassOf(typeof(BaseEntity)).ShouldBeFalse();
         var names = entityType.GetProperties().Select(p => p.Name).ToList();
         foreach (var prop in expectedProperties)
         {
-            names.Should().Contain(prop, because: $"{entityType.Name} should have property {prop}");
+            names.ShouldContain(prop, $"{entityType.Name} should have property {prop}");
         }
     }
 

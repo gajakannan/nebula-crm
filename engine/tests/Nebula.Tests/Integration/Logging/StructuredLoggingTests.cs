@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using FluentAssertions;
+using Shouldly;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.InMemory;
@@ -38,15 +38,15 @@ public class StructuredLoggingTests : IClassFixture<CustomWebApplicationFactory>
 
         var response = await client.GetAsync("/healthz");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var requestLog = sink.LogEvents
             .FirstOrDefault(e => e.MessageTemplate.Text.Contains("HTTP"));
 
-        requestLog.Should().NotBeNull("a Serilog request completion log should be emitted");
-        requestLog!.Level.Should().Be(LogEventLevel.Information);
+        requestLog.ShouldNotBeNull("a Serilog request completion log should be emitted");
+        requestLog!.Level.ShouldBe(LogEventLevel.Information);
 
-        requestLog.Properties.Should().ContainKey("StatusCode");
+        requestLog.Properties.ShouldContainKey("StatusCode");
     }
 
     [Fact]
@@ -56,14 +56,14 @@ public class StructuredLoggingTests : IClassFixture<CustomWebApplicationFactory>
 
         var response = await client.GetAsync("/api/nonexistent-endpoint-that-does-not-exist");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
         var body = await response.Content.ReadAsStringAsync();
         var problem = JsonDocument.Parse(body);
 
-        problem.RootElement.TryGetProperty("traceId", out var traceIdElement).Should().BeTrue(
+        problem.RootElement.TryGetProperty("traceId", out var traceIdElement).ShouldBeTrue(
             "ProblemDetails must include traceId for request correlation");
-        traceIdElement.GetString().Should().NotBeNullOrWhiteSpace();
+        traceIdElement.GetString().ShouldNotBeNullOrWhiteSpace();
     }
 
     [Fact]
@@ -79,11 +79,11 @@ public class StructuredLoggingTests : IClassFixture<CustomWebApplicationFactory>
         var requestLog = sink.LogEvents
             .FirstOrDefault(e => e.MessageTemplate.Text.Contains("HTTP"));
 
-        requestLog.Should().NotBeNull();
+        requestLog.ShouldNotBeNull();
 
         // Authenticated requests should include user context properties
-        requestLog!.Properties.Should().ContainKey("IdpSubject");
-        requestLog.Properties.Should().ContainKey("UserRoles");
+        requestLog!.Properties.ShouldContainKey("IdpSubject");
+        requestLog.Properties.ShouldContainKey("UserRoles");
     }
 
     [Fact]
@@ -100,13 +100,11 @@ public class StructuredLoggingTests : IClassFixture<CustomWebApplicationFactory>
         foreach (var logEvent in sink.LogEvents)
         {
             var rendered = logEvent.RenderMessage();
-            rendered.Should().NotContain("test-token-value",
-                "bearer tokens must not appear in baseline log output");
+            rendered.ShouldNotContain("test-token-value");
 
             foreach (var prop in logEvent.Properties)
             {
-                prop.Value.ToString().Should().NotContain("test-token-value",
-                    $"property {prop.Key} must not contain bearer token");
+                prop.Value.ToString().ShouldNotContain("test-token-value");
             }
         }
     }

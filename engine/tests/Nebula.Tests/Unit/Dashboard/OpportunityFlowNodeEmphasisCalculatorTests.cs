@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Nebula.Application.DTOs;
 using Nebula.Application.Services;
 
@@ -20,11 +20,11 @@ public class OpportunityFlowNodeEmphasisCalculatorTests
 
         var emphasis = OpportunityFlowNodeEmphasisCalculator.Compute(nodes);
 
-        emphasis["Triaging"].Should().Be("bottleneck");
-        emphasis["UwReview"].Should().Be("blocked");
-        emphasis["QuotePrep"].Should().Be("active");
-        emphasis["Received"].Should().Be("normal");
-        emphasis.ContainsKey("Bound").Should().BeFalse();
+        emphasis["Triaging"].ShouldBe("bottleneck");
+        emphasis["UwReview"].ShouldBe("blocked");
+        emphasis["QuotePrep"].ShouldBe("active");
+        emphasis["Received"].ShouldBe("normal");
+        emphasis.ContainsKey("Bound").ShouldBeFalse();
     }
 
     [Fact]
@@ -39,9 +39,9 @@ public class OpportunityFlowNodeEmphasisCalculatorTests
 
         var emphasis = OpportunityFlowNodeEmphasisCalculator.Compute(nodes);
 
-        emphasis["A"].Should().Be("bottleneck");
-        emphasis["B"].Should().Be("blocked");
-        emphasis["C"].Should().Be("active");
+        emphasis["A"].ShouldBe("bottleneck");
+        emphasis["B"].ShouldBe("blocked");
+        emphasis["C"].ShouldBe("active");
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class OpportunityFlowNodeEmphasisCalculatorTests
 
         var emphasis = OpportunityFlowNodeEmphasisCalculator.Compute(nodes);
 
-        emphasis.Should().HaveCount(2);
-        emphasis.Values.Should().OnlyContain(value => value == "normal");
+        emphasis.Count.ShouldBe(2);
+        emphasis.Values.ShouldAllBe(value => value == "normal");
     }
 }

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Nebula.Application.Services;
 
 namespace Nebula.Tests.Unit;
@@ -12,7 +12,7 @@ public class WorkflowStateMachineTests
     [InlineData("Renewal", "Quoted", "Bound")]
     public void IsValidTransition_WithAllowedTransition_ReturnsTrue(string workflowType, string from, string to)
     {
-        WorkflowStateMachine.IsValidTransition(workflowType, from, to).Should().BeTrue();
+        WorkflowStateMachine.IsValidTransition(workflowType, from, to).ShouldBeTrue();
     }
 
     [Theory]
@@ -23,7 +23,7 @@ public class WorkflowStateMachineTests
     [InlineData("Unknown", "Open", "Closed")]
     public void IsValidTransition_WithDisallowedTransition_ReturnsFalse(string workflowType, string from, string to)
     {
-        WorkflowStateMachine.IsValidTransition(workflowType, from, to).Should().BeFalse();
+        WorkflowStateMachine.IsValidTransition(workflowType, from, to).ShouldBeFalse();
     }
 
     [Theory]
@@ -34,6 +34,6 @@ public class WorkflowStateMachineTests
     [InlineData("Unknown", "Anything", false)]
     public void IsTerminalState_ReturnsExpectedValue(string workflowType, string state, bool expected)
     {
-        WorkflowStateMachine.IsTerminalState(workflowType, state).Should().Be(expected);
+        WorkflowStateMachine.IsTerminalState(workflowType, state).ShouldBe(expected);
     }
 }

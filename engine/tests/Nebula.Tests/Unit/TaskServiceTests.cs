@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Nebula.Application.Common;
 using Nebula.Application.DTOs;
 using Nebula.Application.Interfaces;
@@ -38,15 +38,15 @@ public class TaskServiceTests
 
         var (result, error) = await svc.CreateAsync(dto, _user);
 
-        error.Should().BeNull();
-        result.Should().NotBeNull();
-        result!.Title.Should().Be("Test Task");
-        result.Status.Should().Be("Open");
-        result.Priority.Should().Be("High");
-        _taskRepo.Added.Should().HaveCount(1);
-        _timelineRepo.Events.Should().HaveCount(1);
-        _timelineRepo.Events[0].EventType.Should().Be("TaskCreated");
-        _unitOfWork.CommitCount.Should().Be(1);
+        error.ShouldBeNull();
+        result.ShouldNotBeNull();
+        result!.Title.ShouldBe("Test Task");
+        result.Status.ShouldBe("Open");
+        result.Priority.ShouldBe("High");
+        _taskRepo.Added.Count.ShouldBe(1);
+        _timelineRepo.Events.Count.ShouldBe(1);
+        _timelineRepo.Events[0].EventType.ShouldBe("TaskCreated");
+        _unitOfWork.CommitCount.ShouldBe(1);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class TaskServiceTests
 
         var (result, _) = await svc.CreateAsync(dto, _user);
 
-        result!.Priority.Should().Be("Normal");
+        result!.Priority.ShouldBe("Normal");
     }
 
     [Fact]
@@ -73,9 +73,9 @@ public class TaskServiceTests
 
         var (result, error) = await svc.CreateAsync(dto, nonManagerUser);
 
-        error.Should().Be("forbidden");
-        result.Should().BeNull();
-        _unitOfWork.CommitCount.Should().Be(0);
+        error.ShouldBe("forbidden");
+        result.ShouldBeNull();
+        _unitOfWork.CommitCount.ShouldBe(0);
     }
 
     [Fact]
@@ -86,8 +86,8 @@ public class TaskServiceTests
 
         var (result, error) = await svc.CreateAsync(dto, _user);
 
-        error.Should().Be("validation_error");
-        result.Should().BeNull();
+        error.ShouldBe("validation_error");
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -99,9 +99,9 @@ public class TaskServiceTests
 
         var (result, error) = await svc.CreateAsync(dto, _user);
 
-        error.Should().BeNull();
-        result!.LinkedEntityType.Should().Be("Broker");
-        result.LinkedEntityId.Should().Be(linkedId);
+        error.ShouldBeNull();
+        result!.LinkedEntityType.ShouldBe("Broker");
+        result.LinkedEntityId.ShouldBe(linkedId);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -118,9 +118,9 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().BeNull();
-        result!.Status.Should().Be("InProgress");
-        _timelineRepo.Events.Should().ContainSingle(e => e.EventType == "TaskUpdated");
+        error.ShouldBeNull();
+        result!.Status.ShouldBe("InProgress");
+        _timelineRepo.Events.ShouldContain(e => e.EventType == "TaskUpdated");
     }
 
     [Fact]
@@ -133,10 +133,10 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().BeNull();
-        result!.Status.Should().Be("Done");
-        result.CompletedAt.Should().NotBeNull();
-        _timelineRepo.Events.Should().ContainSingle(e => e.EventType == "TaskCompleted");
+        error.ShouldBeNull();
+        result!.Status.ShouldBe("Done");
+        result.CompletedAt.ShouldNotBeNull();
+        _timelineRepo.Events.ShouldContain(e => e.EventType == "TaskCompleted");
     }
 
     [Fact]
@@ -150,10 +150,10 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().BeNull();
-        result!.Status.Should().Be("Open");
-        result.CompletedAt.Should().BeNull();
-        _timelineRepo.Events.Should().ContainSingle(e => e.EventType == "TaskReopened");
+        error.ShouldBeNull();
+        result!.Status.ShouldBe("Open");
+        result.CompletedAt.ShouldBeNull();
+        _timelineRepo.Events.ShouldContain(e => e.EventType == "TaskReopened");
     }
 
     [Fact]
@@ -166,8 +166,8 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().Be("invalid_status_transition");
-        result.Should().BeNull();
+        error.ShouldBe("invalid_status_transition");
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(Guid.NewGuid(), dto, present, 0, _user);
 
-        error.Should().Be("not_found");
+        error.ShouldBe("not_found");
     }
 
     [Fact]
@@ -193,7 +193,7 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().Be("not_found"); // IDOR normalization: 403 → 404
+        error.ShouldBe("not_found"); // IDOR normalization: 403 → 404
     }
 
     [Fact]
@@ -208,7 +208,7 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().Be("forbidden");
+        error.ShouldBe("forbidden");
     }
 
     [Fact]
@@ -222,8 +222,8 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().BeNull();
-        result!.DueDate.Should().BeNull();
+        error.ShouldBeNull();
+        result!.DueDate.ShouldBeNull();
     }
 
     [Fact]
@@ -237,8 +237,8 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().BeNull();
-        result!.Description.Should().BeNull();
+        error.ShouldBeNull();
+        result!.Description.ShouldBeNull();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -253,12 +253,12 @@ public class TaskServiceTests
 
         var error = await svc.DeleteAsync(task.Id, _user);
 
-        error.Should().BeNull();
-        task.IsDeleted.Should().BeTrue();
-        task.DeletedAt.Should().NotBeNull();
-        task.DeletedByUserId.Should().Be(_user.UserId);
-        _timelineRepo.Events.Should().ContainSingle(e => e.EventType == "TaskDeleted");
-        _unitOfWork.CommitCount.Should().Be(1);
+        error.ShouldBeNull();
+        task.IsDeleted.ShouldBeTrue();
+        task.DeletedAt.ShouldNotBeNull();
+        task.DeletedByUserId.ShouldBe(_user.UserId);
+        _timelineRepo.Events.ShouldContain(e => e.EventType == "TaskDeleted");
+        _unitOfWork.CommitCount.ShouldBe(1);
     }
 
     [Fact]
@@ -268,7 +268,7 @@ public class TaskServiceTests
 
         var error = await svc.DeleteAsync(Guid.NewGuid(), _user);
 
-        error.Should().Be("not_found");
+        error.ShouldBe("not_found");
     }
 
     [Fact]
@@ -279,7 +279,7 @@ public class TaskServiceTests
 
         var error = await svc.DeleteAsync(task.Id, _user);
 
-        error.Should().Be("not_found"); // IDOR normalization: 403 → 404
+        error.ShouldBe("not_found"); // IDOR normalization: 403 → 404
     }
 
     [Fact]
@@ -291,8 +291,8 @@ public class TaskServiceTests
 
         var error = await svc.DeleteAsync(task.Id, _user);
 
-        error.Should().BeNull();
-        task.IsDeleted.Should().BeTrue();
+        error.ShouldBeNull();
+        task.IsDeleted.ShouldBeTrue();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -310,10 +310,10 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().BeNull();
-        result!.Status.Should().Be("InProgress");
-        result.CompletedAt.Should().BeNull();
-        _timelineRepo.Events.Should().ContainSingle(e => e.EventType == "TaskReopened");
+        error.ShouldBeNull();
+        result!.Status.ShouldBe("InProgress");
+        result.CompletedAt.ShouldBeNull();
+        _timelineRepo.Events.ShouldContain(e => e.EventType == "TaskReopened");
     }
 
     [Fact]
@@ -326,9 +326,9 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().BeNull();
-        result!.Status.Should().Be("Open");
-        _timelineRepo.Events.Should().ContainSingle(e => e.EventType == "TaskUpdated");
+        error.ShouldBeNull();
+        result!.Status.ShouldBe("Open");
+        _timelineRepo.Events.ShouldContain(e => e.EventType == "TaskUpdated");
     }
 
     [Fact]
@@ -341,9 +341,9 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().BeNull();
-        result!.Status.Should().Be("Open");
-        _timelineRepo.Events.Should().ContainSingle(e => e.EventType == "TaskUpdated");
+        error.ShouldBeNull();
+        result!.Status.ShouldBe("Open");
+        _timelineRepo.Events.ShouldContain(e => e.EventType == "TaskUpdated");
     }
 
     [Fact]
@@ -357,12 +357,13 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().BeNull();
-        result!.Title.Should().Be("New Title");
-        result.Priority.Should().Be("High");
+        error.ShouldBeNull();
+        result!.Title.ShouldBe("New Title");
+        result.Priority.ShouldBe("High");
         var evt = _timelineRepo.Events.Single();
-        evt.EventType.Should().Be("TaskUpdated");
-        evt.EventDescription.Should().Contain("title").And.Contain("priority");
+        evt.EventType.ShouldBe("TaskUpdated");
+        evt.EventDescription.ShouldContain("title");
+        evt.EventDescription.ShouldContain("priority");
     }
 
     [Fact]
@@ -377,12 +378,12 @@ public class TaskServiceTests
 
         var (_, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, _user);
 
-        error.Should().BeNull();
+        error.ShouldBeNull();
         var evt = _timelineRepo.Events.Single();
-        evt.EventType.Should().Be("TaskReopened");
-        evt.EventPayloadJson.Should().Contain("previousCompletedAt");
+        evt.EventType.ShouldBe("TaskReopened");
+        evt.EventPayloadJson!.ShouldContain("previousCompletedAt");
         // Verify the payload contains the original CompletedAt, not the current time
-        evt.EventPayloadJson.Should().Contain(originalCompletedAt.Year.ToString());
+        evt.EventPayloadJson.ShouldContain(originalCompletedAt.Year.ToString());
     }
 
     [Fact]
@@ -394,8 +395,8 @@ public class TaskServiceTests
 
         var (result, error) = await svc.CreateAsync(dto, _user);
 
-        error.Should().BeNull();
-        result!.DueDate.Should().BeCloseTo(pastDate, TimeSpan.FromSeconds(1));
+        error.ShouldBeNull();
+        (result!.DueDate!.Value - pastDate).Duration().ShouldBeLessThanOrEqualTo(TimeSpan.FromSeconds(1));
     }
 
     [Fact]
@@ -409,13 +410,13 @@ public class TaskServiceTests
         await svc.CreateAsync(dto, _user);
 
         var evt = _timelineRepo.Events.Single();
-        evt.EntityType.Should().Be("Task");
-        evt.EventType.Should().Be("TaskCreated");
-        evt.BrokerDescription.Should().BeNull("task events are InternalOnly");
-        evt.ActorUserId.Should().Be(_user.UserId);
-        evt.EventDescription.Should().Contain("Audit task");
-        evt.EventPayloadJson.Should().Contain("title");
-        evt.EventPayloadJson.Should().Contain("assignedToUserId");
+        evt.EntityType.ShouldBe("Task");
+        evt.EventType.ShouldBe("TaskCreated");
+        evt.BrokerDescription.ShouldBeNull("task events are InternalOnly");
+        evt.ActorUserId.ShouldBe(_user.UserId);
+        evt.EventDescription.ShouldContain("Audit task");
+        evt.EventPayloadJson!.ShouldContain("title");
+        evt.EventPayloadJson.ShouldContain("assignedToUserId");
     }
 
     [Fact]
@@ -427,12 +428,12 @@ public class TaskServiceTests
         await svc.DeleteAsync(task.Id, _user);
 
         var evt = _timelineRepo.Events.Single();
-        evt.EntityType.Should().Be("Task");
-        evt.EntityId.Should().Be(task.Id);
-        evt.EventType.Should().Be("TaskDeleted");
-        evt.EventDescription.Should().Be("Task deleted");
-        evt.BrokerDescription.Should().BeNull("task events are InternalOnly");
-        evt.ActorUserId.Should().Be(_user.UserId);
+        evt.EntityType.ShouldBe("Task");
+        evt.EntityId.ShouldBe(task.Id);
+        evt.EventType.ShouldBe("TaskDeleted");
+        evt.EventDescription.ShouldBe("Task deleted");
+        evt.BrokerDescription.ShouldBeNull("task events are InternalOnly");
+        evt.ActorUserId.ShouldBe(_user.UserId);
     }
 
     [Fact]
@@ -444,8 +445,8 @@ public class TaskServiceTests
 
         await svc.DeleteAsync(task.Id, _user);
 
-        task.UpdatedAt.Should().BeOnOrAfter(beforeDelete);
-        task.UpdatedByUserId.Should().Be(_user.UserId);
+        task.UpdatedAt.ShouldBeGreaterThanOrEqualTo(beforeDelete);
+        task.UpdatedByUserId.ShouldBe(_user.UserId);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -458,9 +459,9 @@ public class TaskServiceTests
         var svc = CreateService();
         var result = await svc.GetMyTasksAsync(_user.UserId, "Test User", 10, _user);
 
-        result.Should().NotBeNull();
-        result.Tasks.Should().BeEmpty();
-        result.TotalCount.Should().Be(0);
+        result.ShouldNotBeNull();
+        result.Tasks.ShouldBeEmpty();
+        result.TotalCount.ShouldBe(0);
     }
 
     [Fact]
@@ -475,7 +476,7 @@ public class TaskServiceTests
         // Should not throw — audit log is best-effort
         var result = await svc.GetMyTasksAsync(brokerUser.UserId, null, 10, brokerUser);
 
-        result.Should().NotBeNull();
+        result.ShouldNotBeNull();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -503,11 +504,11 @@ public class TaskServiceTests
 
         var (result, error) = await svc.CreateAsync(dto, managerUser);
 
-        error.Should().BeNull();
-        result.Should().NotBeNull();
-        result!.AssignedToUserId.Should().Be(assigneeId);
-        result.CreatedByUserId.Should().Be(managerUser.UserId);
-        _unitOfWork.CommitCount.Should().Be(1);
+        error.ShouldBeNull();
+        result.ShouldNotBeNull();
+        result!.AssignedToUserId.ShouldBe(assigneeId);
+        result.CreatedByUserId.ShouldBe(managerUser.UserId);
+        _unitOfWork.CommitCount.ShouldBe(1);
     }
 
     [Fact]
@@ -523,9 +524,9 @@ public class TaskServiceTests
 
         var (result, error) = await svc.CreateAsync(dto, distributionUser);
 
-        error.Should().Be("forbidden");
-        result.Should().BeNull();
-        _unitOfWork.CommitCount.Should().Be(0);
+        error.ShouldBe("forbidden");
+        result.ShouldBeNull();
+        _unitOfWork.CommitCount.ShouldBe(0);
     }
 
     [Fact]
@@ -549,9 +550,9 @@ public class TaskServiceTests
 
         var (result, error) = await svc.CreateAsync(dto, managerUser);
 
-        error.Should().Be("inactive_assignee");
-        result.Should().BeNull();
-        _unitOfWork.CommitCount.Should().Be(0);
+        error.ShouldBe("inactive_assignee");
+        result.ShouldBeNull();
+        _unitOfWork.CommitCount.ShouldBe(0);
     }
 
     [Fact]
@@ -567,9 +568,9 @@ public class TaskServiceTests
 
         var (result, error) = await svc.CreateAsync(dto, managerUser);
 
-        error.Should().Be("invalid_assignee");
-        result.Should().BeNull();
-        _unitOfWork.CommitCount.Should().Be(0);
+        error.ShouldBe("invalid_assignee");
+        result.ShouldBeNull();
+        _unitOfWork.CommitCount.ShouldBe(0);
     }
 
     [Fact]
@@ -583,10 +584,10 @@ public class TaskServiceTests
 
         var (result, error) = await svc.CreateAsync(dto, managerUser);
 
-        error.Should().BeNull();
-        result.Should().NotBeNull();
-        result!.AssignedToUserId.Should().Be(managerUserId);
-        result.CreatedByUserId.Should().Be(managerUserId);
+        error.ShouldBeNull();
+        result.ShouldNotBeNull();
+        result!.AssignedToUserId.ShouldBe(managerUserId);
+        result.CreatedByUserId.ShouldBe(managerUserId);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -608,8 +609,8 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, creatorUser);
 
-        error.Should().BeNull();
-        result!.Title.Should().Be("Updated by creator");
+        error.ShouldBeNull();
+        result!.Title.ShouldBe("Updated by creator");
     }
 
     [Fact]
@@ -627,8 +628,8 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, creatorUser);
 
-        error.Should().Be("status_change_restricted");
-        result.Should().BeNull();
+        error.ShouldBe("status_change_restricted");
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -646,8 +647,8 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, assigneeUser);
 
-        error.Should().BeNull();
-        result!.Status.Should().Be("InProgress");
+        error.ShouldBeNull();
+        result!.Status.ShouldBe("InProgress");
     }
 
     [Fact]
@@ -675,8 +676,8 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, creatorUser);
 
-        error.Should().BeNull();
-        result!.AssignedToUserId.Should().Be(newAssigneeId);
+        error.ShouldBeNull();
+        result!.AssignedToUserId.ShouldBe(newAssigneeId);
     }
 
     [Fact]
@@ -704,10 +705,10 @@ public class TaskServiceTests
         await svc.UpdateAsync(task.Id, dto, present, 0, creatorUser);
 
         var evt = _timelineRepo.Events.Single();
-        evt.EventType.Should().Be("TaskReassigned");
-        evt.EventPayloadJson.Should().Contain("fromUserId");
-        evt.EventPayloadJson.Should().Contain("toUserId");
-        evt.EventPayloadJson.Should().Contain(newAssigneeId.ToString());
+        evt.EventType.ShouldBe("TaskReassigned");
+        evt.EventPayloadJson!.ShouldContain("fromUserId");
+        evt.EventPayloadJson.ShouldContain("toUserId");
+        evt.EventPayloadJson.ShouldContain(newAssigneeId.ToString());
     }
 
     [Fact]
@@ -726,8 +727,8 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, assigneeUser);
 
-        error.Should().Be("forbidden");
-        result.Should().BeNull();
+        error.ShouldBe("forbidden");
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -754,8 +755,8 @@ public class TaskServiceTests
 
         var (result, error, _, _) = await svc.UpdateAsync(task.Id, dto, present, 0, creatorUser);
 
-        error.Should().Be("inactive_assignee");
-        result.Should().BeNull();
+        error.ShouldBe("inactive_assignee");
+        result.ShouldBeNull();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -775,11 +776,11 @@ public class TaskServiceTests
 
         var error = await svc.DeleteAsync(task.Id, creatorUser);
 
-        error.Should().BeNull();
-        task.IsDeleted.Should().BeTrue();
-        task.DeletedByUserId.Should().Be(creatorId);
-        _timelineRepo.Events.Should().ContainSingle(e => e.EventType == "TaskDeleted");
-        _unitOfWork.CommitCount.Should().Be(1);
+        error.ShouldBeNull();
+        task.IsDeleted.ShouldBeTrue();
+        task.DeletedByUserId.ShouldBe(creatorId);
+        _timelineRepo.Events.ShouldContain(e => e.EventType == "TaskDeleted");
+        _unitOfWork.CommitCount.ShouldBe(1);
     }
 
     // ═══════════════════════════════════════════════════════════════════════

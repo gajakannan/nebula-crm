@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Nebula.Application.DTOs;
@@ -48,13 +48,13 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result.Should().NotBeNull();
-        result!.Title.Should().Be("Follow up with broker");
-        result.Status.Should().Be("Open");
-        result.Priority.Should().Be("High");
-        result.AssignedToUserId.Should().Be(userId);
+        result.ShouldNotBeNull();
+        result!.Title.ShouldBe("Follow up with broker");
+        result.Status.ShouldBe("Open");
+        result.Priority.ShouldBe("High");
+        result.AssignedToUserId.ShouldBe(userId);
     }
 
     [Fact]
@@ -65,9 +65,9 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.Priority.Should().Be("Normal");
+        result!.Priority.ShouldBe("Normal");
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsync("/tasks", content);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -153,10 +153,10 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.LinkedEntityType.Should().Be("Submission");
-        result.LinkedEntityId.Should().Be(linkedId);
+        result!.LinkedEntityType.ShouldBe("Submission");
+        result.LinkedEntityId.ShouldBe(linkedId);
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -183,9 +183,9 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", json);
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.Title.Should().Be("Updated Title");
+        result!.Title.ShouldBe("Updated Title");
     }
 
     [Fact]
@@ -196,9 +196,9 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", json);
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.Status.Should().Be("InProgress");
+        result!.Status.ShouldBe("InProgress");
     }
 
     [Fact]
@@ -210,10 +210,10 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         // Then to Done
         var response = await PutJsonAsync($"/tasks/{taskId}", JsonSerializer.Serialize(new { status = "Done" }));
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.Status.Should().Be("Done");
-        result.CompletedAt.Should().NotBeNull();
+        result!.Status.ShouldBe("Done");
+        result.CompletedAt.ShouldNotBeNull();
     }
 
     [Fact]
@@ -224,7 +224,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", json);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
     }
 
     [Fact]
@@ -236,10 +236,10 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", JsonSerializer.Serialize(new { status = "Open" }));
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.Status.Should().Be("Open");
-        result.CompletedAt.Should().BeNull();
+        result!.Status.ShouldBe("Open");
+        result.CompletedAt.ShouldBeNull();
     }
 
     [Fact]
@@ -249,7 +249,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", "{}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -260,7 +260,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         // Pass a dummy rowVersion since the task doesn't exist (can't auto-fetch)
         var response = await PutJsonAsync($"/tasks/{Guid.NewGuid()}", json, rowVersion: 1);
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -273,7 +273,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _client.PutAsync($"/tasks/{taskId}", content);
 
-        ((int)response.StatusCode).Should().Be(428);
+        ((int)response.StatusCode).ShouldBe(428);
     }
 
     [Fact]
@@ -284,7 +284,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", json);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -295,7 +295,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", json);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -308,7 +308,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var response = await PutJsonAsync($"/tasks/{taskId}", JsonSerializer.Serialize(new { title = "X" }));
 
         // IDOR normalization: ExternalUser gets 404 (not 403) to prevent entity existence leakage
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -322,7 +322,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.DeleteAsync($"/tasks/{taskId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
     [Fact]
@@ -333,7 +333,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync($"/tasks/{taskId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -344,7 +344,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.DeleteAsync($"/tasks/{taskId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -352,7 +352,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
     {
         var response = await _client.DeleteAsync($"/tasks/{Guid.NewGuid()}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -364,7 +364,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.DeleteAsync($"/tasks/{taskId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
     [Fact]
@@ -377,7 +377,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var response = await _client.DeleteAsync($"/tasks/{taskId}");
 
         // IDOR normalization: ExternalUser gets 404 (not 403) to prevent entity existence leakage
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -392,7 +392,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -404,9 +404,9 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.DueDate.Should().NotBeNull();
+        result!.DueDate.ShouldNotBeNull();
     }
 
     [Fact]
@@ -420,7 +420,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var response = await _client.GetAsync("/my/tasks?limit=100");
         var body = await response.Content.ReadAsStringAsync();
 
-        body.Should().Contain(uniqueTitle);
+        body.ShouldContain(uniqueTitle);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -435,7 +435,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", json);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -446,7 +446,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", json);
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -458,10 +458,10 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", JsonSerializer.Serialize(new { status = "InProgress" }));
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.Status.Should().Be("InProgress");
-        result.CompletedAt.Should().BeNull();
+        result!.Status.ShouldBe("InProgress");
+        result.CompletedAt.ShouldBeNull();
     }
 
     [Fact]
@@ -472,9 +472,9 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await PutJsonAsync($"/tasks/{taskId}", JsonSerializer.Serialize(new { status = "Open" }));
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.Status.Should().Be("Open");
+        result!.Status.ShouldBe("Open");
     }
 
     [Fact]
@@ -489,9 +489,9 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var response = await PutJsonAsync($"/tasks/{created!.Id}",
             "{\"dueDate\": null}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.DueDate.Should().BeNull();
+        result!.DueDate.ShouldBeNull();
     }
 
     [Fact]
@@ -505,9 +505,9 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var response = await PutJsonAsync($"/tasks/{created!.Id}",
             "{\"description\": null}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.Description.Should().BeNull();
+        result!.Description.ShouldBeNull();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -524,7 +524,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var response = await _client.GetAsync("/my/tasks?limit=100");
         var body = await response.Content.ReadAsStringAsync();
 
-        body.Should().NotContain(uniqueTitle);
+        body.ShouldNotContain(uniqueTitle);
     }
 
     [Fact]
@@ -535,7 +535,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.DeleteAsync($"/tasks/{taskId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -550,36 +550,36 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var createDto = new TaskCreateRequestDto("Lifecycle task", "Test full lifecycle", "Normal",
             DateTime.UtcNow.AddDays(3), userId, null, null);
         var createResp = await _client.PostAsJsonAsync("/tasks", createDto);
-        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        createResp.StatusCode.ShouldBe(HttpStatusCode.Created);
         var task = await createResp.Content.ReadFromJsonAsync<TaskDto>();
 
         // Update title
         var updateResp = await PutJsonAsync($"/tasks/{task!.Id}", JsonSerializer.Serialize(new { title = "Updated lifecycle" }));
-        updateResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        updateResp.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         // Open → InProgress
         var progressResp = await PutJsonAsync($"/tasks/{task.Id}", JsonSerializer.Serialize(new { status = "InProgress" }));
-        progressResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        progressResp.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         // InProgress → Done
         var doneResp = await PutJsonAsync($"/tasks/{task.Id}", JsonSerializer.Serialize(new { status = "Done" }));
-        doneResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        doneResp.StatusCode.ShouldBe(HttpStatusCode.OK);
         var done = await doneResp.Content.ReadFromJsonAsync<TaskDto>();
-        done!.CompletedAt.Should().NotBeNull();
+        done!.CompletedAt.ShouldNotBeNull();
 
         // Reopen: Done → Open
         var reopenResp = await PutJsonAsync($"/tasks/{task.Id}", JsonSerializer.Serialize(new { status = "Open" }));
-        reopenResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        reopenResp.StatusCode.ShouldBe(HttpStatusCode.OK);
         var reopened = await reopenResp.Content.ReadFromJsonAsync<TaskDto>();
-        reopened!.CompletedAt.Should().BeNull();
+        reopened!.CompletedAt.ShouldBeNull();
 
         // Delete
         var deleteResp = await _client.DeleteAsync($"/tasks/{task.Id}");
-        deleteResp.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        deleteResp.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         // Verify gone
         var getResp = await _client.GetAsync($"/tasks/{task.Id}");
-        getResp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        getResp.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -597,12 +597,12 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync("/tasks?view=myWork");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var body = await response.Content.ReadAsStringAsync();
-        body.Should().Contain(uniqueTitle);
+        body.ShouldContain(uniqueTitle);
         var result = await response.Content.ReadFromJsonAsync<TaskListResponseDto>();
-        result.Should().NotBeNull();
-        result!.Page.Should().Be(1);
+        result.ShouldNotBeNull();
+        result!.Page.ShouldBe(1);
     }
 
     [Fact]
@@ -616,9 +616,9 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync("/tasks");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var body = await response.Content.ReadAsStringAsync();
-        body.Should().Contain(uniqueTitle);
+        body.ShouldContain(uniqueTitle);
     }
 
     [Fact]
@@ -636,13 +636,13 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var uniqueTitle = $"Delegated-{Guid.NewGuid():N}";
         var dto = new TaskCreateRequestDto(uniqueTitle, null, null, null, user002Id, null, null);
         var createResp = await _client.PostAsJsonAsync("/tasks", dto);
-        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        createResp.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         var response = await _client.GetAsync("/tasks?view=assignedByMe");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var body = await response.Content.ReadAsStringAsync();
-        body.Should().Contain(uniqueTitle);
+        body.ShouldContain(uniqueTitle);
     }
 
     [Fact]
@@ -655,7 +655,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync("/tasks?view=assignedByMe");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -671,14 +671,14 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync("/tasks?view=myWork&page=1&pageSize=2");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskListResponseDto>();
-        result.Should().NotBeNull();
-        result!.Page.Should().Be(1);
-        result.PageSize.Should().Be(2);
-        result.TotalCount.Should().BeGreaterThanOrEqualTo(3);
-        result.TotalPages.Should().BeGreaterThanOrEqualTo(2);
-        result.Data.Should().HaveCount(2);
+        result.ShouldNotBeNull();
+        result!.Page.ShouldBe(1);
+        result.PageSize.ShouldBe(2);
+        result.TotalCount.ShouldBeGreaterThanOrEqualTo(3);
+        result.TotalPages.ShouldBeGreaterThanOrEqualTo(2);
+        result.Data.Count.ShouldBe(2);
     }
 
     [Fact]
@@ -694,11 +694,11 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync("/tasks?view=myWork");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskListResponseDto>();
-        result.Should().NotBeNull();
-        result!.Data.Should().BeEmpty();
-        result.TotalCount.Should().Be(0);
+        result.ShouldNotBeNull();
+        result!.Data.ShouldBeEmpty();
+        result.TotalCount.ShouldBe(0);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -717,11 +717,11 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         // Search by partial display name — should return at least our test user
         var response = await _client.GetAsync("/users?q=Searchable");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<UserSearchResponseDto>();
-        result.Should().NotBeNull();
-        result!.Users.Should().NotBeEmpty();
-        result.Users.Should().Contain(u => u.DisplayName.Contains("Searchable", StringComparison.OrdinalIgnoreCase));
+        result.ShouldNotBeNull();
+        result!.Users.ShouldNotBeEmpty();
+        result.Users.ShouldContain(u => u.DisplayName.Contains("Searchable", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -732,7 +732,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync("/users?q=a");
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -743,7 +743,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync("/users?q=test");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -766,12 +766,12 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result.Should().NotBeNull();
-        result!.AssignedToUserId.Should().Be(assigneeId);
-        result.CreatedByUserId.Should().Be(creatorId);
-        result.AssignedToUserId.Should().NotBe(result.CreatedByUserId);
+        result.ShouldNotBeNull();
+        result!.AssignedToUserId.ShouldBe(assigneeId);
+        result.CreatedByUserId.ShouldBe(creatorId);
+        result.AssignedToUserId.ShouldNotBe(result.CreatedByUserId);
     }
 
     [Fact]
@@ -788,7 +788,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -803,10 +803,10 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.PostAsJsonAsync("/tasks", dto);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.AssignedToUserId.Should().Be(selfId);
-        result.CreatedByUserId.Should().Be(selfId);
+        result!.AssignedToUserId.ShouldBe(selfId);
+        result.CreatedByUserId.ShouldBe(selfId);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -826,16 +826,16 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var uniqueTitle = $"CreatorEdit-{Guid.NewGuid():N}";
         var dto = new TaskCreateRequestDto(uniqueTitle, null, null, null, assigneeId, null, null);
         var createResp = await _client.PostAsJsonAsync("/tasks", dto);
-        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        createResp.StatusCode.ShouldBe(HttpStatusCode.Created);
         var created = await createResp.Content.ReadFromJsonAsync<TaskDto>();
 
         // Edit the title as the creator (still user-001)
         var response = await PutJsonAsync($"/tasks/{created!.Id}",
             JsonSerializer.Serialize(new { title = "Creator Updated Title" }));
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.Title.Should().Be("Creator Updated Title");
+        result!.Title.ShouldBe("Creator Updated Title");
     }
 
     [Fact]
@@ -850,14 +850,14 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var dto = new TaskCreateRequestDto($"StatusChange-{Guid.NewGuid():N}", null, null, null, assigneeId, null, null);
         var createResp = await _client.PostAsJsonAsync("/tasks", dto);
-        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        createResp.StatusCode.ShouldBe(HttpStatusCode.Created);
         var created = await createResp.Content.ReadFromJsonAsync<TaskDto>();
 
         // Attempt status change as creator (not assignee) — should be 403
         var response = await PutJsonAsync($"/tasks/{created!.Id}",
             JsonSerializer.Serialize(new { status = "InProgress" }));
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -872,7 +872,7 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var dto = new TaskCreateRequestDto($"AssigneeStatus-{Guid.NewGuid():N}", null, null, null, assigneeId, null, null);
         var createResp = await _client.PostAsJsonAsync("/tasks", dto);
-        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        createResp.StatusCode.ShouldBe(HttpStatusCode.Created);
         var created = await createResp.Content.ReadFromJsonAsync<TaskDto>();
 
         // Switch to user-002 (the assignee) and change status
@@ -884,9 +884,9 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
         var response = await PutJsonAsync($"/tasks/{created!.Id}",
             JsonSerializer.Serialize(new { status = "InProgress" }));
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<TaskDto>();
-        result!.Status.Should().Be("InProgress");
+        result!.Status.ShouldBe("InProgress");
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -905,17 +905,17 @@ public class TaskEndpointTests(CustomWebApplicationFactory factory)
 
         var dto = new TaskCreateRequestDto($"CreatorDelete-{Guid.NewGuid():N}", null, null, null, assigneeId, null, null);
         var createResp = await _client.PostAsJsonAsync("/tasks", dto);
-        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
+        createResp.StatusCode.ShouldBe(HttpStatusCode.Created);
         var created = await createResp.Content.ReadFromJsonAsync<TaskDto>();
 
         // Delete as creator (still user-001)
         var response = await _client.DeleteAsync($"/tasks/{created!.Id}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         // Verify it is gone
         var getResp = await _client.GetAsync($"/tasks/{created.Id}");
-        getResp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        getResp.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     // ═══════════════════════════════════════════════════════════════════════

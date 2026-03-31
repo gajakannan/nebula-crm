@@ -110,7 +110,7 @@ engine/
 **Example Unit Test:**
 ```csharp
 using Xunit;
-using FluentAssertions;
+using Shouldly;
 
 public class CustomerTests
 {
@@ -124,7 +124,7 @@ public class CustomerTests
         customer.Activate();
 
         // Assert
-        customer.Status.Should().Be(CustomerStatus.Active);
+        customer.Status.ShouldBe(CustomerStatus.Active);
     }
 
     [Theory]
@@ -139,8 +139,8 @@ public class CustomerTests
         var act = () => customer.SetName(name);
 
         // Assert
-        act.Should().Throw<ArgumentException>()
-            .WithMessage("Name cannot be empty");
+        var exception = Should.Throw<ArgumentException>(act);
+        exception.Message.ShouldBe("Name cannot be empty");
     }
 }
 ```
@@ -191,8 +191,8 @@ public class CustomerRepositoryTests : IAsyncLifetime
 
         // Assert
         var saved = await _repository.GetByIdAsync(customer.Id);
-        saved.Should().NotBeNull();
-        saved!.Name.Should().Be("Test Customer");
+        saved.ShouldNotBeNull();
+        saved!.Name.ShouldBe("Test Customer");
     }
 
     public async Task DisposeAsync()
@@ -409,8 +409,8 @@ public async Task GetCustomerAsync_ShouldReturnCustomer()
     var result = await _repository.GetByIdAsync(customer.Id);
 
     // Assert
-    result.Should().NotBeNull();
-    result!.Id.Should().Be(customer.Id);
+    result.ShouldNotBeNull();
+    result!.Id.ShouldBe(customer.Id);
 }
 ```
 
@@ -424,7 +424,7 @@ public async Task GetCustomerAsync_ShouldReturnCustomer()
 public void ValidateEmail_ShouldReturnExpectedResult(string email, bool expected)
 {
     var isValid = EmailValidator.Validate(email);
-    isValid.Should().Be(expected);
+    isValid.ShouldBe(expected);
 }
 ```
 
@@ -474,8 +474,8 @@ public void TestMethod()
     var result = service.Activate(customer);
 
     // Assert - Verify the outcome
-    result.Should().BeTrue();
-    customer.Status.Should().Be(CustomerStatus.Active);
+    result.ShouldBeTrue();
+    customer.Status.ShouldBe(CustomerStatus.Active);
 }
 ```
 

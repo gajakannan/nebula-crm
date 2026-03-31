@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -244,12 +244,12 @@ public class DashboardScopeFilteringTests : IClassFixture<CustomWebApplicationFa
     {
         var response = await SendDashboardRequestAsync("/dashboard/opportunities?periodDays=365", role, subject, regions);
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var payload = await response.Content.ReadFromJsonAsync<DashboardOpportunitiesDto>();
-        payload.Should().NotBeNull();
+        payload.ShouldNotBeNull();
 
         var scopeStatus = payload!.Submissions.Single(status => status.Status == ScopeStatusCode);
-        scopeStatus.Count.Should().Be(expectedCount);
+        scopeStatus.Count.ShouldBe(expectedCount);
     }
 
     [Theory]
@@ -264,12 +264,12 @@ public class DashboardScopeFilteringTests : IClassFixture<CustomWebApplicationFa
             "scope-dist-user",
             "");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var payload = await response.Content.ReadFromJsonAsync<OpportunityBreakdownDto>();
-        payload.Should().NotBeNull();
-        payload!.Total.Should().Be(1);
-        payload.Groups.Should().ContainSingle();
-        payload.Groups.Single().Key.Should().Be(expectedOnlyKey);
+        payload.ShouldNotBeNull();
+        payload!.Total.ShouldBe(1);
+        payload.Groups.Count.ShouldBe(1);
+        payload.Groups.Single().Key.ShouldBe(expectedOnlyKey);
     }
 
     private async Task<HttpResponseMessage> SendDashboardRequestAsync(string path, string role, string subject, string regions)

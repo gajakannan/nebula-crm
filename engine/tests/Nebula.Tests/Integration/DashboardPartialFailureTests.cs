@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -56,11 +56,11 @@ public class DashboardPartialFailureTests : IClassFixture<CustomWebApplicationFa
     {
         var response = await _client.GetAsync("/dashboard/kpis?periodDays=90");
 
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
         var problem = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
-        problem.Should().NotBeNull();
-        problem!.Should().ContainKey("code");
-        problem["code"].ToString().Should().Be("internal_error");
+        problem.ShouldNotBeNull();
+        problem!.ShouldContainKey("code");
+        problem["code"].ToString().ShouldBe("internal_error");
     }
 
     [Fact]
@@ -70,9 +70,9 @@ public class DashboardPartialFailureTests : IClassFixture<CustomWebApplicationFa
         var outcomesResponse = await _client.GetAsync("/dashboard/opportunities/outcomes?periodDays=90");
         var nudgesResponse = await _client.GetAsync("/dashboard/nudges");
 
-        opportunitiesResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        outcomesResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        nudgesResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        opportunitiesResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        outcomesResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+        nudgesResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     private sealed class FaultInjectingDashboardRepository(

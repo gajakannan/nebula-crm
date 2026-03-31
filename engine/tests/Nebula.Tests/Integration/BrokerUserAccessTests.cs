@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using FluentAssertions;
+using Shouldly;
 
 namespace Nebula.Tests.Integration;
 
@@ -59,28 +59,28 @@ public class BrokerUserAccessTests(CustomWebApplicationFactory factory)
         var response = await _client.GetAsync("/brokers");
 
         // Assert — 200 OK
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
 
         // BrokerUser response must NOT contain internal fields
         var root = doc.RootElement;
-        ContainsProperty(root, "rowVersion").Should().BeFalse(
-            because: "rowVersion is InternalOnly (BROKER-VISIBILITY-MATRIX.md §Broker)");
-        ContainsProperty(root, "isDeactivated").Should().BeFalse(
-            because: "isDeactivated is InternalOnly (BROKER-VISIBILITY-MATRIX.md §Broker)");
+        ContainsProperty(root, "rowVersion").ShouldBeFalse(
+            "rowVersion is InternalOnly (BROKER-VISIBILITY-MATRIX.md §Broker)");
+        ContainsProperty(root, "isDeactivated").ShouldBeFalse(
+            "isDeactivated is InternalOnly (BROKER-VISIBILITY-MATRIX.md §Broker)");
 
         // Result should contain only the scoped broker
         var data = GetDataArray(root);
-        data.Should().NotBeNull();
+        data.ShouldNotBeNull();
         if (data.HasValue)
         {
-            data.Value.EnumerateArray().Should().AllSatisfy(item =>
+            foreach (var item in data.Value.EnumerateArray())
             {
-                item.TryGetProperty("id", out _).Should().BeTrue();
-                item.TryGetProperty("legalName", out _).Should().BeTrue();
-            });
+                item.TryGetProperty("id", out _).ShouldBeTrue();
+                item.TryGetProperty("legalName", out _).ShouldBeTrue();
+            }
         }
 
         _ = createdBroker; // suppress unused warning
@@ -104,12 +104,12 @@ public class BrokerUserAccessTests(CustomWebApplicationFactory factory)
         var response = await _client.GetAsync($"/brokers/{createdBroker}");
 
         // Assert: 403 with broker_scope_unresolvable code
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
-        problem.TryGetProperty("code", out var codeElement).Should().BeTrue(
-            because: "403 from scope unresolvable must include code discriminator");
-        codeElement.GetString().Should().Be("broker_scope_unresolvable");
+        problem.TryGetProperty("code", out var codeElement).ShouldBeTrue(
+            "403 from scope unresolvable must include code discriminator");
+        codeElement.GetString().ShouldBe("broker_scope_unresolvable");
     }
 
     // -----------------------------------------------------------------------
@@ -130,10 +130,10 @@ public class BrokerUserAccessTests(CustomWebApplicationFactory factory)
         var response = await _client.GetAsync("/brokers");
 
         // Assert: 403 broker_scope_unresolvable
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
 
         var json = await response.Content.ReadAsStringAsync();
-        json.Should().Contain("broker_scope_unresolvable");
+        json.ShouldContain("broker_scope_unresolvable");
     }
 
     // -----------------------------------------------------------------------
@@ -147,7 +147,7 @@ public class BrokerUserAccessTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync("/dashboard/kpis");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     // -----------------------------------------------------------------------
@@ -172,8 +172,8 @@ public class BrokerUserAccessTests(CustomWebApplicationFactory factory)
             phone = (string?)null,
         });
 
-        createResponse.StatusCode.Should().Be(HttpStatusCode.Created,
-            because: "Admin must be able to create broker for test setup");
+        createResponse.StatusCode.ShouldBe(HttpStatusCode.Created,
+            "Admin must be able to create broker for test setup");
 
         var created = await createResponse.Content.ReadFromJsonAsync<JsonElement>();
         var brokerId = created.GetProperty("id").GetGuid();

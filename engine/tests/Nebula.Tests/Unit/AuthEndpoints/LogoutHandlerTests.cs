@@ -1,5 +1,5 @@
 using System.Net;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -36,16 +36,16 @@ public class LogoutHandlerTests
         var result = await Nebula.Api.Endpoints.AuthEndpoints.LogoutAsync(httpContext, config, factory, NullLogger<Program>.Instance, CancellationToken.None);
 
         // Assert — handler returns 204
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NoContent>();
+        result.ShouldBeOfType<Microsoft.AspNetCore.Http.HttpResults.NoContent>();
 
         // Assert — revocation was called exactly once with correct token
-        messageHandler.Requests.Should().HaveCount(1);
+        messageHandler.Requests.Count.ShouldBe(1);
         var sentRequest = messageHandler.Requests.Single();
-        sentRequest.RequestUri!.ToString().Should().EndWith("/application/o/nebula/revoke/");
+        sentRequest.RequestUri!.ToString().ShouldEndWith("/application/o/nebula/revoke/");
 
         var body = await sentRequest.Content!.ReadAsStringAsync();
-        body.Should().Contain("token=valid-refresh-token-abc");
-        body.Should().Contain("token_type_hint=refresh_token");
+        body.ShouldContain("token=valid-refresh-token-abc");
+        body.ShouldContain("token_type_hint=refresh_token");
 
         // Assert — Set-Cookie clears the refresh_token cookie
         AssertClearCookieAppended(httpContext);
@@ -71,7 +71,7 @@ public class LogoutHandlerTests
         var result = await Nebula.Api.Endpoints.AuthEndpoints.LogoutAsync(httpContext, config, factory, NullLogger<Program>.Instance, CancellationToken.None);
 
         // Assert — 204 regardless of revocation failure
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NoContent>();
+        result.ShouldBeOfType<Microsoft.AspNetCore.Http.HttpResults.NoContent>();
 
         // Assert — cookie still cleared
         AssertClearCookieAppended(httpContext);
@@ -93,7 +93,7 @@ public class LogoutHandlerTests
         var result = await Nebula.Api.Endpoints.AuthEndpoints.LogoutAsync(httpContext, config, factory, NullLogger<Program>.Instance, CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NoContent>();
+        result.ShouldBeOfType<Microsoft.AspNetCore.Http.HttpResults.NoContent>();
         AssertClearCookieAppended(httpContext);
     }
 
@@ -116,10 +116,10 @@ public class LogoutHandlerTests
         var result = await Nebula.Api.Endpoints.AuthEndpoints.LogoutAsync(httpContext, config, factory, NullLogger<Program>.Instance, CancellationToken.None);
 
         // Assert — 204 returned
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NoContent>();
+        result.ShouldBeOfType<Microsoft.AspNetCore.Http.HttpResults.NoContent>();
 
         // Assert — no HTTP call to authentik was made
-        messageHandler.Requests.Should().BeEmpty();
+        messageHandler.Requests.ShouldBeEmpty();
 
         // Assert — Set-Cookie clear header is still emitted
         AssertClearCookieAppended(httpContext);
@@ -144,8 +144,8 @@ public class LogoutHandlerTests
         var result = await Nebula.Api.Endpoints.AuthEndpoints.LogoutAsync(httpContext, config, factory, NullLogger<Program>.Instance, CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NoContent>();
-        messageHandler.Requests.Should().BeEmpty(); // no HTTP call
+        result.ShouldBeOfType<Microsoft.AspNetCore.Http.HttpResults.NoContent>();
+        messageHandler.Requests.ShouldBeEmpty(); // no HTTP call
         AssertClearCookieAppended(httpContext);
     }
 
@@ -189,22 +189,15 @@ public class LogoutHandlerTests
     {
         // The response must contain a Set-Cookie header that zeroes out the refresh_token.
         var setCookieHeaders = httpContext.Response.Headers["Set-Cookie"];
-        setCookieHeaders.Should().NotBeEmpty(
-            because: "logout must always clear the refresh_token cookie");
+        setCookieHeaders.ShouldNotBeEmpty("logout must always clear the refresh_token cookie");
 
         var setCookieValue = setCookieHeaders.ToString();
-        setCookieValue.Should().Contain(Nebula.Api.Endpoints.AuthEndpoints.RefreshTokenCookieName,
-            because: "the cleared cookie must target the refresh_token name");
-        setCookieValue.Should().Contain("max-age=0",
-            because: "Max-Age=0 instructs the browser to delete the cookie immediately");
-        setCookieValue.Should().ContainEquivalentOf("httponly",
-            because: "the cookie must remain HttpOnly");
-        setCookieValue.Should().ContainEquivalentOf("secure",
-            because: "the cookie must remain Secure");
-        setCookieValue.Should().ContainEquivalentOf("samesite=strict",
-            because: "the cookie must remain SameSite=Strict");
-        setCookieValue.Should().Contain("path=/",
-            because: "the cookie must be scoped to the root path");
+        setCookieValue.ShouldContain(Nebula.Api.Endpoints.AuthEndpoints.RefreshTokenCookieName);
+        setCookieValue.ShouldContain("max-age=0");
+        setCookieValue.ToLowerInvariant().ShouldContain("httponly");
+        setCookieValue.ToLowerInvariant().ShouldContain("secure");
+        setCookieValue.ToLowerInvariant().ShouldContain("samesite=strict");
+        setCookieValue.ShouldContain("path=/");
     }
 }
 

@@ -1,7 +1,7 @@
 using System.Net;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -44,7 +44,7 @@ public class DashboardReadAuthorizationTests : IClassFixture<CustomWebApplicatio
     public async Task AggregateDashboardEndpoints_AsBrokerUser_ReturnForbidden(string path)
     {
         var response = await _client.GetAsync(path);
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     private sealed class FixedBrokerUserAuthHandler(

@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.Extensions.DependencyInjection;
 using Nebula.Application.DTOs;
 using Nebula.Domain.Entities;
@@ -21,11 +21,11 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync($"/submissions/{submissionId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<SubmissionDto>();
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(submissionId);
-        result.CurrentStatus.Should().Be("Received");
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(submissionId);
+        result.CurrentStatus.ShouldBe("Received");
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
     {
         var response = await _client.GetAsync($"/submissions/{Guid.NewGuid()}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -44,10 +44,10 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync($"/submissions/{submissionId}/transitions");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<List<WorkflowTransitionRecordDto>>();
-        result.Should().ContainSingle();
-        result![0].ToState.Should().Be("Triaging");
+        var item = result!.Single();
+        item.ToState.ShouldBe("Triaging");
     }
 
     [Fact]
@@ -59,15 +59,15 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
             $"/submissions/{submissionId}/transitions",
             new WorkflowTransitionRequestDto("Triaging", "triage"));
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<WorkflowTransitionRecordDto>();
-        result.Should().NotBeNull();
-        result!.FromState.Should().Be("Received");
-        result.ToState.Should().Be("Triaging");
+        result.ShouldNotBeNull();
+        result!.FromState.ShouldBe("Received");
+        result.ToState.ShouldBe("Triaging");
 
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Submissions.Single(s => s.Id == submissionId).CurrentStatus.Should().Be("Triaging");
+        db.Submissions.Single(s => s.Id == submissionId).CurrentStatus.ShouldBe("Triaging");
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
             $"/submissions/{submissionId}/transitions",
             new WorkflowTransitionRequestDto("Binding", "skip"));
 
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
             $"/submissions/{submissionId}/transitions",
             new WorkflowTransitionRequestDto(string.Empty, "missing"));
 
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -101,11 +101,11 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync($"/renewals/{renewalId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<RenewalDto>();
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(renewalId);
-        result.CurrentStatus.Should().Be("Created");
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(renewalId);
+        result.CurrentStatus.ShouldBe("Created");
     }
 
     [Fact]
@@ -116,10 +116,10 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
 
         var response = await _client.GetAsync($"/renewals/{renewalId}/transitions");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<List<WorkflowTransitionRecordDto>>();
-        result.Should().ContainSingle();
-        result![0].ToState.Should().Be("DataReview");
+        var item = result!.Single();
+        item.ToState.ShouldBe("DataReview");
     }
 
     [Fact]
@@ -131,15 +131,15 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
             $"/renewals/{renewalId}/transitions",
             new WorkflowTransitionRequestDto("DataReview", "start"));
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<WorkflowTransitionRecordDto>();
-        result.Should().NotBeNull();
-        result!.FromState.Should().Be("Created");
-        result.ToState.Should().Be("DataReview");
+        result.ShouldNotBeNull();
+        result!.FromState.ShouldBe("Created");
+        result.ToState.ShouldBe("DataReview");
 
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Renewals.Single(r => r.Id == renewalId).CurrentStatus.Should().Be("DataReview");
+        db.Renewals.Single(r => r.Id == renewalId).CurrentStatus.ShouldBe("DataReview");
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
             $"/renewals/{Guid.NewGuid()}/transitions",
             new WorkflowTransitionRequestDto("DataReview", "missing"));
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
             $"/renewals/{renewalId}/transitions",
             new WorkflowTransitionRequestDto("Negotiation", "skip"));
 
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
     }
 
     private async Task<Guid> SeedSubmissionAsync()

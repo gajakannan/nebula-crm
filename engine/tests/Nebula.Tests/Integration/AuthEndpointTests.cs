@@ -1,5 +1,5 @@
 using System.Net;
-using FluentAssertions;
+using Shouldly;
 using Nebula.Api.Endpoints;
 
 namespace Nebula.Tests.Integration;
@@ -28,12 +28,12 @@ public class AuthEndpointTests(CustomWebApplicationFactory factory) : IClassFixt
         var response = await _client.PostAsync("/auth/logout", content: null);
 
         // Assert — status
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent,
-            because: "logout must return 204 No Content even when no cookie is present");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent,
+            "logout must return 204 No Content even when no cookie is present");
 
         // Assert — no body
         var body = await response.Content.ReadAsStringAsync();
-        body.Should().BeEmpty(because: "204 responses must have no body");
+        body.ShouldBeEmpty("204 responses must have no body");
 
         // Assert — Set-Cookie clears the refresh_token
         AssertRefreshTokenCookieCleared(response);
@@ -50,10 +50,10 @@ public class AuthEndpointTests(CustomWebApplicationFactory factory) : IClassFixt
         var response = await _client.SendAsync(request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         var body = await response.Content.ReadAsStringAsync();
-        body.Should().BeEmpty();
+        body.ShouldBeEmpty();
 
         AssertRefreshTokenCookieCleared(response);
     }
@@ -69,9 +69,9 @@ public class AuthEndpointTests(CustomWebApplicationFactory factory) : IClassFixt
         var response = await _client.SendAsync(request);
 
         // Assert — must not return 401
-        response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized,
-            because: "§2.1 requires the endpoint to accept unauthenticated requests");
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldNotBe(HttpStatusCode.Unauthorized,
+            "§2.1 requires the endpoint to accept unauthenticated requests");
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
     // ------------------------------------------------------------------
@@ -80,18 +80,18 @@ public class AuthEndpointTests(CustomWebApplicationFactory factory) : IClassFixt
 
     private static void AssertRefreshTokenCookieCleared(HttpResponseMessage response)
     {
-        response.Headers.TryGetValues("Set-Cookie", out var setCookieValues).Should().BeTrue(
-            because: "logout must always emit a Set-Cookie header to clear the refresh_token");
+        response.Headers.TryGetValues("Set-Cookie", out var setCookieValues).ShouldBeTrue(
+            "logout must always emit a Set-Cookie header to clear the refresh_token");
 
         var setCookie = string.Join("; ", setCookieValues!);
 
-        setCookie.Should().Contain(AuthEndpoints.RefreshTokenCookieName,
-            because: "the cleared cookie must target refresh_token");
-        setCookie.Should().Contain("max-age=0",
-            because: "Max-Age=0 instructs the browser to immediately delete the cookie");
-        setCookie.Should().ContainEquivalentOf("httponly");
-        setCookie.Should().ContainEquivalentOf("secure");
-        setCookie.Should().ContainEquivalentOf("samesite=strict");
-        setCookie.Should().Contain("path=/");
+        setCookie.ShouldContain(AuthEndpoints.RefreshTokenCookieName,
+            customMessage: "the cleared cookie must target refresh_token");
+        setCookie.ShouldContain("max-age=0",
+            customMessage: "Max-Age=0 instructs the browser to immediately delete the cookie");
+        setCookie.ToLowerInvariant().ShouldContain("httponly");
+        setCookie.ToLowerInvariant().ShouldContain("secure");
+        setCookie.ToLowerInvariant().ShouldContain("samesite=strict");
+        setCookie.ShouldContain("path=/");
     }
 }

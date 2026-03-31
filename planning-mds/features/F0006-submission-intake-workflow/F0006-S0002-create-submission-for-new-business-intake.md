@@ -20,13 +20,13 @@ applies_to: product-manager
 
 ## Context & Background
 
-Submission creation is the entry point for all new business in Nebula. A distribution user captures the essential intake information — account, broker, requested coverage date, line of business — and the system creates the submission in Received status. Region alignment between account and broker is enforced at creation time. The created submission immediately appears in the pipeline list and the creator is initially assigned as the owner.
+Submission creation is the entry point for all new business in Nebula. A distribution user captures the minimum intake information needed to open the record — account, broker, and requested coverage date, with line of business captured when already known — and the system creates the submission in Received status. Region alignment between account and broker is enforced at creation time. The created submission immediately appears in the pipeline list and the creator is initially assigned as the owner.
 
 ## Acceptance Criteria
 
 **Happy Path:**
 - **Given** a distribution user with `submission:create` permission
-- **When** they submit a create request with AccountId, BrokerId, EffectiveDate, and LineOfBusiness
+- **When** they submit a create request with AccountId, BrokerId, and EffectiveDate
 - **Then** a submission is created in `Received` status, `AssignedToUserId` is set to the creator, `CreatedByUserId` and `CreatedAt` are set, an ActivityTimelineEvent (`SubmissionCreated`) is appended, and the submission ID is returned
 
 **With Optional Fields:**
@@ -84,7 +84,7 @@ Submission creation is the entry point for all new business in Nebula. A distrib
 
 **Roles that can create:**
 - Distribution User — Creates submissions and is assigned as initial owner
-- Distribution Manager — Creates submissions; can assign to self or others
+- Distribution Manager — Creates submissions; initial owner still defaults to the creator and reassignment happens separately
 - Admin — Full create access
 
 **Data Visibility:**
@@ -118,7 +118,7 @@ Submission creation is the entry point for all new business in Nebula. A distrib
 ## UI/UX Notes
 
 - Screens involved: Create Submission dialog or page (accessed from Pipeline List header action)
-- Key interactions: Account picker (search-as-you-type), Broker picker (search-as-you-type with region validation feedback), LOB dropdown, date picker for effective date, optional premium and description fields
+- Key interactions: Account picker (search-as-you-type), Broker picker (search-as-you-type with region validation feedback), optional LOB dropdown, date picker for effective date, optional premium and description fields
 - On successful create → navigate to Submission Detail (F0006-S0003)
 - Region mismatch shown as inline validation error near broker picker
 

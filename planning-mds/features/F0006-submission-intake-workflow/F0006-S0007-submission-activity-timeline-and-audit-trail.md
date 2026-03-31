@@ -41,7 +41,7 @@ The activity timeline is the audit backbone of the submission intake workflow. E
 - **Then** a "Load more" action fetches the next page of events
 
 **Alternative Flows / Edge Cases:**
-- No events (should not happen — creation always produces one) → empty timeline with message
+- No events (should not happen for F0006-created records because creation always produces one; legacy or malformed seeded data may still render empty) → empty timeline with message
 - Actor user was soft-deleted → show "[Deleted User]" with userId as fallback
 - Large event payload (long reason text) → truncate in list view; full text on expand/click
 - Timeline events from downstream features (F0019 transitions, F0020 document uploads) appear in the same timeline once those features are active
@@ -104,6 +104,7 @@ The activity timeline is the audit backbone of the submission intake workflow. E
 
 **Depends On:**
 - F0006-S0002 — SubmissionCreated events
+- F0006-S0003 — SubmissionUpdated events
 - F0006-S0004 — SubmissionTransitioned events
 - F0006-S0006 — SubmissionAssigned events
 

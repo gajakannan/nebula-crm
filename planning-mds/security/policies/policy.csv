@@ -146,7 +146,7 @@ p, DistributionManager, submission, update,     true
 p, DistributionManager, submission, transition, true
 p, DistributionManager, submission, assign,     true
 
-# Underwriter — read (assigned + team), transition (downstream states only, F0019)
+# Underwriter — read (assigned only in F0006 intake scope), transition (downstream states only, F0019)
 p, Underwriter,         submission, read,       true
 p, Underwriter,         submission, transition, true
 

@@ -36,7 +36,7 @@ applies_to: product-manager
 **In Scope (MVP):**
 - Submission creation and intake capture (linked to account, broker, and optionally program)
 - Submission pipeline list view with status, broker, account, LOB, and assignment filters
-- Submission detail view with linked account, broker, program, completeness status, and timeline
+- Submission detail view with linked account, broker, program, completeness status, editable intake fields, and timeline
 - Intake status transitions: Received → Triaging → WaitingOnBroker / ReadyForUWReview
 - Completeness evaluation (required fields and required document categories) as a transition guard
 - Manual underwriting assignment and explicit queue handoff to ReadyForUWReview
@@ -73,12 +73,12 @@ applies_to: product-manager
 ## Personas
 
 ### Distribution User (Primary)
-- **Intake job-to-be-done:** Create submissions from broker requests, triage for completeness, follow up with brokers for missing information, and advance complete submissions to underwriting review.
+- **Intake job-to-be-done:** Create submissions from broker requests, edit intake details as missing information arrives, triage for completeness, follow up with brokers for missing information, and advance complete submissions to underwriting review.
 - **Key pain:** Intake happens across email and spreadsheets with no tracking. Information arrives incomplete. There is no structured way to know what is missing, what has been followed up on, or when a submission is ready for underwriting.
 - **Success:** Can create a submission in Nebula, see what is missing at a glance, track follow-up with the broker, and hand off a complete submission to the right underwriter with full context.
 
 ### Underwriter
-- **Intake job-to-be-done:** Receive triaged, complete submissions with broker/account context and supporting documents so that underwriting review can begin immediately.
+- **Intake job-to-be-done:** Receive triaged, complete submissions that are explicitly handed off to them with broker/account context and supporting documents so that underwriting review can begin immediately.
 - **Key pain:** Receives submissions without context — missing documents, unclear broker contact, no history of what has already been discussed. Spends time chasing information instead of evaluating risk.
 - **Success:** Sees ReadyForUWReview submissions assigned to them with completeness confirmed, linked account and broker context, and the full intake timeline.
 
@@ -153,12 +153,12 @@ When F0020 is not yet available, document completeness checks are soft-skipped (
 
 - [ ] Users can create a submission linked to an account and broker with required intake fields
 - [ ] Users can view a filterable submission pipeline list with intake status, broker, account, LOB, and assignment filters
-- [ ] Users can view submission detail with linked account, broker, program, completeness status, and activity timeline
+- [ ] Users can view submission detail with linked account, broker, program, editable intake fields, completeness status, and activity timeline
 - [ ] Submissions transition through Received → Triaging → WaitingOnBroker / ReadyForUWReview with validation
 - [ ] Completeness evaluation surfaces missing fields and missing document categories
 - [ ] Triaging → ReadyForUWReview requires completeness check to pass and underwriter to be assigned
 - [ ] Distribution users and managers can assign/reassign submission ownership; handoff to underwriting is explicit
-- [ ] Stale submissions (stuck in Received or Triaging beyond a configurable threshold) are flagged and surfaced on dashboard
+- [ ] Stale submissions (stuck in Received, Triaging, or WaitingOnBroker beyond a configurable threshold) are flagged and surfaced on dashboard
 - [ ] All submission transitions and activities are recorded in the append-only timeline
 - [ ] Region alignment enforced: Account.Region must be in the broker's BrokerRegion set
 
@@ -167,13 +167,13 @@ When F0020 is not yet available, document completeness checks are soft-skipped (
 | Screen | Purpose | Key Actions |
 |--------|---------|-------------|
 | Submission Pipeline List | Primary operating view for intake submissions | Filter by intake status (Received, Triaging, WaitingOnBroker, ReadyForUWReview), broker, account, LOB, assigned user, stale flag; sort by created date or effective date; paginate |
-| Submission Detail | Full context for a single submission | View linked account, broker, program; view completeness status; view activity timeline; advance status; assign/reassign owner; log follow-up activity |
-| Create Submission Dialog/Page | Capture new submission intake | Select account, broker; enter effective date, LOB, premium estimate, description; validate region alignment; submit |
-| Dashboard — Stale Submission Nudge Card | Surface stale submissions on the dashboard | Shows count of submissions stuck in Received/Triaging beyond threshold; click navigates to filtered pipeline list |
+| Submission Detail | Full context for a single submission | View linked account, broker, program; edit mutable intake fields; view completeness status; view activity timeline; advance status; assign/reassign owner; log follow-up activity |
+| Create Submission Dialog/Page | Capture new submission intake | Select account, broker; enter effective date and optionally LOB, premium estimate, description; validate region alignment; submit |
+| Dashboard — Stale Submission Nudge Card | Surface stale submissions on the dashboard | Shows count of submissions stuck in Received, Triaging, or WaitingOnBroker beyond threshold; click navigates to filtered pipeline list |
 
 **Key Workflows:**
 
-1. **New Submission Intake Flow** — Distribution user receives broker request → opens Create Submission → links account and broker → enters coverage details → submission created in Received → transitions to Triaging → reviews completeness → follows up with broker if incomplete (→ WaitingOnBroker) → once complete, assigns underwriter and advances to ReadyForUWReview.
+1. **New Submission Intake Flow** — Distribution user receives broker request → opens Create Submission → links account and broker → enters the minimum intake details needed to open the record → submission created in Received → transitions to Triaging → edits or enriches intake details as more information arrives → reviews completeness → follows up with broker if incomplete (→ WaitingOnBroker) → once complete, assigns underwriter and advances to ReadyForUWReview.
 
 2. **Broker Follow-Up Flow** — Distribution user triages submission → completeness check shows missing documents → transitions to WaitingOnBroker → logs follow-up activity (timeline event) → broker provides missing info → distribution user reviews → transitions to ReadyForUWReview.
 
@@ -218,9 +218,9 @@ When F0020 is not yet available, document completeness checks are soft-skipped (
 
 | Role | Access Level | Notes |
 |------|-------------|-------|
-| Distribution User | Create, Read (own + team scope), Update, Transition (Received→Triaging, Triaging→WaitingOnBroker, Triaging→ReadyForUWReview, WaitingOnBroker→ReadyForUWReview) | Can assign to self; primary intake operator |
+| Distribution User | Create, Read (own scope), Update (own scope), Transition (Received→Triaging, Triaging→WaitingOnBroker, Triaging→ReadyForUWReview, WaitingOnBroker→ReadyForUWReview) | Can assign to self; primary intake operator |
 | Distribution Manager | Create, Read (all in region), Update, Transition (all intake transitions), Reassign | Full pipeline visibility; can reassign any submission in scope |
-| Underwriter | Read (assigned + team scope) | Read-only in intake phase; receives submissions in ReadyForUWReview. Transition rights for downstream states owned by F0019 |
+| Underwriter | Read (assigned submissions only) | Read-only in intake phase; receives submissions explicitly handed off to them in ReadyForUWReview. Transition rights for downstream states owned by F0019 |
 | Relationship Manager | Read (own accounts/brokers) | Read-only visibility for account/broker context |
 | Program Manager | Read (own programs) | Read-only visibility for program-scoped submissions |
 | Admin | Full CRUD + all transitions + reassign | Administrative override |
@@ -245,7 +245,7 @@ When F0020 is not yet available, document completeness checks are soft-skipped (
 - **Risk:** F0016 (Account) may not be fully built when F0006 starts. **Mitigation:** F0006 can use a minimal Account entity (Id, Name, Region) as a stub. Full Account 360 is not required for intake.
 - **Assumption:** Manual assignment is sufficient for MVP. Rule-based queue routing (F0022) is Future scope.
 - **Assumption:** LOB values on Submission follow the same known set defined in ADR-009.
-- **Assumption:** Stale submission threshold is configurable (default: 48 hours in Received, 72 hours in Triaging).
+- **Assumption:** Stale submission thresholds are configurable (default: 48 hours in Received, 48 hours in Triaging, 72 hours in WaitingOnBroker).
 
 ## Dependencies
 

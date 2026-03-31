@@ -86,15 +86,15 @@ ADD indexes:
 
 ### Seed Data
 
-Seed `WorkflowSlaThreshold` entries for submission intake states (if not already present):
+Seed `WorkflowSlaThreshold` entries for submission intake states (if not already present). Reuse the existing table shape; F0006 does not add a per-LOB column to this table in MVP:
 
 ```sql
-INSERT INTO "WorkflowSlaThresholds" ("Id", "EntityType", "Status", "LineOfBusiness", "WarningDays", "TargetDays")
+INSERT INTO "WorkflowSlaThresholds" ("Id", "EntityType", "Status", "WarningDays", "TargetDays")
 VALUES
-  (gen_random_uuid(), 'Submission', 'Received',        NULL, 1, 2),
-  (gen_random_uuid(), 'Submission', 'Triaging',        NULL, 1, 2),
-  (gen_random_uuid(), 'Submission', 'WaitingOnBroker', NULL, 2, 3);
--- ReadyForUWReview: never stale in F0006 scope (terminal for intake; F0019 owns escalation)
+  (gen_random_uuid(), 'submission', 'Received',        1, 2),
+  (gen_random_uuid(), 'submission', 'Triaging',        1, 2),
+  (gen_random_uuid(), 'submission', 'WaitingOnBroker', 2, 3);
+-- ReadyForUWReview: not stale in F0006 scope because intake ownership ends there
 ```
 
 Seed 5–8 sample submissions across intake states for dev/test, linked to existing dev accounts and brokers.
@@ -733,7 +733,7 @@ ComputeIsStale(Submission submission, DateTime now) → bool
 ```
 
 1. If `CurrentStatus` is terminal (Bound, Declined, Withdrawn) or ReadyForUWReview → return false
-2. Load WorkflowSlaThreshold for `EntityType="Submission"`, `Status=submission.CurrentStatus`, `LineOfBusiness=null` (default)
+2. Load WorkflowSlaThreshold for `EntityType="submission"` and `Status=submission.CurrentStatus`
 3. If no threshold found → return false
 4. Compute last transition timestamp: query `WorkflowTransition` for this submission, order by OccurredAt desc, take first → `lastTransitionAt`
 5. If `lastTransitionAt` is null → use `submission.CreatedAt` as reference
@@ -754,7 +754,7 @@ ListAsync(SubmissionListQuery query, ICurrentUserService user, CancellationToken
 2. **ABAC scope filter** (query layer):
    - DistributionUser: `.Where(s => s.AssignedToUserId == user.UserId)`
    - DistributionManager: `.Where(s => s.Account.Region != null && user.Regions.Contains(s.Account.Region))`
-   - Underwriter: `.Where(s => s.AssignedToUserId == user.UserId)` (in intake states, underwriter sees assigned only)
+   - Underwriter: `.Where(s => s.AssignedToUserId == user.UserId)` (assigned submissions only in F0006 intake scope)
    - RelationshipManager, ProgramManager: scope via managed broker/program (deferred to query helper)
    - Admin: no filter
 3. Apply query filters (status, brokerId, accountId, LOB, assignedToUserId)

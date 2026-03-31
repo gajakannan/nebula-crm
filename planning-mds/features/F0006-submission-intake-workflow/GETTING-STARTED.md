@@ -28,7 +28,7 @@ cd experience && pnpm dev
 ## Seed Data
 
 - **ReferenceSubmissionStatus**: Seed intake states (Received, Triaging, WaitingOnBroker, ReadyForUWReview) plus downstream states (InReview, Quoted, BindRequested, Bound, Declined, Withdrawn) with terminal flags and display metadata
-- **Stale thresholds**: Seed configurable thresholds (Received=48h, Triaging=48h, WaitingOnBroker=72h)
+- **Stale thresholds**: Seed configurable thresholds in `WorkflowSlaThresholds` using the existing schema (`EntityType="submission"`): Received=48h, Triaging=48h, WaitingOnBroker=72h
 - **Accounts**: At least one test account with Region set
 - **Brokers**: At least one test broker with matching BrokerRegion
 - **Users**: lisa.wong (DistributionUser), john.miller (Underwriter), akadmin (Admin)
@@ -41,7 +41,7 @@ cd experience && pnpm dev
 4. Open submission detail — verify completeness panel shows field status
 5. Transition to Triaging → verify timeline event and status badge update
 6. Assign to `john.miller` (Underwriter)
-7. Fill required fields (LOB, etc.) → verify completeness passes
+7. Use the detail page edit action to fill required fields (LOB, etc.) → verify completeness passes
 8. Transition to ReadyForUWReview → verify completeness guard enforced
 9. Authenticate as `john.miller` → verify submission visible in ReadyForUWReview
 10. Verify stale flag appears on a submission left in Received for > 48 hours
@@ -50,11 +50,13 @@ cd experience && pnpm dev
 
 | Layer | Path | Purpose |
 |-------|------|---------|
-| Backend | `engine/src/Nebula.Api/Submissions/` | Submission endpoints and services |
-| Backend | `engine/src/Nebula.Domain/Submissions/` | Submission entity and workflow rules |
-| Backend | `engine/src/Nebula.Infrastructure/Submissions/` | EF repository and configuration |
-| Frontend | `experience/src/pages/submissions/` | Submission pipeline list and detail pages |
-| Frontend | `experience/src/components/submissions/` | Submission-specific components |
+| Backend | `engine/src/Nebula.Api/Endpoints/SubmissionEndpoints.cs` | Submission HTTP routes |
+| Backend | `engine/src/Nebula.Application/Services/SubmissionService.cs` | Submission business logic |
+| Backend | `engine/src/Nebula.Application/Services/WorkflowStateMachine.cs` | Submission workflow rules |
+| Backend | `engine/src/Nebula.Domain/Entities/Submission.cs` | Submission entity |
+| Backend | `engine/src/Nebula.Infrastructure/Repositories/SubmissionRepository.cs` | Submission data access |
+| Backend | `engine/src/Nebula.Infrastructure/Persistence/Configurations/WorkflowSlaThresholdConfiguration.cs` | Current SLA threshold seed/config source |
+| Frontend | `experience/src/features/submissions/` | Proposed feature slice for list, detail, edit, assignment, and timeline UI |
 | Planning | `planning-mds/security/policies/policy.csv` | Casbin ABAC policies §2.3 |
 
 ## Notes

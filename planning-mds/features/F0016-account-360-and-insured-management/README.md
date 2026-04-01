@@ -7,6 +7,7 @@
 ## Overview
 
 Add insured-centered account records and a full account 360 so underwriters and distribution users can view related contacts, submissions, policies, renewals, and activity in one place.
+F0016 also owns account lifecycle resilience so submission, policy, renewal, and related views continue to render predictably if an account is deleted, merged, or deactivated.
 
 ## Documents
 

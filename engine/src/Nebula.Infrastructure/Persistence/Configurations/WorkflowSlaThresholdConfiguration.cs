@@ -37,16 +37,8 @@ public class WorkflowSlaThresholdConfiguration : IEntityTypeConfiguration<Workfl
         [
             // Submission thresholds
             Seed("1fef8cb4-2f9b-41e8-9329-3c1a5d22790a", "submission", "Received", 1, 2, now),
-            Seed("f6969f8b-7ab9-4ab0-a6e9-26f95f57b21c", "submission", "Triaging", 2, 5, now),
-            Seed("379f3ad6-68f0-4d2f-b52f-5ab9bb40f157", "submission", "WaitingOnBroker", 5, 10, now),
-            Seed("33cc5f8d-33ea-4f8a-a737-2f64946f044f", "submission", "WaitingOnDocuments", 5, 10, now),
-            Seed("ec690f3d-84c8-4709-8b32-ff1efde52e52", "submission", "ReadyForUWReview", 3, 7, now),
-            Seed("8b43ed42-17f2-426a-a14a-442f6a7d43d4", "submission", "InReview", 5, 14, now),
-            Seed("ecf8f24e-8ead-4a44-b123-b85b6527db31", "submission", "QuotePreparation", 3, 7, now),
-            Seed("3047cb13-59f8-4d87-a79d-e80e9dcf28ea", "submission", "Quoted", 7, 21, now),
-            Seed("95db58fe-ef54-4c7b-b707-0cdf6458cd5b", "submission", "RequoteRequested", 7, 21, now),
-            Seed("0ef57fce-6bd8-42e7-b1ef-767e44a02817", "submission", "BindRequested", 2, 5, now),
-            Seed("f419f936-3f6f-4135-9d9b-7744bb5e43b8", "submission", "Binding", 2, 5, now),
+            Seed("f6969f8b-7ab9-4ab0-a6e9-26f95f57b21c", "submission", "Triaging", 1, 2, now),
+            Seed("379f3ad6-68f0-4d2f-b52f-5ab9bb40f157", "submission", "WaitingOnBroker", 2, 3, now),
 
             // Renewal thresholds
             Seed("30efe68f-9e5c-4e7f-9191-e68ee0f8eb26", "renewal", "Created", 1, 3, now),

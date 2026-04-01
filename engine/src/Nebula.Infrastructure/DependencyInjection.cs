@@ -3,6 +3,7 @@ using Nebula.Application.Interfaces;
 using Nebula.Infrastructure.Authorization;
 using Nebula.Infrastructure.Persistence;
 using Nebula.Infrastructure.Repositories;
+using Nebula.Infrastructure.Services;
 
 namespace Nebula.Infrastructure;
 
@@ -19,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<ITimelineRepository, TimelineRepository>();
         services.AddScoped<IWorkflowTransitionRepository, WorkflowTransitionRepository>();
         services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
+        services.AddScoped<ISubmissionDocumentChecklistReader, UnavailableSubmissionDocumentChecklistReader>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddSingleton<IAuthorizationService, CasbinAuthorizationService>();

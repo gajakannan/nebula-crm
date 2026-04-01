@@ -51,9 +51,9 @@ The submission detail view is the primary workspace for intake triage. Distribut
 - **Then** each required field shows green check (populated) or red indicator (missing); each required document category shows count of linked documents or "Missing" indicator
 
 **Alternative Flows / Edge Cases:**
-- Submission not found or soft-deleted → HTTP 404 error page
-- User lacks read permission → HTTP 403 error page
-- Linked account or broker soft-deleted → show "[Deleted]" label with ID; do not block rendering
+- Submission not found, soft-deleted, or hidden by entity-scope visibility rules → HTTP 404 error page
+- User lacks route/action-level `submission:read` permission → HTTP 403 error page
+- Deleted/merged account fallback on linked detail views is deferred from F0006 closeout and owned by F0016
 - No timeline events yet due to legacy or malformed seeded data → empty timeline section with message "No activity recorded yet"
 - F0020 not available → document completeness section shows "Document management not yet configured" placeholder
 
@@ -77,8 +77,9 @@ The submission detail view is the primary workspace for intake triage. Distribut
 - `brokerName`, `brokerLicenseNumber`: Denormalized from Broker
 - `programName`: Denormalized from Program (nullable)
 - `assignedToDisplayName`: Denormalized from UserProfile
+- `rowVersion`: Current optimistic-concurrency token for follow-up update / assignment / transition actions
 - `completeness`: Object with field-level and document-level pass/fail status
-- `timelineEvents`: Paginated list of ActivityTimelineEvents for EntityType=Submission, EntityId=this submission
+- Timeline data is loaded separately from `GET /submissions/{id}/timeline` so the detail response does not embed a paginated timeline payload
 
 **Validation Rules:**
 - SubmissionId must be a valid uuid
@@ -109,7 +110,7 @@ The submission detail view is the primary workspace for intake triage. Distribut
 
 - Performance: Detail view loads in < 2s including completeness projection and timeline (first page)
 - Security: ABAC-scoped read; no unauthorized submission data leaks
-- Reliability: Graceful degradation for deleted linked entities; timeline paginates independently
+- Reliability: Timeline paginates independently; account-lifecycle fallback behavior is explicitly deferred to F0016 rather than being implicitly assumed in F0006
 
 ## Dependencies
 
@@ -124,11 +125,21 @@ The submission detail view is the primary workspace for intake triage. Distribut
 - F0006-S0007 — Activity timeline section
 - F0006-S0008 — Stale indicator
 
+## Business Rules
+
+1. **ABAC Scope Enforcement:** The detail view is gated by Casbin ABAC policy (policy.csv §2.3). Route/action-level denial of `submission:read` returns HTTP 403. If the caller has read capability in general but the specific submission is outside resolved visibility scope, the API may cloak that outcome as HTTP 404.
+2. **Edit Produces Audit Trail:** Every successful field edit through the detail view's edit action atomically appends a `SubmissionUpdated` ActivityTimelineEvent recording the changed fields, actor, and timestamp. No-op edits (no fields actually changed) do not produce a timeline event.
+3. **Optimistic Concurrency on Edit:** Field edits enforce optimistic concurrency via `rowVersion` + `If-Match`. If another user modified the submission since the detail view loaded, the edit returns HTTP 412 with `code=precondition_failed`.
+4. **LOB Validation on Edit:** LineOfBusiness, when edited, must match a value in the known LOB set (ADR-009). Invalid values return HTTP 400.
+5. **InternalOnly Data:** All submission detail data is internal-only in MVP. No ExternalVisible fields.
+6. **Lifecycle Boundary:** Deleted or merged account fallback behavior is not part of F0006 closeout. If that requirement is needed, it is owned by F0016 account lifecycle work. Broker-side deleted-entity fallback is also outside F0006 closeout; active broker deletion remains constrained by broker dependency rules.
+
 ## Out of Scope
 
 - Free-form inline editing of individual fields without an explicit edit action (use a dedicated edit form or dialog instead)
 - Document upload directly from detail view (F0020 handles document management)
 - Communication or email integration from detail view (F0021)
+- Deleted or merged linked-entity fallback behavior beyond active-record assumptions
 - Printing or PDF export of submission detail
 
 ## UI/UX Notes

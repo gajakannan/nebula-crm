@@ -8,10 +8,13 @@ public class Submission : BaseEntity
     public string? LineOfBusiness { get; set; }
     public string CurrentStatus { get; set; } = "Received";
     public DateTime EffectiveDate { get; set; }
-    public decimal PremiumEstimate { get; set; }
+    public DateTime? ExpirationDate { get; set; }
+    public decimal? PremiumEstimate { get; set; }
+    public string? Description { get; set; }
     public Guid AssignedToUserId { get; set; }
 
     public Account Account { get; set; } = default!;
     public Broker Broker { get; set; } = default!;
     public Program? Program { get; set; }
+    public UserProfile AssignedToUser { get; set; } = default!;
 }

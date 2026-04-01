@@ -21,16 +21,12 @@ public static class DevSeedData
     private static readonly Dictionary<string, string[]> SubmissionNextStates = new(StringComparer.Ordinal)
     {
         ["Received"] = ["Triaging"],
-        ["Triaging"] = ["WaitingOnBroker", "WaitingOnDocuments", "ReadyForUWReview"],
-        ["WaitingOnBroker"] = ["Triaging", "WaitingOnDocuments", "ReadyForUWReview"],
-        ["WaitingOnDocuments"] = ["WaitingOnBroker", "ReadyForUWReview"],
-        ["ReadyForUWReview"] = ["InReview", "QuotePreparation"],
-        ["InReview"] = ["WaitingOnBroker", "WaitingOnDocuments", "QuotePreparation", "Quoted", "RequoteRequested"],
-        ["QuotePreparation"] = ["Quoted", "RequoteRequested"],
-        ["Quoted"] = ["RequoteRequested", "BindRequested"],
-        ["RequoteRequested"] = ["InReview", "QuotePreparation", "Quoted"],
-        ["BindRequested"] = ["Binding", "Bound"],
-        ["Binding"] = ["Bound"],
+        ["Triaging"] = ["WaitingOnBroker", "ReadyForUWReview"],
+        ["WaitingOnBroker"] = ["ReadyForUWReview"],
+        ["ReadyForUWReview"] = ["InReview"],
+        ["InReview"] = ["Quoted", "Declined"],
+        ["Quoted"] = ["BindRequested", "Declined", "Withdrawn"],
+        ["BindRequested"] = ["Bound", "Withdrawn"],
     };
 
     private static readonly Dictionary<string, string[]> RenewalNextStates = new(StringComparer.Ordinal)
@@ -156,7 +152,9 @@ public static class DevSeedData
                 LineOfBusiness = rng.NextDouble() < 0.1 ? null : LineOfBusinessCodes[rng.Next(LineOfBusinessCodes.Length)],
                 CurrentStatus = path[^1],
                 EffectiveDate = now.AddDays(rng.Next(-30, 180)),
+                ExpirationDate = now.AddDays(rng.Next(180, 540)),
                 PremiumEstimate = Math.Round((decimal)(rng.Next(12_000, 250_000) + rng.NextDouble()), 2),
+                Description = rng.NextDouble() < 0.45 ? "Seeded submission intake record for development workflows." : null,
                 AssignedToUserId = assignedTo,
                 CreatedAt = createdAt,
                 UpdatedAt = updatedAt,
@@ -579,16 +577,16 @@ public static class DevSeedData
 
     private static string PickSubmissionTerminal(Random rng, string current) => current switch
     {
-        "Received" or "Triaging" or "WaitingOnBroker" or "WaitingOnDocuments" => WeightedPick(rng,
-            ("Withdrawn", 30), ("NotQuoted", 28), ("Lost", 18), ("Declined", 14), ("Expired", 10)),
-        "ReadyForUWReview" or "InReview" or "QuotePreparation" => WeightedPick(rng,
-            ("Declined", 34), ("NotQuoted", 24), ("Withdrawn", 16), ("Lost", 16), ("Expired", 10)),
-        "Quoted" or "RequoteRequested" => WeightedPick(rng,
-            ("Lost", 28), ("Withdrawn", 20), ("NotQuoted", 18), ("Declined", 16), ("Bound", 14), ("Expired", 4)),
-        "BindRequested" or "Binding" => WeightedPick(rng,
-            ("Bound", 56), ("Declined", 14), ("Lost", 12), ("Withdrawn", 10), ("Expired", 8)),
+        "Received" or "Triaging" or "WaitingOnBroker" => WeightedPick(rng,
+            ("Withdrawn", 52), ("Declined", 48)),
+        "ReadyForUWReview" or "InReview" => WeightedPick(rng,
+            ("Declined", 68), ("Withdrawn", 32)),
+        "Quoted" => WeightedPick(rng,
+            ("Declined", 58), ("Withdrawn", 42)),
+        "BindRequested" => WeightedPick(rng,
+            ("Bound", 72), ("Withdrawn", 28)),
         _ => WeightedPick(rng,
-            ("Bound", 36), ("Declined", 20), ("Withdrawn", 16), ("NotQuoted", 14), ("Lost", 10), ("Expired", 4)),
+            ("Bound", 52), ("Declined", 28), ("Withdrawn", 20)),
     };
 
     private static string PickRenewalTerminal(Random rng, string current) => current switch
@@ -607,11 +605,10 @@ public static class DevSeedData
 
     private static double RandomStepDays(Random rng, string fromState, string toState)
     {
-        if (toState is "WaitingOnBroker" or "WaitingOnDocuments") return rng.Next(2, 14);
-        if (toState is "BindRequested" or "Binding") return rng.Next(1, 6);
-        if (toState is "Bound" or "Declined" or "Withdrawn" or "Lost" or "NotQuoted" or "NotRenewed" or "Lapsed" or "Expired")
+        if (toState == "WaitingOnBroker") return rng.Next(2, 14);
+        if (toState == "BindRequested") return rng.Next(1, 6);
+        if (toState is "Bound" or "Declined" or "Withdrawn" or "NotRenewed" or "Lapsed" or "Expired")
             return rng.Next(1, 10);
-        if (fromState == "RequoteRequested") return rng.Next(1, 6);
         return rng.Next(1, 8);
     }
 
@@ -619,10 +616,6 @@ public static class DevSeedData
     {
         if (toState == "WaitingOnBroker")
             return WeightedPick(rng, ("Need updated SOV", 35), ("Broker clarification pending", 35), ("Missing loss runs", 30));
-        if (toState == "WaitingOnDocuments")
-            return WeightedPick(rng, ("Supplemental app requested", 40), ("Loss runs requested", 35), ("Financial statements pending", 25));
-        if (toState == "RequoteRequested")
-            return WeightedPick(rng, ("Premium target adjustment", 45), ("Limit change request", 30), ("Coverage revision requested", 25));
 
         if (workflowType == "Submission")
         {
@@ -630,9 +623,7 @@ public static class DevSeedData
             {
                 "Declined" => WeightedPick(rng, ("Carrier appetite", 35), ("Eligibility", 25), ("Loss history", 20), ("Incomplete information", 20)),
                 "Withdrawn" => WeightedPick(rng, ("Broker withdrew", 40), ("Insured withdrew", 35), ("Timing changed", 25)),
-                "NotQuoted" => WeightedPick(rng, ("Incomplete submission", 30), ("No broker response", 30), ("Out of appetite", 25), ("Timing expired", 15)),
-                "Lost" => WeightedPick(rng, ("Placed elsewhere", 45), ("Price", 30), ("Terms", 15), ("Coverage breadth", 10)),
-                "Expired" => WeightedPick(rng, ("No decision before effective date", 60), ("Docs not received", 40)),
+                "BindRequested" => WeightedPick(rng, ("Broker accepted quoted terms", 50), ("Bind order received", 30), ("Coverage finalized", 20)),
                 _ => null,
             };
         }

@@ -117,6 +117,15 @@ Stale submissions are new business opportunities that are not progressing throug
 **Related Stories:**
 - F0006-S0003 — Stale indicator on detail view header
 
+## Business Rules
+
+1. **Stale Threshold Clock Uses Last Transition:** Staleness is measured from the most recent WorkflowTransition.OccurredAt for the submission, not from Submission.CreatedAt or UpdatedAt. Field edits (description changes, premium updates) do not reset the stale clock — only workflow state transitions reset it. This ensures that cosmetic edits cannot mask a genuinely stuck submission.
+2. **Configurable Thresholds via Seed Data:** Stale thresholds are stored as configurable seed data (WorkflowSlaThresholds per ADR-009, EntityType="submission"), not hardcoded. Default values: Received=48h, Triaging=48h, WaitingOnBroker=72h. Changes take effect on the next query without cache invalidation.
+3. **ReadyForUWReview and Terminal States Are Never Stale:** Only early intake states (Received, Triaging, WaitingOnBroker) can trigger the stale flag. Once a submission reaches ReadyForUWReview or any downstream/terminal state, it is no longer subject to stale detection.
+4. **Uniform Thresholds Across LOBs in MVP:** All lines of business share the same stale thresholds. Per-LOB threshold customization is Future scope.
+5. **ABAC-Scoped Stale Counts:** Dashboard nudge card stale counts are scoped by the same ABAC rules as the pipeline list (policy.csv §2.3). Users only see stale counts for submissions within their authorized scope.
+6. **Staleness Is Query-Time Computation:** The `isStale` flag is computed at query time, not stored as a persistent field on the Submission entity. This eliminates the need for background jobs or scheduled recalculation.
+
 ## Out of Scope
 
 - Automated escalation actions (auto-reassign, auto-notify) — manual follow-up only in MVP

@@ -1,6 +1,7 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { NudgeCardsSection } from '@/features/nudges';
 import { OpportunitiesSummary } from '@/features/opportunities';
+import { StaleSubmissionNudgeCard } from '@/features/submissions';
 import { MyTasksWidget } from '@/features/tasks';
 import { ActivityFeed } from '@/features/timeline';
 
@@ -18,7 +19,8 @@ export default function DashboardPage() {
         <p className="text-sm text-text-muted">Your opportunities at a glance</p>
         </div>
 
-        <NudgeCardsSection />
+        <StaleSubmissionNudgeCard />
+        <NudgeCardsSection excludeTypes={['StaleSubmission']} />
         <OpportunitiesSummary />
 
         <div className="canvas-section canvas-zone-break">

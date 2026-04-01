@@ -169,7 +169,7 @@ Status: Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker 
 - [F0002: Broker & MGA Relationship Management](features/archive/F0002-broker-relationship-management/PRD.md) - Done (Archived)
 - [F0003: Task Center + Reminders](features/archive/F0003-task-center/PRD.md) - Done (API-only MVP, archived 2026-03-20)
 - [F0005: IdP Migration: Keycloak → authentik](features/archive/F0005-idp-migration/PRD.md) - Done (Archived)
-- [F0006: Submission Intake Workflow](features/F0006-submission-intake-workflow/PRD.md) - In Refinement (8 stories)
+- [F0006: Submission Intake Workflow](features/F0006-submission-intake-workflow/PRD.md) - Done
 - [F0007: Renewal Pipeline](features/F0007-renewal-pipeline/PRD.md) - Architecture Complete (7 stories; data model, API, workflow, Casbin, ADRs finalized 2026-03-26)
 - [F0009: Authentication + Role-Based Login](features/archive/F0009-authentication-and-role-based-login/PRD.md) - Done (Archived; Phase 1)
 - [F0004: Task Center UI + Manager Assignment](features/archive/F0004-task-center-ui-and-assignment/PRD.md) - Done (Archived 2026-03-23; Phase 1)
@@ -288,14 +288,14 @@ Status: Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker 
 - [F0013-S0005: Ensure responsive, accessibility, and performance parity for framed storytelling canvas](features/archive/F0013-dashboard-framed-storytelling-canvas/F0013-S0005-ensure-responsive-accessibility-and-performance-parity.md) - Done (Archived)
 
 **CRM Release MVP Stories (Feature F0006: Submission Intake Workflow):**
-- [F0006-S0001: Submission pipeline list with intake status filtering](features/F0006-submission-intake-workflow/F0006-S0001-submission-pipeline-list-with-intake-status-filtering.md) - Draft
-- [F0006-S0002: Create submission for new business intake](features/F0006-submission-intake-workflow/F0006-S0002-create-submission-for-new-business-intake.md) - Draft
-- [F0006-S0003: Submission detail view with intake context](features/F0006-submission-intake-workflow/F0006-S0003-submission-detail-view-with-intake-context.md) - Draft
-- [F0006-S0004: Submission intake status transitions](features/F0006-submission-intake-workflow/F0006-S0004-submission-intake-status-transitions.md) - Draft
-- [F0006-S0005: Submission completeness evaluation](features/F0006-submission-intake-workflow/F0006-S0005-submission-completeness-evaluation.md) - Draft
-- [F0006-S0006: Submission ownership assignment and underwriting handoff](features/F0006-submission-intake-workflow/F0006-S0006-submission-ownership-assignment-and-underwriting-handoff.md) - Draft
-- [F0006-S0007: Submission activity timeline and audit trail](features/F0006-submission-intake-workflow/F0006-S0007-submission-activity-timeline-and-audit-trail.md) - Draft
-- [F0006-S0008: Stale submission visibility and follow-up flags](features/F0006-submission-intake-workflow/F0006-S0008-stale-submission-visibility-and-follow-up-flags.md) - Draft
+- [F0006-S0001: Submission pipeline list with intake status filtering](features/F0006-submission-intake-workflow/F0006-S0001-submission-pipeline-list-with-intake-status-filtering.md) - Done
+- [F0006-S0002: Create submission for new business intake](features/F0006-submission-intake-workflow/F0006-S0002-create-submission-for-new-business-intake.md) - Done
+- [F0006-S0003: Submission detail view with intake context](features/F0006-submission-intake-workflow/F0006-S0003-submission-detail-view-with-intake-context.md) - Done
+- [F0006-S0004: Submission intake status transitions](features/F0006-submission-intake-workflow/F0006-S0004-submission-intake-status-transitions.md) - Done
+- [F0006-S0005: Submission completeness evaluation](features/F0006-submission-intake-workflow/F0006-S0005-submission-completeness-evaluation.md) - Done
+- [F0006-S0006: Submission ownership assignment and underwriting handoff](features/F0006-submission-intake-workflow/F0006-S0006-submission-ownership-assignment-and-underwriting-handoff.md) - Done
+- [F0006-S0007: Submission activity timeline and audit trail](features/F0006-submission-intake-workflow/F0006-S0007-submission-activity-timeline-and-audit-trail.md) - Done
+- [F0006-S0008: Stale submission visibility and follow-up flags](features/F0006-submission-intake-workflow/F0006-S0008-stale-submission-visibility-and-follow-up-flags.md) - Done
 
 **CRM Release MVP Stories (Feature F0007: Renewal Pipeline):**
 - [F0007-S0001: Renewal pipeline list with due-window filtering](features/F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md) - Draft
@@ -336,7 +336,7 @@ Screen baseline details:
 
 ## 4) Phase B — Architect Spec (Public Baseline)
 
-**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0003/F0004/F0005/F0009/F0012/F0013/F0014/F0015/F0033. Active work: F0006 (In Refinement), F0007 (Architecture Complete).
+**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0003/F0004/F0005/F0009/F0012/F0013/F0014/F0015/F0033. Active work: F0006 (Done), F0007 (Architecture Complete).
 
 This section defines the build-ready technical baseline for the reference implementation.
 

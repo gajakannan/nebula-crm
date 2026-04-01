@@ -108,6 +108,13 @@ The submission pipeline list is the primary operating view for intake users. It 
 - F0006-S0003 — Row click navigates to detail
 - F0006-S0008 — Stale indicator data
 
+## Business Rules
+
+1. **ABAC Scope Enforcement:** All list queries are scoped by Casbin ABAC policy (policy.csv §2.3). DistributionUser sees own-scope submissions; DistributionManager sees region-scoped; Underwriter sees assigned-only; RelationshipManager sees own accounts/brokers; ProgramManager sees own programs; Admin sees all. Scope filtering is enforced server-side at the query layer — the client never receives unauthorized records.
+2. **InternalOnly Data:** All submission data is internal-only in MVP. BrokerUser has no submission access (no policy line in §2.3 = implicit deny). No ExternalVisible fields exist on the list response.
+3. **Stale Flag Computation:** The `isStale` flag on each list item is computed at query time based on the last WorkflowTransition.OccurredAt and configurable thresholds per state (see F0006-S0008). It is not stored as a field on the Submission entity.
+4. **Status Reference Data:** Filter options for intake status are driven by seeded ReferenceSubmissionStatus entries, not hardcoded UI values. Only intake states (Received, Triaging, WaitingOnBroker, ReadyForUWReview) are shown in the pipeline list filter by default.
+
 ## Out of Scope
 
 - URL-synced filters (deferred to F0023 or future enhancement)

@@ -7,6 +7,7 @@ import { cleanup } from '@testing-library/react'
 import { toHaveNoViolations } from 'jest-axe'
 import { afterAll, afterEach, beforeAll, expect } from 'vitest'
 import { server } from './mocks/server'
+import { resetSubmissionMockState } from './mocks/submissions'
 
 expect.extend(toHaveNoViolations)
 
@@ -49,6 +50,7 @@ beforeAll(() => {
 afterEach(() => {
   cleanup()
   server.resetHandlers()
+  resetSubmissionMockState()
   if (typeof window !== 'undefined') {
     window.localStorage.clear()
     window.sessionStorage.clear()

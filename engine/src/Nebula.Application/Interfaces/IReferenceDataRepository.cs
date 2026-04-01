@@ -9,4 +9,6 @@ public interface IReferenceDataRepository
     Task<IReadOnlyList<Nebula.Domain.Entities.Program>> GetProgramsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<ReferenceSubmissionStatus>> GetSubmissionStatusesAsync(CancellationToken ct = default);
     Task<IReadOnlyList<ReferenceRenewalStatus>> GetRenewalStatusesAsync(CancellationToken ct = default);
+    Task<Account?> GetAccountByIdAsync(Guid id, CancellationToken ct = default);
+    Task<Nebula.Domain.Entities.Program?> GetProgramByIdAsync(Guid id, CancellationToken ct = default);
 }

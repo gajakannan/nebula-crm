@@ -9,11 +9,16 @@ public class SubmissionCreateValidator : AbstractValidator<SubmissionCreateDto>
     {
         RuleFor(x => x.AccountId).NotEmpty();
         RuleFor(x => x.BrokerId).NotEmpty();
-        RuleFor(x => x.CurrentStatus).NotEmpty().MaximumLength(30);
-        RuleFor(x => x.PremiumEstimate).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.AssignedToUserId).NotEmpty();
+        RuleFor(x => x.EffectiveDate).NotEmpty();
+        RuleFor(x => x.PremiumEstimate)
+            .GreaterThanOrEqualTo(0)
+            .When(x => x.PremiumEstimate.HasValue);
         RuleFor(x => x.LineOfBusiness)
             .Must(LineOfBusinessValidation.IsValid)
-            .WithMessage(LineOfBusinessValidation.ErrorMessage);
+            .WithMessage(LineOfBusinessValidation.ErrorMessage)
+            .When(x => x.LineOfBusiness is not null);
+        RuleFor(x => x.Description)
+            .MaximumLength(2000)
+            .When(x => x.Description is not null);
     }
 }

@@ -37,11 +37,17 @@ applies_to: product-manager
 - Account 360 view with related records
 - Account contacts and relationship context
 - Account activity timeline and operational summaries
+- Account lifecycle behavior, including deleted/merged account resilience across dependent views and linked records
 
 **Out of Scope:**
 - Claims servicing detail
 - Full billing and finance operations
 - External self-service access
+
+**Boundary Guardrail with F0006:**
+- If F0006 descopes deleted-account fallback on submission detail, F0016 becomes the owning feature for the replacement contract across account-linked experiences.
+- Account delete, deactivate, merge, or reactivation behavior must not leave dependent submission, policy, renewal, or activity views unable to render.
+- Refinement must explicitly define how downstream consumers display deleted or merged accounts, including stable identifier fallback and historical visibility rules.
 
 ## Success Criteria
 
@@ -52,12 +58,15 @@ applies_to: product-manager
 ## Risks & Assumptions
 
 - **Risk:** Account scope becomes a dumping ground for unrelated features.
+- **Risk:** Account lifecycle actions break dependent submission, policy, renewal, or timeline views if read models assume the linked account is always active.
 - **Assumption:** Policy, renewal, and submission features will connect to the account as their shared context root.
 - **Mitigation:** Keep account scope focused on master record, relationships, and 360 visibility.
+- **Mitigation:** Treat deleted/merged account resilience as part of the account lifecycle contract and require downstream read behavior to be defined during refinement, not patched after failures appear.
 
 ## Dependencies
 
 - F0002 Broker & MGA Relationship Management
+- F0006 Submission Intake Workflow
 - F0018 Policy Lifecycle & Policy 360
 
 ## Architecture & Solution Design
@@ -72,6 +81,7 @@ applies_to: product-manager
 ### Data & Workflow Design
 
 - Model account-to-broker, account-to-policy, account-to-submission, and account-to-contact relationships explicitly, with durable identifiers that other modules can safely reference.
+- Preserve stable account identifiers and historical display behavior so linked submission, policy, renewal, and activity records remain renderable even when an account is deleted, merged, or deactivated.
 - Preserve account-level activity and audit history as append-only timeline records rather than relying on inferred history from child objects alone.
 - Use denormalized account summary fields or projections for high-value metrics such as active policy count, submission count, renewal due count, and last activity date.
 - Keep service cases, claims detail, and finance records linked to account context but owned by their respective modules to avoid aggregate bloat.
@@ -82,6 +92,7 @@ applies_to: product-manager
 - Reuse contact and activity services where possible rather than creating account-specific duplicates of generic supporting capabilities.
 - Design the 360 contract for progressive loading so overview data, related lists, and timeline history can be paged independently.
 - Preserve cross-linking to broker, policy, submission, and renewal modules through IDs and deep links instead of embedding duplicated record snapshots everywhere.
+- Define dependent read behavior for deleted or merged accounts so linked-record pages can return a stable fallback label and identifier rather than failing because the active account row is no longer available.
 
 ### Security & Operational Considerations
 
@@ -89,6 +100,7 @@ applies_to: product-manager
 - Treat insured contact and account data as sensitive business data with strong auditability for create, update, merge, and delete operations.
 - Keep related-list queries pageable and indexed because account 360 screens can become accidental join-heavy hotspots.
 - Ensure account merges or identity corrections are planned carefully because many downstream modules will depend on stable account keys.
+- Ensure delete, deactivate, and merge actions preserve enough historical metadata for downstream audit trails and linked-record rendering.
 
 ## Architecture Traceability
 
@@ -103,3 +115,4 @@ applies_to: product-manager
 ## Related User Stories
 
 - To be defined during refinement
+- One early story must explicitly define deleted/merged account fallback behavior for dependent submission and other linked-record views, with traceability back to F0006's descoped detail-view requirement.

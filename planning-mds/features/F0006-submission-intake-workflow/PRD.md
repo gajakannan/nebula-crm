@@ -10,7 +10,7 @@ applies_to: product-manager
 **Feature Name:** Submission Intake Workflow
 **Priority:** Critical
 **Phase:** CRM Release MVP
-**Status:** In Refinement
+**Status:** Refined
 
 ## Feature Statement
 
@@ -33,28 +33,37 @@ applies_to: product-manager
 
 ## Scope & Boundaries
 
-**In Scope (MVP):**
-- Submission creation and intake capture (linked to account, broker, and optionally program)
-- Submission pipeline list view with status, broker, account, LOB, and assignment filters
-- Submission detail view with linked account, broker, program, completeness status, editable intake fields, and timeline
-- Intake status transitions: Received → Triaging → WaitingOnBroker / ReadyForUWReview
-- Completeness evaluation (required fields and required document categories) as a transition guard
-- Manual underwriting assignment and explicit queue handoff to ReadyForUWReview
-- Append-only activity timeline and workflow transition audit trail
-- Stale submission detection and follow-up flags
-- Dashboard integration: stale-submission nudge card for submissions stuck in early intake states
+**MVP Scope (F0006 owns — ships in CRM Release MVP):**
+- **Submission CRUD:** Create submission linked to account, broker, and optionally program; edit mutable intake fields from detail view (S0002, S0003)
+- **Pipeline List:** Filterable, sortable, paginated list with intake status, broker, account, LOB, assigned user, stale flag (S0001)
+- **Detail Workspace:** Full submission context with linked entity display, editable intake fields, completeness panel, activity timeline, transition action bar (S0003)
+- **Intake Transitions:** Forward-only state machine — Received → Triaging → WaitingOnBroker / ReadyForUWReview — with role gating and guard conditions (S0004)
+- **Completeness Evaluation:** Read-side projection of required-field and required-document-category status; hard gate for ReadyForUWReview transition; soft-skip for document checks when F0020 unavailable (S0005)
+- **Manual Assignment:** Assign/reassign submission ownership; underwriter handoff as explicit prerequisite for ReadyForUWReview; user picker reuses F0004-S0002 user search API (S0006)
+- **Audit Trail:** Append-only ActivityTimelineEvent + WorkflowTransition records for every mutation per ADR-011; timeline displayed on detail view with pagination (S0007)
+- **Stale Detection:** Configurable threshold-based stale flags computed at query time; dashboard nudge card with ABAC-scoped counts (S0008)
 
-**Out of Scope (Future / Other Features):**
-- Downstream quoting, proposal, approval, and bind workflow (F0019)
-- Final quote approval or carrier-side integration and rating (F0019)
-- External broker portal submission entry (F0029)
-- Rule-based queue routing and automated assignment (F0022)
-- Document storage, upload, versioning, and metadata management (F0020 — parallel dependency)
-- OCR, extraction, and AI document intelligence (future)
-- Bulk submission import or CSV upload
-- Carrier-side integration and rating
-- Automated submission creation from external sources
-- Submission scoring or AI-assisted triage
+**Future Scope (explicitly deferred — not in F0006):**
+
+| Capability | Deferred To | Rationale |
+|------------|-------------|-----------|
+| Downstream quoting, proposal, approval, and bind workflow | F0019 | F0006 ends at ReadyForUWReview; F0019 extends the workflow onward |
+| Submission archive/deactivate lifecycle behavior | F0019 | Replaces the descoped F0006 soft-delete claim with audit-preserving end-of-life handling after downstream decisions |
+| External broker portal submission entry | F0029 | External collaboration is post-MVP until internal workflows are mature |
+| Rule-based queue routing and automated assignment | F0022 | MVP uses manual assignment; automated routing is a separate operational capability |
+| Document storage, upload, versioning, and metadata | F0020 | Parallel dependency; F0006 evaluates document completeness via F0020 metadata but does not own document CRUD |
+| Deleted or merged account fallback on linked submission/detail views | F0016 | Account lifecycle owns historical rendering rules for dependent records |
+| Deleted or deactivated broker fallback on linked submission/detail views | Future broker-lifecycle hardening | Active broker deletion is already constrained by dependency rules; broader fallback behavior is not required for F0006 closeout |
+| OCR, extraction, and AI document intelligence | Unplanned | No feature ID assigned; requires document foundation (F0020) first |
+| Bulk submission import or CSV upload | Unplanned | Low priority; manual creation is sufficient for initial adoption |
+| Automated submission creation from external sources | Unplanned | Requires integration hub (F0030) |
+| Submission scoring or AI-assisted triage | Unplanned | Requires AI/neuron layer maturity and sufficient submission history |
+| Per-LOB completeness rules | Future F0006 enhancement | MVP uses uniform required fields across all LOBs |
+| Per-LOB stale thresholds | Future F0006 enhancement | MVP uses uniform thresholds across all LOBs |
+| URL-synced filters and saved views | F0023 | Global search and saved views feature owns cross-object filter persistence |
+| Compensating transitions (undo/revert) | Future F0006 enhancement | Corrections are forward-only in MVP |
+| Automated escalation actions (auto-reassign, auto-notify) | F0021/F0022 | Communication hub and work queues handle automated actions |
+| Duplicate submission detection | Future F0006 enhancement | Insurance domain legitimately produces duplicate account+broker+date combinations |
 
 ## Scope Boundary Clarifications
 
@@ -64,7 +73,9 @@ applies_to: product-manager
 | Downstream states (InReview, Quoted, BindRequested, Bound, Declined, Withdrawn) | — | **F0019** | F0019 extends the submission workflow from ReadyForUWReview onward |
 | Account entity and CRUD | — | **F0016** | F0006 reads account data; F0016 is the authoritative source |
 | Broker entity and CRUD | — | **F0002** | F0006 reads broker data; F0002 is authoritative (already done) |
+| Submission archive/deactivate semantics | — | **F0019** | F0006 does not ship a submission delete route; any future end-of-life contract belongs to downstream lifecycle work |
 | Document storage, metadata, versioning | — | **F0020** | F0006 evaluates document completeness via F0020 metadata; does not own document CRUD |
+| Deleted/merged account fallback rendering | — | **F0016** | F0006 assumes active linked records in MVP; F0016 owns downstream resilience rules for account lifecycle changes |
 | Queue routing and automated assignment rules | — | **F0022** | F0006 supports manual assignment; F0022 adds rule-based routing later |
 | Task creation linked to submissions | — | **F0003/F0004** | F0006 uses existing Task entity via LinkedEntityType=Submission |
 | Submission LOB and SLA configuration | **F0006** | — | F0006 can reference WorkflowSlaThreshold (ADR-009) for intake SLA tracking |
@@ -128,7 +139,7 @@ WaitingOnBroker → ReadyForUWReview
 - `WaitingOnBroker → ReadyForUWReview`: Same guards as Triaging → ReadyForUWReview.
 - Every transition appends one WorkflowTransition record and one ActivityTimelineEvent record atomically.
 - Subject must have Casbin ABAC permission for `submission:transition` (otherwise HTTP 403).
-- Optimistic concurrency enforced (xmin).
+- Optimistic concurrency enforced via `rowVersion` + `If-Match` on update, assignment, and transition requests.
 
 ## Completeness Policy
 
@@ -195,7 +206,7 @@ When F0020 is not yet available, document completeness checks are soft-skipped (
 - `PremiumEstimate` (decimal, nullable): Estimated premium amount
 - `Description` (string, nullable): Free-text submission description/notes
 - `AssignedToUserId` (uuid, FK → UserProfile): Current owner (distribution user during intake; underwriter after handoff)
-- `CreatedAt`, `CreatedByUserId`, `UpdatedAt`, `UpdatedByUserId`, `IsDeleted`: Standard base entity fields
+- `CreatedAt`, `CreatedByUserId`, `UpdatedAt`, `UpdatedByUserId`, `IsDeleted`, `RowVersion`: Standard base entity fields
 
 **Validation Rules:**
 - `AccountId` is required and must reference a valid, non-deleted account

@@ -10,7 +10,12 @@ const { mockGetUser } = vi.hoisted(() => ({
 mockGetUser.mockResolvedValue({
   expired: false,
   access_token: 'test-token',
-  profile: {},
+  profile: {
+    sub: 'user-dist-manager',
+    email: 'sarah.chen@nebula.local',
+    name: 'Sarah Chen',
+    nebula_roles: ['DistributionManager'],
+  },
 })
 
 vi.mock('@/features/auth/oidcUserManager', () => ({
@@ -33,10 +38,12 @@ describe('DashboardPage integration', () => {
     })
 
     expect(await screen.findByText('Your opportunities at a glance')).toBeInTheDocument()
+    expect(await screen.findByText('2 stale submissions need follow-up')).toBeInTheDocument()
     expect(await screen.findByText('Renewal meeting this afternoon')).toBeInTheDocument()
     expect(await screen.findByText('Active Brokers')).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Received stage, 10 opportunities' })).toBeInTheDocument()
     expect(await screen.findByText('Broker appetite notes were refreshed for the west region team.')).toBeInTheDocument()
     expect((await screen.findAllByRole('link', { name: 'Blue Horizon Risk Partners' })).length).toBeGreaterThan(0)
+    expect(screen.queryByText('Submission idle for 9 days')).not.toBeInTheDocument()
   })
 })

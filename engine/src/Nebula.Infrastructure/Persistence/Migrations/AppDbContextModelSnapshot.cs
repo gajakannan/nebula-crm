@@ -677,20 +677,11 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Code = "WaitingOnDocuments",
-                            ColorGroup = "waiting",
-                            Description = "Awaiting required underwriting documents",
-                            DisplayName = "Waiting on Documents",
-                            DisplayOrder = (short)4,
-                            IsTerminal = false
-                        },
-                        new
-                        {
                             Code = "ReadyForUWReview",
                             ColorGroup = "review",
                             Description = "All data received, queued for underwriter",
                             DisplayName = "Ready for UW Review",
-                            DisplayOrder = (short)5,
+                            DisplayOrder = (short)4,
                             IsTerminal = false
                         },
                         new
@@ -699,16 +690,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "review",
                             Description = "Under active underwriter review",
                             DisplayName = "In Review",
-                            DisplayOrder = (short)6,
-                            IsTerminal = false
-                        },
-                        new
-                        {
-                            Code = "QuotePreparation",
-                            ColorGroup = "decision",
-                            Description = "Preparing quote terms for broker",
-                            DisplayName = "Quote Preparation",
-                            DisplayOrder = (short)7,
+                            DisplayOrder = (short)5,
                             IsTerminal = false
                         },
                         new
@@ -717,16 +699,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "decision",
                             Description = "Quote issued, awaiting broker response",
                             DisplayName = "Quoted",
-                            DisplayOrder = (short)8,
-                            IsTerminal = false
-                        },
-                        new
-                        {
-                            Code = "RequoteRequested",
-                            ColorGroup = "decision",
-                            Description = "Broker requested revised quote terms",
-                            DisplayName = "Requote Requested",
-                            DisplayOrder = (short)9,
+                            DisplayOrder = (short)6,
                             IsTerminal = false
                         },
                         new
@@ -735,16 +708,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "decision",
                             Description = "Broker accepted quote, bind in progress",
                             DisplayName = "Bind Requested",
-                            DisplayOrder = (short)10,
-                            IsTerminal = false
-                        },
-                        new
-                        {
-                            Code = "Binding",
-                            ColorGroup = "decision",
-                            Description = "Binding and issuance processing in progress",
-                            DisplayName = "Binding",
-                            DisplayOrder = (short)11,
+                            DisplayOrder = (short)7,
                             IsTerminal = false
                         },
                         new
@@ -753,7 +717,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "won",
                             Description = "Policy bound and issued",
                             DisplayName = "Bound",
-                            DisplayOrder = (short)12,
+                            DisplayOrder = (short)8,
                             IsTerminal = true
                         },
                         new
@@ -762,7 +726,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "lost",
                             Description = "Submission declined by underwriter",
                             DisplayName = "Declined",
-                            DisplayOrder = (short)13,
+                            DisplayOrder = (short)9,
                             IsTerminal = true
                         },
                         new
@@ -771,34 +735,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             ColorGroup = "lost",
                             Description = "Broker or insured withdrew submission",
                             DisplayName = "Withdrawn",
-                            DisplayOrder = (short)14,
-                            IsTerminal = true
-                        },
-                        new
-                        {
-                            Code = "NotQuoted",
-                            ColorGroup = "lost",
-                            Description = "Submission closed without quote issued",
-                            DisplayName = "Not Quoted",
-                            DisplayOrder = (short)15,
-                            IsTerminal = true
-                        },
-                        new
-                        {
-                            Code = "Lost",
-                            ColorGroup = "lost",
-                            Description = "Opportunity lost to another market or strategy change",
-                            DisplayName = "Lost",
-                            DisplayOrder = (short)16,
-                            IsTerminal = true
-                        },
-                        new
-                        {
-                            Code = "Expired",
-                            ColorGroup = "lost",
-                            Description = "Submission expired before disposition completed",
-                            DisplayName = "Expired",
-                            DisplayOrder = (short)17,
+                            DisplayOrder = (short)10,
                             IsTerminal = true
                         });
                 });
@@ -957,8 +894,15 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("DeletedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<DateTime>("EffectiveDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("date");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -969,7 +913,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<decimal>("PremiumEstimate")
+                    b.Property<decimal?>("PremiumEstimate")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
@@ -990,12 +934,20 @@ namespace Nebula.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("IX_Submissions_AccountId");
 
-                    b.HasIndex("BrokerId");
+                    b.HasIndex("AssignedToUserId")
+                        .HasDatabaseName("IX_Submissions_AssignedToUserId");
+
+                    b.HasIndex("BrokerId")
+                        .HasDatabaseName("IX_Submissions_BrokerId");
 
                     b.HasIndex("CurrentStatus")
                         .HasDatabaseName("IX_Submissions_CurrentStatus");
+
+                    b.HasIndex("EffectiveDate")
+                        .HasDatabaseName("IX_Submissions_EffectiveDate");
 
                     b.HasIndex("ProgramId");
 
@@ -1215,9 +1167,9 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "submission",
                             Status = "Triaging",
-                            TargetDays = 5,
+                            TargetDays = 2,
                             UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WarningDays = 2
+                            WarningDays = 1
                         },
                         new
                         {
@@ -1225,87 +1177,7 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "submission",
                             Status = "WaitingOnBroker",
-                            TargetDays = 10,
-                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WarningDays = 5
-                        },
-                        new
-                        {
-                            Id = new Guid("33cc5f8d-33ea-4f8a-a737-2f64946f044f"),
-                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "submission",
-                            Status = "WaitingOnDocuments",
-                            TargetDays = 10,
-                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WarningDays = 5
-                        },
-                        new
-                        {
-                            Id = new Guid("ec690f3d-84c8-4709-8b32-ff1efde52e52"),
-                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "submission",
-                            Status = "ReadyForUWReview",
-                            TargetDays = 7,
-                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WarningDays = 3
-                        },
-                        new
-                        {
-                            Id = new Guid("8b43ed42-17f2-426a-a14a-442f6a7d43d4"),
-                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "submission",
-                            Status = "InReview",
-                            TargetDays = 14,
-                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WarningDays = 5
-                        },
-                        new
-                        {
-                            Id = new Guid("ecf8f24e-8ead-4a44-b123-b85b6527db31"),
-                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "submission",
-                            Status = "QuotePreparation",
-                            TargetDays = 7,
-                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WarningDays = 3
-                        },
-                        new
-                        {
-                            Id = new Guid("3047cb13-59f8-4d87-a79d-e80e9dcf28ea"),
-                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "submission",
-                            Status = "Quoted",
-                            TargetDays = 21,
-                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WarningDays = 7
-                        },
-                        new
-                        {
-                            Id = new Guid("95db58fe-ef54-4c7b-b707-0cdf6458cd5b"),
-                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "submission",
-                            Status = "RequoteRequested",
-                            TargetDays = 21,
-                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WarningDays = 7
-                        },
-                        new
-                        {
-                            Id = new Guid("0ef57fce-6bd8-42e7-b1ef-767e44a02817"),
-                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "submission",
-                            Status = "BindRequested",
-                            TargetDays = 5,
-                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WarningDays = 2
-                        },
-                        new
-                        {
-                            Id = new Guid("f419f936-3f6f-4135-9d9b-7744bb5e43b8"),
-                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            EntityType = "submission",
-                            Status = "Binding",
-                            TargetDays = 5,
+                            TargetDays = 3,
                             UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
                             WarningDays = 2
                         },
@@ -1414,7 +1286,6 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("FromState")
-                        .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
@@ -1534,6 +1405,12 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Nebula.Domain.Entities.UserProfile", "AssignedToUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedToUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Nebula.Domain.Entities.Broker", "Broker")
                         .WithMany()
                         .HasForeignKey("BrokerId")
@@ -1546,6 +1423,8 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Account");
+
+                    b.Navigation("AssignedToUser");
 
                     b.Navigation("Broker");
 

@@ -108,6 +108,17 @@ Submission creation is the entry point for all new business in Nebula. A distrib
 - F0006-S0003 — Detail view shows created submission
 - F0006-S0007 — Timeline records SubmissionCreated event
 
+## Business Rules
+
+1. **Region Alignment:** Account.Region must be included in the broker's BrokerRegion set at creation time. Mismatches return HTTP 400 with `code=region_mismatch`. This prevents submissions from being created against broker-account pairings that violate territorial assignment.
+2. **Self-Assignment on Create:** The authenticated creator is automatically assigned as the initial submission owner (`AssignedToUserId = creator`). Reassignment to an underwriter happens separately via F0006-S0006.
+3. **Default ExpirationDate:** When ExpirationDate is not provided, it defaults to EffectiveDate + 12 months. This follows standard commercial P&C policy term conventions.
+4. **Backdated Submissions Allowed:** EffectiveDate in the past is permitted. Insurance intake frequently processes submissions where coverage start dates have already passed (e.g., broker submits late, retroactive coverage requests).
+5. **No Duplicate Detection in MVP:** Multiple submissions for the same account + broker + effective date combination are allowed. Duplicate detection is deferred — the insurance domain legitimately produces multiple submissions for the same insured/broker pair.
+6. **LOB Validation:** LineOfBusiness, when provided, must match a value in the known LOB set defined per ADR-009. Invalid values return HTTP 400 with `code=invalid_lob`.
+7. **Append-Only Audit on Create:** Creation atomically appends one ActivityTimelineEvent (`SubmissionCreated`) and one WorkflowTransition (null → Received) in the same DB transaction. If either append fails, the entire creation rolls back.
+8. **InternalOnly Data:** All submission data is internal-only in MVP. No external broker visibility.
+
 ## Out of Scope
 
 - Bulk submission creation or CSV import

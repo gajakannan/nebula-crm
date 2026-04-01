@@ -4,6 +4,7 @@
  */
 const REGISTERED_ROUTES: Record<string, (id: string) => string> = {
   'Broker': (id) => `/brokers/${id}`,
+  'Submission': (id) => `/submissions/${id}`,
   'Task': (id) => `/tasks/${id}`,
 };
 

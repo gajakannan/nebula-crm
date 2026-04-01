@@ -10,16 +10,12 @@ public static class WorkflowStateMachine
     private static readonly Dictionary<string, HashSet<string>> SubmissionTransitions = new()
     {
         ["Received"] = ["Triaging"],
-        ["Triaging"] = ["WaitingOnBroker", "WaitingOnDocuments", "ReadyForUWReview"],
-        ["WaitingOnBroker"] = ["Triaging", "WaitingOnDocuments", "ReadyForUWReview"],
-        ["WaitingOnDocuments"] = ["WaitingOnBroker", "ReadyForUWReview"],
-        ["ReadyForUWReview"] = ["InReview", "QuotePreparation"],
-        ["InReview"] = ["WaitingOnBroker", "WaitingOnDocuments", "QuotePreparation", "Quoted", "RequoteRequested"],
-        ["QuotePreparation"] = ["Quoted", "RequoteRequested"],
-        ["Quoted"] = ["RequoteRequested", "BindRequested"],
-        ["RequoteRequested"] = ["InReview", "QuotePreparation", "Quoted"],
-        ["BindRequested"] = ["Binding", "Bound"],
-        ["Binding"] = ["Bound"],
+        ["Triaging"] = ["WaitingOnBroker", "ReadyForUWReview"],
+        ["WaitingOnBroker"] = ["ReadyForUWReview"],
+        ["ReadyForUWReview"] = ["InReview"],
+        ["InReview"] = ["Quoted", "Declined"],
+        ["Quoted"] = ["BindRequested", "Declined", "Withdrawn"],
+        ["BindRequested"] = ["Bound", "Withdrawn"],
     };
 
     private static readonly Dictionary<string, HashSet<string>> RenewalTransitions = new()
@@ -51,6 +47,14 @@ public static class WorkflowStateMachine
             _ => false,
         };
 
+    public static IReadOnlyList<string> GetAvailableTransitions(string workflowType, string from) =>
+        workflowType switch
+        {
+            "Submission" => GetAvailableTransitions(SubmissionTransitions, SubmissionTerminalStates, from),
+            "Renewal" => GetAvailableTransitions(RenewalTransitions, RenewalTerminalStates, from),
+            _ => [],
+        };
+
     private static bool IsValidTransition(
         IReadOnlyDictionary<string, HashSet<string>> transitions,
         IReadOnlySet<string> terminalStates,
@@ -58,8 +62,19 @@ public static class WorkflowStateMachine
         string to)
     {
         if (terminalStates.Contains(from)) return false;
-        if (terminalStates.Contains(to)) return true;
-
         return transitions.TryGetValue(from, out var targets) && targets.Contains(to);
+    }
+
+    private static IReadOnlyList<string> GetAvailableTransitions(
+        IReadOnlyDictionary<string, HashSet<string>> transitions,
+        IReadOnlySet<string> terminalStates,
+        string from)
+    {
+        if (terminalStates.Contains(from))
+            return [];
+
+        return transitions.TryGetValue(from, out var targets)
+            ? targets.OrderBy(target => target, StringComparer.Ordinal).ToList()
+            : [];
     }
 }

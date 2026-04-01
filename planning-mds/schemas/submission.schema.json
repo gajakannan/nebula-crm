@@ -11,6 +11,7 @@
     "currentStatus",
     "effectiveDate",
     "assignedToUserId",
+    "rowVersion",
     "createdAt",
     "createdByUserId",
     "updatedAt",
@@ -101,6 +102,10 @@
       "type": "array",
       "items": { "type": "string" },
       "description": "Valid next states for the authenticated user based on current state and role"
+    },
+    "rowVersion": {
+      "type": "string",
+      "description": "Opaque optimistic concurrency token. Echo this value in the If-Match header for update, assignment, and transition requests."
     },
     "createdAt": {
       "type": "string",

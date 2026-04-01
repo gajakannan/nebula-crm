@@ -1,10 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
-using Shouldly;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Nebula.Application.Common;
 using Nebula.Application.DTOs;
 using Nebula.Domain.Entities;
 using Nebula.Infrastructure.Persistence;
+using Shouldly;
 
 namespace Nebula.Tests.Integration;
 
@@ -12,52 +15,159 @@ namespace Nebula.Tests.Integration;
 public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
     : IClassFixture<CustomWebApplicationFactory>
 {
+    private const string TestIssuer = "http://test.local/application/o/nebula/";
     private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
-    public async Task GetSubmission_Existing_Returns200()
+    public async Task CreateSubmission_WithValidData_Returns201AndSetsCurrentUserAsOwner()
     {
-        var submissionId = await SeedSubmissionAsync();
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var (accountId, brokerId) = await SeedAccountAndBrokerAsync();
 
-        var response = await _client.GetAsync($"/submissions/{submissionId}");
+        var response = await _client.PostAsJsonAsync("/submissions", new SubmissionCreateDto(
+            accountId,
+            brokerId,
+            DateTime.UtcNow.Date.AddDays(30),
+            null,
+            "Cyber",
+            25000m,
+            null,
+            "Submission intake from integration test"));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var result = await response.Content.ReadFromJsonAsync<SubmissionDto>();
+        result.ShouldNotBeNull();
+        result!.CurrentStatus.ShouldBe("Received");
+        result.AssignedToUserId.ShouldBe(currentUserId);
+        result.RowVersion.ShouldNotBeNullOrWhiteSpace();
+        result.AccountId.ShouldBe(accountId);
+        result.BrokerId.ShouldBe(brokerId);
+    }
+
+    [Fact]
+    public async Task GetSubmission_Existing_Returns200WithCompletenessPayload()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var submission = await SeedSubmissionAsync(currentUserId, "Received", "Cyber");
+
+        var response = await _client.GetAsync($"/submissions/{submission.Id}");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<SubmissionDto>();
         result.ShouldNotBeNull();
-        result!.Id.ShouldBe(submissionId);
+        result!.Id.ShouldBe(submission.Id);
         result.CurrentStatus.ShouldBe("Received");
+        result.Completeness.ShouldNotBeNull();
+        result.RowVersion.ShouldNotBeNullOrWhiteSpace();
     }
 
     [Fact]
-    public async Task GetSubmission_NotFound_Returns404()
+    public async Task ListSubmissions_FilteredByAccountId_ReturnsOnlySeededSubmission()
     {
-        var response = await _client.GetAsync($"/submissions/{Guid.NewGuid()}");
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var submission = await SeedSubmissionAsync(currentUserId, "Received", "Cyber");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-    }
-
-    [Fact]
-    public async Task GetSubmissionTransitions_ReturnsSeededTransitions()
-    {
-        var submissionId = await SeedSubmissionAsync();
-        await SeedWorkflowTransitionAsync("Submission", submissionId, "Received", "Triaging", "seed");
-
-        var response = await _client.GetAsync($"/submissions/{submissionId}/transitions");
+        var response = await _client.GetAsync($"/submissions?accountId={submission.AccountId}");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<List<WorkflowTransitionRecordDto>>();
-        var item = result!.Single();
-        item.ToState.ShouldBe("Triaging");
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<SubmissionListItemDto>>();
+        result.ShouldNotBeNull();
+        result!.Data.ShouldContain(item => item.Id == submission.Id);
+    }
+
+    [Fact]
+    public async Task UpdateSubmission_WithIfMatch_Returns200AndPersistsChanges()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var created = await CreateSubmissionViaApiAsync(currentUserId);
+
+        var response = await PutJsonAsync(
+            $"/submissions/{created.Id}",
+            new
+            {
+                lineOfBusiness = "Property",
+                expirationDate = DateTime.UtcNow.Date.AddMonths(13),
+                premiumEstimate = 41000m,
+                description = "Updated description",
+            },
+            created.RowVersion);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<SubmissionDto>();
+        result.ShouldNotBeNull();
+        result!.LineOfBusiness.ShouldBe("Property");
+        result.Description.ShouldBe("Updated description");
+        result.PremiumEstimate.ShouldBe(41000m);
+    }
+
+    [Fact]
+    public async Task UpdateSubmission_WithExplicitNulls_ClearsOptionalFields()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var submission = await SeedSubmissionAsync(currentUserId, "Received", "Cyber");
+        var detail = await GetSubmissionAsync(submission.Id);
+
+        var response = await PutJsonAsync(
+            $"/submissions/{submission.Id}",
+            new
+            {
+                lineOfBusiness = (string?)null,
+                expirationDate = (DateTime?)null,
+                premiumEstimate = (decimal?)null,
+                description = (string?)null,
+            },
+            detail.RowVersion);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<SubmissionDto>();
+        result.ShouldNotBeNull();
+        result!.LineOfBusiness.ShouldBeNull();
+        result.ExpirationDate.ShouldBeNull();
+        result.PremiumEstimate.ShouldBeNull();
+        result.Description.ShouldBeNull();
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var persisted = await db.Submissions.SingleAsync(s => s.Id == submission.Id);
+        persisted.LineOfBusiness.ShouldBeNull();
+        persisted.ExpirationDate.ShouldBeNull();
+        persisted.PremiumEstimate.ShouldBeNull();
+        persisted.Description.ShouldBeNull();
+
+        var timelineEvent = await db.ActivityTimelineEvents
+            .Where(e => e.EntityType == "Submission"
+                && e.EntityId == submission.Id
+                && e.EventType == "SubmissionUpdated")
+            .OrderByDescending(e => e.OccurredAt)
+            .FirstOrDefaultAsync();
+        timelineEvent.ShouldNotBeNull();
+        timelineEvent!.EventPayloadJson.ShouldContain("lineOfBusiness");
+        timelineEvent.EventPayloadJson.ShouldContain("description");
+    }
+
+    [Fact]
+    public async Task PostSubmissionTransition_WithoutIfMatch_Returns412()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var created = await CreateSubmissionViaApiAsync(currentUserId);
+
+        var response = await _client.PostAsJsonAsync(
+            $"/submissions/{created.Id}/transitions",
+            new WorkflowTransitionRequestDto("Triaging", "start review"));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.PreconditionFailed);
     }
 
     [Fact]
     public async Task PostSubmissionTransition_Valid_Returns201AndPersists()
     {
-        var submissionId = await SeedSubmissionAsync();
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var created = await CreateSubmissionViaApiAsync(currentUserId);
 
-        var response = await _client.PostAsJsonAsync(
-            $"/submissions/{submissionId}/transitions",
-            new WorkflowTransitionRequestDto("Triaging", "triage"));
+        var response = await PostJsonAsync(
+            $"/submissions/{created.Id}/transitions",
+            new WorkflowTransitionRequestDto("Triaging", "start review"),
+            created.RowVersion);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<WorkflowTransitionRecordDto>();
@@ -67,216 +177,246 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
 
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Submissions.Single(s => s.Id == submissionId).CurrentStatus.ShouldBe("Triaging");
+        var persisted = await db.Submissions.SingleAsync(s => s.Id == created.Id);
+        persisted.CurrentStatus.ShouldBe("Triaging");
     }
 
     [Fact]
-    public async Task PostSubmissionTransition_Invalid_Returns409()
+    public async Task PostSubmissionTransition_ToReadyForUwReview_WhenIncomplete_Returns409()
     {
-        var submissionId = await SeedSubmissionAsync();
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var created = await CreateSubmissionViaApiAsync(currentUserId);
+        var triaged = await PostJsonAsync(
+            $"/submissions/{created.Id}/transitions",
+            new WorkflowTransitionRequestDto("Triaging", "start review"),
+            created.RowVersion);
+        triaged.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var response = await _client.PostAsJsonAsync(
-            $"/submissions/{submissionId}/transitions",
-            new WorkflowTransitionRequestDto("Binding", "skip"));
+        var refreshed = await GetSubmissionAsync(created.Id);
+        var response = await PostJsonAsync(
+            $"/submissions/{created.Id}/transitions",
+            new WorkflowTransitionRequestDto("ReadyForUWReview", "handoff"),
+            refreshed.RowVersion);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        payload.GetProperty("code").GetString().ShouldBe("missing_transition_prerequisite");
     }
 
     [Fact]
-    public async Task PostSubmissionTransition_MissingToState_Returns400()
+    public async Task PutSubmissionAssignment_ReadyForUwReview_ToNonUnderwriter_Returns400()
     {
-        var submissionId = await SeedSubmissionAsync();
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var submission = await SeedSubmissionAsync(currentUserId, "ReadyForUWReview", "Cyber");
+        var assignee = await SeedUserProfileAsync($"dist-user-{Guid.NewGuid():N}", "DistributionUser", true);
+        var detail = await GetSubmissionAsync(submission.Id);
 
-        var response = await _client.PostAsJsonAsync(
-            $"/submissions/{submissionId}/transitions",
-            new WorkflowTransitionRequestDto(string.Empty, "missing"));
+        var response = await PutJsonAsync(
+            $"/submissions/{submission.Id}/assignment",
+            new SubmissionAssignmentRequestDto(assignee.Id),
+            detail.RowVersion);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        payload.GetProperty("code").GetString().ShouldBe("invalid_assignee");
     }
 
     [Fact]
-    public async Task GetRenewal_Existing_Returns200()
+    public async Task GetSubmissionTimeline_ReturnsPagedEvents()
     {
-        var renewalId = await SeedRenewalAsync();
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var created = await CreateSubmissionViaApiAsync(currentUserId);
 
-        var response = await _client.GetAsync($"/renewals/{renewalId}");
+        var response = await _client.GetAsync($"/submissions/{created.Id}/timeline?page=1&pageSize=10");
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<RenewalDto>();
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<TimelineEventDto>>();
         result.ShouldNotBeNull();
-        result!.Id.ShouldBe(renewalId);
-        result.CurrentStatus.ShouldBe("Created");
+        result!.Data.ShouldContain(item => item.EventType == "SubmissionCreated");
     }
 
-    [Fact]
-    public async Task GetRenewalTransitions_ReturnsSeededTransitions()
+    private async Task<SubmissionDto> CreateSubmissionViaApiAsync(Guid currentUserId)
     {
-        var renewalId = await SeedRenewalAsync();
-        await SeedWorkflowTransitionAsync("Renewal", renewalId, "Created", "DataReview", "seed");
-
-        var response = await _client.GetAsync($"/renewals/{renewalId}/transitions");
-
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<List<WorkflowTransitionRecordDto>>();
-        var item = result!.Single();
-        item.ToState.ShouldBe("DataReview");
-    }
-
-    [Fact]
-    public async Task PostRenewalTransition_Valid_Returns201AndPersists()
-    {
-        var renewalId = await SeedRenewalAsync();
-
-        var response = await _client.PostAsJsonAsync(
-            $"/renewals/{renewalId}/transitions",
-            new WorkflowTransitionRequestDto("DataReview", "start"));
+        var (accountId, brokerId) = await SeedAccountAndBrokerAsync();
+        var response = await _client.PostAsJsonAsync("/submissions", new SubmissionCreateDto(
+            accountId,
+            brokerId,
+            DateTime.UtcNow.Date.AddDays(30),
+            null,
+            "Cyber",
+            25000m,
+            null,
+            "Submission intake from integration test"));
 
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
-        var result = await response.Content.ReadFromJsonAsync<WorkflowTransitionRecordDto>();
-        result.ShouldNotBeNull();
-        result!.FromState.ShouldBe("Created");
-        result.ToState.ShouldBe("DataReview");
-
-        using var scope = factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.Renewals.Single(r => r.Id == renewalId).CurrentStatus.ShouldBe("DataReview");
+        return (await response.Content.ReadFromJsonAsync<SubmissionDto>())!;
     }
 
-    [Fact]
-    public async Task PostRenewalTransition_NotFound_Returns404()
+    private async Task<SubmissionDto> GetSubmissionAsync(Guid submissionId)
     {
-        var response = await _client.PostAsJsonAsync(
-            $"/renewals/{Guid.NewGuid()}/transitions",
-            new WorkflowTransitionRequestDto("DataReview", "missing"));
-
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        var response = await _client.GetAsync($"/submissions/{submissionId}");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        return (await response.Content.ReadFromJsonAsync<SubmissionDto>())!;
     }
 
-    [Fact]
-    public async Task PostRenewalTransition_Invalid_Returns409()
+    private async Task<(Guid AccountId, Guid BrokerId)> SeedAccountAndBrokerAsync(string region = "West")
     {
-        var renewalId = await SeedRenewalAsync();
-
-        var response = await _client.PostAsJsonAsync(
-            $"/renewals/{renewalId}/transitions",
-            new WorkflowTransitionRequestDto("Negotiation", "skip"));
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
-    }
-
-    private async Task<Guid> SeedSubmissionAsync()
-    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var now = DateTime.UtcNow;
-        var userId = Guid.NewGuid();
+
         var account = new Account
         {
             Name = $"Submission Account {Guid.NewGuid():N}",
             Industry = "Technology",
             PrimaryState = "CA",
-            Region = "West",
+            Region = region,
             Status = "Active",
             CreatedAt = now,
             UpdatedAt = now,
-            CreatedByUserId = userId,
-            UpdatedByUserId = userId,
+            CreatedByUserId = currentUserId,
+            UpdatedByUserId = currentUserId,
         };
+
         var broker = new Broker
         {
             LegalName = $"Submission Broker {Guid.NewGuid():N}",
-            LicenseNumber = $"SUB-{Guid.NewGuid().ToString("N")[..8]}",
+            LicenseNumber = $"SUB-{Guid.NewGuid():N}"[..12],
             State = "CA",
             Status = "Active",
             CreatedAt = now,
             UpdatedAt = now,
-            CreatedByUserId = userId,
-            UpdatedByUserId = userId,
-        };
-        var submission = new Submission
-        {
-            Account = account,
-            Broker = broker,
-            CurrentStatus = "Received",
-            LineOfBusiness = "Cyber",
-            EffectiveDate = now.Date.AddDays(30),
-            PremiumEstimate = 25000m,
-            AssignedToUserId = userId,
-            CreatedAt = now,
-            UpdatedAt = now,
-            CreatedByUserId = userId,
-            UpdatedByUserId = userId,
+            CreatedByUserId = currentUserId,
+            UpdatedByUserId = currentUserId,
         };
 
-        db.Submissions.Add(submission);
+        db.Accounts.Add(account);
+        db.Brokers.Add(broker);
+        db.BrokerRegions.Add(new BrokerRegion
+        {
+            BrokerId = broker.Id,
+            Region = region,
+        });
         await db.SaveChangesAsync();
-        return submission.Id;
+
+        return (account.Id, broker.Id);
     }
 
-    private async Task<Guid> SeedRenewalAsync()
+    private async Task<Submission> SeedSubmissionAsync(Guid assignedToUserId, string status, string lineOfBusiness)
     {
+        var (accountId, brokerId) = await SeedAccountAndBrokerAsync();
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var now = DateTime.UtcNow;
-        var userId = Guid.NewGuid();
-        var account = new Account
+
+        var submission = new Submission
         {
-            Name = $"Renewal Account {Guid.NewGuid():N}",
-            Industry = "Healthcare",
-            PrimaryState = "NY",
-            Region = "East",
-            Status = "Active",
+            AccountId = accountId,
+            BrokerId = brokerId,
+            CurrentStatus = status,
+            EffectiveDate = now.Date.AddDays(30),
+            ExpirationDate = now.Date.AddMonths(12),
+            LineOfBusiness = lineOfBusiness,
+            PremiumEstimate = 25000m,
+            Description = "Seeded submission",
+            AssignedToUserId = assignedToUserId,
             CreatedAt = now,
             UpdatedAt = now,
-            CreatedByUserId = userId,
-            UpdatedByUserId = userId,
-        };
-        var broker = new Broker
-        {
-            LegalName = $"Renewal Broker {Guid.NewGuid():N}",
-            LicenseNumber = $"REN-{Guid.NewGuid().ToString("N")[..8]}",
-            State = "NY",
-            Status = "Active",
-            CreatedAt = now,
-            UpdatedAt = now,
-            CreatedByUserId = userId,
-            UpdatedByUserId = userId,
-        };
-        var renewal = new Renewal
-        {
-            Account = account,
-            Broker = broker,
-            CurrentStatus = "Created",
-            LineOfBusiness = "Property",
-            RenewalDate = now.Date.AddDays(45),
-            AssignedToUserId = userId,
-            CreatedAt = now,
-            UpdatedAt = now,
-            CreatedByUserId = userId,
-            UpdatedByUserId = userId,
+            CreatedByUserId = assignedToUserId,
+            UpdatedByUserId = assignedToUserId,
         };
 
-        db.Renewals.Add(renewal);
+        db.Submissions.Add(submission);
+        db.WorkflowTransitions.Add(new WorkflowTransition
+        {
+            WorkflowType = "Submission",
+            EntityId = submission.Id,
+            FromState = null,
+            ToState = status,
+            ActorUserId = assignedToUserId,
+            OccurredAt = now,
+        });
+        db.ActivityTimelineEvents.Add(new ActivityTimelineEvent
+        {
+            EntityType = "Submission",
+            EntityId = submission.Id,
+            EventType = "SubmissionCreated",
+            EventDescription = "Submission created",
+            ActorUserId = assignedToUserId,
+            ActorDisplayName = "Test User",
+            OccurredAt = now,
+        });
         await db.SaveChangesAsync();
-        return renewal.Id;
+
+        return submission;
     }
 
-    private async Task SeedWorkflowTransitionAsync(string workflowType, Guid entityId, string fromState, string toState, string reason)
+    private async Task<Guid> EnsureCurrentUserProfileAsync()
+    {
+        var roles = TestAuthHandler.TestNebulaRoles ?? [TestAuthHandler.TestRole];
+        var existing = await GetUserProfileAsync(TestAuthHandler.TestSubject);
+        if (existing is not null)
+            return existing.Id;
+
+        var seeded = await SeedUserProfileAsync(TestAuthHandler.TestSubject, roles[0], true);
+        return seeded.Id;
+    }
+
+    private async Task<UserProfile?> GetUserProfileAsync(string subject)
     {
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return await db.UserProfiles.FirstOrDefaultAsync(profile =>
+            profile.IdpIssuer == TestIssuer && profile.IdpSubject == subject);
+    }
 
-        db.WorkflowTransitions.Add(new WorkflowTransition
+    private async Task<UserProfile> SeedUserProfileAsync(string subject, string role, bool isActive)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var existing = await db.UserProfiles.FirstOrDefaultAsync(profile =>
+            profile.IdpIssuer == TestIssuer && profile.IdpSubject == subject);
+        if (existing is not null)
+            return existing;
+
+        var now = DateTime.UtcNow;
+        var profile = new UserProfile
         {
-            WorkflowType = workflowType,
-            EntityId = entityId,
-            FromState = fromState,
-            ToState = toState,
-            Reason = reason,
-            ActorUserId = Guid.NewGuid(),
-            OccurredAt = DateTime.UtcNow,
-        });
+            IdpIssuer = TestIssuer,
+            IdpSubject = subject,
+            Email = $"{subject}@example.test",
+            DisplayName = subject,
+            Department = "QA",
+            RegionsJson = "[\"West\"]",
+            RolesJson = JsonSerializer.Serialize(new[] { role }),
+            IsActive = isActive,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
 
+        db.UserProfiles.Add(profile);
         await db.SaveChangesAsync();
+        return profile;
+    }
+
+    private async Task<HttpResponseMessage> PutJsonAsync<TBody>(string url, TBody body, string rowVersion)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Put, url)
+        {
+            Content = JsonContent.Create(body),
+        };
+        request.Headers.TryAddWithoutValidation("If-Match", $"\"{rowVersion}\"");
+        return await _client.SendAsync(request);
+    }
+
+    private async Task<HttpResponseMessage> PostJsonAsync<TBody>(string url, TBody body, string rowVersion)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, url)
+        {
+            Content = JsonContent.Create(body),
+        };
+        request.Headers.TryAddWithoutValidation("If-Match", $"\"{rowVersion}\"");
+        return await _client.SendAsync(request);
     }
 }

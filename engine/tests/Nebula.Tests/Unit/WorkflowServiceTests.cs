@@ -1,4 +1,5 @@
 using Shouldly;
+using Nebula.Application.Common;
 using Nebula.Application.DTOs;
 using Nebula.Application.Interfaces;
 using Nebula.Application.Services;
@@ -10,6 +11,7 @@ public class WorkflowServiceTests
 {
     private readonly StubWorkflowTransitionRepository _transitionRepo = new();
     private readonly StubTimelineRepository _timelineRepo = new();
+    private readonly StubUnitOfWork _unitOfWork = new();
     private readonly StubCurrentUserService _user = new(Guid.Parse("bbbb0000-0000-0000-0000-000000000001"));
 
     [Fact]
@@ -17,16 +19,23 @@ public class WorkflowServiceTests
     {
         var repo = new StubSubmissionRepository();
         var now = DateTime.UtcNow;
+        var account = NewAccount(now);
+        var broker = NewBroker(now);
+        var assignee = NewUserProfile(_user.UserId, "DistributionUser");
         var submission = new Submission
         {
-            AccountId = Guid.NewGuid(),
-            BrokerId = Guid.NewGuid(),
+            AccountId = account.Id,
+            BrokerId = broker.Id,
             ProgramId = Guid.NewGuid(),
             LineOfBusiness = "Cyber",
             CurrentStatus = "Received",
             EffectiveDate = now.Date.AddDays(30),
+            ExpirationDate = now.Date.AddDays(395),
             PremiumEstimate = 125000m,
             AssignedToUserId = _user.UserId,
+            Account = account,
+            Broker = broker,
+            AssignedToUser = assignee,
             CreatedAt = now,
             CreatedByUserId = _user.UserId,
             UpdatedAt = now,
@@ -34,9 +43,9 @@ public class WorkflowServiceTests
         };
         repo.Seed(submission);
 
-        var service = new SubmissionService(repo, _transitionRepo, _timelineRepo);
+        var service = CreateSubmissionService(repo, assignee);
 
-        var result = await service.GetByIdAsync(submission.Id);
+        var result = await service.GetByIdAsync(submission.Id, _user);
 
         result.ShouldNotBeNull();
         result!.Id.ShouldBe(submission.Id);
@@ -61,7 +70,7 @@ public class WorkflowServiceTests
             OccurredAt = occurredAt,
         });
 
-        var service = new SubmissionService(repo, _transitionRepo, _timelineRepo);
+        var service = CreateSubmissionService(repo);
 
         var result = await service.GetTransitionsAsync(submissionId);
 
@@ -74,11 +83,12 @@ public class WorkflowServiceTests
     public async Task SubmissionService_TransitionAsync_NotFound_ReturnsNotFound()
     {
         var repo = new StubSubmissionRepository();
-        var service = new SubmissionService(repo, _transitionRepo, _timelineRepo);
+        var service = CreateSubmissionService(repo);
 
-        var (result, error) = await service.TransitionAsync(
+        var (result, error, _) = await service.TransitionAsync(
             Guid.NewGuid(),
             new WorkflowTransitionRequestDto("Triaging", "review"),
+            0,
             _user);
 
         result.ShouldBeNull();
@@ -89,26 +99,32 @@ public class WorkflowServiceTests
     public async Task SubmissionService_TransitionAsync_InvalidTransition_ReturnsInvalidTransition()
     {
         var repo = new StubSubmissionRepository();
+        var now = DateTime.UtcNow;
+        var assignee = NewUserProfile(_user.UserId, "DistributionUser");
         repo.Seed(new Submission
         {
+            Account = NewAccount(now),
+            Broker = NewBroker(now),
+            AssignedToUser = assignee,
             AccountId = Guid.NewGuid(),
             BrokerId = Guid.NewGuid(),
             CurrentStatus = "Received",
-            EffectiveDate = DateTime.UtcNow.Date,
+            EffectiveDate = now.Date,
             PremiumEstimate = 50000m,
             AssignedToUserId = _user.UserId,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
             CreatedByUserId = _user.UserId,
-            UpdatedAt = DateTime.UtcNow,
+            UpdatedAt = now,
             UpdatedByUserId = _user.UserId,
         });
 
-        var service = new SubmissionService(repo, _transitionRepo, _timelineRepo);
+        var service = CreateSubmissionService(repo, assignee);
         var seeded = repo.Single();
 
-        var (result, error) = await service.TransitionAsync(
+        var (result, error, _) = await service.TransitionAsync(
             seeded.Id,
-            new WorkflowTransitionRequestDto("Binding", "too early"),
+            new WorkflowTransitionRequestDto("Bound", "too early"),
+            seeded.RowVersion,
             _user);
 
         result.ShouldBeNull();
@@ -122,26 +138,32 @@ public class WorkflowServiceTests
     public async Task SubmissionService_TransitionAsync_ValidTransition_PersistsTransitionAndTimeline()
     {
         var repo = new StubSubmissionRepository();
+        var now = DateTime.UtcNow;
+        var assignee = NewUserProfile(_user.UserId, "DistributionUser");
         repo.Seed(new Submission
         {
+            Account = NewAccount(now),
+            Broker = NewBroker(now),
+            AssignedToUser = assignee,
             AccountId = Guid.NewGuid(),
             BrokerId = Guid.NewGuid(),
             CurrentStatus = "Received",
-            EffectiveDate = DateTime.UtcNow.Date,
+            EffectiveDate = now.Date,
             PremiumEstimate = 50000m,
             AssignedToUserId = _user.UserId,
-            CreatedAt = DateTime.UtcNow.AddDays(-3),
+            CreatedAt = now.AddDays(-3),
             CreatedByUserId = _user.UserId,
-            UpdatedAt = DateTime.UtcNow.AddDays(-3),
+            UpdatedAt = now.AddDays(-3),
             UpdatedByUserId = _user.UserId,
         });
 
-        var service = new SubmissionService(repo, _transitionRepo, _timelineRepo);
+        var service = CreateSubmissionService(repo, assignee);
         var seeded = repo.Single();
 
-        var (result, error) = await service.TransitionAsync(
+        var (result, error, _) = await service.TransitionAsync(
             seeded.Id,
             new WorkflowTransitionRequestDto("Triaging", "queue"),
+            seeded.RowVersion,
             _user);
 
         error.ShouldBeNull();
@@ -155,6 +177,112 @@ public class WorkflowServiceTests
         timelineEvent.EntityType.ShouldBe("Submission");
         timelineEvent.EventType.ShouldBe("SubmissionTransitioned");
         timelineEvent.ActorUserId.ShouldBe(_user.UserId);
+        timelineEvent.EventDescription.ShouldContain("Note: queue");
+    }
+
+    [Fact]
+    public async Task SubmissionService_UpdateAsync_ClearOptionalFields_SetsNullAndTracksChanges()
+    {
+        var repo = new StubSubmissionRepository();
+        var now = DateTime.UtcNow;
+        var assignee = NewUserProfile(_user.UserId, "DistributionUser");
+        repo.Seed(new Submission
+        {
+            Account = NewAccount(now),
+            Broker = NewBroker(now),
+            AssignedToUser = assignee,
+            AccountId = Guid.NewGuid(),
+            BrokerId = Guid.NewGuid(),
+            ProgramId = Guid.NewGuid(),
+            LineOfBusiness = "Cyber",
+            CurrentStatus = "Received",
+            EffectiveDate = now.Date.AddDays(30),
+            ExpirationDate = now.Date.AddDays(395),
+            PremiumEstimate = 125000m,
+            Description = "Existing submission notes",
+            AssignedToUserId = _user.UserId,
+            CreatedAt = now.AddDays(-2),
+            CreatedByUserId = _user.UserId,
+            UpdatedAt = now.AddDays(-2),
+            UpdatedByUserId = _user.UserId,
+        });
+
+        var service = CreateSubmissionService(repo, assignee);
+        var seeded = repo.Single();
+
+        var (result, error) = await service.UpdateAsync(
+            seeded.Id,
+            new SubmissionUpdateDto(null, null, null, null, null, null),
+            Fields("programId", "lineOfBusiness", "expirationDate", "premiumEstimate", "description"),
+            seeded.RowVersion,
+            _user);
+
+        error.ShouldBeNull();
+        result.ShouldNotBeNull();
+        result!.ProgramId.ShouldBeNull();
+        result.LineOfBusiness.ShouldBeNull();
+        result.ExpirationDate.ShouldBeNull();
+        result.PremiumEstimate.ShouldBeNull();
+        result.Description.ShouldBeNull();
+        seeded.ProgramId.ShouldBeNull();
+        seeded.LineOfBusiness.ShouldBeNull();
+        seeded.ExpirationDate.ShouldBeNull();
+        seeded.PremiumEstimate.ShouldBeNull();
+        seeded.Description.ShouldBeNull();
+
+        var timelineEvent = _timelineRepo.Events.ShouldHaveSingleItem();
+        timelineEvent.EventType.ShouldBe("SubmissionUpdated");
+        timelineEvent.EventPayloadJson.ShouldContain("\"programId\"");
+        timelineEvent.EventPayloadJson.ShouldContain("\"description\"");
+    }
+
+    [Fact]
+    public async Task SubmissionService_UpdateAsync_OmittedOptionalFields_PreserveExistingValues()
+    {
+        var repo = new StubSubmissionRepository();
+        var now = DateTime.UtcNow;
+        var assignee = NewUserProfile(_user.UserId, "DistributionUser");
+        var existingProgramId = Guid.NewGuid();
+        repo.Seed(new Submission
+        {
+            Account = NewAccount(now),
+            Broker = NewBroker(now),
+            AssignedToUser = assignee,
+            AccountId = Guid.NewGuid(),
+            BrokerId = Guid.NewGuid(),
+            ProgramId = existingProgramId,
+            LineOfBusiness = "Cyber",
+            CurrentStatus = "Received",
+            EffectiveDate = now.Date.AddDays(30),
+            ExpirationDate = now.Date.AddDays(395),
+            PremiumEstimate = 125000m,
+            Description = "Existing submission notes",
+            AssignedToUserId = _user.UserId,
+            CreatedAt = now.AddDays(-2),
+            CreatedByUserId = _user.UserId,
+            UpdatedAt = now.AddDays(-2),
+            UpdatedByUserId = _user.UserId,
+        });
+
+        var service = CreateSubmissionService(repo, assignee);
+        var seeded = repo.Single();
+        var updatedEffectiveDate = seeded.EffectiveDate.AddDays(10);
+
+        var (result, error) = await service.UpdateAsync(
+            seeded.Id,
+            new SubmissionUpdateDto(null, null, updatedEffectiveDate, null, null, null),
+            Fields("effectiveDate"),
+            seeded.RowVersion,
+            _user);
+
+        error.ShouldBeNull();
+        result.ShouldNotBeNull();
+        result!.EffectiveDate.ShouldBe(updatedEffectiveDate);
+        result.ProgramId.ShouldBe(existingProgramId);
+        result.LineOfBusiness.ShouldBe("Cyber");
+        result.ExpirationDate.ShouldNotBeNull();
+        result.PremiumEstimate.ShouldBe(125000m);
+        result.Description.ShouldBe("Existing submission notes");
     }
 
     [Fact]
@@ -178,7 +306,7 @@ public class WorkflowServiceTests
         };
         repo.Seed(renewal);
 
-        var service = new RenewalService(repo, _transitionRepo, _timelineRepo);
+        var service = CreateRenewalService(repo);
 
         var result = await service.GetByIdAsync(renewal.Id);
 
@@ -204,7 +332,7 @@ public class WorkflowServiceTests
             OccurredAt = DateTime.UtcNow,
         });
 
-        var service = new RenewalService(repo, _transitionRepo, _timelineRepo);
+        var service = CreateRenewalService(repo);
 
         var result = await service.GetTransitionsAsync(renewalId);
 
@@ -217,7 +345,7 @@ public class WorkflowServiceTests
     public async Task RenewalService_TransitionAsync_NotFound_ReturnsNotFound()
     {
         var repo = new StubRenewalRepository();
-        var service = new RenewalService(repo, _transitionRepo, _timelineRepo);
+        var service = CreateRenewalService(repo);
 
         var (result, error) = await service.TransitionAsync(
             Guid.NewGuid(),
@@ -245,7 +373,7 @@ public class WorkflowServiceTests
             UpdatedByUserId = _user.UserId,
         });
 
-        var service = new RenewalService(repo, _transitionRepo, _timelineRepo);
+        var service = CreateRenewalService(repo);
         var seeded = repo.Single();
 
         var (result, error) = await service.TransitionAsync(
@@ -277,7 +405,7 @@ public class WorkflowServiceTests
             UpdatedByUserId = _user.UserId,
         });
 
-        var service = new RenewalService(repo, _transitionRepo, _timelineRepo);
+        var service = CreateRenewalService(repo);
         var seeded = repo.Single();
 
         var (result, error) = await service.TransitionAsync(
@@ -295,6 +423,71 @@ public class WorkflowServiceTests
         timelineEvent.EntityType.ShouldBe("Renewal");
         timelineEvent.EventType.ShouldBe("RenewalTransitioned");
     }
+
+    private SubmissionService CreateSubmissionService(
+        StubSubmissionRepository repo,
+        UserProfile? assignedUser = null)
+    {
+        var userProfileRepo = new StubUserProfileRepository();
+        if (assignedUser is not null)
+            userProfileRepo.Seed(assignedUser);
+
+        return new SubmissionService(
+            repo,
+            _transitionRepo,
+            _timelineRepo,
+            new StubBrokerRepository(),
+            new StubReferenceDataRepository(),
+            userProfileRepo,
+            new StubSubmissionDocumentChecklistReader(),
+            _unitOfWork);
+    }
+
+    private RenewalService CreateRenewalService(StubRenewalRepository repo) =>
+        new(repo, _transitionRepo, _timelineRepo, _unitOfWork);
+
+    private Account NewAccount(DateTime now) => new()
+    {
+        Name = "Test Account",
+        Industry = "Technology",
+        PrimaryState = "CA",
+        Region = "West",
+        Status = "Active",
+        CreatedAt = now,
+        UpdatedAt = now,
+        CreatedByUserId = _user.UserId,
+        UpdatedByUserId = _user.UserId,
+    };
+
+    private Broker NewBroker(DateTime now) => new()
+    {
+        LegalName = "Test Broker",
+        LicenseNumber = $"LIC-{Guid.NewGuid():N}"[..12],
+        State = "CA",
+        Status = "Active",
+        CreatedAt = now,
+        UpdatedAt = now,
+        CreatedByUserId = _user.UserId,
+        UpdatedByUserId = _user.UserId,
+    };
+
+    private static UserProfile NewUserProfile(Guid id, string role) => new()
+    {
+        Id = id,
+        IdpIssuer = "test",
+        IdpSubject = "test",
+        Email = "test@example.com",
+        DisplayName = "Test User",
+        Department = "Distribution",
+        RolesJson = $"[\"{role}\"]",
+        RegionsJson = "[\"West\"]",
+        IsActive = true,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow,
+    };
+
+    private static HashSet<string> Fields(params string[] fields) =>
+        new(fields, StringComparer.OrdinalIgnoreCase);
 }
 
 internal sealed class StubSubmissionRepository : ISubmissionRepository
@@ -307,11 +500,31 @@ internal sealed class StubSubmissionRepository : ISubmissionRepository
     public Task<Submission?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         Task.FromResult(_submissions.GetValueOrDefault(id));
 
+    public Task<Submission?> GetByIdWithIncludesAsync(Guid id, CancellationToken ct = default) =>
+        Task.FromResult(_submissions.GetValueOrDefault(id));
+
+    public Task AddAsync(Submission submission, CancellationToken ct = default)
+    {
+        _submissions[submission.Id] = submission;
+        return Task.CompletedTask;
+    }
+
     public Task UpdateAsync(Submission submission, CancellationToken ct = default)
     {
         _submissions[submission.Id] = submission;
         return Task.CompletedTask;
     }
+
+    public Task<PaginatedResult<Submission>> ListAsync(
+        SubmissionListQuery query,
+        ICurrentUserService user,
+        CancellationToken ct = default) =>
+        Task.FromResult(new PaginatedResult<Submission>([], query.Page, query.PageSize, 0));
+
+    public Task<IReadOnlyDictionary<Guid, bool>> GetStaleFlagsAsync(
+        IReadOnlyCollection<Guid> submissionIds,
+        CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyDictionary<Guid, bool>>(submissionIds.ToDictionary(id => id, _ => false));
 }
 
 internal sealed class StubRenewalRepository : IRenewalRepository
@@ -342,9 +555,37 @@ internal sealed class StubWorkflowTransitionRepository : IWorkflowTransitionRepo
             .Where(t => t.WorkflowType == workflowType && t.EntityId == entityId)
             .ToList());
 
+    public Task<IReadOnlyDictionary<Guid, DateTime>> GetLatestTransitionTimesAsync(
+        string workflowType,
+        IReadOnlyCollection<Guid> entityIds,
+        CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyDictionary<Guid, DateTime>>(Items
+            .Where(t => t.WorkflowType == workflowType && entityIds.Contains(t.EntityId))
+            .GroupBy(t => t.EntityId)
+            .ToDictionary(group => group.Key, group => group.Max(item => item.OccurredAt)));
+
     public Task AddAsync(WorkflowTransition transition, CancellationToken ct = default)
     {
         Items.Add(transition);
         return Task.CompletedTask;
     }
+}
+
+internal sealed class StubReferenceDataRepository : IReferenceDataRepository
+{
+    public Task<IReadOnlyList<Account>> GetAccountsAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<Account>>([]);
+    public Task<IReadOnlyList<MGA>> GetMgasAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<MGA>>([]);
+    public Task<IReadOnlyList<Nebula.Domain.Entities.Program>> GetProgramsAsync(CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<Nebula.Domain.Entities.Program>>([]);
+    public Task<IReadOnlyList<ReferenceSubmissionStatus>> GetSubmissionStatusesAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ReferenceSubmissionStatus>>([]);
+    public Task<IReadOnlyList<ReferenceRenewalStatus>> GetRenewalStatusesAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ReferenceRenewalStatus>>([]);
+    public Task<Account?> GetAccountByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Account?>(null);
+    public Task<Nebula.Domain.Entities.Program?> GetProgramByIdAsync(Guid id, CancellationToken ct = default) =>
+        Task.FromResult<Nebula.Domain.Entities.Program?>(null);
+}
+
+internal sealed class StubSubmissionDocumentChecklistReader : ISubmissionDocumentChecklistReader
+{
+    public Task<IReadOnlyList<SubmissionDocumentCheckDto>> GetChecklistAsync(Guid submissionId, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<SubmissionDocumentCheckDto>>([]);
 }

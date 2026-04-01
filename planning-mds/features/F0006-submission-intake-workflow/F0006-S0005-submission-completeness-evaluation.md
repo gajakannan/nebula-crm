@@ -106,6 +106,14 @@ The completeness policy evaluates two categories:
 - F0006-S0003 — Completeness panel on detail view
 - F0006-S0004 — Completeness as transition guard for ReadyForUWReview
 
+## Business Rules
+
+1. **Completeness Is a Read-Side Projection:** Completeness evaluation does not mutate data. It is computed fresh on each request against current submission and document state. There is no cached or stored completeness field.
+2. **Underwriter Role Validation:** The AssignedToUserId completeness check verifies that the referenced user has the Underwriter role, not merely that the field is non-null. A submission assigned to a DistributionUser will fail the underwriter check.
+3. **Document Completeness Soft Dependency (F0020):** When F0020 document management is not deployed, document category checks are soft-skipped. Field completeness remains fully enforced. The completeness panel shows "Document management not yet configured" for the document section. This ensures F0006 can ship independently of F0020.
+4. **Uniform Required Fields Across LOBs:** All lines of business share the same required field set in MVP (AccountId, BrokerId, EffectiveDate, LineOfBusiness, AssignedToUserId with Underwriter role). Per-LOB completeness customization is Future scope.
+5. **Structured Missing-Item Response:** When completeness fails as a transition guard, the HTTP 409 response body lists every missing item — not just the first failure. This allows intake users to address all gaps in a single pass.
+
 ## Out of Scope
 
 - Custom completeness rules per LOB (future — all LOBs share the same required fields in MVP)

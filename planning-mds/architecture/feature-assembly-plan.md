@@ -15,6 +15,7 @@ Define the build order, role handoffs, and integration checkpoints for implement
 ## F0006 — Submission Intake Workflow
 
 **Added:** 2026-03-27 — Architecture review complete; data model, API, workflow, Casbin, schemas, error codes, and timeline events finalized.
+**Updated:** 2026-03-31 — Concurrency, completeness, and soft-dependency contracts reconciled across OpenAPI, JSON Schema, feature stories, and Casbin references.
 
 > **Implementation Execution Plan:** [`feature-assembly-plan.md`](../features/F0006-submission-intake-workflow/feature-assembly-plan.md) — detailed per-step file paths, C# code, logic flows, Casbin enforcement, timeline events, HTTP responses, and integration checkpoints for the backend/frontend developer agents.
 
@@ -22,21 +23,21 @@ Define the build order, role handoffs, and integration checkpoints for implement
 
 | Dependency | Source | What F0006 Needs | Status |
 |------------|--------|------------------|--------|
-| Account entity (stub) | F0016 | AccountId, Name, Region, Industry | **Check if exists; stub if needed** |
+| Account entity lookup | F0016 | AccountId, Name, Region, Industry point lookups for validation and display | **Entity exists; add targeted lookup methods if missing** |
 | Broker entity | F0002 | BrokerId, LegalName, BrokerRegion set | **Done** |
 | User search API | F0004-S0002 | Assignee picker for ownership | **Done** |
 | Task linked entity | F0003/F0004 | LinkedEntityType=Submission on Task | **Done** |
 | WorkflowSlaThreshold | ADR-009 | Stale thresholds per intake state | **Seed required** |
-| Document metadata | F0020 | Document completeness checks | **Soft dependency — soft-skip if unavailable** |
+| Document metadata | F0020 | Document completeness checks via adapter, not hardcoded service branching | **Soft dependency — null-object adapter until available** |
 
 ### Architecture Notes
 
 - **Data model:** Submission entity expanded with Description, ExpirationDate; PremiumEstimate made nullable. UserProfile navigation added for assignee denormalization.
 - **Workflow:** 4 intake states (Received→Triaging→WaitingOnBroker/ReadyForUWReview) with completeness and assignment guards on →ReadyForUWReview. WorkflowStateMachine rewritten to 10-state model (F0006 intake + F0019 downstream).
 - **Stale detection:** Query-time computation from WorkflowSlaThreshold + last WorkflowTransition.OccurredAt.
-- **Completeness:** Field checks (5 required fields) + document checks (soft-skipped when F0020 unavailable). Used as read-side projection and transition guard.
+- **Completeness:** Field checks (including "assigned user has Underwriter role") + document checks through an `ISubmissionDocumentChecklistReader` adapter. Used as read-side projection and transition guard.
 - **Casbin:** Existing §2.3 policies extended with `create`, `update`, `assign` actions (already in policy.csv).
-- **API:** 7 submission endpoints (list, create, detail, update, transition, assignment, timeline).
+- **API:** 7 submission endpoints (list, create, detail, update, transition, assignment, timeline). State-changing mutations require `If-Match` / `rowVersion` and return HTTP 412 on stale versions.
 
 ### Backend Assembly Steps
 
@@ -52,9 +53,10 @@ Define the build order, role handoffs, and integration checkpoints for implement
 1. Submission entity + UserProfile nav prop
 2. OpportunityStatusCatalog: align to 10 submission statuses
 3. WorkflowStateMachine: rewrite submission transitions
-4. SubmissionService: Create (region validation, auto-assignment, timeline event), Update (changed fields tracking), List (ABAC-scoped, stale), Transition (completeness+role guards), Assign (role validation), Completeness evaluation
-5. DTOs: rewrite SubmissionDto, SubmissionCreateDto, SubmissionUpdateDto; new list-item, assignment, completeness, list-query DTOs
-6. Validators: rewrite create/update; new assignment validator
+4. Expand reference-data lookups for account/program validation and add the default F0020 document-checklist adapter
+5. SubmissionService: Create (region validation, auto-assignment, timeline event), Update (changed fields tracking + `If-Match`), List (ABAC-scoped, stale), Transition (completeness+role guards + `If-Match`), Assign (role validation + `If-Match`), Completeness evaluation
+6. DTOs: rewrite SubmissionDto, SubmissionCreateDto, SubmissionUpdateDto; new list-item, assignment, completeness, list-query DTOs
+7. Validators: rewrite create/update; new assignment validator
 
 **Step 3 — API endpoints (Backend Developer)**
 1. `GET /submissions` — paginated list with filters (S0001)
@@ -72,6 +74,7 @@ Define the build order, role handoffs, and integration checkpoints for implement
 4. Role-gated transition enforcement
 5. Assignment validation (underwriter requirement in ReadyForUWReview)
 6. Stale detection with configured thresholds
+7. Stale `If-Match` handling returns HTTP 412 across update, transition, and assignment
 
 ### Frontend Assembly Steps
 
@@ -150,7 +153,7 @@ Step 9 (QE):          comprehensive test coverage
 
 | Item | Severity | Mitigation | Owner |
 |------|----------|------------|-------|
-| F0016 (Account) not ready before F0006 starts | High | Check if Account entity exists; implement stub migration if needed | Architect + Backend |
+| Account/program validation still depends on list-oriented reference-data APIs | Medium | Add targeted point lookups so submission create/update flows do not load full cached lists just to validate IDs | Backend |
 | WorkflowStateMachine has old states not in F0006+F0019 model | Medium | Step 2 rewrites to 10-state model; migration maps existing records | Backend |
 | Stale detection N+1 performance on list endpoint | Medium | Batch-load thresholds; use window function for last transition per submission | Backend |
 | F0020 (Document Management) not available | Low | Document completeness shows "unavailable"; field completeness enforced; transition guard soft-skips documents | Backend |

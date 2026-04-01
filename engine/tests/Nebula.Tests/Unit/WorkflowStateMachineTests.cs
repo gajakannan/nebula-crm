@@ -7,7 +7,7 @@ public class WorkflowStateMachineTests
 {
     [Theory]
     [InlineData("Submission", "Received", "Triaging")]
-    [InlineData("Submission", "Quoted", "Bound")]
+    [InlineData("Submission", "BindRequested", "Bound")]
     [InlineData("Renewal", "Created", "DataReview")]
     [InlineData("Renewal", "Quoted", "Bound")]
     public void IsValidTransition_WithAllowedTransition_ReturnsTrue(string workflowType, string from, string to)
@@ -18,6 +18,7 @@ public class WorkflowStateMachineTests
     [Theory]
     [InlineData("Submission", "Bound", "Quoted")]
     [InlineData("Submission", "Received", "WaitingOnBroker")]
+    [InlineData("Submission", "Quoted", "Bound")]
     [InlineData("Renewal", "Bound", "Quoted")]
     [InlineData("Renewal", "Created", "Negotiation")]
     [InlineData("Unknown", "Open", "Closed")]
@@ -35,5 +36,13 @@ public class WorkflowStateMachineTests
     public void IsTerminalState_ReturnsExpectedValue(string workflowType, string state, bool expected)
     {
         WorkflowStateMachine.IsTerminalState(workflowType, state).ShouldBe(expected);
+    }
+
+    [Fact]
+    public void GetAvailableTransitions_Submission_ReturnsConfiguredTargets()
+    {
+        var transitions = WorkflowStateMachine.GetAvailableTransitions("Submission", "Triaging");
+
+        transitions.ShouldBe(["ReadyForUWReview", "WaitingOnBroker"]);
     }
 }

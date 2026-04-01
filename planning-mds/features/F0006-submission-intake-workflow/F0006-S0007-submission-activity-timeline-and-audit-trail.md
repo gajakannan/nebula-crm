@@ -44,6 +44,8 @@ The activity timeline is the audit backbone of the submission intake workflow. E
 - No events (should not happen for F0006-created records because creation always produces one; legacy or malformed seeded data may still render empty) → empty timeline with message
 - Actor user was soft-deleted → show "[Deleted User]" with userId as fallback
 - Large event payload (long reason text) → truncate in list view; full text on expand/click
+- Caller lacks route/action-level `submission:read` permission for timeline access → HTTP 403
+- Submission is not found or hidden by entity-scope visibility rules → HTTP 404
 - Timeline events from downstream features (F0019 transitions, F0020 document uploads) appear in the same timeline once those features are active
 
 **Checklist:**
@@ -110,6 +112,15 @@ The activity timeline is the audit backbone of the submission intake workflow. E
 
 **Related Stories:**
 - F0006-S0003 — Timeline section on detail view
+
+## Business Rules
+
+1. **Append-Only Immutability (ADR-011):** ActivityTimelineEvent and WorkflowTransition records are immutable. No update or delete operations exist on these tables. This is a non-negotiable audit requirement — the timeline is the compliance backbone for submission intake operations.
+2. **Transition Atomicity (ADR-011):** Timeline event and workflow transition records are created in the same DB transaction as the triggering mutation. If the mutation succeeds, the audit records must exist. If either audit append fails, the entire mutation rolls back.
+3. **Pre-Rendered Event Descriptions:** Event descriptions are computed and stored at write time, not read time. This ensures immutability (the description captures the exact state at the moment of the event) and avoids runtime computation cost on timeline reads.
+4. **Actor Identity from Authenticated Principal:** The `ActorUserId` on every timeline event and workflow transition is set from the authenticated user's resolved internal UserId (per ADR-006 principal key pattern), not from a client-supplied value. This prevents actor spoofing.
+5. **Timeline Read Authorization:** Timeline access inherits submission read semantics. Route/action-level deny of `submission:read` returns HTTP 403. If the caller has general read capability but the submission is outside resolved visibility scope, the API may cloak that outcome as HTTP 404.
+6. **Cross-Feature Timeline Extensibility:** The timeline uses EntityType/EntityId indexing. Events from downstream features (F0019 transitions, F0020 document uploads) will appear in the same submission timeline once those features are active, using the same append-only pattern.
 
 ## Out of Scope
 

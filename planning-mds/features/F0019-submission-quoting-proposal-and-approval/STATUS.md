@@ -1,12 +1,19 @@
 # F0019 — Submission Quoting, Proposal & Approval Workflow — Status
 
 **Overall Status:** Draft
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-31
 
 ## Story Checklist
 
 | Story | Title | Status |
 |-------|-------|--------|
+
+## Refinement Guardrails
+
+- F0006 remains closed at `ReadyForUWReview`; downstream submission transitions must remain disabled until F0019 stories explicitly turn them on.
+- The first F0019 story must own activation of `ReadyForUWReview -> InReview` and later downstream transitions, with direct reference to F0006 as the prior workflow boundary.
+- F0019 refinement is incomplete until the implementation contract identifies the code path, authorization changes, UI exposure, and regression coverage that deliberately move the shared submission workflow beyond F0006.
+- If F0006 descopes submission soft delete, F0019 refinement must explicitly define the replacement submission archive/deactivate contract, including allowed states, action shape, list visibility, and audit retention before coding starts.
 
 ## Required Signoff Roles (Set in Planning)
 

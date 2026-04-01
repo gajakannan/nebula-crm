@@ -28,6 +28,22 @@ vi.mock('./pages/BrokerDetailPage', () => ({
   default: () => <div>broker-detail-page</div>,
 }))
 
+vi.mock('./pages/SubmissionsPage', () => ({
+  default: () => <div>submissions-page</div>,
+}))
+
+vi.mock('./pages/CreateSubmissionPage', () => ({
+  default: () => <div>create-submission-page</div>,
+}))
+
+vi.mock('./pages/SubmissionDetailPage', () => ({
+  default: () => <div>submission-detail-page</div>,
+}))
+
+vi.mock('./pages/TaskCenterPage', () => ({
+  default: () => <div>task-center-page</div>,
+}))
+
 vi.mock('./pages/NotFoundPage', () => ({
   default: () => <div>not-found-page</div>,
 }))
@@ -51,9 +67,13 @@ describe('App routing', () => {
 
   it.each([
     ['/', 'dashboard-page'],
+    ['/submissions', 'submissions-page'],
+    ['/submissions/new', 'create-submission-page'],
+    ['/submissions/submission-1', 'submission-detail-page'],
     ['/brokers', 'broker-list-page'],
     ['/brokers/new', 'create-broker-page'],
     ['/brokers/broker-1', 'broker-detail-page'],
+    ['/tasks', 'task-center-page'],
     ['/login', 'login-page'],
     ['/auth/callback', 'auth-callback-page'],
     ['/unauthorized', 'unauthorized-page'],

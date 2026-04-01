@@ -8,6 +8,13 @@
 
 F0006 builds the new business submission intake workflow — the primary entry point for all new business into Nebula CRM. The existing Submission entity, service, endpoints, DTOs, validators, and repository require significant expansion. The entity needs two new columns plus a nullability fix. The service needs Create, Update, List, Assign, and CompletenessEvaluation methods. Four new API endpoints are required; three existing endpoints need enhancement. The WorkflowStateMachine submission transitions must be aligned to the F0006 + F0019 state model.
 
+This architect pass resolves four design drifts before implementation starts:
+
+1. State-changing submission endpoints (`PUT /submissions/{id}`, `PUT /submissions/{id}/assignment`, `POST /submissions/{id}/transitions`) must use the platform `If-Match` / `rowVersion` precondition contract and return HTTP 412 `precondition_failed` on stale versions.
+2. The submission detail response must expose `rowVersion` for those follow-up mutations, while the submission timeline remains a separately paged read via `GET /submissions/{id}/timeline`.
+3. Completeness cannot remain a pure function of `Submission` alone because it must validate that the current assignee has the Underwriter role and it must integrate with an F0020 document-presence adapter when that feature is available.
+4. The F0020 soft dependency must be represented as a null-object adapter in Application/Infrastructure rather than as hardcoded "always unavailable" logic inside `SubmissionService`.
+
 ## Build Order
 
 | Step | Scope | Stories | Rationale |
@@ -33,11 +40,13 @@ F0006 builds the new business submission intake workflow — the primary entry p
 | `Nebula.Application/Services/SubmissionService.cs` | GetById, GetTransitions, Transition | **Rewrite** — Add Create, Update, List, Assign, Completeness; rewrite Transition with completeness guards + role gates |
 | `Nebula.Application/Interfaces/ISubmissionRepository.cs` | 2 methods | **Expand** — Add AddAsync, ListAsync, GetByIdWithIncludesAsync |
 | `Nebula.Infrastructure/Repositories/SubmissionRepository.cs` | 2 methods | **Expand** — Implement new interface methods |
+| `Nebula.Application/Interfaces/IReferenceDataRepository.cs` | List-only reference-data reads | **Expand** — Add `GetAccountByIdAsync` and `GetProgramByIdAsync` for point validation/lookups |
+| `Nebula.Infrastructure/Repositories/ReferenceDataRepository.cs` | Cached list reads | **Expand** — Add point lookups without forcing SubmissionService to load full reference-data lists |
 | `Nebula.Infrastructure/Persistence/Configurations/SubmissionConfiguration.cs` | Missing columns | **Expand** — Add Description, ExpirationDate columns; add AccountId/BrokerId indexes |
 | `Nebula.Api/Endpoints/SubmissionEndpoints.cs` | 3 routes | **Rewrite** — 7 routes with Casbin enforcement |
 | `Nebula.Application/Services/WorkflowStateMachine.cs` | Old 11-state submission map with WaitingOnDocuments | **Rewrite** — Align to F0006 intake + F0019 downstream states |
 | `Nebula.Domain/Workflow/OpportunityStatusCatalog.cs` | 17 submission statuses | **Review** — Align with schema enum (10 states for F0006+F0019) |
-| `Nebula.Api/Helpers/ProblemDetailsHelper.cs` | Missing F0006 error helpers | **Expand** — Add RegionMismatch, InvalidAccount, InvalidBroker, InvalidProgram, InvalidLob, InvalidAssignee (submission), MissingTransitionPrerequisite |
+| `Nebula.Api/Helpers/ProblemDetailsHelper.cs` | Missing F0006 error helpers | **Expand** — Add RegionMismatch, InvalidAccount, InvalidBroker, InvalidProgram, InvalidLob, InvalidAssignee (submission), MissingTransitionPrerequisite, PreconditionFailed |
 
 ## New Files
 
@@ -50,6 +59,8 @@ F0006 builds the new business submission intake workflow — the primary entry p
 | `Nebula.Application/DTOs/SubmissionFieldCheckDto.cs` | Application | Per-field completeness check |
 | `Nebula.Application/DTOs/SubmissionDocumentCheckDto.cs` | Application | Per-document-category completeness check |
 | `Nebula.Application/Validators/SubmissionAssignmentValidator.cs` | Application | Assignment request validation |
+| `Nebula.Application/Interfaces/ISubmissionDocumentChecklistReader.cs` | Application | Soft-dependency adapter for F0020-backed document presence checks |
+| `Nebula.Infrastructure/Services/UnavailableSubmissionDocumentChecklistReader.cs` | Infrastructure | Default null-object implementation while F0020 is not deployed |
 
 ---
 
@@ -270,6 +281,7 @@ public record SubmissionDto(
     bool IsStale,
     SubmissionCompletenessDto Completeness,
     IReadOnlyList<string> AvailableTransitions,
+    string RowVersion,
     // Audit
     DateTime CreatedAt,
     Guid CreatedByUserId,
@@ -445,6 +457,21 @@ public interface ISubmissionRepository
 }
 ```
 
+### IReferenceDataRepository (Expand)
+
+```csharp
+public interface IReferenceDataRepository
+{
+    Task<IReadOnlyList<Account>> GetAccountsAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<MGA>> GetMgasAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<Program>> GetProgramsAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<ReferenceSubmissionStatus>> GetSubmissionStatusesAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<ReferenceRenewalStatus>> GetRenewalStatusesAsync(CancellationToken ct = default);
+    Task<Account?> GetAccountByIdAsync(Guid id, CancellationToken ct = default);   // NEW
+    Task<Program?> GetProgramByIdAsync(Guid id, CancellationToken ct = default);   // NEW
+}
+```
+
 ### SubmissionRepository (Expand)
 
 ```csharp
@@ -473,6 +500,29 @@ await db.Submissions.AddAsync(submission, ct);
 // 8. Return PaginatedResult<Submission>
 ```
 
+### ISubmissionDocumentChecklistReader (New)
+
+```csharp
+public interface ISubmissionDocumentChecklistReader
+{
+    Task<IReadOnlyList<SubmissionDocumentCheckDto>> GetChecklistAsync(Guid submissionId, CancellationToken ct = default);
+}
+```
+
+Default implementation while F0020 is unavailable:
+
+```csharp
+public sealed class UnavailableSubmissionDocumentChecklistReader : ISubmissionDocumentChecklistReader
+{
+    public Task<IReadOnlyList<SubmissionDocumentCheckDto>> GetChecklistAsync(Guid submissionId, CancellationToken ct = default) =>
+        Task.FromResult<IReadOnlyList<SubmissionDocumentCheckDto>>(
+        [
+            new("Application", true, "unavailable"),
+            new("Supporting Document", true, "unavailable"),
+        ]);
+}
+```
+
 ---
 
 ## Step 6 — Service Rewrite
@@ -485,11 +535,11 @@ public class SubmissionService(
     IWorkflowTransitionRepository transitionRepo,
     ITimelineRepository timelineRepo,
     IBrokerRepository brokerRepo,
+    IReferenceDataRepository referenceDataRepo,
     IUserProfileRepository userProfileRepo,
+    ISubmissionDocumentChecklistReader submissionDocumentChecklistReader,
     IUnitOfWork unitOfWork)
 ```
-
-> **Note:** Account validation requires an IAccountRepository. If F0016 has not landed yet, implement a minimal account lookup method. Check whether `db.Accounts` DbSet exists. If not, the migration in Step 1 should create a minimal Account stub or the service should query directly.
 
 ### 6a — CreateAsync (S0002)
 
@@ -497,10 +547,10 @@ public class SubmissionService(
 CreateAsync(SubmissionCreateDto dto, ICurrentUserService user, CancellationToken ct) → SubmissionDto
 ```
 
-1. Validate Account exists and is not soft-deleted → error `invalid_account` (400)
+1. Validate Account exists and is not soft-deleted via `referenceDataRepo.GetAccountByIdAsync(dto.AccountId, ct)` → error `invalid_account` (400)
 2. Validate Broker exists, not soft-deleted, status=Active → error `invalid_broker` (400)
 3. Region alignment: load Account.Region, load BrokerRegions for BrokerId, check Account.Region ∈ BrokerRegions → error `region_mismatch` (400)
-4. If ProgramId provided: validate Program exists and is not soft-deleted → error `invalid_program` (400)
+4. If ProgramId provided: validate Program exists and is not soft-deleted via `referenceDataRepo.GetProgramByIdAsync(dto.ProgramId.Value, ct)` → error `invalid_program` (400)
 5. If LineOfBusiness provided: validate against known LOB set → error `invalid_lob` (400)
 6. Compute ExpirationDate: if null, default to EffectiveDate + 12 months
 7. Create Submission entity:
@@ -552,14 +602,14 @@ GetByIdAsync(Guid id, ICurrentUserService user, CancellationToken ct) → Submis
 
 1. `submissionRepo.GetByIdWithIncludesAsync(id, ct)` → if null, return null (404 at endpoint)
 2. Compute `isStale` (see 6g)
-3. Evaluate completeness (see 6f)
+3. Evaluate completeness via `EvaluateCompletenessAsync(submission, ct)` (see 6f)
 4. Compute `availableTransitions` for the user's role and current state
-5. Map to SubmissionDto with denormalized names from included navigation properties
+5. Map to SubmissionDto with denormalized names from included navigation properties and `RowVersion`
 
 ### Casbin Enforcement (GetById)
 
 - Resource: `submission`, Action: `read`
-- Enforcement: at endpoint. ABAC scope: DistributionUser sees own (assigned); DistributionManager sees region; Underwriter sees assigned+team; Admin sees all.
+- Enforcement: at endpoint. ABAC scope: DistributionUser sees own (assigned); DistributionManager sees region; Underwriter sees assigned-only in F0006 scope; Admin sees all.
 
 ### HTTP Responses (GET /submissions/{id})
 
@@ -574,18 +624,19 @@ GetByIdAsync(Guid id, ICurrentUserService user, CancellationToken ct) → Submis
 ### 6c — UpdateAsync (S0003)
 
 ```
-UpdateAsync(Guid id, SubmissionUpdateDto dto, ICurrentUserService user, CancellationToken ct) → (SubmissionDto?, string?)
+UpdateAsync(Guid id, SubmissionUpdateDto dto, uint expectedRowVersion, ICurrentUserService user, CancellationToken ct) → (SubmissionDto?, string?)
 ```
 
 1. Load submission with includes → if null, return (null, "not_found")
-2. If LineOfBusiness provided: validate against known LOB set → error `invalid_lob`
-3. If ProgramId provided: validate exists and not soft-deleted → error `invalid_program`
-4. Track changed fields (build `changedFields` map with before/after)
-5. Apply non-null fields from dto to submission
-6. Set `UpdatedAt = now`, `UpdatedByUserId = user.UserId`
-7. If any fields changed, append ActivityTimelineEvent: `EventType="SubmissionUpdated"`, payload with `changedFields`
-8. `unitOfWork.CommitAsync(ct)` — catches `DbUpdateConcurrencyException` → return (null, "concurrency_conflict")
-9. Return mapped SubmissionDto
+2. Compare `submission.RowVersion` to `expectedRowVersion` → if mismatch, return (null, "precondition_failed")
+3. If LineOfBusiness provided: validate against known LOB set → error `invalid_lob`
+4. If ProgramId provided: validate exists and not soft-deleted via `referenceDataRepo.GetProgramByIdAsync` → error `invalid_program`
+5. Track changed fields (build `changedFields` map with before/after)
+6. Apply non-null fields from dto to submission
+7. Set `UpdatedAt = now`, `UpdatedByUserId = user.UserId`
+8. If any fields changed, append ActivityTimelineEvent: `EventType="SubmissionUpdated"`, payload with `changedFields`
+9. `unitOfWork.CommitAsync(ct)` — catches `DbUpdateConcurrencyException` → return (null, "precondition_failed")
+10. Return mapped SubmissionDto
 
 ### Casbin Enforcement (Update)
 
@@ -602,43 +653,41 @@ UpdateAsync(Guid id, SubmissionUpdateDto dto, ICurrentUserService user, Cancella
 | 400 | ProblemDetails (`invalid_program`) | Program not found or soft-deleted |
 | 403 | ProblemDetails (`policy_denied`) | Casbin deny |
 | 404 | ProblemDetails (`not_found`) | Not found |
-| 409 | ProblemDetails (`concurrency_conflict`) | Optimistic concurrency violation |
+| 412 | ProblemDetails (`precondition_failed`) | Stale or missing `If-Match` precondition |
 
 ---
 
 ### 6d — TransitionAsync (S0004 — Enhanced)
 
 ```
-TransitionAsync(Guid id, WorkflowTransitionRequestDto dto, ICurrentUserService user, CancellationToken ct) → (WorkflowTransitionRecordDto?, string?)
+TransitionAsync(Guid id, WorkflowTransitionRequestDto dto, uint expectedRowVersion, ICurrentUserService user, CancellationToken ct) → (WorkflowTransitionRecordDto?, string?)
 ```
 
 1. Load submission with includes → if null, return (null, "not_found")
-2. Validate transition allowed: `WorkflowStateMachine.IsValidTransition("Submission", current, dto.ToState)` → error `invalid_transition`
-3. **Intake role gate** (application-layer, not Casbin):
+2. Compare `submission.RowVersion` to `expectedRowVersion` → if mismatch, return (null, "precondition_failed")
+3. Validate transition allowed: `WorkflowStateMachine.IsValidTransition("Submission", current, dto.ToState)` → error `invalid_transition`
+4. **Intake role gate** (application-layer, not Casbin):
    - Received→Triaging: DistributionUser, DistributionManager, Admin
    - Triaging→WaitingOnBroker: DistributionUser, DistributionManager, Admin
    - Triaging→ReadyForUWReview: DistributionUser, DistributionManager, Admin
    - WaitingOnBroker→ReadyForUWReview: DistributionUser, DistributionManager, Admin
    - Downstream (F0019): Underwriter, Admin (placeholder)
    - If user's role not in allowed set → return (null, "policy_denied")
-4. **Completeness guard** (transitions to ReadyForUWReview only):
-   - Evaluate completeness (see 6f)
+5. **Completeness guard** (transitions to ReadyForUWReview only):
+   - Evaluate completeness via `EvaluateCompletenessAsync(submission, ct)` (see 6f)
    - If `!completeness.IsComplete` → return (null, "missing_transition_prerequisite") with detail listing missing items
-5. **Assignment guard** (transitions to ReadyForUWReview only):
-   - Verify `submission.AssignedToUserId` references a user with Underwriter role
-   - If not → return (null, "missing_transition_prerequisite") with detail: "AssignedToUserId must reference a user with Underwriter role"
 6. `var now = DateTime.UtcNow;`
 7. Create WorkflowTransition: `WorkflowType="Submission"`, `EntityId=submission.Id`, `FromState=current`, `ToState=dto.ToState`, `Reason=dto.Reason`, `ActorUserId=user.UserId`, `OccurredAt=now`
 8. Update submission: `CurrentStatus=dto.ToState`, `UpdatedAt=now`, `UpdatedByUserId=user.UserId`
 9. Append ActivityTimelineEvent: `EventType="SubmissionTransitioned"`, payload per schema
 10. `transitionRepo.AddAsync(transition, ct)`, `submissionRepo.UpdateAsync(submission, ct)`, `timelineRepo.AddEventAsync(event, ct)`
-11. `unitOfWork.CommitAsync(ct)` — catches concurrency → return (null, "concurrency_conflict")
+11. `unitOfWork.CommitAsync(ct)` — catches concurrency → return (null, "precondition_failed")
 12. Return mapped WorkflowTransitionRecordDto
 
 ### Casbin Enforcement (Transition)
 
 - Resource: `submission`, Action: `transition`
-- Casbin gates broad action; application layer gates per-transition role (step 3 above)
+- Casbin gates broad action; application layer gates per-transition role (step 4 above)
 
 ### Timeline Event (SubmissionTransitioned)
 
@@ -656,26 +705,27 @@ TransitionAsync(Guid id, WorkflowTransitionRequestDto dto, ICurrentUserService u
 | 404 | ProblemDetails (`not_found`) | Not found |
 | 409 | ProblemDetails (`invalid_transition`) | Disallowed transition pair |
 | 409 | ProblemDetails (`missing_transition_prerequisite`) | Completeness or assignment guard failed |
-| 409 | ProblemDetails (`concurrency_conflict`) | Optimistic concurrency violation |
+| 412 | ProblemDetails (`precondition_failed`) | Stale or missing `If-Match` precondition |
 
 ---
 
 ### 6e — AssignAsync (S0006)
 
 ```
-AssignAsync(Guid id, SubmissionAssignmentRequestDto dto, ICurrentUserService user, CancellationToken ct) → (SubmissionDto?, string?)
+AssignAsync(Guid id, SubmissionAssignmentRequestDto dto, uint expectedRowVersion, ICurrentUserService user, CancellationToken ct) → (SubmissionDto?, string?)
 ```
 
 1. Load submission with includes → if null, return (null, "not_found")
-2. If `dto.AssignedToUserId == submission.AssignedToUserId` → no-op, return current SubmissionDto
-3. Validate target user exists, is active → error `invalid_assignee`
-4. If submission is in ReadyForUWReview: validate target user has Underwriter role → error `invalid_assignee` with detail
-5. Track previous assignee for timeline event
-6. `submission.AssignedToUserId = dto.AssignedToUserId`
-7. `submission.UpdatedAt = now`, `submission.UpdatedByUserId = user.UserId`
-8. Append ActivityTimelineEvent: `EventType="SubmissionAssigned"`, payload per schema
-9. `unitOfWork.CommitAsync(ct)` — catches concurrency → return (null, "concurrency_conflict")
-10. Reload with includes, return mapped SubmissionDto
+2. Compare `submission.RowVersion` to `expectedRowVersion` → if mismatch, return (null, "precondition_failed")
+3. If `dto.AssignedToUserId == submission.AssignedToUserId` → no-op, return current SubmissionDto
+4. Validate target user exists, is active → error `invalid_assignee`
+5. If submission is in ReadyForUWReview: validate target user has Underwriter role → error `invalid_assignee` with detail
+6. Track previous assignee for timeline event
+7. `submission.AssignedToUserId = dto.AssignedToUserId`
+8. `submission.UpdatedAt = now`, `submission.UpdatedByUserId = user.UserId`
+9. Append ActivityTimelineEvent: `EventType="SubmissionAssigned"`, payload per schema
+10. `unitOfWork.CommitAsync(ct)` — catches concurrency → return (null, "precondition_failed")
+11. Reload with includes, return mapped SubmissionDto
 
 ### Casbin Enforcement (Assign)
 
@@ -699,30 +749,31 @@ AssignAsync(Guid id, SubmissionAssignmentRequestDto dto, ICurrentUserService use
 | 400 | ProblemDetails (`invalid_assignee`) | Target user not found, inactive, or wrong role |
 | 403 | ProblemDetails (`policy_denied`) | Casbin deny |
 | 404 | ProblemDetails (`not_found`) | Not found |
-| 409 | ProblemDetails (`concurrency_conflict`) | Optimistic concurrency violation |
+| 412 | ProblemDetails (`precondition_failed`) | Stale or missing `If-Match` precondition |
 
 ---
 
 ### 6f — EvaluateCompleteness (S0005)
 
 ```
-EvaluateCompleteness(Submission submission) → SubmissionCompletenessDto
+EvaluateCompletenessAsync(Submission submission, CancellationToken ct) → SubmissionCompletenessDto
 ```
 
-This is a pure function (no DB calls). Called from GetByIdAsync and TransitionAsync.
+This is an application-level evaluator. It reads assignee role information from `IUserProfileRepository` and document-category presence from `ISubmissionDocumentChecklistReader`.
 
 1. **Field checks** (required for ReadyForUWReview transition):
    - `AccountId`: status = submission.AccountId != Guid.Empty ? "pass" : "missing"
    - `BrokerId`: status = submission.BrokerId != Guid.Empty ? "pass" : "missing"
    - `EffectiveDate`: status = submission.EffectiveDate != default ? "pass" : "missing"
    - `LineOfBusiness`: status = !string.IsNullOrEmpty(submission.LineOfBusiness) ? "pass" : "missing"
-   - `AssignedToUserId`: status = submission.AssignedToUserId != Guid.Empty ? "pass" : "missing"
+   - `AssignedToUserId`: load `userProfileRepo.GetByIdAsync(submission.AssignedToUserId, ct)`; status = pass only when an active user exists and their `RolesJson` contains `Underwriter`
 2. **Document checks** (soft dependency on F0020):
-   - Category "Application": status = "unavailable" (F0020 not deployed)
-   - Category "Supporting Document": status = "unavailable" (F0020 not deployed)
-3. **MissingItems**: collect human-readable strings for all "missing" field checks
-4. **IsComplete**: true only when all required field checks pass AND (all required document checks pass OR all show "unavailable")
-   - When F0020 unavailable: document checks are soft-skipped (treated as non-blocking)
+   - `var documentChecks = await submissionDocumentChecklistReader.GetChecklistAsync(submission.Id, ct);`
+   - Default F0006 implementation returns `Application` + `Supporting Document` as `unavailable`
+   - F0020 replaces the implementation with category presence checks from document metadata without changing the F0006 controller/service contract
+3. **MissingItems**: collect human-readable strings for all `missing` field checks and any `missing` document categories; exclude `unavailable` document rows
+4. **IsComplete**: true only when all required field checks pass AND all document checks are either `pass` or `unavailable`
+5. **UI note:** when every required document check is `unavailable`, the detail view renders the section banner "Document management not yet configured"
 
 ---
 
@@ -820,8 +871,9 @@ public static class SubmissionEndpoints
     // 1. Resolve IAuthorizationService + ICurrentUserService from DI
     // 2. Check user.Roles for at least one matching Casbin policy
     // 3. If denied → ProblemDetailsHelper.Forbidden()
-    // 4. Call service method
-    // 5. Map result/error to HTTP response
+    // 4. For update / assignment / transition: parse `If-Match`, convert to uint rowVersion, fail with PreconditionFailed() when stale
+    // 5. Call service method
+    // 6. Map result/error to HTTP response
 }
 ```
 
@@ -892,6 +944,12 @@ public static IResult MissingTransitionPrerequisite(IReadOnlyList<string> missin
         ["missingItems"] = missingItems,
         ["traceId"] = System.Diagnostics.Activity.Current?.Id,
     });
+
+public static IResult PreconditionFailed() => Results.Problem(
+    title: "Precondition failed",
+    detail: "The submission was modified by another user. Refresh the detail view and retry with the current rowVersion.",
+    statusCode: 412,
+    extensions: Ext("precondition_failed"));
 ```
 
 ---
@@ -937,12 +995,13 @@ Step 14 (QE):         comprehensive test coverage
 - [ ] `GET /submissions` returns paginated list filtered by status, broker, account, LOB, assigned user, stale
 - [ ] `GET /submissions` enforces ABAC scope (DistributionUser sees own; DistributionManager sees region; Admin sees all)
 - [ ] `GET /submissions/{id}` returns denormalized detail with completeness, available transitions, isStale
-- [ ] `PUT /submissions/{id}` updates mutable fields, emits SubmissionUpdated timeline event, enforces concurrency
+- [ ] `GET /submissions/{id}` includes `rowVersion` and omits paginated timeline payloads
+- [ ] `PUT /submissions/{id}` updates mutable fields, emits SubmissionUpdated timeline event, and requires `If-Match`
 - [ ] `POST /submissions/{id}/transitions` enforces state machine (only 4 intake transitions allowed)
-- [ ] `POST /submissions/{id}/transitions` enforces completeness guard on →ReadyForUWReview
-- [ ] `POST /submissions/{id}/transitions` enforces assignment guard (underwriter required) on →ReadyForUWReview
-- [ ] `PUT /submissions/{id}/assignment` validates target user, enforces underwriter requirement in ReadyForUWReview
+- [ ] `POST /submissions/{id}/transitions` enforces completeness guard on →ReadyForUWReview, including underwriter-role validation inside completeness evaluation
+- [ ] `PUT /submissions/{id}/assignment` validates target user, enforces underwriter requirement in ReadyForUWReview, and requires `If-Match`
 - [ ] `GET /submissions/{id}/timeline` returns paginated timeline events for the submission
+- [ ] Stale `If-Match` headers return HTTP 412 `precondition_failed` across update, assignment, and transition endpoints
 - [ ] All error responses use RFC 7807 ProblemDetails with correct codes and traceId
 
 ### After Step 13 (Frontend)
@@ -961,6 +1020,7 @@ Step 14 (QE):         comprehensive test coverage
 - [ ] ProblemDetails format consistent with existing endpoints (code + traceId)
 - [ ] Stale detection: submission in Received for >48h shows isStale=true on list and detail
 - [ ] Completeness guard: attempt Triaging→ReadyForUWReview without LOB → 409 with missing items
+- [ ] Concurrency contract: stale `If-Match` on update, assignment, or transition returns 412 `precondition_failed`
 
 ## Integration Checklist
 
@@ -981,10 +1041,10 @@ Step 14 (QE):         comprehensive test coverage
 
 | Item | Severity | Mitigation | Owner |
 |------|----------|------------|-------|
-| F0016 (Account) not ready before F0006 starts | High | Check if Account entity exists in codebase. If not, implement minimal stub (Id, Name, Region, Industry, Status) in Step 1 migration | Architect + Backend |
+| Point lookup APIs for account/program validation are missing from `IReferenceDataRepository` | Medium | Add `GetAccountByIdAsync` and `GetProgramByIdAsync`; do not force SubmissionService to hydrate full cached reference-data lists for validation | Backend |
 | WorkflowStateMachine has old states (WaitingOnDocuments, QuotePreparation, etc.) | Medium | Step 2 rewrites submission transitions to 10-state model; migration maps any existing records | Backend |
 | Stale detection N+1 on list endpoint | Medium | Batch-load last transitions per submission via window function; pre-load thresholds once per request | Backend |
-| F0020 (Document Management) not available for completeness document checks | Low | Document checks show "unavailable" status; field completeness enforced; soft-skip in transition guard | Backend |
+| F0020 (Document Management) not available for completeness document checks | Low | Use `UnavailableSubmissionDocumentChecklistReader` null-object implementation until F0020 provides a real metadata-backed adapter | Backend |
 | ReferenceSubmissionStatus re-seed breaks existing records | Medium | Migration Up() must map old→new statuses before DELETE. If no production data, simple re-INSERT suffices | Backend |
 
 ## JSON Serialization Convention
@@ -996,10 +1056,10 @@ Step 14 (QE):         comprehensive test coverage
 
 ## DI Registration Changes
 
-No new DI registrations needed — `ISubmissionRepository` → `SubmissionRepository` already registered. If an `IAccountRepository` is needed for account validation and doesn't exist, add:
+No new repository registrations are required beyond the existing submission/reference-data wiring. Add the F0020 soft-dependency default explicitly:
 
 ```csharp
-services.AddScoped<IAccountRepository, AccountRepository>();
+services.AddScoped<ISubmissionDocumentChecklistReader, UnavailableSubmissionDocumentChecklistReader>();
 ```
 
 ## Casbin Policy Sync

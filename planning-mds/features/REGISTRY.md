@@ -11,7 +11,7 @@
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
-| F0006 | Submission Intake Workflow | In Refinement | CRM Release MVP | `F0006-submission-intake-workflow/` |
+| F0006 | Submission Intake Workflow | Done | CRM Release MVP | `F0006-submission-intake-workflow/` |
 
 ## Abandoned Features
 

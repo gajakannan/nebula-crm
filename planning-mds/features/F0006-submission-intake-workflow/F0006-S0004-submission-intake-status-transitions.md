@@ -48,9 +48,9 @@ The submission intake workflow has four states with defined transitions and role
 - Invalid transition (e.g., Received → ReadyForUWReview) → HTTP 409 with `code=invalid_transition`
 - Completeness check fails on Triaging → ReadyForUWReview → HTTP 409 with `code=missing_transition_prerequisite`, detail listing missing fields/documents
 - No underwriter assigned on Triaging → ReadyForUWReview → HTTP 409 with `code=missing_transition_prerequisite`, detail: "AssignedToUserId must reference a user with Underwriter role"
-- User lacks role permission for transition → HTTP 403
-- Submission is soft-deleted → HTTP 404
-- Concurrent transition (optimistic concurrency conflict) → HTTP 409 with `code=concurrency_conflict`
+- User lacks route/action-level `submission:transition` permission or transition-role permission → HTTP 403
+- Submission is soft-deleted, not found, or hidden by entity-scope visibility rules → HTTP 404
+- Concurrent transition (stale `If-Match` / rowVersion) → HTTP 412 with `code=precondition_failed`
 - Transition from a downstream state (InReview, Quoted, etc.) via F0006 → HTTP 409 with `code=invalid_transition` (downstream transitions owned by F0019)
 
 **Checklist:**
@@ -64,8 +64,8 @@ The submission intake workflow has four states with defined transitions and role
 - [ ] Each transition appends one ActivityTimelineEvent record
 - [ ] Transition + audit records created atomically (single DB transaction)
 - [ ] Invalid transitions return HTTP 409 with RFC 7807 ProblemDetails
-- [ ] Unauthorized transitions return HTTP 403
-- [ ] Optimistic concurrency enforced (xmin)
+- [ ] Action-level or transition-policy denials return HTTP 403; hidden/out-of-scope submissions return HTTP 404
+- [ ] Optimistic concurrency enforced via `rowVersion` + `If-Match`
 
 ## Data Requirements
 
@@ -109,6 +109,16 @@ The submission intake workflow has four states with defined transitions and role
 - F0006-S0003 — Transition buttons on detail view action bar
 - F0006-S0006 — Assignment must be set before ReadyForUWReview
 - F0006-S0007 — Timeline records created by each transition
+
+## Business Rules
+
+1. **Completeness Gate for ReadyForUWReview:** Transitions to ReadyForUWReview (from Triaging or WaitingOnBroker) require the completeness check to pass — all required fields populated and required document categories linked (when F0020 available). Failure returns HTTP 409 with `code=missing_transition_prerequisite` listing every missing item.
+2. **Underwriter Assignment Prerequisite:** Transitions to ReadyForUWReview require `AssignedToUserId` to reference a user with the Underwriter role. A non-null assignment to a non-underwriter user does not satisfy this guard.
+3. **Forward-Only Transitions:** Intake transitions are forward-only in MVP. There is no undo, revert, or backward transition. Corrections are handled by moving forward through the workflow. Compensating transitions are explicitly deferred.
+4. **Transition Atomicity (ADR-011):** Every transition atomically performs three operations in a single DB transaction: (a) update Submission.CurrentStatus, (b) append one WorkflowTransition record, (c) append one ActivityTimelineEvent. If any part fails, the entire operation rolls back.
+5. **Two-Layer Authorization:** Transition authorization uses two layers per ADR-011: (a) Casbin ABAC gates `submission:transition` action per role (policy.csv §2.3), (b) application-layer guard enforces which specific from→to transitions each role may perform. Route/action-level deny returns HTTP 403. When the caller has general transition capability but the specific submission is outside resolved visibility scope, the API may cloak that outcome as HTTP 404.
+6. **Optimistic Concurrency:** All transitions enforce optimistic concurrency via `rowVersion` + `If-Match` to prevent conflicting concurrent transitions on the same submission. Stale versions return HTTP 412 with `code=precondition_failed`.
+7. **F0006/F0019 Boundary:** F0006 owns only intake transitions (Received→Triaging, Triaging→WaitingOnBroker, Triaging→ReadyForUWReview, WaitingOnBroker→ReadyForUWReview). Any attempt to transition from ReadyForUWReview onward via F0006 returns HTTP 409 with `code=invalid_transition`. Downstream states are owned by F0019.
 
 ## Out of Scope
 

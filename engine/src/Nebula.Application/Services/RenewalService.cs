@@ -8,7 +8,8 @@ namespace Nebula.Application.Services;
 public class RenewalService(
     IRenewalRepository renewalRepo,
     IWorkflowTransitionRepository transitionRepo,
-    ITimelineRepository timelineRepo)
+    ITimelineRepository timelineRepo,
+    IUnitOfWork unitOfWork)
 {
     public async Task<RenewalDto?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
@@ -61,6 +62,8 @@ public class RenewalService(
             ActorDisplayName = user.DisplayName,
             OccurredAt = now,
         }, ct);
+
+        await unitOfWork.CommitAsync(ct);
 
         return (MapTransition(transition), null);
     }

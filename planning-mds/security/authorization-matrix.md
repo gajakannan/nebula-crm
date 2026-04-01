@@ -274,28 +274,46 @@ F0004 extends the self-assigned-only task model with creator-based access for Di
 
 ---
 
-### 2.8 Submission — Read / Transition
+### 2.8 Submission — Read / Create / Update / Transition / Assign
 
 | Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
 |------|--------|----------|------------------------------|----------------------|
 | DistributionUser | read | **ALLOW** | Submissions assigned to the user only. Applies to `GET /submissions/{submissionId}`. | F0001-S0002; user requirement |
+| DistributionUser | create | **ALLOW** | Can create new submissions. Initial owner is the authenticated user. Applies to `POST /submissions`. | F0006-S0002 |
+| DistributionUser | update | **ALLOW** | Only for submissions currently assigned to the user. Applies to `PUT /submissions/{submissionId}`. | F0006-S0003 |
 | DistributionUser | transition | **ALLOW** | Only for assigned submissions and only for valid transitions. Applies to `POST /submissions/{submissionId}/transitions`. | BLUEPRINT §4.3; user requirement |
+| DistributionUser | assign | **ALLOW** | Only for submissions currently assigned to the user. Applies to `PUT /submissions/{submissionId}/assignment`. | F0006-S0006 |
 | DistributionManager | read | **ALLOW** | All submissions within region. Applies to `GET /submissions/{submissionId}`. | F0001-S0002; user requirement |
+| DistributionManager | create | **ALLOW** | Can create submissions within manager scope. Applies to `POST /submissions`. | F0006-S0002 |
+| DistributionManager | update | **ALLOW** | Region-scoped mutable edit access. Applies to `PUT /submissions/{submissionId}`. | F0006-S0003 |
 | DistributionManager | transition | **ALLOW** | Submissions within region; valid transitions only. Applies to `POST /submissions/{submissionId}/transitions`. | BLUEPRINT §4.3; user requirement |
-| Underwriter | read | **ALLOW** | Submissions assigned to or accessible by the user. Applies to `GET /submissions/{submissionId}`. | BLUEPRINT §4.4 |
+| DistributionManager | assign | **ALLOW** | Can assign or reassign any submission in region scope. Applies to `PUT /submissions/{submissionId}/assignment`. | F0006-S0006 |
+| Underwriter | read | **ALLOW** | Submissions assigned to the underwriter in F0006 intake scope. Applies to `GET /submissions/{submissionId}`. | F0006 PRD Role-Based Access |
+| Underwriter | create | **DENY** | Intake creation stays with distribution/admin roles. Applies to `POST /submissions`. | F0006-S0002 Role-Based Access |
+| Underwriter | update | **DENY** | Underwriter is read-only in F0006 intake scope. Applies to `PUT /submissions/{submissionId}`. | F0006-S0003 Role-Based Visibility |
 | Underwriter | transition | **ALLOW** | Underwriters can transition within underwriting stages. Applies to `POST /submissions/{submissionId}/transitions`. | BLUEPRINT §4.4; §4.3 |
+| Underwriter | assign | **DENY** | Ownership reassignment remains with distribution manager/admin in MVP. Applies to `PUT /submissions/{submissionId}/assignment`. | F0006-S0006 |
 | RelationshipManager | read | **ALLOW** | Submissions linked to managed broker relationships. Applies to `GET /submissions/{submissionId}`. | F0001-S0002 Role Visibility |
+| RelationshipManager | create | **DENY** | RelationshipManager is read-only for submission intake. Applies to `POST /submissions`. | F0006 PRD Role-Based Access |
+| RelationshipManager | update | **DENY** | Read-only access; no intake edits in MVP. Applies to `PUT /submissions/{submissionId}`. | F0006-S0003 |
 | RelationshipManager | transition | **DENY** | Read-only access; no submission transitions in MVP. Applies to `POST /submissions/{submissionId}/transitions`. | BLUEPRINT §4.4 |
+| RelationshipManager | assign | **DENY** | Read-only access; no ownership changes in MVP. Applies to `PUT /submissions/{submissionId}/assignment`. | F0006-S0006 |
 | ProgramManager | read | **ALLOW** | Submissions within the user's programs. Applies to `GET /submissions/{submissionId}`. | F0001-S0002 Role Visibility |
+| ProgramManager | create | **DENY** | ProgramManager is read-only for submission intake. Applies to `POST /submissions`. | F0006 PRD Role-Based Access |
+| ProgramManager | update | **DENY** | Read-only access; no intake edits in MVP. Applies to `PUT /submissions/{submissionId}`. | F0006-S0003 |
 | ProgramManager | transition | **DENY** | Read-only access; no submission transitions in MVP. Applies to `POST /submissions/{submissionId}/transitions`. | BLUEPRINT §4.4 |
+| ProgramManager | assign | **DENY** | Read-only access; no ownership changes in MVP. Applies to `PUT /submissions/{submissionId}/assignment`. | F0006-S0006 |
 | Admin | read | **ALLOW** | Unscoped access. Applies to `GET /submissions/{submissionId}`. | BLUEPRINT §4.4 |
+| Admin | create | **ALLOW** | Unscoped create access. Applies to `POST /submissions`. | F0006-S0002 |
+| Admin | update | **ALLOW** | Unscoped mutable edit access. Applies to `PUT /submissions/{submissionId}`. | F0006-S0003 |
 | Admin | transition | **ALLOW** | Unscoped; valid transitions only. Applies to `POST /submissions/{submissionId}/transitions`. | BLUEPRINT §4.4; §4.3 |
+| Admin | assign | **ALLOW** | Unscoped assignment and reassignment access. Applies to `PUT /submissions/{submissionId}/assignment`. | F0006-S0006 |
 | ExternalUser | all | **DENY** | No external portal in MVP. | BLUEPRINT §3.1 non-goals |
 
 **Constraints applying to all ALLOW decisions on Submission:**
-- Applies to `POST /submissions/{submissionId}/transitions` only.
 - Invalid transition pairs return HTTP 409 with ProblemDetails code invalid_transition. (BLUEPRINT §4.3)
 - Missing transition prerequisites return HTTP 409 with ProblemDetails code missing_transition_prerequisite. (BLUEPRINT §4.3)
+- State-changing mutations (`PUT /submissions/{submissionId}`, `PUT /submissions/{submissionId}/assignment`, `POST /submissions/{submissionId}/transitions`) require `If-Match` and return HTTP 412 `precondition_failed` on stale rowVersion values. (API Guidelines + F0006 architecture)
 - Every successful transition appends a WorkflowTransition and ActivityTimelineEvent record. (BLUEPRINT §4.3)
 
 ---

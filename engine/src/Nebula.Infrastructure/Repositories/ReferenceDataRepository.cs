@@ -46,4 +46,10 @@ public class ReferenceDataRepository(AppDbContext db, IMemoryCache cache) : IRef
             return (IReadOnlyList<ReferenceRenewalStatus>)await db.ReferenceRenewalStatuses
                 .OrderBy(s => s.DisplayOrder).ToListAsync(ct);
         }) ?? [];
+
+    public async Task<Account?> GetAccountByIdAsync(Guid id, CancellationToken ct = default) =>
+        await db.Accounts.FirstOrDefaultAsync(account => account.Id == id, ct);
+
+    public async Task<Nebula.Domain.Entities.Program?> GetProgramByIdAsync(Guid id, CancellationToken ct = default) =>
+        await db.Programs.FirstOrDefaultAsync(program => program.Id == id, ct);
 }

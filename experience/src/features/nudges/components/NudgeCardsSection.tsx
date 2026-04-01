@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { useDashboardNudges } from '../hooks/useDashboardNudges';
 import { NudgeCard } from './NudgeCard';
 
-export function NudgeCardsSection() {
+interface NudgeCardsSectionProps {
+  excludeTypes?: string[];
+}
+
+export function NudgeCardsSection({ excludeTypes = [] }: NudgeCardsSectionProps) {
   const { data, isError } = useDashboardNudges();
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
@@ -10,7 +14,7 @@ export function NudgeCardsSection() {
   if (isError || !data) return null;
 
   const visible = data.nudges.filter(
-    (n) => !dismissed.has(`${n.nudgeType}-${n.linkedEntityId}`),
+    (n) => !dismissed.has(`${n.nudgeType}-${n.linkedEntityId}`) && !excludeTypes.includes(n.nudgeType),
   );
 
   if (visible.length === 0) return null;

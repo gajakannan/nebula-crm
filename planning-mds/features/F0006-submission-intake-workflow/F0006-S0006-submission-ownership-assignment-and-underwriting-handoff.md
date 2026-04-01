@@ -45,10 +45,11 @@ In MVP, assignment is manual — rule-based queue routing (F0022) is deferred. D
 - Assign to self → allowed (distribution user self-assigns during triage)
 - Assign to a non-existent or soft-deleted user → HTTP 400 with `code=invalid_assignee`
 - Assign to a user without Underwriter role when submission is in ReadyForUWReview → HTTP 400 with `code=invalid_assignee`, detail: "Submission in ReadyForUWReview must be assigned to a user with Underwriter role"
-- Distribution user attempts to reassign a submission they do not own → HTTP 403
+- Caller lacks route/action-level `submission:assign` permission → HTTP 403
+- Distribution user attempts to reassign a submission they do not own, or the submission is otherwise outside resolved entity scope → HTTP 404
 - Assign to the same user already assigned → no-op (no timeline event created; return success)
 - Submission is soft-deleted → HTTP 404
-- Concurrent assignment (optimistic concurrency) → HTTP 409 with `code=concurrency_conflict`
+- Concurrent assignment (stale `If-Match` / rowVersion) → HTTP 412 with `code=precondition_failed`
 
 **Checklist:**
 - [ ] `AssignedToUserId` updated to target user
@@ -57,7 +58,7 @@ In MVP, assignment is manual — rule-based queue routing (F0022) is deferred. D
 - [ ] ActivityTimelineEvent (`SubmissionAssigned`) appended with: old assignee, new assignee, actor, timestamp
 - [ ] No-op when assigning to the already-assigned user
 - [ ] ABAC enforced: Distribution User can assign submissions they own; Distribution Manager can assign any in scope; Admin can assign any
-- [ ] Optimistic concurrency enforced (xmin)
+- [ ] Optimistic concurrency enforced via `rowVersion` + `If-Match`
 - [ ] User picker shows active internal users with role indicator
 
 ## Data Requirements
@@ -68,7 +69,7 @@ In MVP, assignment is manual — rule-based queue routing (F0022) is deferred. D
 **Validation Rules:**
 - Target user must exist, be active, and be an internal user
 - When submission.CurrentStatus = ReadyForUWReview, target must have Underwriter role
-- Requester must have ABAC permission (`submission:assign` or `submission:update`) and ownership or managerial scope
+- Requester must have ABAC permission `submission:assign` plus ownership or managerial scope
 
 ## Role-Based Visibility
 
@@ -97,6 +98,15 @@ In MVP, assignment is manual — rule-based queue routing (F0022) is deferred. D
 - F0006-S0004 — ReadyForUWReview transition requires underwriter assignment
 - F0006-S0005 — Completeness check verifies AssignedToUserId is an underwriter
 - F0006-S0007 — Timeline records assignment events
+
+## Business Rules
+
+1. **ReadyForUWReview Assignment Constraint:** When a submission is in ReadyForUWReview state, assignment changes must maintain an assignee with the Underwriter role. Assigning to a non-underwriter in this state returns HTTP 400 with `code=invalid_assignee`. This ensures the underwriting handoff is not broken by a stale reassignment.
+2. **Ownership-Based Access for DistributionUser:** A DistributionUser can only assign submissions where they are the current `AssignedToUserId`. They cannot reassign another user's submissions. DistributionManager and Admin can assign any submission in their ABAC scope. Route/action-level deny returns HTTP 403; entity-scope or ownership failures may be cloaked as HTTP 404 to avoid exposing submission existence.
+3. **No-Op Assignment:** Assigning to the user who is already assigned is a no-op — no timeline event is produced, no UpdatedAt change, and the operation returns success. This prevents timeline pollution from redundant UI interactions.
+4. **Self-Assignment Allowed:** Distribution users may assign submissions to themselves during initial triage. This is the expected workflow when a distribution user claims a submission from the Received queue.
+5. **Append-Only Audit on Assignment:** Every non-no-op assignment change atomically appends a `SubmissionAssigned` ActivityTimelineEvent recording old assignee, new assignee, actor, and timestamp. The event is created in the same DB transaction as the assignment update.
+6. **Optimistic Concurrency:** Assignment enforces optimistic concurrency via `rowVersion` + `If-Match` to prevent conflicting concurrent assignments on the same submission. Stale versions return HTTP 412 with `code=precondition_failed`.
 
 ## Out of Scope
 

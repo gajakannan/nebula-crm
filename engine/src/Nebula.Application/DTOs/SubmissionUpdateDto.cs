@@ -3,7 +3,7 @@ namespace Nebula.Application.DTOs;
 public record SubmissionUpdateDto(
     Guid? ProgramId,
     string? LineOfBusiness,
-    string? CurrentStatus,
     DateTime? EffectiveDate,
+    DateTime? ExpirationDate,
     decimal? PremiumEstimate,
-    Guid? AssignedToUserId);
+    string? Description);

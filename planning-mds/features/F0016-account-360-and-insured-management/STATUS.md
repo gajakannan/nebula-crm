@@ -1,12 +1,18 @@
 # F0016 — Account 360 & Insured Management — Status
 
 **Overall Status:** Draft
-**Last Updated:** 2026-03-21
+**Last Updated:** 2026-03-31
 
 ## Story Checklist
 
 | Story | Title | Status |
 |-------|-------|--------|
+
+## Refinement Guardrails
+
+- If F0006 descopes deleted-account fallback on submission detail, F0016 owns the replacement contract for deleted/merged account resilience across dependent views.
+- Any F0016 account lifecycle story must define how linked submissions, policies, renewals, activity timelines, and search results render when the account is deleted, merged, or deactivated.
+- F0016 refinement is incomplete until the implementation contract identifies the read-model behavior, UI fallback, API semantics, and regression coverage for deleted/merged account handling.
 
 ## Required Signoff Roles (Set in Planning)
 

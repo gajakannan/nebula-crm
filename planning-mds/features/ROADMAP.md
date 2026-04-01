@@ -18,7 +18,7 @@ This document is the working prioritization view for feature sequencing.
 
 | Feature | Phase | Why Now |
 |---------|-------|---------|
-| [F0006 — Submission Intake Workflow](./F0006-submission-intake-workflow/README.md) | CRM Release MVP | In Refinement (8 stories, workflow, completeness policy, stale detection). Establishes the single source of truth for new business intake, triage, and early routing. |
+| [F0006 — Submission Intake Workflow](./F0006-submission-intake-workflow/README.md) | CRM Release MVP | Done |
 | [F0016 — Account 360 & Insured Management](./F0016-account-360-and-insured-management/README.md) | CRM Release MVP | Adds insured-centric context required by underwriters and distribution users before deeper policy and renewal workflows land. |
 | [F0020 — Document Management & ACORD Intake](./F0020-document-management-and-acord-intake/README.md) | CRM Release MVP | Removes document chasing and supports completeness checks for submissions and underwriting review. |
 

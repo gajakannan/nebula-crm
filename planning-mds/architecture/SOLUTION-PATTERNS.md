@@ -514,7 +514,7 @@ modelBuilder.Entity<Broker>()
     .UseXminAsConcurrencyToken();
 ```
 
-**API pattern:** PUT endpoints accept `If-Match` header with the `RowVersion` value. On conflict, return HTTP 409 with ProblemDetails (`code=concurrency_conflict`).
+**API pattern:** State-mutating endpoints that update an existing aggregate accept the `If-Match` header with the last returned `RowVersion` value. On stale versions, return HTTP 412 with ProblemDetails (`code=precondition_failed`).
 
 ```csharp
 // In update handler
@@ -525,10 +525,10 @@ try
 catch (DbUpdateConcurrencyException)
 {
     return Problem(
-        title: "Concurrency conflict",
-        detail: "The resource was modified by another user. Please refresh and retry.",
-        statusCode: 409,
-        extensions: new Dictionary<string, object?> { ["code"] = "concurrency_conflict" }
+        title: "Precondition failed",
+        detail: "The resource was modified by another user. Refresh and retry with the latest rowVersion.",
+        statusCode: 412,
+        extensions: new Dictionary<string, object?> { ["code"] = "precondition_failed" }
     );
 }
 ```
@@ -684,7 +684,7 @@ test('broker form has no a11y violations', async ({ page }) => {
 ### Pattern: State Machines for Business Workflows
 **Decision:** Model workflows as explicit state machines
 **Rationale:** Clear transitions, validation, audit trail
-**Applied in:** Submission (10 states), Renewal (8 states)
+**Applied in:** Submission (10 states), Renewal (6 states)
 
 **Example:**
 ```csharp

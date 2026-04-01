@@ -134,8 +134,8 @@ async function fetchApiNoBody(path: string, options?: RequestInit): Promise<void
 
 export const api = {
   get: <T>(path: string) => fetchApi<T>(path),
-  post: <T>(path: string, body: unknown) =>
-    fetchApi<T>(path, { method: 'POST', body: JSON.stringify(body) }),
+  post: <T>(path: string, body: unknown, headers?: Record<string, string>) =>
+    fetchApi<T>(path, { method: 'POST', body: JSON.stringify(body), headers }),
   put: <T>(path: string, body: unknown, headers?: Record<string, string>) =>
     fetchApi<T>(path, { method: 'PUT', body: JSON.stringify(body), headers }),
   delete: (path: string) =>

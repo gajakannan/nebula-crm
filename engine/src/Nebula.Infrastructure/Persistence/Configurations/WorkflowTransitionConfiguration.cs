@@ -13,7 +13,7 @@ public class WorkflowTransitionConfiguration : IEntityTypeConfiguration<Workflow
         builder.HasKey(e => e.Id);
 
         builder.Property(e => e.WorkflowType).IsRequired().HasMaxLength(50);
-        builder.Property(e => e.FromState).IsRequired().HasMaxLength(30);
+        builder.Property(e => e.FromState).HasMaxLength(30);
         builder.Property(e => e.ToState).IsRequired().HasMaxLength(30);
         builder.Property(e => e.Reason).HasMaxLength(500);
         builder.Property(e => e.ActorUserId).IsRequired();

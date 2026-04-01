@@ -10,7 +10,8 @@
   "properties": {
     "toState": {
       "type": "string",
-      "description": "Target workflow state. Must be a valid next state from the current state."
+      "description": "Target workflow state. Must be a valid next state from the current state.",
+      "enum": ["Received", "Triaging", "WaitingOnBroker", "ReadyForUWReview", "InReview", "Quoted", "BindRequested", "Bound", "Declined", "Withdrawn"]
     },
     "reason": {
       "type": ["string", "null"],

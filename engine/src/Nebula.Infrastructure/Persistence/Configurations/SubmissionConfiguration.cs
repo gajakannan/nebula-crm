@@ -15,7 +15,9 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
         builder.Property(e => e.CurrentStatus).IsRequired().HasMaxLength(30).HasDefaultValue("Received");
         builder.Property(e => e.LineOfBusiness).HasMaxLength(50);
         builder.Property(e => e.EffectiveDate).IsRequired();
-        builder.Property(e => e.PremiumEstimate).IsRequired().HasPrecision(18, 2);
+        builder.Property(e => e.ExpirationDate).HasColumnType("date");
+        builder.Property(e => e.PremiumEstimate).HasPrecision(18, 2);
+        builder.Property(e => e.Description).HasMaxLength(2000);
         builder.Property(e => e.AssignedToUserId).IsRequired();
         builder.Property(e => e.CreatedByUserId).IsRequired();
         builder.Property(e => e.UpdatedByUserId).IsRequired();
@@ -37,6 +39,11 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
             .HasForeignKey(e => e.ProgramId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(e => e.AssignedToUser)
+            .WithMany()
+            .HasForeignKey(e => e.AssignedToUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(e => e.RowVersion)
             .HasColumnName("xmin")
             .HasColumnType("xid")
@@ -46,6 +53,18 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
 
         builder.HasIndex(e => e.CurrentStatus)
             .HasDatabaseName("IX_Submissions_CurrentStatus");
+
+        builder.HasIndex(e => e.AccountId)
+            .HasDatabaseName("IX_Submissions_AccountId");
+
+        builder.HasIndex(e => e.BrokerId)
+            .HasDatabaseName("IX_Submissions_BrokerId");
+
+        builder.HasIndex(e => e.EffectiveDate)
+            .HasDatabaseName("IX_Submissions_EffectiveDate");
+
+        builder.HasIndex(e => e.AssignedToUserId)
+            .HasDatabaseName("IX_Submissions_AssignedToUserId");
 
         builder.HasIndex(e => new { e.AssignedToUserId, e.CurrentStatus })
             .HasDatabaseName("IX_Submissions_AssignedToUserId_CurrentStatus");

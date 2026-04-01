@@ -560,9 +560,12 @@ paths:
       summary: Update submission fields
       description: |
         Updates mutable submission fields (description, LOB, premium, expiration date,
-        program). Creates a SubmissionUpdated ActivityTimelineEvent. Optimistic
-        concurrency enforced (xmin).
+        program). Creates a SubmissionUpdated ActivityTimelineEvent. Requires
+        `If-Match` with the current `rowVersion`; stale versions return HTTP 412
+        with `code=precondition_failed`.
       tags: [Submissions]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
       requestBody:
         required: true
         content:
@@ -584,8 +587,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
 
   /submissions/{submissionId}/assignment:
     parameters:
@@ -596,8 +599,12 @@ paths:
       description: |
         Assigns or reassigns submission ownership. When submission is in ReadyForUWReview,
         target must have Underwriter role. No-op when assigning to the already-assigned user.
-        Creates SubmissionAssigned ActivityTimelineEvent. Optimistic concurrency enforced.
+        Creates SubmissionAssigned ActivityTimelineEvent. Requires `If-Match` with
+        the current `rowVersion`; stale versions return HTTP 412 with
+        `code=precondition_failed`.
       tags: [Submissions]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
       requestBody:
         required: true
         content:
@@ -619,8 +626,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
 
   /submissions/{submissionId}/timeline:
     parameters:
@@ -952,13 +959,21 @@ paths:
     post:
       operationId: transitionSubmission
       summary: Transition submission workflow state
+      description: |
+        Transitions a submission workflow state. F0006 owns the intake transitions
+        through `ReadyForUWReview`; F0019 continues the downstream submission
+        lifecycle on the same resource. Requires `If-Match` with the current
+        `rowVersion`; stale versions return HTTP 412 with
+        `code=precondition_failed`.
       tags: [Submissions]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WorkflowTransitionRequest"
+              $ref: "#/components/schemas/SubmissionTransitionRequest"
       responses:
         "201":
           description: Transition recorded
@@ -974,6 +989,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
+        "412":
+          $ref: "#/components/responses/PreconditionFailed"
 
   /renewals/{renewalId}/transitions:
     parameters:
@@ -2352,7 +2369,8 @@ components:
       type: object
       description: |
         Submission detail response (F0006). Includes denormalized linked entity
-        context, completeness evaluation, available transitions, and stale flag.
+        context, completeness evaluation, available transitions, stale flag,
+        and the current optimistic-concurrency token for follow-up mutations.
       required:
         - id
         - accountId
@@ -2360,6 +2378,7 @@ components:
         - currentStatus
         - effectiveDate
         - assignedToUserId
+        - rowVersion
         - createdAt
         - createdByUserId
         - updatedAt
@@ -2464,6 +2483,9 @@ components:
           items:
             type: string
           description: Valid next states for the authenticated user.
+        rowVersion:
+          type: string
+          description: Opaque optimistic concurrency token. Echo this value in `If-Match` for update, assignment, and transition requests.
         createdAt:
           type: string
           format: date-time
@@ -2614,6 +2636,35 @@ components:
           type: string
           maxLength: 2000
           nullable: true
+
+    SubmissionTransitionRequest:
+      type: object
+      description: |
+        Request to transition a submission workflow state. F0006 owns only intake
+        transitions; downstream states remain part of the shared submission status
+        vocabulary because F0019 continues using the same resource.
+      required:
+        - toState
+      properties:
+        toState:
+          type: string
+          description: Target submission workflow state.
+          enum:
+            - Received
+            - Triaging
+            - WaitingOnBroker
+            - ReadyForUWReview
+            - InReview
+            - Quoted
+            - BindRequested
+            - Bound
+            - Declined
+            - Withdrawn
+        reason:
+          type: string
+          nullable: true
+          maxLength: 2000
+          description: Optional transition comment. Recommended for `WaitingOnBroker` transitions.
 
     # ── Submission / Renewal Schemas (continued) ─────────────────
 

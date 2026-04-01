@@ -45,10 +45,10 @@ public class LineOfBusinessValidationTests
     private static SubmissionCreateDto ValidModel() => new(
         Guid.NewGuid(),
         Guid.NewGuid(),
+        DateTime.UtcNow,
         Guid.NewGuid(),
         "Property",
-        "Received",
-        DateTime.UtcNow,
         150000m,
-        Guid.NewGuid());
+        DateTime.UtcNow.AddMonths(12),
+        "Test submission");
 }

@@ -52,6 +52,12 @@ public static class ProblemDetailsHelper
         statusCode: 403,
         extensions: Ext("forbidden"));
 
+    public static IResult PolicyDenied() => Results.Problem(
+        title: "Forbidden",
+        detail: "You do not have permission to perform this action.",
+        statusCode: 403,
+        extensions: Ext("policy_denied"));
+
     public static IResult InactiveAssignee() => Results.Problem(
         title: "Inactive assignee",
         detail: "The specified user is inactive and cannot be assigned tasks.",
@@ -86,6 +92,59 @@ public static class ProblemDetailsHelper
             ["errors"] = errors,
             ["traceId"] = Activity.Current?.Id,
         });
+
+    public static IResult RegionMismatch() => Results.Problem(
+        title: "Region mismatch",
+        detail: "Account region is not in the broker's licensed region set.",
+        statusCode: 400,
+        extensions: Ext("region_mismatch"));
+
+    public static IResult InvalidAccount(Guid id) => Results.Problem(
+        title: "Invalid account",
+        detail: $"Account {id} does not exist or is soft-deleted.",
+        statusCode: 400,
+        extensions: Ext("invalid_account"));
+
+    public static IResult InvalidBroker(Guid id) => Results.Problem(
+        title: "Invalid broker",
+        detail: $"Broker {id} does not exist, is soft-deleted, or is inactive.",
+        statusCode: 400,
+        extensions: Ext("invalid_broker"));
+
+    public static IResult InvalidProgram(Guid id) => Results.Problem(
+        title: "Invalid program",
+        detail: $"Program {id} does not exist or is soft-deleted.",
+        statusCode: 400,
+        extensions: Ext("invalid_program"));
+
+    public static IResult InvalidLob(string lob) => Results.Problem(
+        title: "Invalid line of business",
+        detail: $"'{lob}' is not in the known line of business set.",
+        statusCode: 400,
+        extensions: Ext("invalid_lob"));
+
+    public static IResult InvalidSubmissionAssignee(string detail) => Results.Problem(
+        title: "Invalid assignee",
+        detail: detail,
+        statusCode: 400,
+        extensions: Ext("invalid_assignee"));
+
+    public static IResult MissingTransitionPrerequisite(IReadOnlyList<string> missingItems) => Results.Problem(
+        title: "Missing transition prerequisite",
+        detail: $"Cannot transition: {string.Join("; ", missingItems)}",
+        statusCode: 409,
+        extensions: new Dictionary<string, object?>
+        {
+            ["code"] = "missing_transition_prerequisite",
+            ["missingItems"] = missingItems,
+            ["traceId"] = Activity.Current?.Id,
+        });
+
+    public static IResult PreconditionFailed() => Results.Problem(
+        title: "Precondition failed",
+        detail: "The submission was modified by another user. Refresh the detail view and retry with the current rowVersion.",
+        statusCode: 412,
+        extensions: Ext("precondition_failed"));
 
     private static Dictionary<string, object?> Ext(string code) => new()
     {

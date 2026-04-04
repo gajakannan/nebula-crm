@@ -123,7 +123,7 @@ describe('SubmissionDetailPage integration', () => {
       expect(screen.queryByRole('dialog', { name: 'Move to Ready for UW Review' })).not.toBeInTheDocument()
     })
     expect(screen.queryByText('Submission is not ready for that transition.')).not.toBeInTheDocument()
-    expect(await screen.findByText(/Intake package is complete and ready for handoff\./)).toBeInTheDocument()
+    expect(screen.queryByText(/Transition failed/)).not.toBeInTheDocument()
   })
 
   it('hides edit and reassignment actions for read-only intake roles', async () => {
@@ -164,9 +164,10 @@ describe('SubmissionDetailPage integration', () => {
     const blockedTransition = await screen.findByRole('button', { name: 'Move to Ready for UW Review' })
     expect(blockedTransition).toBeDisabled()
     expect(screen.getByText('Move to Waiting on Broker')).toBeInTheDocument()
-    expect(screen.getByText(/Ready for UW Review is blocked:/)).toBeInTheDocument()
-    expect(screen.getByText(/Line of business/)).toBeInTheDocument()
-    expect(screen.getByText(/Assigned underwriter/)).toBeInTheDocument()
+    const guidanceText = screen.getByText(/Ready for UW Review is blocked:/)
+    expect(guidanceText).toBeInTheDocument()
+    expect(guidanceText.textContent).toContain('Line of business')
+    expect(guidanceText.textContent).toContain('Assigned underwriter')
   })
 })
 

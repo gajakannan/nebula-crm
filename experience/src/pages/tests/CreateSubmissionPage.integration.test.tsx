@@ -43,7 +43,12 @@ describe('CreateSubmissionPage integration', () => {
     authMocks.getUser.mockResolvedValue({
       expired: false,
       access_token: 'test-token',
-      profile: {},
+      profile: {
+        sub: 'user-dist-manager',
+        name: 'Sarah Chen',
+        email: 'sarah.chen@nebula.local',
+        nebula_roles: ['DistributionManager'],
+      },
     })
 
     const user = userEvent.setup()

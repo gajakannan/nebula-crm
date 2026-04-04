@@ -23,10 +23,6 @@ interface StageNodeStoryPanelProps {
   chapter: StoryChapter;
   outcomes: OpportunityOutcomeDto[];
   agingStatus?: OpportunityAgingStatusDto;
-  panelX: number;
-  panelY: number;
-  compact?: boolean;
-  stacked?: boolean;
 }
 
 type MiniVisualKind = 'waffle' | 'gauge' | 'progress' | 'donut' | 'bar' | 'dotmap' | 'stacked' | 'badge' | 'entity';
@@ -296,10 +292,6 @@ export function StageNodeStoryPanel({
   chapter,
   outcomes,
   agingStatus,
-  panelX,
-  panelY,
-  compact = false,
-  stacked = false,
 }: StageNodeStoryPanelProps) {
   const profile = resolveStageProfile(node.status);
 
@@ -893,15 +885,6 @@ export function StageNodeStoryPanel({
     ? [{ emphasis: 'No items in this stage', detail: 'stage remains visible for continuity.' }]
     : chapterBullets(chapter, node, outcomes, activeView.bullets);
   const visualScale = clamp(0.72 + Math.sqrt(Math.max(0, node.currentCount)) / 5.2, 0.72, 1.12);
-  const miniBaseWidth = stacked ? 176 : 188;
-  const miniPanelWidth = Math.round(
-    clamp(
-      miniBaseWidth * visualScale,
-      stacked ? 146 : 152,
-      stacked ? 196 : 210,
-    ),
-  );
-  const panelWidth = Math.round(clamp(compact ? 220 : 244, miniPanelWidth, 260));
   const viewSummary = `${node.label} ${activeView.label}, ${activeView.count} items. ${activeView.summary}`;
 
   function cycleView() {
@@ -916,16 +899,15 @@ export function StageNodeStoryPanel({
   return (
     <div
       className={cn(
-        'absolute -translate-x-1/2 -translate-y-1/2',
+        'w-full max-w-[260px] min-w-[152px] shrink',
         node.currentCount === 0 && 'opacity-70',
         chapter === 'outcomes' && 'opacity-50',
       )}
-      style={{ left: panelX, top: panelY }}
     >
       <article
         aria-label={viewSummary}
         className="rounded-xl border bg-surface-main/40 px-3 py-2.5 transition-opacity duration-150"
-        style={{ width: panelWidth, borderColor: 'var(--callout-border)' }}
+        style={{ borderColor: 'var(--callout-border)' }}
       >
         {/* Mini visualization */}
         <div

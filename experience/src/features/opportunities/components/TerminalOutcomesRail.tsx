@@ -1,3 +1,4 @@
+import type { RefCallback } from 'react';
 import { Popover } from '@/components/ui/Popover';
 import { cn } from '@/lib/utils';
 import { OpportunityOutcomePopoverContent } from './OpportunityOutcomePopover';
@@ -9,6 +10,7 @@ interface TerminalOutcomesRailProps {
   periodDays: number;
   chapter: StoryChapter;
   allOutcomesZero: boolean;
+  registerOutcome?: (key: string) => RefCallback<HTMLElement>;
 }
 
 function branchStyleLabel(branchStyle: OutcomeAnchor['branchStyle']): string {
@@ -22,18 +24,18 @@ export function TerminalOutcomesRail({
   periodDays,
   chapter,
   allOutcomesZero,
+  registerOutcome,
 }: TerminalOutcomesRailProps) {
   if (anchors.length === 0) {
     return null;
   }
 
   return (
-    <aside aria-label="Terminal outcome branches">
+    <aside aria-label="Terminal outcome branches" className="flex flex-wrap justify-center gap-4 pt-8">
       {anchors.map((anchor) => (
         <div
           key={anchor.key}
-          className="absolute -translate-x-1/2 -translate-y-1/2"
-          style={{ left: anchor.x, top: anchor.y }}
+          ref={registerOutcome?.(anchor.key)}
         >
           <Popover
             contentAriaLabel={`${anchor.label} outcome details, ${anchor.count} exits, ${anchor.percentOfTotal.toFixed(1)} percent`}

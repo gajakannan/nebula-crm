@@ -75,7 +75,7 @@
   --topbar-bg: color-mix(in srgb, var(--accent-primary) 10%, #ede6dc);
   --topbar-border: rgba(200, 106, 94, 0.18);
   --sidebar-hover: rgba(200, 106, 94, 0.12);
-  --sidebar-active-bg: rgba(212, 86, 74, 0.20);
+  --sidebar-active-bg: rgba(212, 86, 74, 0.06);
   --sidebar-active-text: #8f4f49;
   --bg-glow-1: rgba(210, 110, 90, 0.34);
   --bg-glow-2: rgba(80, 160, 200, 0.26);

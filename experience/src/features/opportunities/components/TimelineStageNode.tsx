@@ -10,7 +10,7 @@ interface TimelineStageNodeProps {
   anchor: StageAnchor;
   entityType: OpportunityEntityType;
   node: OpportunityFlowNodeDto;
-  nodeWidth: number;
+  compact?: boolean;
   emphasisClass: string;
   buttonRef: RefCallback<HTMLButtonElement>;
   onKeyDown: KeyboardEventHandler<HTMLButtonElement>;
@@ -21,7 +21,7 @@ export function TimelineStageNode({
   anchor,
   entityType,
   node,
-  nodeWidth,
+  compact = false,
   emphasisClass,
   buttonRef,
   onKeyDown,
@@ -33,10 +33,10 @@ export function TimelineStageNode({
       type="button"
       onKeyDown={onKeyDown}
       className={cn(
-        'story-focus-ring min-h-[70px] rounded-xl bg-surface-main/70 px-3 py-2 text-left shadow-sm transition-colors hover:bg-surface-main/80',
+        'story-focus-ring min-h-[70px] shrink-0 rounded-xl bg-surface-main/70 px-3 py-2 text-left shadow-sm transition-colors hover:bg-surface-main/80',
+        compact ? 'w-[118px]' : 'w-[132px]',
         emphasisClass,
       )}
-      style={{ width: nodeWidth }}
       aria-label={`${anchor.label} stage, ${node.currentCount} opportunities`}
     >
       <p className="truncate text-xs font-semibold uppercase tracking-wide text-text-muted">

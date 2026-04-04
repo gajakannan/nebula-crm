@@ -3,8 +3,6 @@ import type { OpportunityFlowNodeDto, OpportunityOutcomeDto } from '../types';
 export interface StageAnchor {
   status: string;
   label: string;
-  x: number;
-  y: number;
   avgDwellDays?: number | null;
   emphasis?: OpportunityFlowNodeDto['emphasis'];
 }
@@ -15,6 +13,4 @@ export interface OutcomeAnchor {
   branchStyle: OpportunityOutcomeDto['branchStyle'];
   count: number;
   percentOfTotal: number;
-  x: number;
-  y: number;
 }

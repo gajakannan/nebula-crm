@@ -72,14 +72,14 @@ Auto-generated index of all user stories across feature folders.
 
 | Story ID | Title | Priority | Phase | Persona |
 |----------|-------|----------|-------|---------|
-| [F0006-S0001](./F0006-submission-intake-workflow/F0006-S0001-submission-pipeline-list-with-intake-status-filtering.md) | Submission pipeline list with intake status filtering | Critical | CRM Release MVP | distribution user or distribution manager |
-| [F0006-S0002](./F0006-submission-intake-workflow/F0006-S0002-create-submission-for-new-business-intake.md) | Create submission for new business intake | Critical | CRM Release MVP | distribution user |
-| [F0006-S0003](./F0006-submission-intake-workflow/F0006-S0003-submission-detail-view-with-intake-context.md) | Submission detail view with intake context | Critical | CRM Release MVP | distribution user or underwriter |
-| [F0006-S0004](./F0006-submission-intake-workflow/F0006-S0004-submission-intake-status-transitions.md) | Submission intake status transitions | Critical | CRM Release MVP | distribution user or distribution manager |
-| [F0006-S0005](./F0006-submission-intake-workflow/F0006-S0005-submission-completeness-evaluation.md) | Submission completeness evaluation | High | CRM Release MVP | distribution user |
-| [F0006-S0006](./F0006-submission-intake-workflow/F0006-S0006-submission-ownership-assignment-and-underwriting-handoff.md) | Submission ownership assignment and underwriting handoff | High | CRM Release MVP | distribution user or distribution manager |
-| [F0006-S0007](./F0006-submission-intake-workflow/F0006-S0007-submission-activity-timeline-and-audit-trail.md) | Submission activity timeline and audit trail | High | CRM Release MVP | distribution user, underwriter, or distribution manager |
-| [F0006-S0008](./F0006-submission-intake-workflow/F0006-S0008-stale-submission-visibility-and-follow-up-flags.md) | Stale submission visibility and follow-up flags | High | CRM Release MVP | distribution manager |
+| [F0006-S0001](./archive/F0006-submission-intake-workflow/F0006-S0001-submission-pipeline-list-with-intake-status-filtering.md) | Submission pipeline list with intake status filtering | Critical | CRM Release MVP | distribution user or distribution manager |
+| [F0006-S0002](./archive/F0006-submission-intake-workflow/F0006-S0002-create-submission-for-new-business-intake.md) | Create submission for new business intake | Critical | CRM Release MVP | distribution user |
+| [F0006-S0003](./archive/F0006-submission-intake-workflow/F0006-S0003-submission-detail-view-with-intake-context.md) | Submission detail view with intake context | Critical | CRM Release MVP | distribution user or underwriter |
+| [F0006-S0004](./archive/F0006-submission-intake-workflow/F0006-S0004-submission-intake-status-transitions.md) | Submission intake status transitions | Critical | CRM Release MVP | distribution user or distribution manager |
+| [F0006-S0005](./archive/F0006-submission-intake-workflow/F0006-S0005-submission-completeness-evaluation.md) | Submission completeness evaluation | High | CRM Release MVP | distribution user |
+| [F0006-S0006](./archive/F0006-submission-intake-workflow/F0006-S0006-submission-ownership-assignment-and-underwriting-handoff.md) | Submission ownership assignment and underwriting handoff | High | CRM Release MVP | distribution user or distribution manager |
+| [F0006-S0007](./archive/F0006-submission-intake-workflow/F0006-S0007-submission-activity-timeline-and-audit-trail.md) | Submission activity timeline and audit trail | High | CRM Release MVP | distribution user, underwriter, or distribution manager |
+| [F0006-S0008](./archive/F0006-submission-intake-workflow/F0006-S0008-stale-submission-visibility-and-follow-up-flags.md) | Stale submission visibility and follow-up flags | High | CRM Release MVP | distribution manager |
 
 ---
 

@@ -299,13 +299,13 @@ When F0020 is not yet available, document completeness checks are soft-skipped (
 
 ## Architecture Traceability
 
-**Taxonomy Reference:** [Feature Architecture Traceability Taxonomy](../../architecture/feature-architecture-traceability-taxonomy.md)
+**Taxonomy Reference:** [Feature Architecture Traceability Taxonomy](../../../architecture/feature-architecture-traceability-taxonomy.md)
 
 | Classification | Artifact / Decision | ADR |
 |----------------|---------------------|-----|
 | Introduces: Feature-Local Component | Submission aggregate, completeness policy, and intake workflow service | PRD only |
-| Introduces/Standardizes: Cross-Cutting Pattern | CRM workflow state machine with append-only transition history for submission intake | [ADR-011](../../architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md) (Accepted) |
-| Extends: Cross-Cutting Component | Intake completeness and document linkage rely on the shared document architecture | [ADR-012](../../architecture/decisions/ADR-012-shared-document-storage-and-metadata-architecture.md) (Proposed) |
+| Introduces/Standardizes: Cross-Cutting Pattern | CRM workflow state machine with append-only transition history for submission intake | [ADR-011](../../../architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md) (Accepted) |
+| Extends: Cross-Cutting Component | Intake completeness and document linkage rely on the shared document architecture | [ADR-012](../../../architecture/decisions/ADR-012-shared-document-storage-and-metadata-architecture.md) (Proposed) |
 
 ## Related User Stories
 

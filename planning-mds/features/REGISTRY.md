@@ -11,7 +11,7 @@
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
-| F0006 | Submission Intake Workflow | Done | CRM Release MVP | `F0006-submission-intake-workflow/` |
+| F0007 | Renewal Pipeline | Architecture Complete | CRM Release MVP | `F0007-renewal-pipeline/` |
 
 ## Abandoned Features
 
@@ -24,7 +24,6 @@
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
-| F0007 | Renewal Pipeline | Architecture Complete | CRM Release MVP | `F0007-renewal-pipeline/` |
 | F0008 | Broker Insights | Planned | MVP | `F0008-broker-insights/` |
 | F0016 | Account 360 & Insured Management | Planned | CRM Release MVP | `F0016-account-360-and-insured-management/` |
 | F0017 | Broker/MGA Hierarchy, Producer Ownership & Territory Management | Planned | CRM Release MVP+ | `F0017-broker-mga-hierarchy-and-producer-ownership/` |
@@ -48,6 +47,7 @@
 
 | Feature ID | Name | Archived Date | Folder |
 |------------|------|---------------|--------|
+| F0006 | Submission Intake Workflow | 2026-04-04 | `archive/F0006-submission-intake-workflow/` |
 | F0001 | Dashboard | 2026-03-07 | `archive/F0001-dashboard/` |
 | F0002 | Broker & MGA Relationship Management | 2026-03-10 | `archive/F0002-broker-relationship-management/` |
 | F0005 | IdP Migration: Keycloak → authentik | 2026-03-07 | `archive/F0005-idp-migration/` |

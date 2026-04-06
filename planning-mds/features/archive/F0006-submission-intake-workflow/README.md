@@ -1,6 +1,7 @@
 # F0006 — Submission Intake Workflow
 
 **Status:** Done
+**Archived:** 2026-04-04
 **Priority:** Critical
 **Phase:** CRM Release MVP
 

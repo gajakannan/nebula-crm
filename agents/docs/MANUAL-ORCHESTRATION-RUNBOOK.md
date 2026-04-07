@@ -7,6 +7,7 @@ This runbook defines how to execute the framework in the initial public preview,
 Use this document with:
 - `agents/actions/*.md`
 - `agents/<role>/SKILL.md`
+- `agents/docs/AGENT-USE.md`
 - `agents/docs/ORCHESTRATION-CONTRACT.md`
 
 ## Scope

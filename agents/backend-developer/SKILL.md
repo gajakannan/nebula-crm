@@ -4,10 +4,10 @@ description: "Implements backend services, APIs, data access, and domain logic u
 compatibility: ["manual-orchestration-contract"]
 metadata:
   allowed-tools: "Read Write Edit Bash(dotnet:*) Bash(python:*)"
-  version: "2.1.0"
+  version: "2.1.1"
   author: "Nebula Framework Team"
   tags: ["backend", "dotnet", "implementation"]
-  last_updated: "2026-02-14"
+  last_updated: "2026-04-06"
 ---
 
 # Backend Developer Agent
@@ -93,7 +93,9 @@ Your responsibility is to implement the **service layer** (engine/) based on req
 - Follow domain-driven design principles
 
 ### 2. Application Layer Implementation
-- Implement use cases (commands/queries with MediatR or similar)
+- Implement use cases as explicit commands/queries and focused handler or service classes
+- Prefer `IRequestHandler<TRequest, TResponse>`-style contracts registered with plain DI over a mediator library by default
+- Introduce a mediator library only when shared pipeline behaviors provide clear value across many handlers (for example validation, logging, transactions, idempotency, or audit wrapping)
 - Define repository interfaces
 - Implement application services
 - Add business logic orchestration
@@ -161,6 +163,8 @@ Your responsibility is to implement the **service layer** (engine/) based on req
 - **Authentication:** authentik (OIDC/JWT)
 - **Authorization:** Casbin with ABAC
 - **Validation:** NJsonSchema (JSON Schema validator)
+- **CQRS Organization:** Prefer explicit command/query handlers with plain DI and `IRequestHandler<TRequest, TResponse>`-style contracts. Do not add a mediator library unless the feature set needs shared pipeline behaviors across many handlers.
+- **Resilience:** `Microsoft.Extensions.Http.Resilience` for HttpClient pipelines (retry, circuit breaker, timeout, bulkhead, hedging) — wraps Polly v8, MS-supported, ships with .NET 8+. Use `Microsoft.Extensions.Resilience` directly for non-HTTP pipelines.
 - **Workflow Engine:** Temporal.io
 - **Testing:** xUnit + Shouldly + Testcontainers
 - **Logging:** Serilog with structured logging

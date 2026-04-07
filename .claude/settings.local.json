@@ -69,7 +69,11 @@
       "Bash(npx vitest:*)",
       "Bash(npx vite:*)",
       "Bash(sudo apt-get:*)",
-      "Bash(pnpm --dir experience dlx node -e \"console.log\\(process.platform\\)\")"
+      "Bash(pnpm --dir experience dlx node -e \"console.log\\(process.platform\\)\")",
+      "Bash(jq .message.content[].text)",
+      "Bash(while IFS= read -r line)",
+      "Bash(do echo:*)",
+      "Bash(du -sh /mnt/c/Users/gajap/sandbox/nebula-crm/agents/*)"
     ]
   }
 }

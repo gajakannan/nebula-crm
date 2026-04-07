@@ -1,10 +1,16 @@
 # F0005 — IdP Migration: Keycloak → authentik
 
-**Status:** Draft | **Phase:** Infrastructure Patch | **Priority:** Must-complete before backend implementation
+**Status:** Done (Archived; Foundation Complete, Runtime Enforcement Deferred to F0009)
+**Phase:** Infrastructure Patch
+**Priority:** Must-complete before backend implementation
+**Archived:** 2026-03-07
 
 ## What Is This?
 
 This feature replaces Keycloak with **authentik** as the OIDC identity provider and introduces an IdP-agnostic **internal `UserId`** layer in the data model. It is a pre-production architectural patch applied before the backend engine is implemented.
+
+The feature is complete as a foundation migration. Full login/session runtime
+enforcement and BrokerUser boundary behavior remain in F0009 scope.
 
 ## Why Now?
 
@@ -25,16 +31,16 @@ This feature replaces Keycloak with **authentik** as the OIDC identity provider 
 
 | ID | Title | Status |
 |----|-------|--------|
-| F0005-S0001 | Replace authentik infrastructure | Draft |
-| F0005-S0002 | Claims normalization + principal key (backend) | Draft |
-| F0005-S0003 | Frontend OIDC flow update | Draft |
-| F0005-S0004 | Data model principal key rename | Draft |
+| F0005-S0001 | Replace authentik infrastructure | Done |
+| F0005-S0002 | Claims normalization + principal key (backend) | Done |
+| F0005-S0003 | Frontend OIDC flow update | Foundation Done; runtime token wiring deferred to F0009 |
+| F0005-S0004 | Data model principal key rename | Done |
 
 ## Impact Summary
 
 | Area | Change |
 |------|--------|
-| `docker-compose.yml` | Remove `keycloak`; add `authentik-server`, `authentik-worker`, `redis` |
+| `docker-compose.yml` | Remove `keycloak`; add `authentik-server` and `authentik-worker`; Redis no longer required |
 | `BLUEPRINT.md` | Tech stack: Keycloak → authentik; data model principal fields renamed |
 | `ADR-Auth-Strategy.md` | Superseded by ADR-006 |
 | `SOLUTION-PATTERNS.md` | Auth pattern, env var examples, UserProfile sync updated |

@@ -96,7 +96,7 @@ When forking or copying this framework to a new project, copy the `agents/` dire
 | Path | Purpose |
 |------|---------|
 | `agents/` (this directory) | Agent roles, actions, templates, scripts, and framework docs |
-| `agents/docs/` | Framework documentation (orchestration contract, onboarding, FAQ, container strategy) |
+| `agents/docs/` | Framework documentation (orchestration contract, onboarding, FAQ, container strategy, agent/action usage guide) |
 | `agents/actions/` | User-facing action compositions (init, plan, build, feature, review, etc.) |
 | `agents/templates/` | Reusable artifact templates (stories, features, ADRs, lifecycle config, CI workflows) |
 | `agents/scripts/` | Framework-level validation and gate scripts |
@@ -124,6 +124,7 @@ Files outside `agents/` that are part of the framework but live at the repo root
 1) Use **[Action Flow](./actions/README.md)** to compose agents for common workflows (init, plan, build, review, etc.)
 2) Actions provide user-friendly entry points that orchestrate agents automatically
 3) Example: `"Run the plan action"` → PM (Phase A) → Architect (Phase B) with approval gates
+4) For direct fresh-session prompts and role-by-role usage, see **[AGENT-USE.md](./docs/AGENT-USE.md)**
 
 ### For New Projects
 1) Copy `agents/` into a new repo

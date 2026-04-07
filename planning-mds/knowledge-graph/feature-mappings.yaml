@@ -1,0 +1,491 @@
+version: 0
+status: seed
+coverage_note: >
+  This file intentionally expands shared coverage in phases. Core workflow
+  features and the completed archived features are backfilled first because they
+  represent executed solution truth. Draft and abandoned historical scopes may
+  still have thinner coverage.
+
+rules:
+  - Mappings must reference canonical IDs declared in canonical-nodes.yaml.
+  - Product Manager owns feature and story mapping freshness.
+  - Architect owns corrections to canonical shared semantics.
+  - If a target feature or story is not mapped here, prompts must fall back to the current file-centric read pattern.
+
+features:
+  - id: feature:F0001
+    path: planning-mds/features/archive/F0001-dashboard
+    status: archived-done
+    affects:
+      - capability:dashboard-home
+      - capability:dashboard-kpis
+      - capability:dashboard-pipeline-visualization
+      - capability:dashboard-broker-activity-feed
+      - capability:dashboard-nudge-cards
+      - entity:task-item
+      - entity:broker
+      - entity:activity-timeline-event
+      - workflow:submission
+    governed_by:
+      - adr:002
+      - adr:003
+      - adr:004
+    uses_schema:
+      - schema:dashboard-kpis
+      - schema:dashboard-pipeline
+      - schema:task-summary
+      - schema:nudge-card
+      - schema:pipeline-status-count
+    uses_api_contract:
+      - api:nebula-rest
+  - id: feature:F0002
+    path: planning-mds/features/archive/F0002-broker-relationship-management
+    status: archived-done
+    affects:
+      - capability:broker-relationship-management
+      - capability:broker-360
+      - capability:broker-contact-management
+      - capability:authorization-enforcement
+      - entity:broker
+      - entity:contact
+      - entity:activity-timeline-event
+    governed_by:
+      - adr:008
+    uses_schema:
+      - schema:broker
+      - schema:broker-create-request
+      - schema:broker-update-request
+      - schema:broker-search-query
+      - schema:paginated-broker-list
+      - schema:contact
+      - schema:contact-create-request
+      - schema:contact-update-request
+      - schema:timeline-event
+      - schema:activity-event-payloads
+    uses_api_contract:
+      - api:nebula-rest
+  - id: feature:F0003
+    path: planning-mds/features/archive/F0003-task-center
+    status: archived-done
+    affects:
+      - capability:task-center
+      - capability:dashboard-nudge-cards
+      - entity:task-item
+    governed_by:
+      - adr:003
+    uses_schema:
+      - schema:task
+      - schema:task-create-request
+      - schema:task-update-request
+      - schema:task-summary
+      - schema:nudge-card
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0001
+  - id: feature:F0004
+    path: planning-mds/features/archive/F0004-task-center-ui-and-assignment
+    status: archived-done
+    affects:
+      - capability:task-center
+      - capability:task-assignment
+      - capability:task-visibility
+      - entity:task-item
+      - entity:user-profile
+    uses_schema:
+      - schema:task
+      - schema:task-create-request
+      - schema:task-update-request
+      - schema:task-summary
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0003
+      - feature:F0005
+  - id: feature:F0005
+    path: planning-mds/features/archive/F0005-idp-migration
+    status: archived-done
+    affects:
+      - capability:idp-foundation
+      - capability:claims-principal-normalization
+      - capability:principal-key-normalization
+      - capability:authentication
+      - entity:user-profile
+    governed_by:
+      - adr:006
+    uses_api_contract:
+      - api:nebula-rest
+  - id: feature:F0006
+    path: planning-mds/features/archive/F0006-submission-intake-workflow
+    status: archived
+    affects:
+      - workflow:submission
+      - entity:submission
+      - entity:account
+      - entity:broker
+      - entity:document
+      - entity:workflow-transition
+      - entity:activity-timeline-event
+      - entity:workflow-sla-threshold
+    governed_by:
+      - adr:009
+      - adr:011
+      - adr:012
+    uses_schema:
+      - schema:submission
+      - schema:submission-create-request
+      - schema:submission-update-request
+      - schema:submission-transition-request
+      - schema:submission-list-item
+      - schema:submission-completeness
+      - schema:submission-assignment-request
+      - schema:line-of-business
+      - schema:timeline-event
+      - schema:activity-event-payloads
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0016
+      - feature:F0020
+  - id: feature:F0007
+    path: planning-mds/features/F0007-renewal-pipeline
+    status: in-refinement
+    affects:
+      - workflow:renewal
+      - entity:renewal
+      - entity:policy
+      - entity:account
+      - entity:broker
+      - entity:workflow-transition
+      - entity:activity-timeline-event
+      - entity:workflow-sla-threshold
+    governed_by:
+      - adr:010
+      - adr:011
+      - adr:014-workflow-sla
+    uses_schema:
+      - schema:renewal
+      - schema:renewal-create-request
+      - schema:renewal-update-request
+      - schema:renewal-transition-request
+      - schema:renewal-list-item
+      - schema:renewal-assignment-request
+      - schema:line-of-business
+      - schema:timeline-event
+      - schema:activity-event-payloads
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0018
+      - feature:F0016
+  - id: feature:F0009
+    path: planning-mds/features/archive/F0009-authentication-and-role-based-login
+    status: archived-done
+    affects:
+      - capability:authentication
+      - capability:oidc-login-and-session
+      - capability:role-based-entry
+      - capability:broker-user-access-boundaries
+      - capability:authorization-enforcement
+      - entity:user-profile
+    governed_by:
+      - adr:007
+      - adr:008
+      - adr:authentication-strategy
+      - adr:auth-token-storage
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0005
+  - id: feature:F0019
+    path: planning-mds/features/F0019-submission-quoting-proposal-and-approval
+    status: planned
+    affects:
+      - workflow:submission
+      - entity:submission
+      - entity:policy
+      - entity:document
+      - entity:workflow-transition
+      - entity:activity-timeline-event
+    governed_by:
+      - adr:011
+      - adr:012
+    uses_schema:
+      - schema:submission
+      - schema:submission-transition-request
+      - schema:line-of-business
+      - schema:activity-event-payloads
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0006
+      - feature:F0018
+      - feature:F0020
+  - id: feature:F0020
+    path: planning-mds/features/F0020-document-management-and-acord-intake
+    status: planned
+    affects:
+      - entity:document
+      - entity:submission
+      - entity:policy
+      - entity:renewal
+    governed_by:
+      - adr:012
+    uses_api_contract:
+      - api:nebula-rest
+  - id: feature:F0022
+    path: planning-mds/features/F0022-work-queues-assignment-rules-and-coverage-management
+    status: planned
+    affects:
+      - entity:task-item
+      - entity:workflow-sla-threshold
+      - workflow:submission
+      - workflow:renewal
+    governed_by:
+      - adr:013
+      - adr:016
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0032
+  - id: feature:F0030
+    path: planning-mds/features/F0030-integration-hub-and-data-exchange
+    status: planned
+    affects:
+      - entity:submission
+      - entity:policy
+      - entity:renewal
+      - entity:document
+    governed_by:
+      - adr:015
+      - adr:016
+    uses_api_contract:
+      - api:nebula-rest
+  - id: feature:F0012
+    path: planning-mds/features/archive/F0012-dashboard-storytelling-infographic-canvas
+    status: archived-done
+    affects:
+      - capability:dashboard-home
+      - capability:dashboard-storytelling-canvas
+      - capability:dashboard-pipeline-visualization
+      - capability:dashboard-opportunity-analytics
+      - capability:dashboard-nudge-cards
+      - entity:task-item
+      - workflow:submission
+    governed_by:
+      - adr:002
+      - adr:004
+    uses_schema:
+      - schema:dashboard-kpis
+      - schema:nudge-card
+      - schema:task-summary
+      - schema:opportunity-flow
+      - schema:opportunity-flow-node
+      - schema:opportunity-flow-link
+      - schema:pipeline-mini-card
+    uses_api_contract:
+      - api:nebula-rest
+  - id: feature:F0013
+    path: planning-mds/features/archive/F0013-dashboard-framed-storytelling-canvas
+    status: archived-done
+    affects:
+      - capability:dashboard-home
+      - capability:dashboard-storytelling-canvas
+      - capability:dashboard-pipeline-visualization
+      - capability:dashboard-opportunity-analytics
+      - capability:dashboard-nudge-cards
+      - entity:task-item
+      - workflow:submission
+    governed_by:
+      - adr:002
+      - adr:004
+    uses_schema:
+      - schema:dashboard-kpis
+      - schema:nudge-card
+      - schema:task-summary
+      - schema:opportunity-flow
+      - schema:opportunity-flow-node
+      - schema:opportunity-flow-link
+      - schema:opportunity-breakdown
+      - schema:opportunity-breakdown-group
+      - schema:pipeline-mini-card
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0001
+  - id: feature:F0014
+    path: planning-mds/features/archive/F0014-devops-smoke-test-automation
+    status: archived-done
+    affects:
+      - capability:smoke-test-automation
+      - capability:environment-reset
+      - capability:authorization-enforcement
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0009
+  - id: feature:F0015
+    path: planning-mds/features/archive/F0015-frontend-quality-gates-and-test-infrastructure
+    status: archived-done
+    affects:
+      - capability:frontend-test-infrastructure
+      - capability:frontend-quality-gates
+  - id: feature:F0033
+    path: planning-mds/features/archive/F0033-structured-logging-and-qe-toolchain-activation
+    status: archived-done
+    affects:
+      - capability:structured-logging
+      - capability:qe-toolchain-activation
+      - capability:api-contract-testing
+      - capability:lighthouse-performance-gate
+      - capability:sonarqube-reporting
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0015
+  - id: feature:F0032
+    path: planning-mds/features/F0032-admin-configuration-and-reference-data-console
+    status: planned
+    affects:
+      - entity:workflow-sla-threshold
+      - workflow:submission
+      - workflow:renewal
+    governed_by:
+      - adr:013
+      - adr:014-search
+      - adr:014-workflow-sla
+      - adr:016
+    uses_api_contract:
+      - api:nebula-rest
+
+stories:
+  - id: story:F0005-S0002
+    path: planning-mds/features/archive/F0005-idp-migration/F0005-S0002-claims-normalization-backend.md
+    feature: feature:F0005
+    affects:
+      - capability:claims-principal-normalization
+      - capability:idp-foundation
+      - entity:user-profile
+    governed_by:
+      - adr:006
+    uses_api_contract:
+      - api:nebula-rest
+  - id: story:F0005-S0004
+    path: planning-mds/features/archive/F0005-idp-migration/F0005-S0004-principal-key-data-model.md
+    feature: feature:F0005
+    affects:
+      - capability:principal-key-normalization
+      - entity:user-profile
+    governed_by:
+      - adr:006
+  - id: story:F0002-S0009
+    path: planning-mds/features/archive/F0002-broker-relationship-management/F0002-S0009-adopt-native-casbin-enforcer.md
+    feature: feature:F0002
+    affects:
+      - capability:authorization-enforcement
+      - capability:broker-relationship-management
+      - entity:broker
+    governed_by:
+      - adr:008
+    uses_api_contract:
+      - api:nebula-rest
+  - id: story:F0006-S0004
+    path: planning-mds/features/archive/F0006-submission-intake-workflow/F0006-S0004-submission-intake-status-transitions.md
+    feature: feature:F0006
+    affects:
+      - workflow:submission
+      - entity:submission
+      - entity:workflow-transition
+      - entity:activity-timeline-event
+    workflow_states:
+      - state:submission:received
+      - state:submission:triaging
+      - state:submission:waiting-on-broker
+      - state:submission:ready-for-uw-review
+    governed_by:
+      - adr:011
+    uses_schema:
+      - schema:submission-transition-request
+      - schema:submission
+      - schema:activity-event-payloads
+    uses_api_contract:
+      - api:nebula-rest
+  - id: story:F0004-S0003
+    path: planning-mds/features/archive/F0004-task-center-ui-and-assignment/F0004-S0003-cross-user-task-authorization.md
+    feature: feature:F0004
+    affects:
+      - capability:task-assignment
+      - capability:task-visibility
+      - entity:task-item
+      - entity:user-profile
+    uses_schema:
+      - schema:task
+      - schema:task-update-request
+    uses_api_contract:
+      - api:nebula-rest
+  - id: story:F0007-S0003
+    path: planning-mds/features/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md
+    feature: feature:F0007
+    affects:
+      - workflow:renewal
+      - entity:renewal
+      - entity:workflow-transition
+      - entity:activity-timeline-event
+    workflow_states:
+      - state:renewal:identified
+      - state:renewal:outreach
+      - state:renewal:in-review
+      - state:renewal:quoted
+      - state:renewal:completed
+      - state:renewal:lost
+    governed_by:
+      - adr:010
+      - adr:011
+      - adr:014-workflow-sla
+    uses_schema:
+      - schema:renewal-transition-request
+      - schema:renewal
+      - schema:activity-event-payloads
+    uses_api_contract:
+      - api:nebula-rest
+  - id: story:F0009-S0004
+    path: planning-mds/features/archive/F0009-authentication-and-role-based-login/F0009-S0004-broker-user-access-boundaries.md
+    feature: feature:F0009
+    affects:
+      - capability:broker-user-access-boundaries
+      - capability:authorization-enforcement
+      - capability:authentication
+      - entity:user-profile
+    governed_by:
+      - adr:007
+      - adr:008
+    uses_api_contract:
+      - api:nebula-rest
+  - id: story:F0014-S0002
+    path: planning-mds/features/archive/F0014-devops-smoke-test-automation/F0014-S0002-multi-role-smoke-test-verification.md
+    feature: feature:F0014
+    affects:
+      - capability:smoke-test-automation
+      - capability:authorization-enforcement
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0009
+  - id: story:F0015-S0002
+    path: planning-mds/features/archive/F0015-frontend-quality-gates-and-test-infrastructure/F0015-S0002-activate-nebula-frontend-quality-gates-and-evidence.md
+    feature: feature:F0015
+    affects:
+      - capability:frontend-quality-gates
+      - capability:frontend-test-infrastructure
+  - id: story:F0033-S0004
+    path: planning-mds/features/archive/F0033-structured-logging-and-qe-toolchain-activation/F0033-S0004-establish-broker-list-contract-testing-with-pact.md
+    feature: feature:F0033
+    affects:
+      - capability:api-contract-testing
+      - entity:broker
+    uses_schema:
+      - schema:broker
+      - schema:paginated-broker-list
+      - schema:problem-details
+    uses_api_contract:
+      - api:nebula-rest

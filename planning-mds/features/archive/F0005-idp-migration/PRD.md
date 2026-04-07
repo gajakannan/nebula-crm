@@ -2,7 +2,7 @@
 
 **Feature ID:** F0005
 **Phase:** Infrastructure Patch (pre-MVP, applied before backend implementation begins)
-**Status:** Draft
+**Status:** Done (Archived; Foundation Complete, Runtime Enforcement Deferred to F0009)
 **Owner:** Architect
 
 ---
@@ -54,9 +54,12 @@ See [ADR-006: authentik IdP Migration](../../architecture/decisions/ADR-006-auth
 
 ## Acceptance Criteria (Feature Level)
 
-- [ ] `docker-compose up` brings up authentik (server + worker), Redis, and the app without Keycloak.
-- [ ] An authenticated API request returns HTTP 200 with a JWT issued by authentik.
-- [ ] `UserProfile.UserId` is a stable UUID that does not change across token refreshes.
-- [ ] All entity `*Subject` / `AssignedTo` string fields are renamed to `*UserId (uuid)`.
-- [ ] Casbin enforcement passes for all roles defined in the authorization matrix.
-- [ ] Dev-auth helper (`dev-auth.ts`) successfully fetches a token from authentik.
+- [x] `docker-compose up` brings up authentik (server + worker) and the app without Keycloak.
+- [x] An authenticated API request returns HTTP 200 with a JWT issued by authentik.
+- [x] `UserProfile.UserId` is a stable UUID that does not change across token refreshes.
+- [x] All entity `*Subject` / `AssignedTo` string fields are renamed to `*UserId (uuid)`.
+- [x] Casbin enforcement passes for all roles defined in the authorization matrix.
+- [x] Dev-auth helper (`dev-auth.ts`) successfully fetches a token from authentik.
+
+Feature-level note:
+- Runtime login/session enforcement and BrokerUser boundary behavior are carried by F0009.

@@ -170,4 +170,5 @@ Actions can be extended by:
 - Review individual action definitions to understand agent compositions
 - Map your workflows to actions
 - Use actions as primary entry points instead of invoking agents directly
+- For direct role prompts and fresh-session examples, see `agents/docs/AGENT-USE.md`
 - Provide feedback on missing actions or better compositions

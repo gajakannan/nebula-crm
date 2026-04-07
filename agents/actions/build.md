@@ -21,10 +21,16 @@ Security
   ↓
 [APPROVAL GATE: User reviews security findings]
   ↓
+[SIGNOFF GATE: required reviewer evidence verified]
+  ↓
+[PRODUCT MANAGER CLOSEOUT: delivered-feature reconciliation]
+  ↓
+[TRACKER SYNC GATE: trackers and story index validated]
+  ↓
 Build Complete
 ```
 
-**Flow Type:** Mixed (architect-led orchestration kickoff, parallel implementation, sequential reviews with approval gates)
+**Flow Type:** Mixed (architect-led orchestration kickoff, parallel implementation, sequential reviews with approval gates, required signoff verification, PM closeout, and final tracker sync)
 
 ---
 
@@ -123,6 +129,8 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - Repository implementations
    - Unit tests
    - Integration tests
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (Backend Progress section, validation evidence)
+   - `planning-mds/features/F{NNNN}-{slug}/GETTING-STARTED.md` updates (key files, seed data, verification steps)
 
 #### 1b. Frontend Developer
 1. **Activate Frontend Developer agent** by reading `agents/frontend-developer/SKILL.md`
@@ -153,6 +161,8 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - Routing configuration
    - Component tests
    - UX audit evidence (required command outputs + dark/light validation notes)
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (Frontend Progress section, validation evidence)
+   - `planning-mds/features/F{NNNN}-{slug}/GETTING-STARTED.md` updates (key files, verification steps)
 
 #### 1c. Quality Engineer
 1. **Activate Quality Engineer agent** by reading `agents/quality-engineer/SKILL.md`
@@ -177,6 +187,7 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - Test coverage gap analysis and remediation checklist
    - Cross-tier integration and E2E test suites
    - Coverage and quality-gate reports
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (QE feature-level signoff entry, validation evidence paths)
 
 #### 1d. DevOps
 1. **Activate DevOps agent** by reading `agents/devops/SKILL.md`
@@ -238,6 +249,7 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - `.env.example` (Phase 3)
    - Deployment scripts in `scripts/` (Phase 3)
    - Supporting configuration files (Phase 3)
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (deployability evidence, Cross-Cutting checklist items)
 
 **Reference:** `agents/devops/references/containerization-guide.md` - Full three-phase workflow guide
 
@@ -264,6 +276,8 @@ All stack-specific execution (compile/tests/scans) must run in application runti
    - MCP server/tool definitions (if needed)
    - AI unit/integration tests
    - `neuron/README.md` updates (if behavior or setup changed)
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (AI Progress section, validation evidence)
+   - `planning-mds/features/F{NNNN}-{slug}/GETTING-STARTED.md` updates (AI runtime / setup notes)
 
 **Completion Criteria for Step 1:**
 - [ ] All required agents have completed their work (Backend, Frontend, Quality, DevOps, and AI Engineer if AI scope)
@@ -744,7 +758,7 @@ Each agent validates their own work before proceeding to code review:
        [ User enters reason: "These are planned for Phase 2 per ADR-015" ]
        ```
      - Log approval decision with justification to audit trail
-     - Proceed to Step 6.75 (Tracker Sync Gate)
+     - Proceed to Step 6.75 (Signoff Gate)
 
    - **"Cancel Build":**
      - Abort build action
@@ -771,7 +785,7 @@ Each agent validates their own work before proceeding to code review:
 
    **Handling:**
    - **"Approve":**
-     - Proceed to Step 6.75 (Tracker Sync Gate)
+     - Proceed to Step 6.75 (Signoff Gate)
 
    - **"Fix Issues Anyway":**
      - Return to developer agents to fix issues
@@ -802,7 +816,7 @@ Each agent validates their own work before proceeding to code review:
 
    **Handling:**
    - **"Approve":**
-     - Proceed to Step 6.75 (Tracker Sync Gate)
+     - Proceed to Step 6.75 (Signoff Gate)
 
 5. **Machine-Readable Gate State:**
 
@@ -893,30 +907,72 @@ This is an informational gate for release readiness reporting and does not block
 
 ---
 
-### Step 6.75: TRACKER SYNC GATE (Mandatory)
+### Step 6.75: SIGNOFF GATE (Mandatory)
 
 **Execution Instructions:**
 
-Before Build Complete, synchronize planning trackers with the implemented state:
+Before Build Complete, verify required role signoffs across delivered features:
 
-1. Update tracker documents:
+1. Read `planning-mds/features/F{NNNN}-{slug}/STATUS.md` for each delivered feature:
+   - `Required Signoff Roles` matrix
+   - `Story Signoff Provenance`
+2. For every required role across the build scope, confirm:
+   - each in-scope story has a passing signoff row
+   - reviewer/date/evidence are present
+   - evidence paths point to solution artifacts, not `agents/**`
+3. If any required signoff is missing or non-pass:
+   - Block build closeout
+   - Route back to the owning reviewer role
+
+**Gate Criteria:**
+- [ ] Every required signoff role has a passing ledger entry for delivered scope
+- [ ] Signoff evidence is complete for every in-scope story
+- [ ] No feature is marked `Done`/`Archived` without passing required signoffs
+
+---
+
+### Step 6.9: PRODUCT MANAGER CLOSEOUT (Mandatory)
+
+**Execution Instructions:**
+
+1. **Activate Product Manager agent** by reading `agents/product-manager/SKILL.md`
+2. Reconcile delivered-feature closure artifacts:
    - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` for each delivered feature
    - `planning-mds/features/REGISTRY.md` for status/path transitions
    - `planning-mds/features/ROADMAP.md` for sequencing/completion placement
    - `planning-mds/BLUEPRINT.md` feature/story status snapshot (if changed)
+3. For completed features, move folders to `planning-mds/features/archive/` when appropriate and update impacted path references
+4. If ontology-backed planning exists for touched features, update feature/path/status references in:
+   - `planning-mds/knowledge-graph/feature-mappings.yaml`
+5. Record deferred follow-ups, known mitigations, and orphaned story handling before tracker validation
 
-2. Regenerate story index when story files changed:
+**Completion Criteria:**
+- [ ] Product Manager closeout executed after signoff passed
+- [ ] Delivered features have final status/archive decisions recorded
+- [ ] Deferred follow-ups and mitigation carry-overs captured
+- [ ] Ontology feature mappings updated if closeout changes feature path/status
+
+---
+
+### Step 6.95: TRACKER SYNC GATE (Mandatory)
+
+**Execution Instructions:**
+
+Validate the closeout updates before Build Complete:
+
+1. Regenerate story index when story files changed:
    - `python3 agents/product-manager/scripts/generate-story-index.py planning-mds/features/`
 
-3. Validate tracker coherence:
+2. Validate tracker coherence:
    - `python3 agents/product-manager/scripts/validate-trackers.py`
 
-4. If validation fails:
+3. If validation fails:
    - Treat as blocking
    - Fix tracker drift and re-run until passing
 
 **Gate Criteria:**
 - [ ] STATUS files updated for delivered features
+- [ ] Product Manager closeout executed before tracker validation
 - [ ] REGISTRY/ROADMAP/BLUEPRINT synchronized
 - [ ] STORY-INDEX regenerated when required
 - [ ] Tracker validation passes
@@ -980,6 +1036,11 @@ Security Review:
   ✓ Authorization: Correct
   Status: APPROVED
 
+Closeout:
+  ✓ Required signoff ledger complete
+  ✓ Product Manager closeout recorded
+  ✓ Trackers and story index synchronized
+
 ═══════════════════════════════════════════════════════════
 Next Steps:
 ═══════════════════════════════════════════════════════════
@@ -1004,8 +1065,10 @@ All features implemented and approved! ✓
 - [ ] AI tests passing (if AI scope) in AI runtime container
 - [ ] Code review approved
 - [ ] Security review approved
+- [ ] Signoff gate passed for all required reviewer roles
 - [ ] Application runtime containers run successfully
 - [ ] All acceptance criteria met
+- [ ] Product Manager closeout completed
 - [ ] Tracker sync gate passed (REGISTRY/ROADMAP/STORY-INDEX/BLUEPRINT/STATUS)
 
 ---
@@ -1039,4 +1102,4 @@ Before running build action:
 - Critical issues block approval; high issues require explicit mitigation justification if approved
 - Can re-run steps if approval gates fail
 - All patterns in SOLUTION-PATTERNS.md must be followed
-- Tracker sync gate is mandatory before Build Complete
+- Signoff must pass before PM closeout, and PM closeout must finish before final tracker sync

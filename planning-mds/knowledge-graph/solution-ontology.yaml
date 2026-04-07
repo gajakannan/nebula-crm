@@ -1,0 +1,188 @@
+version: 0
+status: seed
+purpose: >
+  Lightweight typed vocabulary for Nebula solution context. Shared cross-feature
+  semantics are declared once here so prompts can pass stable IDs and links
+  instead of re-reading broad prose every session.
+
+authority:
+  raw_artifacts_win: true
+  precedence:
+    - target feature folder and feature-assembly-plan.md for feature-local implementation intent
+    - planning-mds/architecture/decisions/** for architectural decisions
+    - planning-mds/api/*.yaml and planning-mds/schemas/*.json for interface and payload contracts
+    - planning-mds/architecture/data-model.md and planning-mds/domain/glossary.md for domain definitions
+    - planning-mds/knowledge-graph/*.yaml for compressed retrieval and routing
+  drift_policy:
+    - Do not silently let ontology mappings outrank raw artifacts.
+    - If a source document is wrong, fix the source document first.
+    - If the source document is correct and the ontology is stale, repair the ontology in the same change set.
+
+ownership:
+  architect:
+    owns:
+      - entity
+      - workflow
+      - workflow_state
+      - capability
+      - schema
+      - api_contract
+      - adr
+  product-manager:
+    owns:
+      - feature
+      - story
+      - persona
+      - feature_story_mappings
+  implementation_agents:
+    owns: []
+    duties:
+      - Flag ontology drift when discovered during implementation.
+      - Do not redefine canonical shared semantics unless explicitly operating in Architect or Product Manager mode.
+
+node_types:
+  - id: entity
+    description: Canonical domain or append-only business record used across features.
+    owner: architect
+  - id: workflow
+    description: Cross-feature lifecycle or operating flow with shared meaning.
+    owner: architect
+  - id: workflow_state
+    description: Canonical state within a declared workflow.
+    owner: architect
+  - id: capability
+    description: Shared runtime, UI, operational, or platform capability used across features.
+    owner: architect
+  - id: schema
+    description: Shared JSON Schema contract.
+    owner: architect
+  - id: api_contract
+    description: Shared API contract, usually OpenAPI.
+    owner: architect
+  - id: adr
+    description: Architecture decision record governing shared design choices.
+    owner: architect
+  - id: feature
+    description: Product planning container and delivery scope.
+    owner: product-manager
+  - id: story
+    description: User story or implementation slice within a feature.
+    owner: product-manager
+  - id: persona
+    description: User or operator role referenced by planning artifacts.
+    owner: product-manager
+  - id: evidence
+    description: Verification or signoff artifact proving completion or review.
+    owner: product-manager
+
+edge_types:
+  - id: belongs_to_feature
+    from: [story]
+    to: [feature]
+    description: Story is scoped under a feature.
+  - id: affects
+    from: [feature, story]
+    to: [entity, workflow, workflow_state, capability]
+    description: Target scope changes or depends on the behavior of the destination node.
+  - id: governs
+    from: [adr]
+    to: [entity, workflow, workflow_state, capability, schema, api_contract, feature, story]
+    description: ADR is the governing architectural decision for the destination node.
+  - id: uses_schema
+    from: [feature, story]
+    to: [schema]
+    description: Scope reads, writes, or validates against the schema.
+  - id: uses_api_contract
+    from: [feature, story]
+    to: [api_contract]
+    description: Scope depends on or changes the API contract.
+  - id: belongs_to_workflow
+    from: [workflow_state]
+    to: [workflow]
+    description: State belongs to the named workflow.
+  - id: transitions_to
+    from: [workflow_state]
+    to: [workflow_state]
+    description: Allowed transition within a single workflow.
+  - id: depends_on
+    from: [feature, story]
+    to: [feature, story, entity, workflow, capability]
+    description: Scope requires the destination node or scope to exist or stay aligned.
+  - id: validated_by
+    from: [feature, story]
+    to: [evidence]
+    description: Execution or review evidence proving behavior or signoff.
+  - id: supersedes
+    from: [feature, story, adr]
+    to: [feature, story, adr]
+    description: Newer scope replaces the destination node.
+
+id_patterns:
+  - type: entity
+    pattern: entity:<slug>
+    examples:
+      - entity:submission
+      - entity:workflow-sla-threshold
+  - type: workflow
+    pattern: workflow:<slug>
+    examples:
+      - workflow:submission
+      - workflow:renewal
+  - type: workflow_state
+    pattern: state:<workflow-slug>:<state-slug>
+    examples:
+      - state:submission:ready-for-uw-review
+      - state:renewal:identified
+  - type: schema
+    pattern: schema:<filename-without-.schema.json>
+    examples:
+      - schema:submission-transition-request
+      - schema:broker
+  - type: capability
+    pattern: capability:<slug>
+    examples:
+      - capability:dashboard-home
+      - capability:frontend-quality-gates
+  - type: api_contract
+    pattern: api:<slug>
+    examples:
+      - api:nebula-rest
+  - type: adr
+    pattern: adr:<number-or-slug>
+    examples:
+      - adr:011
+      - adr:014-search
+      - adr:014-workflow-sla
+  - type: feature
+    pattern: feature:FNNNN
+    examples:
+      - feature:F0006
+      - feature:F0032
+  - type: story
+    pattern: story:FNNNN-SNNNN
+    examples:
+      - story:F0006-S0004
+      - story:F0007-S0003
+
+invariants:
+  - ADRs, schemas, workflows, workflow states, capabilities, API contracts, and canonical entities are shared solution nodes; features and stories only reference them.
+  - Workflow states belong to workflows, not to features.
+  - A feature or story must not appear to own an ADR, capability, or schema.
+  - The ontology should store compact typed links, not re-copy whole PRDs or ADR text.
+  - When coverage is partial, prompts must fall back to file-centric reads instead of inventing missing links.
+
+retrieval_contract:
+  when_feature_or_story_is_mapped:
+    - Load solution-ontology.yaml first.
+    - Load canonical-nodes.yaml second.
+    - Load only the matching feature or story entry from feature-mappings.yaml.
+    - Expand one hop into linked canonical nodes.
+    - Open raw feature, ADR, API, or schema files only when linked, changed, or needed for detail or verification.
+  minimum_prompt_block:
+    - target
+    - affected_nodes
+    - governed_by
+    - uses_schema
+    - uses_api_contract
+    - depends_on
+    - source_precedence

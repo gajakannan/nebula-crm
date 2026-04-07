@@ -2,7 +2,9 @@
 
 ## User Intent
 
-Complete planning phase (Phase A + B) by defining product requirements and technical architecture with approval gates between phases.
+Complete planning phase (Phase A + B) by defining product requirements,
+technical architecture, and the feature's solution-ontology bindings with
+mandatory approval and synchronization gates.
 
 ## Agent Flow
 
@@ -13,12 +15,14 @@ Product Manager (Phase A)
   ↓
 Architect (Phase B)
   ↓
+[ONTOLOGY SYNC GATE: Feature mapping and canonical bindings aligned]
+  ↓
 [APPROVAL GATE: User reviews architecture]
   ↓
 Ready for Build
 ```
 
-**Flow Type:** Sequential with approval gates
+**Flow Type:** Sequential with approval and synchronization gates
 
 ---
 
@@ -33,6 +37,7 @@ Ready for Build
 2. **Read required context:**
    - `planning-mds/BLUEPRINT.md` (Sections 0-2 for baseline context)
    - `planning-mds/domain/` (domain glossary, if exists)
+   - `planning-mds/knowledge-graph/` (shared ontology context, if present)
 
 3. **Execute Product Manager responsibilities:**
    - Define vision and explicit non-goals
@@ -41,12 +46,14 @@ Ready for Build
    - Write user stories with clear acceptance criteria
    - Specify screen list and responsibilities
    - Map key workflows across screens
+   - Seed a minimal feature mapping stub in `planning-mds/knowledge-graph/feature-mappings.yaml` for any new or materially changed feature in scope
 
 4. **Produce outputs:**
    - Update `planning-mds/BLUEPRINT.md` Section 3 (complete, no TODOs)
    - Create `planning-mds/examples/personas/*.md` (if detailed personas needed)
    - Create feature folders at `planning-mds/features/F{NNNN}-{slug}/` with PRD.md, README.md, STATUS.md, GETTING-STARTED.md
    - Create stories colocated in feature folders as `F{NNNN}-S{NNNN}-{slug}.md`
+   - Create or update a minimal feature mapping stub in `planning-mds/knowledge-graph/feature-mappings.yaml`
    - Ensure `planning-mds/features/TRACKER-GOVERNANCE.md` exists (copy from `agents/templates/tracker-governance-template.md` if missing)
    - Update `planning-mds/features/REGISTRY.md` with new features
    - Update `planning-mds/features/ROADMAP.md` with sequence changes (`Now / Next / Later / Completed`)
@@ -57,6 +64,7 @@ Ready for Build
    - [ ] Features listed with MVP prioritization
    - [ ] User stories have acceptance criteria
    - [ ] Screen responsibilities specified
+   - [ ] Minimal ontology stub exists for each touched feature (`id`, `path`, `status`, obvious dependencies/high-confidence affected nodes)
    - [ ] No invented business rules (all traced to user needs)
    - [ ] No TODOs remain in Section 3
 
@@ -64,6 +72,7 @@ Ready for Build
 - `planning-mds/BLUEPRINT.md` Section 3 (complete)
 - `planning-mds/examples/personas/` (optional)
 - `planning-mds/features/F{NNNN}-{slug}/` (feature folders with PRD, README, STATUS, GETTING-STARTED, and story files)
+- `planning-mds/knowledge-graph/feature-mappings.yaml` (minimal feature/story stub for touched scope)
 - `planning-mds/features/REGISTRY.md` (feature index)
 - `planning-mds/features/ROADMAP.md` (prioritization/sequence view)
 
@@ -222,6 +231,7 @@ Before Phase A approval, synchronize and validate planning trackers:
    - `planning-mds/features/REGISTRY.md` reflects feature inventory and paths
    - `planning-mds/features/ROADMAP.md` reflects current sequencing
    - `planning-mds/BLUEPRINT.md` feature/story status links resolve
+   - `planning-mds/knowledge-graph/feature-mappings.yaml` contains a minimal stub for each touched feature
 
 2. Regenerate generated tracker:
    - Run `python3 agents/product-manager/scripts/generate-story-index.py planning-mds/features/`
@@ -239,6 +249,7 @@ Before Phase A approval, synchronize and validate planning trackers:
 - [ ] Story index regenerated after story file changes
 - [ ] Story validation passes
 - [ ] Tracker validation passes
+- [ ] Minimal feature mapping stub present for touched planning scope
 - [ ] No stale links/paths/status mismatches across tracker docs
 
 ---
@@ -338,6 +349,7 @@ Before Phase A approval, synchronize and validate planning trackers:
    - `planning-mds/BLUEPRINT.md` Sections 0-3 (especially Section 3 - approved requirements)
    - `planning-mds/architecture/SOLUTION-PATTERNS.md` (project-specific patterns to follow)
    - `planning-mds/domain/` (domain knowledge)
+   - `planning-mds/knowledge-graph/solution-ontology.yaml`, `canonical-nodes.yaml`, and `feature-mappings.yaml` (if present)
    - `agents/architect/references/` (generic architecture best practices)
 
 3. **Execute Architect responsibilities:**
@@ -349,6 +361,9 @@ Before Phase A approval, synchronize and validate planning trackers:
    - Specify workflow state machines and business rules
    - Document architectural decisions (ADRs)
    - Define non-functional requirements (performance, security, scalability)
+   - Complete the target feature's ontology mapping in `planning-mds/knowledge-graph/feature-mappings.yaml`
+   - Add or update canonical shared nodes in `planning-mds/knowledge-graph/canonical-nodes.yaml` when Phase B introduces reusable solution semantics
+   - Update `planning-mds/knowledge-graph/solution-ontology.yaml` only if the ontology vocabulary itself must change
 
 4. **Validate against SOLUTION-PATTERNS.md:**
    - [ ] Authorization follows Casbin ABAC pattern
@@ -364,6 +379,8 @@ Before Phase A approval, synchronize and validate planning trackers:
    - Create `planning-mds/architecture/decisions/*.md` (ADRs for key decisions)
    - Create `planning-mds/architecture/data-model.md` (if detailed ERD needed)
    - Create `planning-mds/api/*.yaml` (OpenAPI contracts for implementation)
+   - Complete ontology bindings in `planning-mds/knowledge-graph/feature-mappings.yaml`
+   - Add canonical shared nodes in `planning-mds/knowledge-graph/canonical-nodes.yaml` when needed
 
 6. **Validate Phase B outputs:**
    - [ ] Service boundaries clear
@@ -373,6 +390,8 @@ Before Phase A approval, synchronize and validate planning trackers:
    - [ ] Workflow rules specified
    - [ ] NFRs measurable
    - [ ] ADRs written for key decisions
+   - [ ] Feature ontology mapping completed
+   - [ ] New shared semantics captured in canonical nodes when applicable
    - [ ] Architecture satisfies all Phase A requirements
    - [ ] SOLUTION-PATTERNS.md followed
    - [ ] No TODOs remain in Section 4
@@ -382,6 +401,45 @@ Before Phase A approval, synchronize and validate planning trackers:
 - `planning-mds/architecture/decisions/*.md` (ADRs)
 - `planning-mds/architecture/data-model.md` (optional)
 - `planning-mds/api/*.yaml` (OpenAPI contracts)
+- `planning-mds/knowledge-graph/feature-mappings.yaml` (completed feature/story bindings)
+- `planning-mds/knowledge-graph/canonical-nodes.yaml` (when new shared semantics were introduced)
+
+---
+
+### Step 3.5: ONTOLOGY SYNC GATE (Mandatory)
+
+**Execution Instructions:**
+
+Before Phase B approval, synchronize and validate the solution ontology for the
+touched planning scope:
+
+1. Ensure feature mapping completion:
+   - The target feature exists in `planning-mds/knowledge-graph/feature-mappings.yaml`
+   - Story mappings exist when architecture decisions materially depend on canonical workflow, schema, or ADR links
+   - `status`, `path`, and dependency references align with the feature folder and trackers
+
+2. Ensure canonical shared semantics are captured correctly:
+   - If the feature only reuses existing shared semantics, reference existing canonical nodes
+   - If the feature introduces a new reusable workflow, workflow state, entity, schema grouping, or capability, add it to `planning-mds/knowledge-graph/canonical-nodes.yaml`
+   - Do not add new canonical nodes for feature-local details that remain owned by the PRD alone
+
+3. Validate source precedence and ownership boundaries:
+   - Raw feature, ADR, API, schema, and data-model artifacts remain the authority
+   - Product Manager Phase A stubs are not left as the final semantic mapping when Phase B clarified the design
+   - Architect-owned canonical bindings are complete before plan closeout
+
+4. Validate ontology integrity:
+   - Touched YAML files parse successfully
+   - Referenced IDs exist
+   - Referenced paths exist
+   - No stale or contradictory bindings remain for the touched feature
+
+**Gate Criteria:**
+- [ ] Target feature has a completed ontology mapping
+- [ ] New shared semantics captured in canonical nodes when applicable
+- [ ] Mapping references resolve to real IDs and paths
+- [ ] Ontology does not contradict raw planning/architecture artifacts
+- [ ] Architect has finished ontology updates before plan closeout
 
 ---
 
@@ -419,6 +477,11 @@ Before Phase A approval, synchronize and validate planning trackers:
      - [count] ADRs documented
      - Key decisions: [list major ADRs]
 
+   ✓ Ontology Sync
+     - Feature mapping: complete
+     - Canonical nodes updated: [yes/no]
+     - Shared semantics captured: [list key nodes or "no new shared nodes"]
+
    ✓ Non-Functional Requirements
      - Performance: [summary]
      - Security: [summary]
@@ -432,6 +495,8 @@ Before Phase A approval, synchronize and validate planning trackers:
    - planning-mds/BLUEPRINT.md (Section 4)
    - planning-mds/architecture/decisions/ (ADRs)
    - planning-mds/architecture/SOLUTION-PATTERNS.md (patterns followed)
+   - planning-mds/knowledge-graph/feature-mappings.yaml
+   - planning-mds/knowledge-graph/canonical-nodes.yaml (if changed)
    ═══════════════════════════════════════════════════════════
    ```
 
@@ -445,6 +510,7 @@ Before Phase A approval, synchronize and validate planning trackers:
    - [ ] Workflow state machines are well-defined
    - [ ] NFRs are measurable and achievable
    - [ ] ADRs explain key architectural decisions
+   - [ ] Ontology mapping is complete and aligned with the architecture
    - [ ] SOLUTION-PATTERNS.md patterns are followed
    - [ ] No technical debt or shortcuts
    - [ ] Architecture is implementable
@@ -477,6 +543,7 @@ Before Phase A approval, synchronize and validate planning trackers:
 - [ ] Data model complete
 - [ ] API contracts clear
 - [ ] Authorization model sound
+- [ ] Ontology sync complete
 - [ ] Follows SOLUTION-PATTERNS.md
 - [ ] NFRs measurable
 - [ ] User explicitly approves
@@ -508,6 +575,7 @@ Phase B (Architect):
   ✓ Authorization model defined
   ✓ [count] workflows specified
   ✓ [count] ADRs documented
+  ✓ Ontology mapping synchronized
   ✓ SOLUTION-PATTERNS.md followed
   Status: APPROVED
 
@@ -537,6 +605,7 @@ Example: "Run the feature action for [specific feature name]"
 - [ ] All outputs exist in planning-mds/
 - [ ] No TODOs remain in BLUEPRINT.md Sections 3-4
 - [ ] SOLUTION-PATTERNS.md patterns documented and followed
+- [ ] Ontology mapping synchronized for touched feature scope
 - [ ] Ready to proceed to build action
 
 ---
@@ -546,6 +615,7 @@ Example: "Run the feature action for [specific feature name]"
 Before running plan action:
 - [ ] `planning-mds/BLUEPRINT.md` exists with Sections 0-2 (baseline context)
 - [ ] `planning-mds/features/TRACKER-GOVERNANCE.md` exists (or will be created from `agents/templates/tracker-governance-template.md` during this run)
+- [ ] `planning-mds/knowledge-graph/` exists or can be created during this run
 - [ ] Domain glossary exists or can be created
 - [ ] User is available to provide approvals at gates
 - [ ] User has clarified business requirements
@@ -634,6 +704,7 @@ User: "approve"
 
 - Plan action can be run for the entire project or individual features
 - Approval gates are mandatory - cannot skip to Phase B without Phase A approval
+- Product Manager seeds the minimal ontology stub in Phase A; Architect completes ontology bindings in Phase B
 - If requirements change mid-project, re-run plan action for affected features
 - Both agents use templates from `agents/templates/` for consistency
 - Architect must reference SOLUTION-PATTERNS.md to ensure pattern compliance

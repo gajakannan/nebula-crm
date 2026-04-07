@@ -19,10 +19,16 @@ Code Reviewer + Security
   ↓
 [APPROVAL GATE: User reviews and approves]
   ↓
+[SIGNOFF GATE: required reviewer evidence verified]
+  ↓
+[PRODUCT MANAGER CLOSEOUT: status, archive, follow-up reconciliation]
+  ↓
+[TRACKER SYNC GATE: trackers and story index validated]
+  ↓
 Feature Complete
 ```
 
-**Flow Type:** Mixed (architect-led orchestration kickoff, parallel implementation including deployability checks, parallel code+security reviews, single approval gate; AI Engineer runs when feature includes AI scope)
+**Flow Type:** Mixed (architect-led orchestration kickoff, parallel implementation including deployability checks, parallel code+security reviews, single approval gate, required signoff verification, PM closeout, and final tracker sync; AI Engineer runs when feature includes AI scope)
 
 ---
 
@@ -144,6 +150,8 @@ Mandatory preflight before implementation validation runs:
    - Application services
    - Unit tests
    - Integration tests
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (Backend Progress section, validation evidence)
+   - `planning-mds/features/F{NNNN}-{slug}/GETTING-STARTED.md` updates (key files, seed data, verification steps)
 
 #### 1b. Frontend Developer (Feature Scope)
 1. **Activate Frontend Developer agent** by reading `agents/frontend-developer/SKILL.md`
@@ -173,6 +181,8 @@ Mandatory preflight before implementation validation runs:
    - Routing updates
    - Component tests
    - UX audit evidence for this feature (command output + dark/light verification notes)
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (Frontend Progress section, validation evidence)
+   - `planning-mds/features/F{NNNN}-{slug}/GETTING-STARTED.md` updates (key files, verification steps)
 
 #### 1c. AI Engineer (Feature Scope, if AI scope)
 1. **Activate AI Engineer agent** by reading `agents/ai-engineer/SKILL.md`
@@ -193,6 +203,8 @@ Mandatory preflight before implementation validation runs:
    - `neuron/` feature implementation
    - AI tests
    - Prompt/config updates
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (AI Progress section, validation evidence)
+   - `planning-mds/features/F{NNNN}-{slug}/GETTING-STARTED.md` updates (AI runtime / setup notes)
 
 #### 1d. Quality Engineer (Feature Scope)
 1. **Activate Quality Engineer agent** by reading `agents/quality-engineer/SKILL.md`
@@ -215,6 +227,7 @@ Mandatory preflight before implementation validation runs:
    - Test plan for feature
    - E2E tests (happy path + errors)
    - Feature test coverage report
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (QE feature-level signoff entry, validation evidence paths)
 
 #### 1e. DevOps (Feature Deployability Check)
 1. **Activate DevOps agent** by reading `agents/devops/SKILL.md`
@@ -232,6 +245,7 @@ Mandatory preflight before implementation validation runs:
    - Deployment/runtime config updates (if required)
    - Feature deployability check summary with executed command evidence
    - Updated env var documentation for new feature requirements
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` updates (deployability evidence, Cross-Cutting checklist items)
 
 **Completion Criteria for Step 1:**
 - [ ] All required agents completed feature implementation (Backend, Frontend, Quality, DevOps, and AI Engineer if AI scope)
@@ -526,10 +540,10 @@ Run these review agents in parallel:
    - **If "approve with justification":**
      - Capture explicit mitigation justification for remaining high issues
      - Log decision with mitigation plan
-     - Proceed to Step 4.5 (Tracker Sync Gate)
+     - Proceed to Step 4.5 (Signoff Gate)
 
    - **If "approve":**
-     - Proceed to Step 4.5 (Tracker Sync Gate)
+     - Proceed to Step 4.5 (Signoff Gate)
 
    - **If "reject":**
      - Capture feedback
@@ -547,47 +561,7 @@ Run these review agents in parallel:
 
 ---
 
-### Step 4.5: TRACKER SYNC GATE (Mandatory)
-
-**Execution Instructions:**
-
-Before declaring feature completion, update and validate planning trackers:
-
-0. **Activate Product Manager agent** by reading `agents/product-manager/SKILL.md`
-
-1. Update feature and planning trackers:
-   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` (feature completion state)
-   - `STATUS.md` required signoff matrix + story signoff provenance entries
-   - `planning-mds/features/REGISTRY.md` (status/path transitions, including archive moves)
-   - `planning-mds/features/ROADMAP.md` (Now/Next/Later/Completed placement)
-   - `planning-mds/BLUEPRINT.md` (feature/story status labels and links, if changed)
-
-2. For completed features (`Overall Status: Done`), move the feature folder to archive:
-   - From `planning-mds/features/F{NNNN}-{slug}/`
-   - To `planning-mds/features/archive/F{NNNN}-{slug}/`
-   - Then update any path references impacted by the move (including feature-local doc links)
-
-3. Regenerate story rollup when story files changed:
-   - `python3 agents/product-manager/scripts/generate-story-index.py planning-mds/features/`
-
-4. Validate consistency:
-   - `python3 agents/product-manager/scripts/validate-trackers.py`
-
-5. If validation fails:
-   - Treat as a blocking issue
-   - Fix tracker drift and re-run validation before completion
-
-**Gate Criteria:**
-- [ ] Feature STATUS reflects final approved state
-- [ ] Product Manager closeout executed for tracker sync + archive decision
-- [ ] Completed feature folders are moved to `planning-mds/features/archive/`
-- [ ] REGISTRY/ROADMAP/BLUEPRINT are synchronized
-- [ ] STORY-INDEX regenerated if story files changed
-- [ ] Tracker validation passes
-
----
-
-### Step 4.6: SIGNOFF GATE (Mandatory)
+### Step 4.5: SIGNOFF GATE (Mandatory)
 
 **Execution Instructions:**
 
@@ -606,12 +580,65 @@ Before setting feature status to `Done` or moving to archive, verify role signof
    - Block feature closeout
    - Route back to the owning reviewer role
 4. Only after all required signoffs pass:
-   - Keep `Overall Status` as `Done` (active) or proceed with archive transition
+   - Proceed to Product Manager closeout
 
 **Gate Criteria:**
 - [ ] Every required signoff role has a passing ledger entry
 - [ ] Every required signoff includes reviewer/date/evidence
 - [ ] No `Done`/`Archived` transition occurs without passing required signoffs
+
+---
+
+### Step 4.6: PRODUCT MANAGER CLOSEOUT (Mandatory)
+
+**Execution Instructions:**
+
+1. **Activate Product Manager agent** by reading `agents/product-manager/SKILL.md`
+2. Reconcile feature closure artifacts:
+   - `planning-mds/features/F{NNNN}-{slug}/STATUS.md` (final status, deferred follow-ups, mitigation notes)
+   - `STATUS.md` required signoff matrix + story signoff provenance entries
+   - `planning-mds/features/REGISTRY.md` (status/path transitions, including archive moves)
+   - `planning-mds/features/ROADMAP.md` (Now/Next/Later/Completed placement)
+   - `planning-mds/BLUEPRINT.md` (feature/story status labels and links, if changed)
+3. For completed features (`Overall Status: Done`), move the feature folder to archive when appropriate:
+   - From `planning-mds/features/F{NNNN}-{slug}/`
+   - To `planning-mds/features/archive/F{NNNN}-{slug}/`
+   - Then update impacted feature-local links and registry paths
+4. If ontology-backed planning exists for the feature, update feature/path/status references in:
+   - `planning-mds/knowledge-graph/feature-mappings.yaml`
+5. Record any orphaned stories, deferred follow-ups, or explicit mitigation carry-overs before final validation
+
+**Completion Criteria:**
+- [ ] Product Manager closeout executed after signoff passed
+- [ ] Final feature status and archive decision recorded
+- [ ] Deferred follow-ups and mitigation notes captured
+- [ ] Ontology feature mapping updated if closeout changes feature path/status
+
+---
+
+### Step 4.7: TRACKER SYNC GATE (Mandatory)
+
+**Execution Instructions:**
+
+Validate the closeout updates before declaring feature completion:
+
+1. Regenerate story rollup when story files changed:
+   - `python3 agents/product-manager/scripts/generate-story-index.py planning-mds/features/`
+
+2. Validate consistency:
+   - `python3 agents/product-manager/scripts/validate-trackers.py`
+
+3. If validation fails:
+   - Treat as a blocking issue
+   - Fix tracker drift and re-run validation before completion
+
+**Gate Criteria:**
+- [ ] Feature STATUS reflects final approved state
+- [ ] Product Manager closeout executed before tracker validation
+- [ ] Completed feature folders are moved to `planning-mds/features/archive/`
+- [ ] REGISTRY/ROADMAP/BLUEPRINT are synchronized
+- [ ] STORY-INDEX regenerated if story files changed
+- [ ] Tracker validation passes
 
 ---
 
@@ -672,6 +699,11 @@ Security Review:
   ✓ Authorization and validation checks complete
   Status: PASS
 
+Closeout:
+  ✓ Required signoff ledger complete
+  ✓ Product Manager closeout recorded
+  ✓ Trackers and story index synchronized
+
 ═══════════════════════════════════════════════════════════
 Next Steps:
 ═══════════════════════════════════════════════════════════
@@ -701,9 +733,11 @@ Feature delivered! ✓
 - [ ] AI tests passing (if AI scope) in AI runtime container
 - [ ] Code review approved
 - [ ] Security review approved
+- [ ] Signoff gate passed for all required reviewer roles
 - [ ] All feature acceptance criteria met
 - [ ] Feature can be deployed independently
 - [ ] User decision recorded per gate rules
+- [ ] Product Manager closeout completed
 - [ ] Tracker sync gate passed (REGISTRY/ROADMAP/STORY-INDEX/BLUEPRINT/STATUS)
 
 ---
@@ -802,7 +836,7 @@ Agent Runtime: "Feature review complete. Do you approve? (approve/fix issues/rej
 
 User: "approve"
 
-Agent Runtime: "Feature complete! Customer list with pagination ready to merge."
+Agent Runtime: "Required signoffs are complete, PM closeout and tracker sync passed. Customer list with pagination is ready to merge."
 ```
 
 ### Scenario 2: Iteration After Rejection
@@ -832,7 +866,7 @@ Agent Runtime: "Do you approve now?"
 
 User: "approve"
 
-Agent Runtime: "Feature complete!"
+Agent Runtime: "Required signoffs are complete, PM closeout and tracker sync passed. Feature ready."
 ```
 
 ---
@@ -856,3 +890,4 @@ Agent Runtime: "Feature complete!"
 - Security review is part of the feature action (run `review` action separately for deeper audit scope when needed)
 - DevOps deployability check is included; use `build` action for broader infra redesign across multiple features
 - Critical findings block approval; high findings require explicit mitigation justification if approved
+- Signoff must pass before PM closeout, and PM closeout must finish before final tracker sync

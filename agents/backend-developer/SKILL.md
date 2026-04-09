@@ -149,11 +149,16 @@ Your responsibility is to implement the **service layer** (engine/) based on req
 **Required Resources:**
 - `planning-mds/BLUEPRINT.md` - Sections 4.x (architecture specs)
 - `planning-mds/architecture/` - Data model, decisions, SOLUTION-PATTERNS.md
+- `planning-mds/knowledge-graph/` - Ontology mappings and code-index bindings for scoped retrieval
 - `planning-mds/architecture/api-guidelines-profile.md` - API governance profile
 - `planning-mds/architecture/api-design-guide.md` - API design conventions
 - `planning-mds/api/` - OpenAPI contracts
 - `planning-mds/schemas/` - JSON Schema validation schemas (shared with frontend)
 - `planning-mds/workflows/` - Workflow rules and state machines
+
+When ontology coverage exists for the target feature or story, run
+`python3 scripts/kg/lookup.py <feature-or-story-id>` before broad repo reads.
+Use `--file <repo-path>` to reverse-map an existing code file back into the ontology.
 
 **Tech Stack:**
 - **Framework:** C# / .NET 10

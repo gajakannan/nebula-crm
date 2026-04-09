@@ -4,13 +4,19 @@ public class Renewal : BaseEntity
 {
     public Guid AccountId { get; set; }
     public Guid BrokerId { get; set; }
-    public Guid? SubmissionId { get; set; }
+    public Guid PolicyId { get; set; }
     public string? LineOfBusiness { get; set; }
-    public string CurrentStatus { get; set; } = "Created";
-    public DateTime RenewalDate { get; set; }
+    public string CurrentStatus { get; set; } = "Identified";
+    public DateTime PolicyExpirationDate { get; set; }
+    public DateTime TargetOutreachDate { get; set; }
     public Guid AssignedToUserId { get; set; }
+    public string? LostReasonCode { get; set; }
+    public string? LostReasonDetail { get; set; }
+    public Guid? BoundPolicyId { get; set; }
+    public Guid? RenewalSubmissionId { get; set; }
 
     public Account Account { get; set; } = default!;
     public Broker Broker { get; set; } = default!;
-    public Submission? Submission { get; set; }
+    public UserProfile AssignedToUser { get; set; } = default!;
+    public Submission? RenewalSubmission { get; set; }
 }

@@ -7,8 +7,11 @@ import { useDashboardOpportunities } from '../hooks/useDashboardOpportunities';
 import { useOpportunityFlow } from '../hooks/useOpportunityFlow';
 import { useOpportunityOutcomes } from '../hooks/useOpportunityOutcomes';
 import { useOpportunityAging } from '../hooks/useOpportunityAging';
+import type { OpportunityEntityType } from '../types';
+import { OPPORTUNITY_SCOPE_OPTIONS } from '../lib/opportunity-scope';
 import type { StoryChapter } from './storyTypes';
 import { MobilePipelineSummary } from './MobilePipelineSummary';
+import { OpportunityScopeDropdown } from './OpportunityScopeDropdown';
 import { VerticalTimeline } from './VerticalTimeline';
 
 const PERIOD_WINDOWS = [30, 90, 180, 365] as const;
@@ -22,11 +25,47 @@ const CHAPTERS: { key: StoryChapter; label: string }[] = [
 export function StoryCanvas() {
   const [periodDays, setPeriodDays] = useState<(typeof PERIOD_WINDOWS)[number]>(180);
   const [chapter, setChapter] = useState<StoryChapter>('flow');
+  const [selectedEntityTypes, setSelectedEntityTypes] = useState<OpportunityEntityType[]>(
+    OPPORTUNITY_SCOPE_OPTIONS.map((option) => option.value),
+  );
 
   const opportunitiesQuery = useDashboardOpportunities(periodDays);
-  const flowQuery = useOpportunityFlow('submission', periodDays);
-  const outcomesQuery = useOpportunityOutcomes(periodDays);
-  const agingQuery = useOpportunityAging('submission', periodDays);
+  const submissionSelected = selectedEntityTypes.includes('submission');
+  const renewalSelected = selectedEntityTypes.includes('renewal');
+  const submissionFlowQuery = useOpportunityFlow('submission', periodDays, { enabled: submissionSelected });
+  const renewalFlowQuery = useOpportunityFlow('renewal', periodDays, { enabled: renewalSelected });
+  const submissionOutcomesQuery = useOpportunityOutcomes(periodDays, ['submission'], { enabled: submissionSelected });
+  const renewalOutcomesQuery = useOpportunityOutcomes(periodDays, ['renewal'], { enabled: renewalSelected });
+  const submissionAgingQuery = useOpportunityAging('submission', periodDays, { enabled: submissionSelected });
+  const renewalAgingQuery = useOpportunityAging('renewal', periodDays, { enabled: renewalSelected });
+
+  function toggleEntityType(entityType: OpportunityEntityType) {
+    setSelectedEntityTypes((current) => {
+      if (current.includes(entityType)) {
+        if (current.length === 1) {
+          return current;
+        }
+
+        return OPPORTUNITY_SCOPE_OPTIONS
+          .map((option) => option.value)
+          .filter((value) => current.includes(value) && value !== entityType);
+      }
+
+      const next = new Set([...current, entityType]);
+      return OPPORTUNITY_SCOPE_OPTIONS
+        .map((option) => option.value)
+        .filter((value) => next.has(value));
+    });
+  }
+
+  const selectedLanes = OPPORTUNITY_SCOPE_OPTIONS
+    .filter((option) => selectedEntityTypes.includes(option.value))
+    .map((option) => ({
+      ...option,
+      flowQuery: option.value === 'submission' ? submissionFlowQuery : renewalFlowQuery,
+      outcomesQuery: option.value === 'submission' ? submissionOutcomesQuery : renewalOutcomesQuery,
+      agingQuery: option.value === 'submission' ? submissionAgingQuery : renewalAgingQuery,
+    }));
 
   function focusChapter(
     chapterIndex: number,
@@ -139,44 +178,63 @@ export function StoryCanvas() {
               );
             })}
           </div>
+
+          <div className="lg:justify-self-end">
+            <OpportunityScopeDropdown
+              selectedEntityTypes={selectedEntityTypes}
+              onToggle={toggleEntityType}
+            />
+          </div>
         </div>
       </header>
 
       <KpiCardsRow periodDays={periodDays} className="canvas-zone-tight" />
 
-      <section id="story-flow-canvas" className="canvas-section canvas-zone-default">
-        {flowQuery.isLoading && <Skeleton className="h-[320px] w-full" />}
-
-        {flowQuery.isError && (
-          <ErrorFallback
-            message="Unable to load opportunity flow"
-            onRetry={() => flowQuery.refetch()}
-          />
-        )}
-
-        {flowQuery.data && (
-          <>
-            <div className="hidden lg:block">
-              <VerticalTimeline
-                flow={flowQuery.data}
-                opportunities={opportunitiesQuery.data}
-                outcomes={outcomesQuery.data?.outcomes ?? []}
-                chapter={chapter}
-                periodDays={periodDays}
-                outcomesLoading={outcomesQuery.isLoading}
-                outcomesError={outcomesQuery.isError}
-                onRetryOutcomes={() => outcomesQuery.refetch()}
-                aging={agingQuery.data}
-              />
+      <section id="story-flow-canvas" className="canvas-section canvas-zone-default space-y-8">
+        {selectedLanes.map((lane) => (
+          <section key={lane.value} aria-label={`${lane.label} opportunity lane`} className="space-y-4">
+            <div className="flex flex-col gap-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">
+                {lane.label}
+              </p>
+              <p className="text-sm text-text-secondary">{lane.description}</p>
             </div>
-            <div className="lg:hidden">
-              <MobilePipelineSummary
-                flow={flowQuery.data}
-                outcomes={outcomesQuery.data?.outcomes ?? []}
+
+            {lane.flowQuery.isLoading && <Skeleton className="h-[320px] w-full" />}
+
+            {lane.flowQuery.isError && (
+              <ErrorFallback
+                message={`Unable to load ${lane.label.toLowerCase()} flow`}
+                onRetry={() => lane.flowQuery.refetch()}
               />
-            </div>
-          </>
-        )}
+            )}
+
+            {lane.flowQuery.data && (
+              <>
+                <div className="hidden lg:block">
+                  <VerticalTimeline
+                    flow={lane.flowQuery.data}
+                    opportunities={opportunitiesQuery.data}
+                    outcomes={lane.outcomesQuery.data?.outcomes ?? []}
+                    chapter={chapter}
+                    periodDays={periodDays}
+                    outcomesLoading={lane.outcomesQuery.isLoading}
+                    outcomesError={lane.outcomesQuery.isError}
+                    onRetryOutcomes={() => lane.outcomesQuery.refetch()}
+                    aging={lane.agingQuery.data}
+                    outcomeEntityTypes={[lane.value]}
+                  />
+                </div>
+                <div className="lg:hidden">
+                  <MobilePipelineSummary
+                    flow={lane.flowQuery.data}
+                    outcomes={lane.outcomesQuery.data?.outcomes ?? []}
+                  />
+                </div>
+              </>
+            )}
+          </section>
+        ))}
       </section>
     </section>
   );

@@ -34,13 +34,13 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
 
         var windowStart = DateTime.UtcNow.AddDays(-periodDays);
 
-        // Renewal rate: % of renewals reaching Bound out of all that exited opportunities in selected window.
+        // Renewal rate: % of renewals reaching Completed out of all exited renewals in the selected window.
         var exitedRenewals = await scopedRenewals
             .Where(r => terminalRenewalStatuses.Contains(r.CurrentStatus) && r.UpdatedAt >= windowStart)
             .ToListAsync(ct);
 
         double? renewalRate = exitedRenewals.Count > 0
-            ? Math.Round(exitedRenewals.Count(r => r.CurrentStatus == "Bound") * 100.0 / exitedRenewals.Count, 1)
+            ? Math.Round(exitedRenewals.Count(r => r.CurrentStatus == "Completed") * 100.0 / exitedRenewals.Count, 1)
             : null;
 
         // Avg turnaround: mean days from Submission.CreatedAt to first terminal transition
@@ -459,7 +459,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
                 .ToListAsync(ct),
             "program" => await (
                 from renewal in scopedRenewals
-                join submission in db.Submissions on renewal.SubmissionId equals submission.Id into submissionJoin
+                join submission in db.Submissions on renewal.RenewalSubmissionId equals submission.Id into submissionJoin
                 from submission in submissionJoin.DefaultIfEmpty()
                 join program in db.Programs on submission.ProgramId equals program.Id into programJoin
                 from program in programJoin.DefaultIfEmpty()
@@ -512,10 +512,13 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
     public async Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(
         ICurrentUserService user,
         int periodDays,
+        IReadOnlyCollection<string>? entityTypes = null,
         CancellationToken ct = default)
     {
         periodDays = NormalizePeriodDays(periodDays, 180);
         var windowStart = DateTime.UtcNow.AddDays(-periodDays);
+        var includeSubmissions = IncludesEntityType(entityTypes, "submission");
+        var includeRenewals = IncludesEntityType(entityTypes, "renewal");
 
         var submissionTerminalStatuses = await db.ReferenceSubmissionStatuses
             .Where(s => s.IsTerminal)
@@ -526,26 +529,34 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .Select(s => s.Code)
             .ToHashSetAsync(ct);
 
-        var scopedSubmissionIds = GetScopedSubmissionQuery(user).Select(submission => submission.Id);
-        var scopedRenewalIds = GetScopedRenewalQuery(user).Select(renewal => renewal.Id);
+        var scopedSubmissionIds = includeSubmissions
+            ? GetScopedSubmissionQuery(user).Select(submission => submission.Id)
+            : Enumerable.Empty<Guid>().AsQueryable();
+        var scopedRenewalIds = includeRenewals
+            ? GetScopedRenewalQuery(user).Select(renewal => renewal.Id)
+            : Enumerable.Empty<Guid>().AsQueryable();
 
-        var submissionTransitions = await db.WorkflowTransitions
-            .Where(wt =>
-                wt.WorkflowType == "Submission"
-                && scopedSubmissionIds.Contains(wt.EntityId)
-                && wt.OccurredAt >= windowStart
-                && submissionTerminalStatuses.Contains(wt.ToState))
-            .Select(wt => new ExitTransition(wt.EntityId, wt.ToState, wt.OccurredAt))
-            .ToListAsync(ct);
+        var submissionTransitions = includeSubmissions
+            ? await db.WorkflowTransitions
+                .Where(wt =>
+                    wt.WorkflowType == "Submission"
+                    && scopedSubmissionIds.Contains(wt.EntityId)
+                    && wt.OccurredAt >= windowStart
+                    && submissionTerminalStatuses.Contains(wt.ToState))
+                .Select(wt => new ExitTransition(wt.EntityId, wt.ToState, wt.OccurredAt))
+                .ToListAsync(ct)
+            : [];
 
-        var renewalTransitions = await db.WorkflowTransitions
-            .Where(wt =>
-                wt.WorkflowType == "Renewal"
-                && scopedRenewalIds.Contains(wt.EntityId)
-                && wt.OccurredAt >= windowStart
-                && renewalTerminalStatuses.Contains(wt.ToState))
-            .Select(wt => new ExitTransition(wt.EntityId, wt.ToState, wt.OccurredAt))
-            .ToListAsync(ct);
+        var renewalTransitions = includeRenewals
+            ? await db.WorkflowTransitions
+                .Where(wt =>
+                    wt.WorkflowType == "Renewal"
+                    && scopedRenewalIds.Contains(wt.EntityId)
+                    && wt.OccurredAt >= windowStart
+                    && renewalTerminalStatuses.Contains(wt.ToState))
+                .Select(wt => new ExitTransition(wt.EntityId, wt.ToState, wt.OccurredAt))
+                .ToListAsync(ct)
+            : [];
 
         var firstSubmissionExits = submissionTransitions
             .GroupBy(t => t.EntityId)
@@ -559,14 +570,14 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         var submissionIds = firstSubmissionExits.Select(e => e.EntityId).ToList();
         var renewalIds = firstRenewalExits.Select(e => e.EntityId).ToList();
 
-        var submissionCreatedAt = submissionIds.Count == 0
+        var submissionCreatedAt = !includeSubmissions || submissionIds.Count == 0
             ? new Dictionary<Guid, DateTime>()
             : await GetScopedSubmissionQuery(user)
                 .Where(s => submissionIds.Contains(s.Id))
                 .Select(s => new { s.Id, s.CreatedAt })
                 .ToDictionaryAsync(s => s.Id, s => s.CreatedAt, ct);
 
-        var renewalCreatedAt = renewalIds.Count == 0
+        var renewalCreatedAt = !includeRenewals || renewalIds.Count == 0
             ? new Dictionary<Guid, DateTime>()
             : await GetScopedRenewalQuery(user)
                 .Where(r => renewalIds.Contains(r.Id))
@@ -634,6 +645,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
         ICurrentUserService user,
         string outcomeKey,
         int periodDays,
+        IReadOnlyCollection<string>? entityTypes = null,
         CancellationToken ct = default)
     {
         periodDays = NormalizePeriodDays(periodDays, 180);
@@ -643,9 +655,15 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             throw new ArgumentOutOfRangeException(nameof(outcomeKey), "Unsupported outcome key.");
 
         var windowStart = DateTime.UtcNow.AddDays(-periodDays);
+        var includeSubmissions = IncludesEntityType(entityTypes, "submission");
+        var includeRenewals = IncludesEntityType(entityTypes, "renewal");
 
-        var submissionItems = await GetOutcomeSubmissionItemsAsync(user, normalizedOutcomeKey, windowStart, ct);
-        var renewalItems = await GetOutcomeRenewalItemsAsync(user, normalizedOutcomeKey, windowStart, ct);
+        var submissionItems = includeSubmissions
+            ? await GetOutcomeSubmissionItemsAsync(user, normalizedOutcomeKey, windowStart, ct)
+            : [];
+        var renewalItems = includeRenewals
+            ? await GetOutcomeRenewalItemsAsync(user, normalizedOutcomeKey, windowStart, ct)
+            : [];
 
         var combined = submissionItems
             .Concat(renewalItems)
@@ -797,11 +815,11 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             ("submission", "declined") => ["Declined"],
             ("submission", "expired") => ["Expired"],
             ("submission", "lost_competitor") => ["Lost", "Withdrawn"],
-            ("renewal", "bound") => ["Bound"],
-            ("renewal", "no_quote") => ["NotRenewed"],
+            ("renewal", "bound") => ["Completed"],
+            ("renewal", "no_quote") => [],
             ("renewal", "declined") => [],
-            ("renewal", "expired") => ["Expired", "Lapsed"],
-            ("renewal", "lost_competitor") => ["Lost", "Withdrawn"],
+            ("renewal", "expired") => [],
+            ("renewal", "lost_competitor") => ["Lost"],
             _ => [],
         };
 
@@ -814,14 +832,13 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             ("submission", "Expired") => "expired",
             ("submission", "Lost") => "lost_competitor",
             ("submission", "Withdrawn") => "lost_competitor",
-            ("renewal", "Bound") => "bound",
-            ("renewal", "NotRenewed") => "no_quote",
-            ("renewal", "Expired") => "expired",
-            ("renewal", "Lapsed") => "expired",
+            ("renewal", "Completed") => "bound",
             ("renewal", "Lost") => "lost_competitor",
-            ("renewal", "Withdrawn") => "lost_competitor",
             _ => null,
         };
+
+    private static bool IncludesEntityType(IReadOnlyCollection<string>? entityTypes, string entityType) =>
+        entityTypes is null || entityTypes.Count == 0 || entityTypes.Contains(entityType, StringComparer.OrdinalIgnoreCase);
 
     public async Task<IReadOnlyList<NudgeCardDto>> GetNudgesAsync(Guid userId, CancellationToken ct = default)
     {
@@ -911,21 +928,21 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
 
         if (nudges.Count >= 10) return nudges.Take(10).ToList();
 
-        // Priority 3: Upcoming renewals assigned to this user (within 14 days, non-terminal).
+        // Priority 3: Upcoming renewals assigned to this user (expiring within 14 days, non-terminal).
         // Scoped to AssignedToUserId — only renewals the user owns are surfaced.
         var fourteenDaysFromNow = today.AddDays(14);
         var upcomingRenewals = await db.Renewals
             .Where(r => r.AssignedToUserId == userId
                 && !terminalRenewalStatuses.Contains(r.CurrentStatus)
-                && r.RenewalDate >= today && r.RenewalDate <= fourteenDaysFromNow)
-            .OrderBy(r => r.RenewalDate)
-            .Select(r => new { r.Id, r.CurrentStatus, AccountName = r.Account.Name, r.RenewalDate })
+                && r.PolicyExpirationDate >= today && r.PolicyExpirationDate <= fourteenDaysFromNow)
+            .OrderBy(r => r.PolicyExpirationDate)
+            .Select(r => new { r.Id, r.CurrentStatus, AccountName = r.Account.Name, r.PolicyExpirationDate })
             .Take(10 - nudges.Count)
             .ToListAsync(ct);
 
         foreach (var ren in upcomingRenewals)
         {
-            var daysUntil = (int)(ren.RenewalDate - today).TotalDays;
+            var daysUntil = (int)(ren.PolicyExpirationDate - today).TotalDays;
             nudges.Add(new NudgeCardDto(
                 "UpcomingRenewal", $"Renewal for {ren.AccountName}",
                 $"Due in {daysUntil} day{(daysUntil != 1 ? "s" : "")}",
@@ -1193,7 +1210,7 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
             .Where(submission => submission.ProgramId.HasValue && managedProgramIds.Contains(submission.ProgramId.Value))
             .Select(submission => submission.BrokerId)
             .Union(db.Renewals
-                .Where(renewal => renewal.SubmissionId.HasValue && programScopedSubmissionIds.Contains(renewal.SubmissionId.Value))
+                .Where(renewal => renewal.RenewalSubmissionId.HasValue && programScopedSubmissionIds.Contains(renewal.RenewalSubmissionId.Value))
                 .Select(renewal => renewal.BrokerId))
             .Union(db.Brokers
                 .Where(broker => broker.PrimaryProgramId.HasValue && managedProgramIds.Contains(broker.PrimaryProgramId.Value))
@@ -1270,8 +1287,8 @@ public class DashboardRepository(AppDbContext db) : IDashboardRepository
                 && renewal.Broker.BrokerRegions.Any(region => normalizedRegions.Contains(region.Region)))
             || (includeManagedBroker && renewal.Broker.ManagedByUserId == user.UserId)
             || (includeManagedProgram
-                && renewal.SubmissionId.HasValue
-                && programScopedSubmissionIds.Contains(renewal.SubmissionId.Value)));
+                && renewal.RenewalSubmissionId.HasValue
+                && programScopedSubmissionIds.Contains(renewal.RenewalSubmissionId.Value)));
     }
 
     private IQueryable<Renewal> GetWindowedScopedRenewalQuery(ICurrentUserService user, DateTime windowStart) =>

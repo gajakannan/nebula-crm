@@ -1,20 +1,24 @@
 import { Skeleton } from '@/components/ui/Skeleton';
 import { OpportunityMiniCard } from './OpportunityMiniCard';
 import { useOpportunityOutcomeItems } from '../hooks/useOpportunityOutcomeItems';
+import type { OpportunityEntityType } from '../types';
 
 interface OpportunityOutcomePopoverProps {
   outcomeKey: string;
   periodDays: number;
+  entityTypes?: OpportunityEntityType[];
 }
 
 export function OpportunityOutcomePopoverContent({
   outcomeKey,
   periodDays,
+  entityTypes,
 }: OpportunityOutcomePopoverProps) {
   const { data, isLoading, isError } = useOpportunityOutcomeItems(
     outcomeKey,
     periodDays,
     true,
+    entityTypes,
   );
 
   if (isLoading) {
@@ -42,4 +46,3 @@ export function OpportunityOutcomePopoverContent({
     </div>
   );
 }
-

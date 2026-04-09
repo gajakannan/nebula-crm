@@ -281,7 +281,7 @@ Provide an at-a-glance operational command center on login. Surfaces the most ur
 |------|-------|-------------|------|-------------|
 | Active Brokers | "Active Brokers" | Broker table | count | COUNT WHERE Status = Active, ABAC-scoped |
 | Open Submissions | "Open Submissions" | Submission table | count | COUNT WHERE CurrentStatus NOT IN (Bound, Declined, Withdrawn), ABAC-scoped |
-| Renewal Rate | "Renewal Rate" | Renewal table | % | (Bound / (Bound + Lost + Lapsed)) * 100, trailing 90 days, ABAC-scoped |
+| Renewal Rate | "Renewal Rate" | Renewal table | % | (Completed / (Completed + Lost)) * 100, trailing 90 days, ABAC-scoped |
 | Avg Turnaround | "Avg Turnaround" | Submission + WorkflowTransition | days | AVG(first terminal transition OccurredAt - Submission.CreatedAt), trailing 90 days |
 
 **Layout:** 4 cards in a horizontal row, equal width. Responsive: 2x2 grid on tablet, 2x2 on mobile.
@@ -325,11 +325,13 @@ Provide an at-a-glance operational command center on login. Surfaces the most ur
 
 | Stage Group | Statuses | Color |
 |-------------|----------|-------|
-| Intake | Received, Created | Slate/Gray |
-| Triage | Triaging, Early | Blue |
-| Waiting | WaitingOnBroker, OutreachStarted | Amber |
+| Intake | Received, Identified | Slate/Gray |
+| Triage | Triaging | Blue |
+| Waiting | WaitingOnBroker, Outreach | Amber |
 | Review | ReadyForUWReview, InReview | Indigo |
 | Decision | Quoted, BindRequested | Green |
+| Won | Bound, Completed | Emerald |
+| Lost | Declined, Withdrawn, Lost | Rose |
 
 **Mini-card fields:**
 

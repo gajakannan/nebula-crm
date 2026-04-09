@@ -12,8 +12,8 @@ public interface IDashboardRepository
     Task<OpportunityBreakdownDto> GetOpportunityBreakdownAsync(ICurrentUserService user, string entityType, string status, string groupBy, int periodDays, CancellationToken ct = default);
     Task<OpportunityAgingDto> GetOpportunityAgingAsync(ICurrentUserService user, string entityType, int periodDays, CancellationToken ct = default);
     Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(ICurrentUserService user, int periodDays, CancellationToken ct = default);
-    Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(ICurrentUserService user, int periodDays, CancellationToken ct = default);
-    Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(ICurrentUserService user, string outcomeKey, int periodDays, CancellationToken ct = default);
+    Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(ICurrentUserService user, int periodDays, IReadOnlyCollection<string>? entityTypes = null, CancellationToken ct = default);
+    Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(ICurrentUserService user, string outcomeKey, int periodDays, IReadOnlyCollection<string>? entityTypes = null, CancellationToken ct = default);
     Task<IReadOnlyList<NudgeCardDto>> GetNudgesAsync(Guid userId, CancellationToken ct = default);
     /// <summary>
     /// BrokerUser variant: returns only OverdueTask nudges linked to the specified broker IDs (F0009 §14).

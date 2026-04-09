@@ -205,7 +205,14 @@ When a feature reaches final approved completion (`Done` with no remaining block
 - `planning-mds/features/STORY-INDEX.md` (auto-generated story tracker)
 - `planning-mds/features/TRACKER-GOVERNANCE.md` (tracker sync contract)
 - `planning-mds/domain/` (solution-specific domain references)
+- `planning-mds/knowledge-graph/` (ontology mappings, code-index bindings, coverage report)
 - `planning-mds/examples/` (solution-specific examples)
+
+When ontology coverage exists for the target feature or story, run
+`python3 scripts/kg/lookup.py <feature-or-story-id>` before broad repo reads.
+Use `--file <repo-path>` to reverse-map an existing code file back into the ontology.
+Treat ontology mappings as compressed retrieval context only; raw feature, glossary,
+ADR, API, and schema artifacts still win on conflict.
 
 **Templates:**
 - `agents/templates/feature-template.md` (PRD template)

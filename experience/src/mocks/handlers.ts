@@ -14,6 +14,9 @@ import {
   opportunityOutcomesFixture,
   opportunityAgingFixture,
   programReferenceFixture,
+  renewalAgingFixture,
+  renewalFlowFixture,
+  renewalOutcomesFixture,
   searchUsers,
   transitionSubmission,
   updateSubmission,
@@ -38,16 +41,27 @@ export const handlers = [
     return HttpResponse.json(dashboardOpportunitiesFixture)
   }),
 
-  http.get(apiUrl('/dashboard/opportunities/flow'), () => {
-    return HttpResponse.json(submissionFlowFixture)
+  http.get(apiUrl('/dashboard/opportunities/flow'), ({ request }) => {
+    const entityType = new URL(request.url).searchParams.get('entityType')
+    return HttpResponse.json(entityType === 'renewal' ? renewalFlowFixture : submissionFlowFixture)
   }),
 
-  http.get(apiUrl('/dashboard/opportunities/outcomes'), () => {
+  http.get(apiUrl('/dashboard/opportunities/outcomes'), ({ request }) => {
+    const entityTypes = new URL(request.url).searchParams.get('entityTypes')
+    if (entityTypes === 'renewal') {
+      return HttpResponse.json(renewalOutcomesFixture)
+    }
+
+    if (entityTypes === 'submission') {
+      return HttpResponse.json(opportunityOutcomesFixture)
+    }
+
     return HttpResponse.json(opportunityOutcomesFixture)
   }),
 
-  http.get(apiUrl('/dashboard/opportunities/aging'), () => {
-    return HttpResponse.json(opportunityAgingFixture)
+  http.get(apiUrl('/dashboard/opportunities/aging'), ({ request }) => {
+    const entityType = new URL(request.url).searchParams.get('entityType')
+    return HttpResponse.json(entityType === 'renewal' ? renewalAgingFixture : opportunityAgingFixture)
   }),
 
   http.get(apiUrl('/dashboard/opportunities/:entityType/:status/breakdown'), ({ params, request }) => {

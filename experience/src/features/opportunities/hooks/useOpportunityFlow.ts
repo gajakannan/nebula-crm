@@ -5,6 +5,7 @@ import type { OpportunityEntityType, OpportunityFlowDto } from '../types';
 export function useOpportunityFlow(
   entityType: OpportunityEntityType,
   periodDays = 180,
+  options?: { enabled?: boolean },
 ) {
   return useQuery({
     queryKey: ['dashboard', 'opportunities', entityType, 'flow', periodDays],
@@ -12,5 +13,6 @@ export function useOpportunityFlow(
       api.get<OpportunityFlowDto>(
         `/dashboard/opportunities/flow?entityType=${entityType}&periodDays=${periodDays}`,
       ),
+    enabled: options?.enabled ?? true,
   });
 }

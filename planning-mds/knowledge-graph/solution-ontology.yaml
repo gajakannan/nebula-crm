@@ -22,9 +22,17 @@ ownership:
   architect:
     owns:
       - entity
+      - glossary_term
       - workflow
       - workflow_state
       - capability
+      - endpoint
+      - ui_route
+      - event
+      - config_key
+      - migration
+      - role
+      - policy_rule
       - schema
       - api_contract
       - adr
@@ -50,8 +58,32 @@ node_types:
   - id: workflow_state
     description: Canonical state within a declared workflow.
     owner: architect
+  - id: glossary_term
+    description: Shared business vocabulary term anchored in the domain glossary.
+    owner: architect
   - id: capability
     description: Shared runtime, UI, operational, or platform capability used across features.
+    owner: architect
+  - id: endpoint
+    description: Shared API endpoint surface used for build-time routing into handlers and tests.
+    owner: architect
+  - id: ui_route
+    description: Shared frontend route or page surface used for UI routing and page-level work.
+    owner: architect
+  - id: event
+    description: Shared audit, timeline, or workflow event emitted by solution behavior.
+    owner: architect
+  - id: config_key
+    description: Shared runtime configuration key or published operational configuration surface.
+    owner: architect
+  - id: migration
+    description: Database migration or schema-shaping implementation artifact tied to feature rollout.
+    owner: architect
+  - id: role
+    description: Authorization role enforced by identity and policy artifacts.
+    owner: architect
+  - id: policy_rule
+    description: Resource and action authorization rule governed by policy artifacts.
     owner: architect
   - id: schema
     description: Shared JSON Schema contract.
@@ -82,11 +114,11 @@ edge_types:
     description: Story is scoped under a feature.
   - id: affects
     from: [feature, story]
-    to: [entity, workflow, workflow_state, capability]
+    to: [entity, glossary_term, workflow, workflow_state, capability, endpoint, ui_route, event, config_key, migration]
     description: Target scope changes or depends on the behavior of the destination node.
   - id: governs
     from: [adr]
-    to: [entity, workflow, workflow_state, capability, schema, api_contract, feature, story]
+    to: [entity, glossary_term, workflow, workflow_state, capability, endpoint, ui_route, event, config_key, migration, role, policy_rule, schema, api_contract, feature, story]
     description: ADR is the governing architectural decision for the destination node.
   - id: uses_schema
     from: [feature, story]
@@ -106,8 +138,16 @@ edge_types:
     description: Allowed transition within a single workflow.
   - id: depends_on
     from: [feature, story]
-    to: [feature, story, entity, workflow, capability]
+    to: [feature, story, entity, glossary_term, workflow, capability, endpoint, ui_route, event, config_key, migration, role, policy_rule]
     description: Scope requires the destination node or scope to exist or stay aligned.
+  - id: restricted_to_role
+    from: [feature, story, capability]
+    to: [role]
+    description: Scope is primarily performed by or explicitly constrained to the destination role.
+  - id: enforced_by_policy
+    from: [feature, story, capability]
+    to: [policy_rule]
+    description: Scope is gated or shaped by the destination authorization rule.
   - id: validated_by
     from: [feature, story]
     to: [evidence]
@@ -128,6 +168,11 @@ id_patterns:
     examples:
       - workflow:submission
       - workflow:renewal
+  - type: glossary_term
+    pattern: glossary_term:<slug>
+    examples:
+      - glossary_term:quote
+      - glossary_term:line-of-business
   - type: workflow_state
     pattern: state:<workflow-slug>:<state-slug>
     examples:
@@ -143,6 +188,41 @@ id_patterns:
     examples:
       - capability:dashboard-home
       - capability:frontend-quality-gates
+  - type: endpoint
+    pattern: endpoint:<slug>
+    examples:
+      - endpoint:submission-transition
+      - endpoint:dashboard-kpis
+  - type: ui_route
+    pattern: ui_route:<slug>
+    examples:
+      - ui_route:submissions-list
+      - ui_route:dashboard-home
+  - type: event
+    pattern: event:<slug>
+    examples:
+      - event:submission-created
+      - event:renewal-transitioned
+  - type: config_key
+    pattern: config_key:<slug>
+    examples:
+      - config_key:workflow-sla-thresholds
+      - config_key:oidc-authority
+  - type: migration
+    pattern: migration:<slug>
+    examples:
+      - migration:f0006-submission-intake-columns
+      - migration:f0007-renewal-entity-shape-reconcile
+  - type: role
+    pattern: role:<slug>
+    examples:
+      - role:distribution-user
+      - role:broker-user
+  - type: policy_rule
+    pattern: policy_rule:<slug>
+    examples:
+      - policy_rule:renewal-transition
+      - policy_rule:dashboard-nudge-read
   - type: api_contract
     pattern: api:<slug>
     examples:
@@ -166,6 +246,9 @@ id_patterns:
 
 invariants:
   - ADRs, schemas, workflows, workflow states, capabilities, API contracts, and canonical entities are shared solution nodes; features and stories only reference them.
+  - Endpoints, UI routes, events, config keys, migrations, and glossary terms exist to tighten build-time routing; they should stay compact and point to authoritative docs or code surfaces instead of duplicating them.
+  - Persona is a planning-facing actor label; role and policy_rule are enforcement-facing authorization nodes.
+  - Glossary terms complement raw glossary definitions for retrieval and naming consistency; they do not replace `planning-mds/domain/glossary.md`.
   - Workflow states belong to workflows, not to features.
   - A feature or story must not appear to own an ADR, capability, or schema.
   - The ontology should store compact typed links, not re-copy whole PRDs or ADR text.
@@ -176,13 +259,19 @@ retrieval_contract:
     - Load solution-ontology.yaml first.
     - Load canonical-nodes.yaml second.
     - Load only the matching feature or story entry from feature-mappings.yaml.
+    - Load code-index.yaml when implementation file routing or reverse lookup is needed.
     - Expand one hop into linked canonical nodes.
     - Open raw feature, ADR, API, or schema files only when linked, changed, or needed for detail or verification.
   minimum_prompt_block:
     - target
     - affected_nodes
+    - restricted_to_role
+    - enforced_by_policy
     - governed_by
     - uses_schema
     - uses_api_contract
     - depends_on
+    - validated_by
+    - supersedes
+    - code_paths
     - source_precedence

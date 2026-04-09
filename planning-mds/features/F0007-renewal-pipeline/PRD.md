@@ -308,4 +308,4 @@ Stories are colocated in this feature folder as `F0007-S{NNNN}-{slug}.md`.
 
 ## Workflow State Note
 
-This PRD defines the refined renewal workflow states as: Identified, Outreach, InReview, Quoted, Completed, Lost. The BLUEPRINT Section 4.3 contains earlier placeholder states (Created, Early, OutreachStarted, InReview, Quoted, Bound, Lost, Lapsed). The architect should reconcile BLUEPRINT Section 4.3 with this refined PRD during the Phase B update for F0007.
+This PRD defines the authoritative renewal workflow states as: Identified, Outreach, InReview, Quoted, Completed, Lost. These states replace the earlier placeholder lifecycle (Created, Early, OutreachStarted, InReview, Quoted, Bound, Lost, Lapsed) that existed in early baseline planning and runtime scaffolding.

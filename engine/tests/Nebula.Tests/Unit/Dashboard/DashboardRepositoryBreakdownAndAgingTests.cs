@@ -85,15 +85,15 @@ public class DashboardRepositoryBreakdownAndAgingTests
         db.Submissions.AddRange(submissionA, submissionB);
 
         db.Renewals.AddRange(
-            NewRenewal(account.Id, brokerA.Id, submissionA.Id, userA.Id, "Created", "Cyber", now.AddDays(-5)),
-            NewRenewal(account.Id, brokerB.Id, submissionB.Id, userB.Id, "Created", null, now.AddDays(-4)),
-            NewRenewal(account.Id, brokerB.Id, null, userB.Id, "Created", "ProfessionalLiability", now.AddDays(-3)));
+            NewRenewal(account.Id, brokerA.Id, submissionA.Id, userA.Id, "Identified", "Cyber", now.AddDays(-5)),
+            NewRenewal(account.Id, brokerB.Id, submissionB.Id, userB.Id, "Identified", null, now.AddDays(-4)),
+            NewRenewal(account.Id, brokerB.Id, null, userB.Id, "Identified", "ProfessionalLiability", now.AddDays(-3)));
 
         await db.SaveChangesAsync();
 
         var repository = new DashboardRepository(db);
         var currentUser = new TestCurrentUserService(Guid.NewGuid(), ["Admin"], ["West"]);
-        var programBreakdown = await repository.GetOpportunityBreakdownAsync(currentUser, "renewal", "Created", "program", 180);
+        var programBreakdown = await repository.GetOpportunityBreakdownAsync(currentUser, "renewal", "Identified", "program", 180);
 
         programBreakdown.Total.ShouldBe(3);
         programBreakdown.Groups.ShouldContain(g => g.Key == "Property Shield" && g.Label == "Property Shield" && g.Count == 1);
@@ -322,7 +322,7 @@ public class DashboardRepositoryBreakdownAndAgingTests
     private static Renewal NewRenewal(
         Guid accountId,
         Guid brokerId,
-        Guid? submissionId,
+        Guid? renewalSubmissionId,
         Guid assignedToUserId,
         string status,
         string? lineOfBusiness,
@@ -331,10 +331,12 @@ public class DashboardRepositoryBreakdownAndAgingTests
         Id = Guid.NewGuid(),
         AccountId = accountId,
         BrokerId = brokerId,
-        SubmissionId = submissionId,
+        PolicyId = Guid.NewGuid(),
+        RenewalSubmissionId = renewalSubmissionId,
         LineOfBusiness = lineOfBusiness,
         CurrentStatus = status,
-        RenewalDate = DateTime.UtcNow.Date.AddDays(30),
+        PolicyExpirationDate = DateTime.UtcNow.Date.AddDays(30),
+        TargetOutreachDate = DateTime.UtcNow.Date.AddDays(-60),
         AssignedToUserId = assignedToUserId,
         CreatedAt = createdAt,
         UpdatedAt = DateTime.UtcNow,

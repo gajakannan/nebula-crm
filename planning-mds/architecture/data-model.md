@@ -452,7 +452,7 @@ These query patterns document how dashboard widgets access existing entities def
 |--------|--------------|---------------|
 | Active Brokers | `SELECT COUNT(*) FROM Brokers WHERE Status = 'Active' AND IsDeleted = false` + ABAC scope | `IX_Brokers_Status` (exists) |
 | Open Submissions | `SELECT COUNT(*) FROM Submissions WHERE CurrentStatus NOT IN ('Bound','Declined','Withdrawn')` + ABAC scope | `IX_Submissions_CurrentStatus` (new) |
-| Renewal Rate | `SELECT COUNT(CASE WHEN CurrentStatus='Bound') / COUNT(*) FROM Renewals WHERE CurrentStatus IN ('Bound','Lost','Lapsed') AND updated_at > now()-90d` + ABAC scope | `IX_Renewals_CurrentStatus_UpdatedAt` (new) |
+| Renewal Rate | `SELECT COUNT(CASE WHEN CurrentStatus='Completed') / COUNT(*) FROM Renewals WHERE CurrentStatus IN ('Completed','Lost') AND updated_at > now()-90d` + ABAC scope | `IX_Renewals_CurrentStatus_UpdatedAt` (new) |
 | Avg Turnaround | `SELECT AVG(wt.OccurredAt - s.CreatedAt) FROM Submissions s JOIN WorkflowTransition wt ON ... WHERE wt.ToState IN ('Bound','Declined','Withdrawn') AND wt.OccurredAt > now()-90d` | `IX_WorkflowTransition_EntityId_OccurredAt` (new) |
 
 ### 2.2 Pipeline Summary Queries
@@ -470,7 +470,7 @@ GROUP BY CurrentStatus
 ```sql
 SELECT CurrentStatus, COUNT(*)
 FROM Renewals
-WHERE CurrentStatus NOT IN ('Bound', 'Lost', 'Lapsed')
+WHERE CurrentStatus NOT IN ('Completed', 'Lost')
   -- + ABAC scope filter
 GROUP BY CurrentStatus
 ```
@@ -536,7 +536,9 @@ These indexes are required for dashboard query performance. They do not change a
 | Submissions | `IX_Submissions_AssignedToUserId_CurrentStatus` | (AssignedToUserId, CurrentStatus) | B-tree | Assigned-scope pipeline + KPI counts |
 | Renewals | `IX_Renewals_CurrentStatus` | (CurrentStatus) | B-tree | KPI renewal rate, pipeline grouping |
 | Renewals | `IX_Renewals_AssignedToUserId_CurrentStatus` | (AssignedToUserId, CurrentStatus) | B-tree | Assigned-scope pipeline + KPI counts |
-| Renewals | `IX_Renewals_RenewalDate_Status` | (RenewalDate, CurrentStatus) | B-tree | Nudge: upcoming renewals |
+| Renewals | `IX_Renewals_PolicyId_Active` | (PolicyId) WHERE IsDeleted = false AND CurrentStatus NOT IN ('Completed', 'Lost') | Unique partial B-tree | One active renewal per policy |
+| Renewals | `IX_Renewals_PolicyExpirationDate_CurrentStatus` | (PolicyExpirationDate, CurrentStatus) | B-tree | Nudge: upcoming renewals |
+| Renewals | `IX_Renewals_TargetOutreachDate` | (TargetOutreachDate) WHERE IsDeleted = false AND CurrentStatus = 'Identified' | Partial B-tree | Overdue/approaching renewal queries |
 | WorkflowTransition | `IX_WT_EntityId_OccurredAt` | (EntityId, OccurredAt DESC) | B-tree | DaysInStatus computation, avg turnaround |
 | ActivityTimelineEvent | `IX_ATE_EntityType_OccurredAt` | (EntityType, OccurredAt DESC) | B-tree | Broker activity feed |
 | Brokers | `IX_Brokers_ManagedByUserId` | (ManagedByUserId) | B-tree | RelationshipManager scope |

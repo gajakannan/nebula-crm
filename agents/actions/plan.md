@@ -433,6 +433,8 @@ touched planning scope:
    - Referenced IDs exist
    - Referenced paths exist
    - No stale or contradictory bindings remain for the touched feature
+   - Refresh the coverage report: `python3 scripts/kg/validate.py --write-coverage-report`
+   - Run `python3 scripts/kg/validate.py` — it MUST exit 0 before the gate passes (stale `coverage-report.yaml`, missing paths, unknown refs, or uncovered feature dirs will fail the gate)
 
 **Gate Criteria:**
 - [ ] Target feature has a completed ontology mapping
@@ -440,6 +442,7 @@ touched planning scope:
 - [ ] Mapping references resolve to real IDs and paths
 - [ ] Ontology does not contradict raw planning/architecture artifacts
 - [ ] Architect has finished ontology updates before plan closeout
+- [ ] `python3 scripts/kg/validate.py` exits 0 (coverage report fresh, no integrity errors)
 
 ---
 

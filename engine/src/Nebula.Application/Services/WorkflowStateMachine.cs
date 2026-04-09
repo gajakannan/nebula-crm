@@ -20,15 +20,10 @@ public static class WorkflowStateMachine
 
     private static readonly Dictionary<string, HashSet<string>> RenewalTransitions = new()
     {
-        ["Created"] = ["Early", "DataReview"],
-        ["Early"] = ["DataReview", "OutreachStarted"],
-        ["DataReview"] = ["OutreachStarted", "WaitingOnBroker", "InReview"],
-        ["OutreachStarted"] = ["WaitingOnBroker", "InReview", "Quoted"],
-        ["WaitingOnBroker"] = ["DataReview", "InReview", "Quoted"],
-        ["InReview"] = ["Quoted", "Negotiation"],
-        ["Quoted"] = ["Negotiation", "BindRequested", "Bound"],
-        ["Negotiation"] = ["Quoted", "BindRequested", "Bound"],
-        ["BindRequested"] = ["Bound"],
+        ["Identified"] = ["Outreach"],
+        ["Outreach"] = ["InReview"],
+        ["InReview"] = ["Quoted", "Lost"],
+        ["Quoted"] = ["Completed", "Lost"],
     };
 
     public static bool IsValidTransition(string workflowType, string from, string to) =>

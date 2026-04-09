@@ -157,6 +157,7 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
 - `planning-mds/features/REGISTRY.md` - feature state/path inventory
 - `planning-mds/features/ROADMAP.md` - active sequencing
 - `planning-mds/domain/` - Solution-specific domain knowledge
+- `planning-mds/knowledge-graph/` - Ontology mappings, code-index bindings, and coverage report
 - `planning-mds/examples/architecture/` - Solution-specific architecture examples
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Solution-specific architectural patterns
 - `planning-mds/architecture/api-guidelines-profile.md` - API governance profile (routing, status semantics, error media type)
@@ -165,6 +166,12 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
 - `agents/backend-developer/SKILL.md` - Understand backend tech stack and constraints
 - `agents/frontend-developer/SKILL.md` - Understand frontend tech stack and patterns
 - `agents/ai-engineer/SKILL.md` - Understand AI layer capabilities and integration points
+
+When ontology coverage exists for the target feature or story, run
+`python3 scripts/kg/lookup.py <feature-or-story-id>` before broad repo reads.
+Use `--file <repo-path>` to reverse-map an existing code file back into the ontology.
+Treat ontology mappings as compressed retrieval context only; raw feature, glossary,
+ADR, API, and schema artifacts still win on conflict.
 
 ## References
 

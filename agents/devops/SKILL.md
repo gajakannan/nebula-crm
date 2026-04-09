@@ -298,7 +298,12 @@ Phase 3: Implementation (Generate Configs)
 **Required Resources:**
 - `planning-mds/BLUEPRINT.md` - Tech stack, deployment requirements
 - `planning-mds/architecture/` - Architecture, NFRs
+- `planning-mds/knowledge-graph/` - Ontology mappings and code-index bindings for scoped retrieval
 - Source code (to containerize and deploy)
+
+When ontology coverage exists for the target feature or story, run
+`python3 scripts/kg/lookup.py <feature-or-story-id>` before broad repo reads.
+Use `--file <repo-path>` to reverse-map an existing code file back into the ontology.
 
 **Runtime Stack Baseline:**
 - Keep deployments open-source by default (Docker, Compose, GitHub Actions/GitLab CI, PostgreSQL, Prometheus/Grafana/Loki).

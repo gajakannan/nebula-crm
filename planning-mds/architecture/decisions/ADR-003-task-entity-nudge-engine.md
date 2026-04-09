@@ -96,7 +96,7 @@ Nudge logic runs **server-side** in a single endpoint (`GET /dashboard/nudges`).
 |------|-------|-------|
 | MAX_NUDGES | 3 | Maximum cards returned |
 | STALE_THRESHOLD_DAYS | 6 | Submissions with DaysInCurrentStatus >= 6 are stale (i.e. > 5 full days) |
-| RENEWAL_WINDOW_DAYS | 14 | Inclusive: today <= RenewalDate <= today + 14 |
+| RENEWAL_WINDOW_DAYS | 14 | Inclusive: today <= PolicyExpirationDate <= today + 14 |
 | CANDIDATE_LIMIT | 3 | Max candidates fetched per nudge type |
 
 #### Step 1: Execute three queries in parallel (all ABAC-scoped)
@@ -148,18 +148,18 @@ LIMIT 3
 
 **c. Upcoming renewals:**
 ```sql
-SELECT r.Id, r.CurrentStatus, r.RenewalDate,
+SELECT r.Id, r.CurrentStatus, r.PolicyExpirationDate,
        COALESCE(a.Name, b.LegalName) AS EntityName,
-       (r.RenewalDate - @today) AS DaysUntilRenewal
+       (r.PolicyExpirationDate - @today) AS DaysUntilRenewal
 FROM Renewals r
   LEFT JOIN Accounts a ON r.AccountId = a.Id
   LEFT JOIN Brokers b ON r.BrokerId = b.Id
-WHERE r.RenewalDate >= @today                -- inclusive lower bound (today counts)
-  AND r.RenewalDate <= @today + 14           -- inclusive upper bound (14 days out counts)
-  AND r.CurrentStatus IN ('Created', 'Early')
+WHERE r.PolicyExpirationDate >= @today       -- inclusive lower bound (today counts)
+  AND r.PolicyExpirationDate <= @today + 14  -- inclusive upper bound (14 days out counts)
+  AND r.CurrentStatus NOT IN ('Completed', 'Lost')
   AND r.IsDeleted = false
   -- + ABAC scope filter
-ORDER BY r.RenewalDate ASC,                  -- soonest first
+ORDER BY r.PolicyExpirationDate ASC,         -- soonest first
          r.Id ASC                            -- deterministic tie-break
 LIMIT 3
 ```
@@ -223,9 +223,9 @@ function mergeNudges(overdueTasks[], staleSubmissions[], upcomingRenewals[]) →
 | Task DueDate is NULL | **Not eligible.** Tasks without a due date cannot be overdue. |
 | DaysInCurrentStatus = 5 | **Not stale.** Threshold is >= 6 (i.e. more than 5 full days). |
 | No WorkflowTransition exists for submission | **DaysInCurrentStatus = NULL.** Excluded from stale nudges (NULL fails the >= 6 check). |
-| RenewalDate = today | **Eligible.** Lower bound is inclusive. |
-| RenewalDate = today + 14 | **Eligible.** Upper bound is inclusive. |
-| RenewalDate = today + 15 | **Not eligible.** Outside the 14-day window. |
+| PolicyExpirationDate = today | **Eligible.** Lower bound is inclusive. |
+| PolicyExpirationDate = today + 14 | **Eligible.** Upper bound is inclusive. |
+| PolicyExpirationDate = today + 15 | **Not eligible.** Outside the 14-day window. |
 | Linked entity is soft-deleted | **Task excluded.** Overdue task nudge is skipped; the task still appears in the My Tasks widget (F0001-S0003) with "[Deleted]" label. |
 | All 3 slots filled by overdue tasks | **Stale/renewal nudges suppressed.** Priority ordering is strict — lower priority types only fill remaining slots. |
 | Two tasks have same DueDate | **Tie-break by Task.Id ascending.** Deterministic — same user always sees the same card. |

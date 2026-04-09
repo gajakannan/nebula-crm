@@ -3041,7 +3041,7 @@ components:
           maximum: 100
           nullable: true
           description: |
-            Percentage of renewals reaching Bound out of all renewals
+            Percentage of renewals reaching Completed out of all renewals
             that exited the opportunities funnel in the requested trailing window
             (default 90 days). Null if no data.
           example: 72.5

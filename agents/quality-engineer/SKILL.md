@@ -188,7 +188,12 @@ QE must not mark `PASS` based solely on visual smoke or broad E2E summaries when
 - `planning-mds/architecture/TESTING-STRATEGY.md` - Comprehensive testing strategy
 - `planning-mds/architecture/TESTING-STACK-SUMMARY.md` - Tool reference
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Section 7 (Testing Patterns)
+- `planning-mds/knowledge-graph/` - Ontology mappings and code-index bindings for scoped retrieval
 - Source code (to write tests for)
+
+When ontology coverage exists for the target feature or story, run
+`python3 scripts/kg/lookup.py <feature-or-story-id>` before broad repo reads.
+Use `--file <repo-path>` to reverse-map an existing code file back into the ontology.
 
 **Tech Stack:**
 

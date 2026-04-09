@@ -262,9 +262,10 @@ Flag when you see:
 Read in this order before touching the code:
 1. The user story and acceptance criteria
 2. `planning-mds/architecture/SOLUTION-PATTERNS.md` — the patterns this project follows
-3. The code changes
-4. The test files
-5. If planning docs changed: `planning-mds/features/TRACKER-GOVERNANCE.md` plus tracker files touched in the diff
+3. If ontology coverage exists, run `python3 scripts/kg/lookup.py <feature-or-story-id>` or `python3 scripts/kg/lookup.py --file <changed-path>` to scope the review
+4. The code changes
+5. The test files
+6. If planning docs changed: `planning-mds/features/TRACKER-GOVERNANCE.md` plus tracker files touched in the diff
 
 ### Step 2: Run Available Scripts (Feedback Loop)
 ```bash

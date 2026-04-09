@@ -4,12 +4,14 @@ import { cn } from '@/lib/utils';
 import { OpportunityOutcomePopoverContent } from './OpportunityOutcomePopover';
 import type { StoryChapter } from './storyTypes';
 import type { OutcomeAnchor } from './storyTimelineTypes';
+import type { OpportunityEntityType } from '../types';
 
 interface TerminalOutcomesRailProps {
   anchors: OutcomeAnchor[];
   periodDays: number;
   chapter: StoryChapter;
   allOutcomesZero: boolean;
+  entityTypes?: OpportunityEntityType[];
   registerOutcome?: (key: string) => RefCallback<HTMLElement>;
 }
 
@@ -24,6 +26,7 @@ export function TerminalOutcomesRail({
   periodDays,
   chapter,
   allOutcomesZero,
+  entityTypes,
   registerOutcome,
 }: TerminalOutcomesRailProps) {
   if (anchors.length === 0) {
@@ -74,7 +77,7 @@ export function TerminalOutcomesRail({
               </button>
             }
           >
-            <OpportunityOutcomePopoverContent outcomeKey={anchor.key} periodDays={periodDays} />
+            <OpportunityOutcomePopoverContent outcomeKey={anchor.key} periodDays={periodDays} entityTypes={entityTypes} />
           </Popover>
         </div>
       ))}

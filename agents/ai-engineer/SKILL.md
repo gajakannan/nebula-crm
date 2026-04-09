@@ -128,7 +128,12 @@ Your responsibility is to build the **intelligence layer** (neuron/) that powers
 - `neuron/` - AI intelligence layer (Python codebase)
 - `planning-mds/BLUEPRINT.md` - Requirements for AI features
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Architecture patterns
+- `planning-mds/knowledge-graph/` - Ontology mappings and code-index bindings for scoped retrieval
 - `agents/ai-engineer/references/` - AI engineering best practices
+
+When ontology coverage exists for the target feature or story, run
+`python3 scripts/kg/lookup.py <feature-or-story-id>` before broad repo reads.
+Use `--file <repo-path>` to reverse-map an existing code file back into the ontology.
 
 **Tech Stack:**
 - Python 3.11+

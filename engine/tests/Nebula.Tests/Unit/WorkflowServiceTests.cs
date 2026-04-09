@@ -294,10 +294,11 @@ public class WorkflowServiceTests
         {
             AccountId = Guid.NewGuid(),
             BrokerId = Guid.NewGuid(),
-            SubmissionId = Guid.NewGuid(),
+            PolicyId = Guid.NewGuid(),
             LineOfBusiness = "Property",
-            CurrentStatus = "Created",
-            RenewalDate = now.Date.AddDays(45),
+            CurrentStatus = "Identified",
+            PolicyExpirationDate = now.Date.AddDays(45),
+            TargetOutreachDate = now.Date.AddDays(5),
             AssignedToUserId = _user.UserId,
             CreatedAt = now,
             CreatedByUserId = _user.UserId,
@@ -312,7 +313,10 @@ public class WorkflowServiceTests
 
         result.ShouldNotBeNull();
         result!.Id.ShouldBe(renewal.Id);
-        result.CurrentStatus.ShouldBe("Created");
+        result.CurrentStatus.ShouldBe("Identified");
+        result.PolicyId.ShouldBe(renewal.PolicyId);
+        result.PolicyExpirationDate.ShouldBe(renewal.PolicyExpirationDate);
+        result.TargetOutreachDate.ShouldBe(renewal.TargetOutreachDate);
         result.LineOfBusiness.ShouldBe("Property");
     }
 
@@ -325,8 +329,8 @@ public class WorkflowServiceTests
         {
             WorkflowType = "Renewal",
             EntityId = renewalId,
-            FromState = "Created",
-            ToState = "DataReview",
+            FromState = "Identified",
+            ToState = "Outreach",
             Reason = "ready",
             ActorUserId = _user.UserId,
             OccurredAt = DateTime.UtcNow,
@@ -338,7 +342,7 @@ public class WorkflowServiceTests
 
         result.Count().ShouldBe(1);
         result[0].WorkflowType.ShouldBe("Renewal");
-        result[0].ToState.ShouldBe("DataReview");
+        result[0].ToState.ShouldBe("Outreach");
     }
 
     [Fact]
@@ -347,13 +351,14 @@ public class WorkflowServiceTests
         var repo = new StubRenewalRepository();
         var service = CreateRenewalService(repo);
 
-        var (result, error) = await service.TransitionAsync(
+        var (result, error, missingItems) = await service.TransitionAsync(
             Guid.NewGuid(),
-            new WorkflowTransitionRequestDto("DataReview", "seed"),
+            new WorkflowTransitionRequestDto("Outreach", "seed"),
             _user);
 
         result.ShouldBeNull();
         error.ShouldBe("not_found");
+        missingItems.ShouldBeNull();
     }
 
     [Fact]
@@ -364,8 +369,10 @@ public class WorkflowServiceTests
         {
             AccountId = Guid.NewGuid(),
             BrokerId = Guid.NewGuid(),
-            CurrentStatus = "Created",
-            RenewalDate = DateTime.UtcNow.Date.AddDays(30),
+            PolicyId = Guid.NewGuid(),
+            CurrentStatus = "Identified",
+            PolicyExpirationDate = DateTime.UtcNow.Date.AddDays(30),
+            TargetOutreachDate = DateTime.UtcNow.Date.AddDays(-60),
             AssignedToUserId = _user.UserId,
             CreatedAt = DateTime.UtcNow,
             CreatedByUserId = _user.UserId,
@@ -376,14 +383,15 @@ public class WorkflowServiceTests
         var service = CreateRenewalService(repo);
         var seeded = repo.Single();
 
-        var (result, error) = await service.TransitionAsync(
+        var (result, error, missingItems) = await service.TransitionAsync(
             seeded.Id,
-            new WorkflowTransitionRequestDto("Negotiation", "too early"),
+            new WorkflowTransitionRequestDto("Completed", "too early"),
             _user);
 
         result.ShouldBeNull();
         error.ShouldBe("invalid_transition");
-        seeded.CurrentStatus.ShouldBe("Created");
+        missingItems.ShouldBeNull();
+        seeded.CurrentStatus.ShouldBe("Identified");
         _transitionRepo.Items.ShouldBeEmpty();
         _timelineRepo.Events.ShouldBeEmpty();
     }
@@ -396,8 +404,10 @@ public class WorkflowServiceTests
         {
             AccountId = Guid.NewGuid(),
             BrokerId = Guid.NewGuid(),
-            CurrentStatus = "Created",
-            RenewalDate = DateTime.UtcNow.Date.AddDays(30),
+            PolicyId = Guid.NewGuid(),
+            CurrentStatus = "Identified",
+            PolicyExpirationDate = DateTime.UtcNow.Date.AddDays(30),
+            TargetOutreachDate = DateTime.UtcNow.Date.AddDays(-60),
             AssignedToUserId = _user.UserId,
             CreatedAt = DateTime.UtcNow.AddDays(-2),
             CreatedByUserId = _user.UserId,
@@ -408,16 +418,17 @@ public class WorkflowServiceTests
         var service = CreateRenewalService(repo);
         var seeded = repo.Single();
 
-        var (result, error) = await service.TransitionAsync(
+        var (result, error, missingItems) = await service.TransitionAsync(
             seeded.Id,
-            new WorkflowTransitionRequestDto("DataReview", "start"),
+            new WorkflowTransitionRequestDto("Outreach", "start"),
             _user);
 
         error.ShouldBeNull();
+        missingItems.ShouldBeNull();
         result.ShouldNotBeNull();
-        result!.FromState.ShouldBe("Created");
-        result.ToState.ShouldBe("DataReview");
-        seeded.CurrentStatus.ShouldBe("DataReview");
+        result!.FromState.ShouldBe("Identified");
+        result.ToState.ShouldBe("Outreach");
+        seeded.CurrentStatus.ShouldBe("Outreach");
         _transitionRepo.Items.Count.ShouldBe(1);
         var timelineEvent = _timelineRepo.Events.ShouldHaveSingleItem();
         timelineEvent.EntityType.ShouldBe("Renewal");
@@ -535,6 +546,9 @@ internal sealed class StubRenewalRepository : IRenewalRepository
     public Renewal Single() => _renewals.Values.Single();
 
     public Task<Renewal?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
+        Task.FromResult(_renewals.GetValueOrDefault(id));
+
+    public Task<Renewal?> GetByIdWithIncludesAsync(Guid id, CancellationToken ct = default) =>
         Task.FromResult(_renewals.GetValueOrDefault(id));
 
     public Task UpdateAsync(Renewal renewal, CancellationToken ct = default)

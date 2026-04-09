@@ -138,7 +138,7 @@ stateDiagram-v2
     Outreach --> InReview : Handoff to underwriting
     InReview --> Quoted : UW prepares quote
     InReview --> Lost : UW declines (requires reasonCode)
-    Quoted --> Completed : Bound (requires boundPolicyId or renewalSubmissionId)
+    Quoted --> Completed : Renewed (requires boundPolicyId or renewalSubmissionId)
     Quoted --> Lost : Not retained (requires reasonCode)
     Completed --> [*]
     Lost --> [*]

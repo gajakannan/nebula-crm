@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nebula.Infrastructure.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Nebula.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260407151358_F0007_ReconcileRenewalWorkflowStates")]
+    partial class F0007_ReconcileRenewalWorkflowStates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -710,9 +713,6 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("AssignedToUserId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("BoundPolicyId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("BrokerId")
                         .HasColumnType("uuid");
 
@@ -744,22 +744,8 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("LostReasonCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("LostReasonDetail")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTime>("PolicyExpirationDate")
-                        .HasColumnType("date");
-
-                    b.Property<Guid>("PolicyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("RenewalSubmissionId")
-                        .HasColumnType("uuid");
+                    b.Property<DateTime>("RenewalDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
@@ -767,8 +753,8 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<DateTime>("TargetOutreachDate")
-                        .HasColumnType("date");
+                    b.Property<Guid?>("SubmissionId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -785,22 +771,13 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                     b.HasIndex("CurrentStatus")
                         .HasDatabaseName("IX_Renewals_CurrentStatus");
 
-                    b.HasIndex("PolicyId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Renewals_PolicyId_Active")
-                        .HasFilter("\"IsDeleted\" = false AND \"CurrentStatus\" NOT IN ('Completed', 'Lost')");
-
-                    b.HasIndex("RenewalSubmissionId");
-
-                    b.HasIndex("TargetOutreachDate")
-                        .HasDatabaseName("IX_Renewals_TargetOutreachDate")
-                        .HasFilter("\"IsDeleted\" = false AND \"CurrentStatus\" = 'Identified'");
+                    b.HasIndex("SubmissionId");
 
                     b.HasIndex("AssignedToUserId", "CurrentStatus")
                         .HasDatabaseName("IX_Renewals_AssignedToUserId_CurrentStatus");
 
-                    b.HasIndex("PolicyExpirationDate", "CurrentStatus")
-                        .HasDatabaseName("IX_Renewals_PolicyExpirationDate_CurrentStatus");
+                    b.HasIndex("RenewalDate", "CurrentStatus")
+                        .HasDatabaseName("IX_Renewals_RenewalDate_Status");
 
                     b.ToTable("Renewals", (string)null);
                 });
@@ -1274,30 +1251,22 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Nebula.Domain.Entities.UserProfile", "AssignedToUser")
-                        .WithMany()
-                        .HasForeignKey("AssignedToUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Nebula.Domain.Entities.Broker", "Broker")
                         .WithMany()
                         .HasForeignKey("BrokerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Nebula.Domain.Entities.Submission", "RenewalSubmission")
+                    b.HasOne("Nebula.Domain.Entities.Submission", "Submission")
                         .WithMany()
-                        .HasForeignKey("RenewalSubmissionId")
+                        .HasForeignKey("SubmissionId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Account");
 
-                    b.Navigation("AssignedToUser");
-
                     b.Navigation("Broker");
 
-                    b.Navigation("RenewalSubmission");
+                    b.Navigation("Submission");
                 });
 
             modelBuilder.Entity("Nebula.Domain.Entities.Submission", b =>

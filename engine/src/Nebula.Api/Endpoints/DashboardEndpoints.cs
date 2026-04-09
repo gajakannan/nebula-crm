@@ -25,6 +25,12 @@ public static class DashboardEndpoints
         "brokerstate",
     ];
 
+    private static readonly HashSet<string> SupportedEntityTypes =
+    [
+        "submission",
+        "renewal",
+    ];
+
     public static IEndpointRouteBuilder MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/dashboard")
@@ -127,17 +133,22 @@ public static class DashboardEndpoints
     }
 
     private static async Task<IResult> GetOpportunityOutcomes(
+        string? entityTypes,
         int? periodDays,
         DashboardService svc, IAuthorizationService authz, ICurrentUserService user, CancellationToken ct)
     {
         if (!await HasAccessAsync(user, authz, "dashboard_pipeline"))
             return ProblemDetailsHelper.Forbidden();
 
-        return Results.Ok(await svc.GetOpportunityOutcomesAsync(user, periodDays ?? 180, ct));
+        if (!TryParseEntityTypes(entityTypes, out var parsedEntityTypes, out var errorResult))
+            return errorResult!;
+
+        return Results.Ok(await svc.GetOpportunityOutcomesAsync(user, periodDays ?? 180, parsedEntityTypes, ct));
     }
 
     private static async Task<IResult> GetOpportunityOutcomeItems(
         string outcomeKey,
+        string? entityTypes,
         int? periodDays,
         DashboardService svc, IAuthorizationService authz, ICurrentUserService user, CancellationToken ct)
     {
@@ -154,7 +165,10 @@ public static class DashboardEndpoints
             });
         }
 
-        return Results.Ok(await svc.GetOpportunityOutcomeItemsAsync(user, normalizedKey, periodDays ?? 180, ct));
+        if (!TryParseEntityTypes(entityTypes, out var parsedEntityTypes, out var errorResult))
+            return errorResult!;
+
+        return Results.Ok(await svc.GetOpportunityOutcomeItemsAsync(user, normalizedKey, periodDays ?? 180, parsedEntityTypes, ct));
     }
 
     private static async Task<IResult> GetOpportunityAging(
@@ -208,5 +222,45 @@ public static class DashboardEndpoints
                 return true;
         }
         return false;
+    }
+
+    private static bool TryParseEntityTypes(
+        string? entityTypes,
+        out IReadOnlyList<string>? parsedEntityTypes,
+        out IResult? errorResult)
+    {
+        errorResult = null;
+
+        if (string.IsNullOrWhiteSpace(entityTypes))
+        {
+            parsedEntityTypes = null;
+            return true;
+        }
+
+        var normalized = entityTypes
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(value => value.ToLowerInvariant())
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (normalized.Count == 0)
+        {
+            parsedEntityTypes = null;
+            return true;
+        }
+
+        if (normalized.Any(value => !SupportedEntityTypes.Contains(value)))
+        {
+            parsedEntityTypes = null;
+            errorResult = Results.BadRequest(new
+            {
+                code = "invalid_entity_types",
+                message = "entityTypes must be a comma-separated list containing only 'submission' or 'renewal'.",
+            });
+            return false;
+        }
+
+        parsedEntityTypes = normalized;
+        return true;
     }
 }

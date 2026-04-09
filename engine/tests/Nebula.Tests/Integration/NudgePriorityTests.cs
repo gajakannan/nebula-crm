@@ -114,8 +114,10 @@ public class NudgePriorityTests(CustomWebApplicationFactory factory)
         {
             AccountId = account.Id,
             BrokerId = broker.Id,
-            CurrentStatus = "Created",
-            RenewalDate = now2.Date.AddDays(7),
+            CurrentStatus = "Identified",
+            PolicyId = Guid.NewGuid(),
+            PolicyExpirationDate = now2.Date.AddDays(7),
+            TargetOutreachDate = now2.Date.AddDays(-83),
             AssignedToUserId = testUserId,
             CreatedAt = now2,
             UpdatedAt = now2,

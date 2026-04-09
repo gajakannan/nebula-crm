@@ -94,18 +94,34 @@ workflows:
     states:
       - id: state:submission:received
         label: Received
+        transitions_to: [state:submission:triaging]
       - id: state:submission:triaging
         label: Triaging
+        transitions_to:
+          - state:submission:waiting-on-broker
+          - state:submission:ready-for-uw-review
       - id: state:submission:waiting-on-broker
         label: WaitingOnBroker
+        transitions_to: [state:submission:ready-for-uw-review]
       - id: state:submission:ready-for-uw-review
         label: ReadyForUWReview
+        transitions_to: [state:submission:in-review]
       - id: state:submission:in-review
         label: InReview
+        transitions_to:
+          - state:submission:quoted
+          - state:submission:declined
       - id: state:submission:quoted
         label: Quoted
+        transitions_to:
+          - state:submission:bind-requested
+          - state:submission:declined
+          - state:submission:withdrawn
       - id: state:submission:bind-requested
         label: BindRequested
+        transitions_to:
+          - state:submission:bound
+          - state:submission:withdrawn
       - id: state:submission:bound
         label: Bound
       - id: state:submission:declined
@@ -123,12 +139,20 @@ workflows:
     states:
       - id: state:renewal:identified
         label: Identified
+        transitions_to: [state:renewal:outreach]
       - id: state:renewal:outreach
         label: Outreach
+        transitions_to: [state:renewal:in-review]
       - id: state:renewal:in-review
         label: InReview
+        transitions_to:
+          - state:renewal:quoted
+          - state:renewal:lost
       - id: state:renewal:quoted
         label: Quoted
+        transitions_to:
+          - state:renewal:completed
+          - state:renewal:lost
       - id: state:renewal:completed
         label: Completed
       - id: state:renewal:lost
@@ -276,6 +300,968 @@ capabilities:
     label: SonarQube Reporting
     source_docs:
       - planning-mds/features/archive/F0033-structured-logging-and-qe-toolchain-activation/README.md
+
+glossary_terms:
+  - id: glossary_term:quote
+    label: Quote
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:submission
+      - entity:policy
+      - workflow:submission
+  - id: glossary_term:bind
+    label: Bind
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:policy
+      - workflow:submission
+  - id: glossary_term:line-of-business
+    label: Line of Business
+    source_docs:
+      - planning-mds/domain/glossary.md
+      - planning-mds/architecture/decisions/ADR-009-lob-classification-and-sla-configuration.md
+    related_nodes:
+      - entity:submission
+      - entity:renewal
+      - entity:policy
+      - entity:workflow-sla-threshold
+  - id: glossary_term:premium
+    label: Premium
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:policy
+      - entity:renewal
+  - id: glossary_term:surplus-lines
+    label: Surplus Lines
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:mga
+      - entity:program
+  - id: glossary_term:triaging
+    label: Triaging
+    source_docs:
+      - planning-mds/domain/glossary.md
+      - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
+    related_nodes:
+      - workflow:submission
+      - state:submission:triaging
+  - id: glossary_term:underwriting
+    label: Underwriting
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - workflow:submission
+      - state:submission:in-review
+      - role:underwriter
+  - id: glossary_term:declination
+    label: Declination
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - workflow:submission
+      - state:submission:declined
+  - id: glossary_term:withdrawal
+    label: Withdrawal
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - workflow:submission
+      - state:submission:withdrawn
+  - id: glossary_term:exposure
+    label: Exposure
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:submission
+      - entity:policy
+  - id: glossary_term:carrier
+    label: Carrier
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:mga
+      - entity:program
+  - id: glossary_term:insured
+    label: Insured
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:account
+      - entity:policy
+  - id: glossary_term:application
+    label: Application
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:document
+      - entity:submission
+  - id: glossary_term:loss-runs
+    label: Loss Runs
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:document
+      - entity:submission
+  - id: glossary_term:acord-form
+    label: ACORD Form
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:document
+      - entity:submission
+  - id: glossary_term:binder
+    label: Binder
+    source_docs:
+      - planning-mds/domain/glossary.md
+    related_nodes:
+      - entity:document
+      - entity:policy
+      - state:submission:bound
+
+endpoints:
+  - id: endpoint:dashboard-kpis
+    label: GET /dashboard/kpis
+    method: GET
+    route: /dashboard/kpis
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/architecture/decisions/ADR-002-dashboard-data-aggregation.md
+    related_nodes:
+      - capability:dashboard-kpis
+      - capability:dashboard-home
+  - id: endpoint:dashboard-opportunity-flow
+    label: GET /dashboard/opportunities/flow
+    method: GET
+    route: /dashboard/opportunities/flow
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/architecture/decisions/ADR-002-dashboard-data-aggregation.md
+      - planning-mds/architecture/decisions/ADR-004-frontend-dashboard-widget-architecture.md
+    related_nodes:
+      - capability:dashboard-pipeline-visualization
+      - capability:dashboard-opportunity-analytics
+      - workflow:submission
+      - workflow:renewal
+  - id: endpoint:dashboard-nudges
+    label: GET /dashboard/nudges
+    method: GET
+    route: /dashboard/nudges
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/architecture/decisions/ADR-003-task-entity-nudge-engine.md
+    related_nodes:
+      - capability:dashboard-nudge-cards
+      - entity:task-item
+  - id: endpoint:broker-list
+    label: GET /brokers
+    method: GET
+    route: /brokers
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0002-broker-relationship-management/README.md
+    related_nodes:
+      - entity:broker
+      - capability:broker-relationship-management
+      - policy_rule:broker-search
+  - id: endpoint:broker-detail
+    label: GET /brokers/{brokerId}
+    method: GET
+    route: /brokers/{brokerId}
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0002-broker-relationship-management/README.md
+    related_nodes:
+      - entity:broker
+      - capability:broker-360
+      - policy_rule:broker-read
+  - id: endpoint:broker-create
+    label: POST /brokers
+    method: POST
+    route: /brokers
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0002-broker-relationship-management/README.md
+    related_nodes:
+      - entity:broker
+      - capability:broker-relationship-management
+  - id: endpoint:submission-list
+    label: GET /submissions
+    method: GET
+    route: /submissions
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0006-submission-intake-workflow/README.md
+    related_nodes:
+      - entity:submission
+      - workflow:submission
+  - id: endpoint:submission-detail
+    label: GET /submissions/{submissionId}
+    method: GET
+    route: /submissions/{submissionId}
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0006-submission-intake-workflow/README.md
+    related_nodes:
+      - entity:submission
+      - workflow:submission
+  - id: endpoint:submission-create
+    label: POST /submissions
+    method: POST
+    route: /submissions
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0006-submission-intake-workflow/README.md
+    related_nodes:
+      - entity:submission
+      - workflow:submission
+  - id: endpoint:submission-transition
+    label: POST /submissions/{submissionId}/transitions
+    method: POST
+    route: /submissions/{submissionId}/transitions
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
+    related_nodes:
+      - entity:submission
+      - entity:workflow-transition
+      - workflow:submission
+  - id: endpoint:submission-assignment
+    label: PUT /submissions/{submissionId}/assignment
+    method: PUT
+    route: /submissions/{submissionId}/assignment
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0006-submission-intake-workflow/README.md
+    related_nodes:
+      - entity:submission
+      - entity:user-profile
+  - id: endpoint:submission-timeline
+    label: GET /submissions/{submissionId}/timeline
+    method: GET
+    route: /submissions/{submissionId}/timeline
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0006-submission-intake-workflow/README.md
+    related_nodes:
+      - entity:submission
+      - entity:activity-timeline-event
+      - policy_rule:timeline-event-read
+  - id: endpoint:renewal-detail
+    label: GET /renewals/{renewalId}
+    method: GET
+    route: /renewals/{renewalId}
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0007-renewal-pipeline/README.md
+    related_nodes:
+      - entity:renewal
+      - workflow:renewal
+      - policy_rule:renewal-read
+  - id: endpoint:renewal-transitions-list
+    label: GET /renewals/{renewalId}/transitions
+    method: GET
+    route: /renewals/{renewalId}/transitions
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0007-renewal-pipeline/README.md
+    related_nodes:
+      - entity:renewal
+      - entity:workflow-transition
+      - workflow:renewal
+  - id: endpoint:renewal-transition
+    label: POST /renewals/{renewalId}/transitions
+    method: POST
+    route: /renewals/{renewalId}/transitions
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
+    related_nodes:
+      - entity:renewal
+      - entity:workflow-transition
+      - workflow:renewal
+      - policy_rule:renewal-transition
+  - id: endpoint:task-my-list
+    label: GET /my/tasks
+    method: GET
+    route: /my/tasks
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0003-task-center/README.md
+    related_nodes:
+      - entity:task-item
+      - capability:task-center
+      - policy_rule:task-read
+  - id: endpoint:task-list
+    label: GET /tasks
+    method: GET
+    route: /tasks
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0004-task-center-ui-and-assignment/README.md
+    related_nodes:
+      - entity:task-item
+      - capability:task-center
+      - policy_rule:task-read
+  - id: endpoint:task-detail
+    label: GET /tasks/{taskId}
+    method: GET
+    route: /tasks/{taskId}
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0004-task-center-ui-and-assignment/README.md
+    related_nodes:
+      - entity:task-item
+      - capability:task-center
+      - policy_rule:task-read
+  - id: endpoint:task-create
+    label: POST /tasks
+    method: POST
+    route: /tasks
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/archive/F0003-task-center/README.md
+    related_nodes:
+      - entity:task-item
+      - capability:task-center
+      - policy_rule:task-create
+  - id: endpoint:timeline-events
+    label: GET /timeline/events
+    method: GET
+    route: /timeline/events
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md
+    related_nodes:
+      - entity:activity-timeline-event
+      - capability:authorization-enforcement
+      - policy_rule:timeline-event-read
+
+ui_routes:
+  - id: ui_route:dashboard-home
+    label: /
+    route: /
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/DashboardPage.tsx
+    related_nodes:
+      - capability:dashboard-home
+  - id: ui_route:brokers-list
+    label: /brokers
+    route: /brokers
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/BrokerListPage.tsx
+    related_nodes:
+      - entity:broker
+      - capability:broker-relationship-management
+  - id: ui_route:broker-create
+    label: /brokers/new
+    route: /brokers/new
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/CreateBrokerPage.tsx
+    related_nodes:
+      - entity:broker
+      - capability:broker-relationship-management
+  - id: ui_route:broker-detail
+    label: /brokers/:brokerId
+    route: /brokers/:brokerId
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/BrokerDetailPage.tsx
+    related_nodes:
+      - entity:broker
+      - capability:broker-360
+  - id: ui_route:submissions-list
+    label: /submissions
+    route: /submissions
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/SubmissionsPage.tsx
+    related_nodes:
+      - entity:submission
+      - workflow:submission
+  - id: ui_route:submission-create
+    label: /submissions/new
+    route: /submissions/new
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/CreateSubmissionPage.tsx
+    related_nodes:
+      - entity:submission
+      - workflow:submission
+  - id: ui_route:submission-detail
+    label: /submissions/:submissionId
+    route: /submissions/:submissionId
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/SubmissionDetailPage.tsx
+    related_nodes:
+      - entity:submission
+      - workflow:submission
+  - id: ui_route:task-center
+    label: /tasks
+    route: /tasks
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/TaskCenterPage.tsx
+    related_nodes:
+      - entity:task-item
+      - capability:task-center
+  - id: ui_route:login
+    label: /login
+    route: /login
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/LoginPage.tsx
+    related_nodes:
+      - capability:authentication
+
+events:
+  - id: event:broker-created
+    label: BrokerCreated
+    event_type: BrokerCreated
+    source_docs:
+      - planning-mds/features/archive/F0002-broker-relationship-management/README.md
+      - planning-mds/architecture/data-model.md
+    related_nodes:
+      - entity:broker
+      - entity:activity-timeline-event
+  - id: event:broker-updated
+    label: BrokerUpdated
+    event_type: BrokerUpdated
+    source_docs:
+      - planning-mds/features/archive/F0002-broker-relationship-management/README.md
+      - planning-mds/architecture/data-model.md
+    related_nodes:
+      - entity:broker
+      - entity:activity-timeline-event
+  - id: event:contact-created
+    label: ContactCreated
+    event_type: ContactCreated
+    source_docs:
+      - planning-mds/features/archive/F0002-broker-relationship-management/README.md
+      - planning-mds/architecture/data-model.md
+    related_nodes:
+      - entity:contact
+      - entity:activity-timeline-event
+  - id: event:submission-created
+    label: SubmissionCreated
+    event_type: SubmissionCreated
+    source_docs:
+      - planning-mds/features/archive/F0006-submission-intake-workflow/README.md
+      - planning-mds/architecture/data-model.md
+    related_nodes:
+      - entity:submission
+      - entity:activity-timeline-event
+  - id: event:submission-transitioned
+    label: SubmissionTransitioned
+    event_type: SubmissionTransitioned
+    source_docs:
+      - planning-mds/features/archive/F0006-submission-intake-workflow/F0006-S0004-submission-intake-status-transitions.md
+      - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
+    related_nodes:
+      - entity:submission
+      - entity:workflow-transition
+      - entity:activity-timeline-event
+  - id: event:task-created
+    label: TaskCreated
+    event_type: TaskCreated
+    source_docs:
+      - planning-mds/features/archive/F0003-task-center/README.md
+      - planning-mds/architecture/data-model.md
+    related_nodes:
+      - entity:task-item
+      - entity:activity-timeline-event
+  - id: event:task-updated
+    label: TaskUpdated
+    event_type: TaskUpdated
+    source_docs:
+      - planning-mds/features/archive/F0004-task-center-ui-and-assignment/README.md
+      - planning-mds/architecture/data-model.md
+    related_nodes:
+      - entity:task-item
+      - entity:activity-timeline-event
+  - id: event:renewal-transitioned
+    label: RenewalTransitioned
+    event_type: RenewalTransitioned
+    source_docs:
+      - planning-mds/features/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md
+      - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
+    related_nodes:
+      - entity:renewal
+      - entity:workflow-transition
+      - entity:activity-timeline-event
+
+config_keys:
+  - id: config_key:authentication-authority
+    label: Authentication:Authority
+    key: Authentication:Authority
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-Authentication-Strategy.md
+      - planning-mds/features/archive/F0005-idp-migration/F0005-S0002-claims-normalization-backend.md
+    related_nodes:
+      - capability:authentication
+      - capability:idp-foundation
+  - id: config_key:authentication-audience
+    label: Authentication:Audience
+    key: Authentication:Audience
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-Authentication-Strategy.md
+      - planning-mds/features/archive/F0005-idp-migration/F0005-S0002-claims-normalization-backend.md
+    related_nodes:
+      - capability:authentication
+      - capability:idp-foundation
+  - id: config_key:oidc-authority
+    label: VITE_OIDC_AUTHORITY
+    key: VITE_OIDC_AUTHORITY
+    source_docs:
+      - planning-mds/features/archive/F0005-idp-migration/F0005-S0003-frontend-oidc-flow.md
+      - planning-mds/features/archive/F0015-frontend-quality-gates-and-test-infrastructure/GETTING-STARTED.md
+    related_nodes:
+      - capability:authentication
+      - ui_route:login
+  - id: config_key:oidc-client-id
+    label: VITE_OIDC_CLIENT_ID
+    key: VITE_OIDC_CLIENT_ID
+    source_docs:
+      - planning-mds/features/archive/F0005-idp-migration/F0005-S0003-frontend-oidc-flow.md
+      - planning-mds/features/archive/F0015-frontend-quality-gates-and-test-infrastructure/GETTING-STARTED.md
+    related_nodes:
+      - capability:authentication
+      - ui_route:login
+  - id: config_key:oidc-redirect-uri
+    label: VITE_OIDC_REDIRECT_URI
+    key: VITE_OIDC_REDIRECT_URI
+    source_docs:
+      - planning-mds/features/archive/F0005-idp-migration/F0005-S0003-frontend-oidc-flow.md
+      - planning-mds/features/archive/F0015-frontend-quality-gates-and-test-infrastructure/GETTING-STARTED.md
+    related_nodes:
+      - capability:authentication
+      - ui_route:login
+  - id: config_key:workflow-sla-thresholds
+    label: WorkflowSlaThresholds
+    key: WorkflowSlaThresholds
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-009-lob-classification-and-sla-configuration.md
+      - planning-mds/architecture/decisions/ADR-014-workflow-sla-threshold-per-lob-extension.md
+    related_nodes:
+      - entity:workflow-sla-threshold
+      - workflow:submission
+      - workflow:renewal
+  - id: config_key:published-configuration-sets
+    label: Published Operational Configuration Sets
+    key: published-configuration-sets
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-016-published-operational-configuration-governance.md
+    related_nodes:
+      - adr:016
+
+migrations:
+  - id: migration:initial-create
+    label: Initial Create
+    path: engine/src/Nebula.Infrastructure/Persistence/Migrations/20260223071234_InitialCreate.cs
+    related_nodes:
+      - entity:broker
+      - entity:submission
+      - entity:renewal
+      - entity:task-item
+  - id: migration:f0005-idp-principal-refactor
+    label: F0005 IdP Principal Refactor
+    path: engine/src/Nebula.Infrastructure/Persistence/Migrations/20260301000000_F0005_IdpPrincipalRefactor.cs
+    related_nodes:
+      - entity:user-profile
+      - capability:principal-key-normalization
+      - capability:idp-foundation
+  - id: migration:f0004-task-and-user-profile-indexes
+    label: F0004 Task and User Profile Indexes
+    path: engine/src/Nebula.Infrastructure/Persistence/Migrations/20260322184705_F0004_AddTaskAndUserProfileIndexes.cs
+    related_nodes:
+      - entity:task-item
+      - entity:user-profile
+      - capability:task-center
+  - id: migration:f0013-workflow-sla-thresholds
+    label: F0013 Add Line Of Business And Workflow SLA Thresholds
+    path: engine/src/Nebula.Infrastructure/Persistence/Migrations/20260316014518_F0013_AddLineOfBusinessAndWorkflowSlaThresholds.cs
+    related_nodes:
+      - entity:workflow-sla-threshold
+      - config_key:workflow-sla-thresholds
+  - id: migration:f0006-submission-intake-columns
+    label: F0006 Submission Intake Columns
+    path: engine/src/Nebula.Infrastructure/Persistence/Migrations/20260331164454_F0006_SubmissionIntakeColumns.cs
+    related_nodes:
+      - entity:submission
+      - workflow:submission
+      - config_key:workflow-sla-thresholds
+  - id: migration:f0007-renewal-workflow-states-reconcile
+    label: F0007 Reconcile Renewal Workflow States
+    path: engine/src/Nebula.Infrastructure/Persistence/Migrations/20260407151358_F0007_ReconcileRenewalWorkflowStates.cs
+    related_nodes:
+      - entity:renewal
+      - workflow:renewal
+      - config_key:workflow-sla-thresholds
+  - id: migration:f0007-renewal-entity-shape-reconcile
+    label: F0007 Reconcile Renewal Entity Shape
+    path: engine/src/Nebula.Infrastructure/Persistence/Migrations/20260408013334_F0007_ReconcileRenewalEntityShape.cs
+    related_nodes:
+      - entity:renewal
+      - workflow:renewal
+      - config_key:workflow-sla-thresholds
+
+roles:
+  - id: role:distribution-user
+    label: DistributionUser
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    notes: Internal distribution operator scoped primarily to assigned opportunities.
+  - id: role:distribution-manager
+    label: DistributionManager
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    notes: Internal distribution manager with region-scoped authority.
+  - id: role:underwriter
+    label: Underwriter
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    notes: Internal underwriting role with downstream transition authority and read access to broker/account context.
+  - id: role:relationship-manager
+    label: RelationshipManager
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    notes: Internal broker/account relationship owner with read-heavy opportunity access.
+  - id: role:program-manager
+    label: ProgramManager
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    notes: Internal MGA/program oversight role with program-scoped read access.
+  - id: role:admin
+    label: Admin
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    notes: Internal administrator with broad unscoped access where policy lines exist.
+  - id: role:broker-user
+    label: BrokerUser
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
+    notes: External phase-1 broker role with broker-tenant-scoped reads and field filtering.
+  - id: role:external-user
+    label: ExternalUser
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+    notes: Default external deny role for MVP; no allow policy lines exist.
+
+policy_rules:
+  - id: policy_rule:broker-read
+    label: broker:read
+    resource: broker
+    action: read
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+      - role:broker-user
+    related_nodes:
+      - entity:broker
+      - capability:broker-relationship-management
+      - capability:authorization-enforcement
+  - id: policy_rule:broker-search
+    label: broker:search
+    resource: broker
+    action: search
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:relationship-manager
+      - role:admin
+      - role:broker-user
+    related_nodes:
+      - entity:broker
+      - capability:broker-relationship-management
+      - capability:authorization-enforcement
+  - id: policy_rule:contact-read
+    label: contact:read
+    resource: contact
+    action: read
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+      - role:broker-user
+    related_nodes:
+      - entity:contact
+      - capability:broker-contact-management
+      - capability:authorization-enforcement
+  - id: policy_rule:renewal-read
+    label: renewal:read
+    resource: renewal
+    action: read
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+    related_nodes:
+      - entity:renewal
+      - workflow:renewal
+      - capability:authorization-enforcement
+  - id: policy_rule:renewal-create
+    label: renewal:create
+    resource: renewal
+    action: create
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:renewal
+      - entity:policy
+      - workflow:renewal
+      - capability:authorization-enforcement
+  - id: policy_rule:renewal-transition
+    label: renewal:transition
+    resource: renewal
+    action: transition
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:renewal
+      - entity:workflow-transition
+      - workflow:renewal
+      - capability:authorization-enforcement
+  - id: policy_rule:renewal-assign
+    label: renewal:assign
+    resource: renewal
+    action: assign
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:renewal
+      - entity:user-profile
+      - capability:authorization-enforcement
+    notes: Policy surface grants manager and admin assignment authority; any additional self-assign semantics remain application-layer behavior until policy artifacts are updated.
+  - id: policy_rule:dashboard-nudge-read
+    label: dashboard_nudge:read
+    resource: dashboard_nudge
+    action: read
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+      - role:broker-user
+    related_nodes:
+      - capability:dashboard-nudge-cards
+      - entity:task-item
+      - workflow:renewal
+      - capability:authorization-enforcement
+    notes: BrokerUser reads are additionally constrained to broker-linked OverdueTask nudges by query-layer filtering.
+  - id: policy_rule:task-read
+    label: task:read
+    resource: task
+    action: read
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+      - role:broker-user
+    related_nodes:
+      - entity:task-item
+      - capability:task-center
+      - capability:authorization-enforcement
+    notes: Internal roles use assignee and creator policy predicates; BrokerUser reads are broker-tenant scoped.
+  - id: policy_rule:task-create
+    label: task:create
+    resource: task
+    action: create
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+    related_nodes:
+      - entity:task-item
+      - capability:task-center
+      - capability:authorization-enforcement
+    notes: Self-assigned task creation is policy-gated; F0004 adds manager/admin create-any-target semantics.
+  - id: policy_rule:task-update
+    label: task:update
+    resource: task
+    action: update
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+    related_nodes:
+      - entity:task-item
+      - capability:task-center
+      - capability:authorization-enforcement
+    notes: Policy layer combines assignee and creator-based predicates with OR semantics for manager/admin flows.
+  - id: policy_rule:task-delete
+    label: task:delete
+    resource: task
+    action: delete
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+    related_nodes:
+      - entity:task-item
+      - capability:task-center
+      - capability:authorization-enforcement
+  - id: policy_rule:user-search
+    label: user:search
+    resource: user
+    action: search
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+    related_nodes:
+      - entity:user-profile
+      - capability:authorization-enforcement
+    notes: Search is internal-only; IdP issuer and subject fields remain excluded from responses.
+  - id: policy_rule:timeline-event-read
+    label: timeline_event:read
+    resource: timeline_event
+    action: read
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+      - role:broker-user
+    related_nodes:
+      - entity:activity-timeline-event
+      - capability:authorization-enforcement
+    notes: BrokerUser timeline reads remain limited to explicitly broker-visible event types and fields.
+
+evidence:
+  - id: evidence:workflow-state-machine-tests
+    label: Workflow State Machine Tests
+    path: engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
+    related_nodes:
+      - workflow:submission
+      - workflow:renewal
+      - entity:workflow-transition
+  - id: evidence:workflow-endpoint-integration-tests
+    label: Workflow Endpoint Integration Tests
+    path: engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
+    related_nodes:
+      - workflow:submission
+      - workflow:renewal
+      - entity:submission
+      - entity:renewal
+  - id: evidence:broker-list-pact-tests
+    label: Broker List Pact Tests
+    path: engine/tests/Nebula.Tests/Contracts/BrokerListProviderPactTests.cs
+    related_nodes:
+      - endpoint:broker-list
+      - capability:api-contract-testing
+      - entity:broker
+  - id: evidence:broker-access-integration-tests
+    label: Broker Access Integration Tests
+    path: engine/tests/Nebula.Tests/Integration/BrokerUserAccessTests.cs
+    related_nodes:
+      - capability:authorization-enforcement
+      - role:broker-user
+      - policy_rule:broker-read
+      - policy_rule:timeline-event-read
+  - id: evidence:theme-smoke-visual-tests
+    label: Theme Smoke Visual Tests
+    path: experience/tests/visual/theme-smoke.spec.ts
+    related_nodes:
+      - capability:frontend-quality-gates
+      - capability:frontend-test-infrastructure
 
 adrs:
   - id: adr:001

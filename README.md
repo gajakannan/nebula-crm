@@ -117,6 +117,18 @@ As of 2026-02-08, this repository is **published as a human-orchestrated framewo
 - `docker/agent-builder/` - Container entrypoint/runtime helpers for the builder framework.
 - `agents/docs/` - Framework documentation (orchestration contract, onboarding, container strategy).
 
+## Frontend Installs On WSL
+
+If you run the repo from a Windows-mounted path such as `/mnt/c/...` in WSL, pnpm's default `node_modules/.pnpm` layout can fail with `EACCES` during package rename/import steps. The frontend now pins its pnpm virtual store to a Linux-side path via `experience/.npmrc`, so normal commands can stay the same:
+
+```bash
+cd experience
+pnpm install
+pnpm test
+```
+
+If you need to reset the frontend install, remove both `experience/node_modules` and `${HOME}/.pnpm-virtual-store/nebula-crm-experience`.
+
 ## Reuse Workflow (New Project)
 
 1) Copy `agents/` into your new repo unchanged.

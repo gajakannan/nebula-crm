@@ -31,15 +31,10 @@ public static class DevSeedData
 
     private static readonly Dictionary<string, string[]> RenewalNextStates = new(StringComparer.Ordinal)
     {
-        ["Created"] = ["Early", "DataReview"],
-        ["Early"] = ["DataReview", "OutreachStarted"],
-        ["DataReview"] = ["OutreachStarted", "WaitingOnBroker", "InReview"],
-        ["OutreachStarted"] = ["WaitingOnBroker", "InReview", "Quoted"],
-        ["WaitingOnBroker"] = ["DataReview", "InReview", "Quoted"],
-        ["InReview"] = ["Quoted", "Negotiation"],
-        ["Quoted"] = ["Negotiation", "BindRequested", "Bound"],
-        ["Negotiation"] = ["Quoted", "BindRequested", "Bound"],
-        ["BindRequested"] = ["Bound"],
+        ["Identified"] = ["Outreach"],
+        ["Outreach"] = ["InReview"],
+        ["InReview"] = ["Quoted", "Lost"],
+        ["Quoted"] = ["Completed", "Lost"],
     };
 
     public static async Task SeedDevDataAsync(AppDbContext db)
@@ -193,7 +188,7 @@ public static class DevSeedData
             var assignedTo = userIds[rng.Next(userIds.Length)];
             var path = GenerateWorkflowPath(
                 rng,
-                "Created",
+                "Identified",
                 RenewalNextStates,
                 OpportunityStatusCatalog.RenewalTerminalStatusCodes,
                 chooseSubmissionTerminal: false);
@@ -233,16 +228,29 @@ public static class DevSeedData
             {
                 AccountId = account.Id,
                 BrokerId = broker.Id,
-                SubmissionId = boundSubmissionIds.Count > 0 && rng.NextDouble() < 0.55 ? boundSubmissionIds[rng.Next(boundSubmissionIds.Count)] : null,
+                PolicyId = Guid.NewGuid(),
                 LineOfBusiness = rng.NextDouble() < 0.08 ? null : LineOfBusinessCodes[rng.Next(LineOfBusinessCodes.Length)],
                 CurrentStatus = path[^1],
-                RenewalDate = now.AddDays(rng.Next(-60, 180)),
+                PolicyExpirationDate = now.Date.AddDays(rng.Next(-60, 180)),
                 AssignedToUserId = assignedTo,
                 CreatedAt = createdAt,
                 UpdatedAt = updatedAt,
                 CreatedByUserId = assignedTo,
                 UpdatedByUserId = assignedTo,
             };
+            renewal.TargetOutreachDate = renewal.PolicyExpirationDate.AddDays(-GetRenewalTargetDays(renewal.LineOfBusiness));
+            if (renewal.CurrentStatus == "Completed")
+            {
+                renewal.BoundPolicyId = Guid.NewGuid();
+                renewal.RenewalSubmissionId = boundSubmissionIds.Count > 0 && rng.NextDouble() < 0.55
+                    ? boundSubmissionIds[rng.Next(boundSubmissionIds.Count)]
+                    : null;
+            }
+
+            if (renewal.CurrentStatus == "Lost")
+            {
+                renewal.LostReasonCode = "CompetitiveLoss";
+            }
             renewals.Add(renewal);
 
             PatchRecentTransitionsEntityId(transitions, renewal.Id);
@@ -546,7 +554,8 @@ public static class DevSeedData
         for (var step = 0; step < 9; step++)
         {
             var shouldTerminate = step >= 1 && rng.NextDouble() < (step < 3 ? 0.14 : step < 5 ? 0.28 : 0.52);
-            if (shouldTerminate && !terminalStatuses.Contains(current))
+            var canTerminate = chooseSubmissionTerminal || CanTerminateRenewalFromState(current);
+            if (shouldTerminate && canTerminate && !terminalStatuses.Contains(current))
             {
                 path.Add(chooseSubmissionTerminal
                     ? PickSubmissionTerminal(rng, current)
@@ -565,7 +574,9 @@ public static class DevSeedData
                 break;
         }
 
-        if (!terminalStatuses.Contains(path[^1]) && rng.NextDouble() < 0.38)
+        if (!terminalStatuses.Contains(path[^1])
+            && (chooseSubmissionTerminal || CanTerminateRenewalFromState(path[^1]))
+            && rng.NextDouble() < 0.38)
         {
             path.Add(chooseSubmissionTerminal
                 ? PickSubmissionTerminal(rng, path[^1])
@@ -589,25 +600,21 @@ public static class DevSeedData
             ("Bound", 52), ("Declined", 28), ("Withdrawn", 20)),
     };
 
+    private static bool CanTerminateRenewalFromState(string current) =>
+        current is "InReview" or "Quoted";
+
     private static string PickRenewalTerminal(Random rng, string current) => current switch
     {
-        "Created" or "Early" or "DataReview" => WeightedPick(rng,
-            ("Withdrawn", 28), ("NotRenewed", 24), ("Lost", 16), ("Expired", 12), ("Lapsed", 10), ("Bound", 10)),
-        "OutreachStarted" or "WaitingOnBroker" => WeightedPick(rng,
-            ("NotRenewed", 26), ("Lost", 22), ("Withdrawn", 18), ("Lapsed", 14), ("Bound", 14), ("Expired", 6)),
-        "InReview" or "Quoted" or "Negotiation" => WeightedPick(rng,
-            ("Bound", 34), ("Lost", 22), ("NotRenewed", 20), ("Lapsed", 12), ("Withdrawn", 8), ("Expired", 4)),
-        "BindRequested" => WeightedPick(rng,
-            ("Bound", 62), ("NotRenewed", 14), ("Lost", 10), ("Lapsed", 8), ("Withdrawn", 4), ("Expired", 2)),
-        _ => WeightedPick(rng,
-            ("Bound", 28), ("NotRenewed", 24), ("Lost", 20), ("Lapsed", 12), ("Withdrawn", 10), ("Expired", 6)),
+        "InReview" => "Lost",
+        "Quoted" => WeightedPick(rng, ("Completed", 68), ("Lost", 32)),
+        _ => "Lost",
     };
 
     private static double RandomStepDays(Random rng, string fromState, string toState)
     {
         if (toState == "WaitingOnBroker") return rng.Next(2, 14);
         if (toState == "BindRequested") return rng.Next(1, 6);
-        if (toState is "Bound" or "Declined" or "Withdrawn" or "NotRenewed" or "Lapsed" or "Expired")
+        if (toState is "Completed" or "Lost" or "Bound" or "Declined" or "Withdrawn")
             return rng.Next(1, 10);
         return rng.Next(1, 8);
     }
@@ -630,14 +637,17 @@ public static class DevSeedData
 
         return toState switch
         {
-            "NotRenewed" => WeightedPick(rng, ("Carrier non-renewal", 30), ("Insured declined", 30), ("Program change", 20), ("No response", 20)),
-            "Lost" => WeightedPick(rng, ("Lost to competitor", 55), ("Price increase", 25), ("Coverage terms", 20)),
-            "Lapsed" => WeightedPick(rng, ("No bind received", 55), ("Late response", 25), ("Payment issue", 20)),
-            "Withdrawn" => WeightedPick(rng, ("Insured sold business", 30), ("Broker withdrew", 40), ("Coverage no longer needed", 30)),
-            "Expired" => WeightedPick(rng, ("Renewal window elapsed", 70), ("Data collection stalled", 30)),
+            "Lost" => WeightedPick(rng, ("CompetitiveLoss", 45), ("NonRenewal", 30), ("PricingDeclined", 15), ("CoverageNoLongerNeeded", 10)),
             _ => null,
         };
     }
+
+    private static int GetRenewalTargetDays(string? lineOfBusiness) => lineOfBusiness switch
+    {
+        "WorkersCompensation" => 120,
+        "Cyber" => 60,
+        _ => 90,
+    };
 
     private static async Task EnsureReferenceStatusesAsync(AppDbContext db)
     {

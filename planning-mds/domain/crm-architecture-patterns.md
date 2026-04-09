@@ -201,11 +201,12 @@ public class SubmissionWorkflow
         var transition = new WorkflowTransition
         {
             Id = Guid.NewGuid(),
-            SubmissionId = submission.Id,
-            FromStatus = oldStatus,
-            ToStatus = toStatus,
-            TransitionedAt = DateTime.UtcNow,
-            TransitionedBy = context.UserId,
+            WorkflowType = "Submission",
+            EntityId = submission.Id,
+            FromState = oldStatus,
+            ToState = toStatus,
+            OccurredAt = DateTime.UtcNow,
+            ActorUserId = context.UserId,
             Reason = context.Reason
         };
         await _context.WorkflowTransitions.AddAsync(transition);

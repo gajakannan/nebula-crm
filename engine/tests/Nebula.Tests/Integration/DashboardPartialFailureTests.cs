@@ -106,11 +106,11 @@ public class DashboardPartialFailureTests : IClassFixture<CustomWebApplicationFa
         public Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(ICurrentUserService user, int periodDays, CancellationToken ct = default) =>
             inner.GetOpportunityHierarchyAsync(user, periodDays, ct);
 
-        public Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(ICurrentUserService user, int periodDays, CancellationToken ct = default) =>
-            inner.GetOpportunityOutcomesAsync(user, periodDays, ct);
+        public Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(ICurrentUserService user, int periodDays, IReadOnlyCollection<string>? entityTypes = null, CancellationToken ct = default) =>
+            inner.GetOpportunityOutcomesAsync(user, periodDays, entityTypes, ct);
 
-        public Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(ICurrentUserService user, string outcomeKey, int periodDays, CancellationToken ct = default) =>
-            inner.GetOpportunityOutcomeItemsAsync(user, outcomeKey, periodDays, ct);
+        public Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(ICurrentUserService user, string outcomeKey, int periodDays, IReadOnlyCollection<string>? entityTypes = null, CancellationToken ct = default) =>
+            inner.GetOpportunityOutcomeItemsAsync(user, outcomeKey, periodDays, entityTypes, ct);
 
         public Task<IReadOnlyList<NudgeCardDto>> GetNudgesAsync(Guid userId, CancellationToken ct = default) =>
             inner.GetNudgesAsync(userId, ct);

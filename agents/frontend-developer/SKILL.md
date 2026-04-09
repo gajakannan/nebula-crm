@@ -186,12 +186,17 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 - `planning-mds/BLUEPRINT.md` - Sections 3.x (screens, stories) and 4.x (API contracts)
 - `planning-mds/screens/` - Screen specifications
 - `planning-mds/features/` - Feature folders with colocated user stories and acceptance criteria
+- `planning-mds/knowledge-graph/` - Ontology mappings and code-index bindings for scoped retrieval
 - `planning-mds/api/` - OpenAPI contracts for API endpoints
 - `planning-mds/architecture/SOLUTION-PATTERNS.md` - Frontend patterns
 - `experience/src/index.css` - Theme tokens and semantic color mappings
 - `experience/scripts/check-theme-semantic-classes.mjs` - Theme guard (blocks raw palette classes in app UI)
 - `experience/tests/visual/theme-smoke.spec.ts` - Light/dark visual smoke coverage examples
 - `agents/frontend-developer/references/ux-audit-ruleset.md` - Mandatory UX implementation and audit gate
+
+When ontology coverage exists for the target feature or story, run
+`python3 scripts/kg/lookup.py <feature-or-story-id>` before broad repo reads.
+Use `--file <repo-path>` to reverse-map an existing code file back into the ontology.
 
 **Tech Stack:**
 - **Framework:** React 18 + TypeScript

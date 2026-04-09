@@ -133,7 +133,8 @@ const opportunitiesDto = {
     { status: 'Quoted', count: 3, colorGroup: 'decision' as const },
   ],
   renewals: [
-    { status: 'Created', count: 6, colorGroup: 'intake' as const },
+    { status: 'Identified', count: 6, colorGroup: 'intake' as const },
+    { status: 'Outreach', count: 4, colorGroup: 'waiting' as const },
     { status: 'InReview', count: 2, colorGroup: 'review' as const },
     { status: 'Quoted', count: 3, colorGroup: 'decision' as const },
   ],
@@ -162,49 +163,174 @@ const outcomesDto = {
   ],
 };
 
+const renewalFlowDto = {
+  entityType: 'renewal' as const,
+  periodDays: 180,
+  windowStartUtc: '2026-01-01T00:00:00Z',
+  windowEndUtc: '2026-03-01T00:00:00Z',
+  nodes: [
+    {
+      status: 'Identified',
+      label: 'Identified',
+      isTerminal: false,
+      displayOrder: 1,
+      colorGroup: 'intake' as const,
+      currentCount: 6,
+      inflowCount: 0,
+      outflowCount: 4,
+      avgDwellDays: 3.8,
+      emphasis: 'active' as const,
+    },
+    {
+      status: 'Outreach',
+      label: 'Outreach',
+      isTerminal: false,
+      displayOrder: 2,
+      colorGroup: 'waiting' as const,
+      currentCount: 4,
+      inflowCount: 4,
+      outflowCount: 3,
+      avgDwellDays: 4.6,
+      emphasis: 'normal' as const,
+    },
+    {
+      status: 'InReview',
+      label: 'In Review',
+      isTerminal: false,
+      displayOrder: 3,
+      colorGroup: 'review' as const,
+      currentCount: 2,
+      inflowCount: 3,
+      outflowCount: 2,
+      avgDwellDays: 6.1,
+      emphasis: 'blocked' as const,
+    },
+    {
+      status: 'Quoted',
+      label: 'Quoted',
+      isTerminal: false,
+      displayOrder: 4,
+      colorGroup: 'decision' as const,
+      currentCount: 3,
+      inflowCount: 2,
+      outflowCount: 2,
+      avgDwellDays: 2.9,
+      emphasis: 'normal' as const,
+    },
+    {
+      status: 'Completed',
+      label: 'Completed',
+      isTerminal: true,
+      displayOrder: 5,
+      colorGroup: 'won' as const,
+      currentCount: 5,
+      inflowCount: 2,
+      outflowCount: 0,
+      avgDwellDays: null,
+      emphasis: null,
+    },
+  ],
+  links: [
+    { sourceStatus: 'Identified', targetStatus: 'Outreach', count: 4 },
+    { sourceStatus: 'Outreach', targetStatus: 'InReview', count: 3 },
+    { sourceStatus: 'InReview', targetStatus: 'Quoted', count: 2 },
+    { sourceStatus: 'Quoted', targetStatus: 'Completed', count: 2 },
+  ],
+};
+
+const renewalOutcomesDto = {
+  periodDays: 180,
+  totalExits: 7,
+  outcomes: [
+    {
+      key: 'bound',
+      label: 'Bound',
+      branchStyle: 'solid' as const,
+      count: 5,
+      percentOfTotal: 71.4,
+      averageDaysToExit: 11.1,
+    },
+    {
+      key: 'lost_competitor',
+      label: 'Lost to competitor',
+      branchStyle: 'red_dashed' as const,
+      count: 2,
+      percentOfTotal: 28.6,
+      averageDaysToExit: 8.4,
+    },
+  ],
+};
+
+const renewalAgingDto = {
+  entityType: 'renewal' as const,
+  periodDays: 180,
+  statuses: [
+    {
+      status: 'Identified',
+      label: 'Identified',
+      colorGroup: 'intake' as const,
+      displayOrder: 1,
+      sla: {
+        warningDays: 7,
+        targetDays: 30,
+        totalCount: 6,
+        onTimeCount: 4,
+        approachingCount: 1,
+        overdueCount: 1,
+      },
+      buckets: [],
+      total: 6,
+    },
+  ],
+};
+
 describe('OpportunitiesSummary', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockUseOpportunityFlow.mockReturnValue({
-      data: flowDto,
+    mockUseOpportunityFlow.mockImplementation((entityType: unknown) => ({
+      data: entityType === 'renewal' ? renewalFlowDto : flowDto,
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
-    });
-    mockUseOpportunityOutcomes.mockReturnValue({
-      data: outcomesDto,
+    }));
+    mockUseOpportunityOutcomes.mockImplementation((_: unknown, entityTypes?: unknown) => ({
+      data: Array.isArray(entityTypes) && entityTypes.includes('renewal')
+        ? renewalOutcomesDto
+        : outcomesDto,
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
-    });
-    mockUseOpportunityAging.mockReturnValue({
-      data: {
-        entityType: 'submission',
-        periodDays: 180,
-        statuses: [
-          {
-            status: 'Triaging',
-            label: 'Triaging',
-            colorGroup: 'triage',
-            displayOrder: 2,
-            sla: {
-              warningDays: 2,
-              targetDays: 5,
-              totalCount: 7,
-              onTimeCount: 3,
-              approachingCount: 2,
-              overdueCount: 2,
-            },
-            buckets: [],
-            total: 7,
+    }));
+    mockUseOpportunityAging.mockImplementation((entityType: unknown) => ({
+      data: entityType === 'renewal'
+        ? renewalAgingDto
+        : {
+            entityType: 'submission',
+            periodDays: 180,
+            statuses: [
+              {
+                status: 'Triaging',
+                label: 'Triaging',
+                colorGroup: 'triage',
+                displayOrder: 2,
+                sla: {
+                  warningDays: 2,
+                  targetDays: 5,
+                  totalCount: 7,
+                  onTimeCount: 3,
+                  approachingCount: 2,
+                  overdueCount: 2,
+                },
+                buckets: [],
+                total: 7,
+              },
+            ],
           },
-        ],
-      },
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
-    });
+    }));
     mockUseOpportunityBreakdown.mockReturnValue({
       data: {
         entityType: 'submission',
@@ -247,8 +373,12 @@ describe('OpportunitiesSummary', () => {
     expect(screen.getByRole('tab', { name: 'Outcomes' })).toBeTruthy();
     expect(screen.queryByRole('tab', { name: 'Aging' })).toBeNull();
     expect(screen.queryByRole('tab', { name: 'Mix' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Opportunity scope: All' })).toBeTruthy();
 
+    expect(screen.getByText('New Business')).toBeTruthy();
+    expect(screen.getByText('Renewals')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Received stage, 10 opportunities' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Identified stage, 6 opportunities' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Bound outcome, 12 exits/i })).toBeTruthy();
     expect(screen.getByText(/2d warning/i)).toBeTruthy();
   });
@@ -265,16 +395,36 @@ describe('OpportunitiesSummary', () => {
     render(<OpportunitiesSummary />);
 
     expect(mockUseDashboardOpportunities).toHaveBeenCalledWith(180);
-    expect(mockUseOpportunityFlow).toHaveBeenCalledWith('submission', 180);
-    expect(mockUseOpportunityOutcomes).toHaveBeenCalledWith(180);
-    expect(mockUseOpportunityAging).toHaveBeenCalledWith('submission', 180);
+    expect(mockUseOpportunityFlow).toHaveBeenCalledWith('submission', 180, { enabled: true });
+    expect(mockUseOpportunityFlow).toHaveBeenCalledWith('renewal', 180, { enabled: true });
+    expect(mockUseOpportunityOutcomes).toHaveBeenCalledWith(180, ['submission'], { enabled: true });
+    expect(mockUseOpportunityOutcomes).toHaveBeenCalledWith(180, ['renewal'], { enabled: true });
+    expect(mockUseOpportunityAging).toHaveBeenCalledWith('submission', 180, { enabled: true });
+    expect(mockUseOpportunityAging).toHaveBeenCalledWith('renewal', 180, { enabled: true });
 
     fireEvent.click(screen.getByRole('tab', { name: '30d' }));
 
     expect(mockUseDashboardOpportunities).toHaveBeenLastCalledWith(30);
-    expect(mockUseOpportunityFlow).toHaveBeenLastCalledWith('submission', 30);
-    expect(mockUseOpportunityOutcomes).toHaveBeenLastCalledWith(30);
-    expect(mockUseOpportunityAging).toHaveBeenLastCalledWith('submission', 30);
+    expect(mockUseOpportunityFlow).toHaveBeenCalledWith('submission', 30, { enabled: true });
+    expect(mockUseOpportunityFlow).toHaveBeenCalledWith('renewal', 30, { enabled: true });
+    expect(mockUseOpportunityOutcomes).toHaveBeenCalledWith(30, ['submission'], { enabled: true });
+    expect(mockUseOpportunityOutcomes).toHaveBeenCalledWith(30, ['renewal'], { enabled: true });
+    expect(mockUseOpportunityAging).toHaveBeenCalledWith('submission', 30, { enabled: true });
+    expect(mockUseOpportunityAging).toHaveBeenCalledWith('renewal', 30, { enabled: true });
+  });
+
+  it('filters the canvas to renewals only from the scope dropdown', async () => {
+    render(<OpportunitiesSummary />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Opportunity scope: All' }));
+    fireEvent.click(screen.getByLabelText('New Business'));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Received stage, 10 opportunities' })).toBeNull();
+    });
+
+    expect(screen.getByText('Renewals')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Identified stage, 6 opportunities' })).toBeTruthy();
   });
 
   it('supports keyboard chapter navigation with arrow keys', () => {

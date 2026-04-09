@@ -79,7 +79,7 @@ External users (future): MGA users with limited access (not in Phase 0 MVP unles
 ### 1.4 Critical workflows (baseline)
 
 Submission: Received → Triaging → WaitingOnBroker → ReadyForUWReview → InReview → Quoted → BindRequested → Bound (or Declined/Withdrawn)
-Renewal: Created → Early → OutreachStarted → InReview → Quoted → Bound (or Lost/Lapsed)
+Renewal: Identified → Outreach → InReview → Quoted → Completed (or Lost)
 
 Non-negotiables:
 
@@ -415,7 +415,8 @@ Core entities (minimum baseline):
   - Id (uuid), AccountId, BrokerId, ProgramId (nullable), CurrentStatus, EffectiveDate, PremiumEstimate, AssignedToUserId (uuid, FK → UserProfile.UserId)
   - CreatedAt, CreatedByUserId (uuid), UpdatedAt, UpdatedByUserId (uuid?), IsDeleted
 - Renewal
-  - Id (uuid), AccountId, BrokerId, SubmissionId (nullable), CurrentStatus, RenewalDate, AssignedToUserId (uuid, FK → UserProfile.UserId)
+  - Id (uuid), AccountId, BrokerId, PolicyId, CurrentStatus, PolicyExpirationDate, TargetOutreachDate, AssignedToUserId (uuid, FK → UserProfile.UserId)
+  - LineOfBusiness (nullable), LostReasonCode (nullable), LostReasonDetail (nullable), BoundPolicyId (nullable), RenewalSubmissionId (nullable)
   - CreatedAt, CreatedByUserId (uuid), UpdatedAt, UpdatedByUserId (uuid?), IsDeleted
 - **Task** (new — required by Dashboard F0001 and Task Center F0003)
   - Id (uuid), Title, Description (nullable), Status (Open/InProgress/Done), Priority (Low/Normal/High/Urgent)
@@ -456,11 +457,10 @@ Submission workflow transitions:
 - BindRequested -> Bound or Declined
 
 Renewal workflow transitions:
-- Created -> Early
-- Early -> OutreachStarted
-- OutreachStarted -> InReview
+- Identified -> Outreach
+- Outreach -> InReview
 - InReview -> Quoted or Lost
-- Quoted -> Bound or Lapsed
+- Quoted -> Completed or Lost
 
 Transition rules and validations:
 - Invalid transition pairs return HTTP 409 with `ProblemDetails` (`code=invalid_transition`).

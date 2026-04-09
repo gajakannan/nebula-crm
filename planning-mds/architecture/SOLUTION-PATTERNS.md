@@ -130,11 +130,12 @@ event.EventDescription = description; // stored alongside EventPayloadJson
 // Never update or delete - always append
 var transition = new WorkflowTransition
 {
-    SubmissionId = submission.Id,
+    WorkflowType = "Submission",
+    EntityId = submission.Id,
     FromState = submission.Status,
     ToState = newStatus,
-    TransitionedBy = _currentUser.Id,
-    TransitionedAt = DateTime.UtcNow,
+    ActorUserId = _currentUser.Id,
+    OccurredAt = DateTime.UtcNow,
     Reason = reason
 };
 

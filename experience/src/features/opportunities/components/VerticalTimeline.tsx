@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import type {
   OpportunityAgingDto,
   DashboardOpportunitiesDto,
+  OpportunityEntityType,
   OpportunityFlowDto,
   OpportunityOutcomeDto,
 } from '../types';
@@ -26,6 +27,7 @@ interface VerticalTimelineProps {
   outcomesError: boolean;
   onRetryOutcomes: () => void;
   aging?: OpportunityAgingDto;
+  outcomeEntityTypes?: OpportunityEntityType[];
 }
 
 export function VerticalTimeline({
@@ -38,6 +40,7 @@ export function VerticalTimeline({
   outcomesError,
   onRetryOutcomes,
   aging,
+  outcomeEntityTypes,
 }: VerticalTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -271,6 +274,7 @@ export function VerticalTimeline({
                 periodDays={periodDays}
                 chapter={chapter}
                 allOutcomesZero={allOutcomesZero}
+                entityTypes={outcomeEntityTypes}
                 registerOutcome={registerOutcome}
               />
               {chapter === 'outcomes' && (

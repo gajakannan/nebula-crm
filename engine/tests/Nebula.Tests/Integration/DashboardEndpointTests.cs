@@ -275,6 +275,24 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    public async Task GetOpportunityOutcomes_FilteredByRenewal_Returns200()
+    {
+        var response = await _client.GetAsync("/dashboard/opportunities/outcomes?periodDays=180&entityTypes=renewal");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var outcomes = await response.Content.ReadFromJsonAsync<OpportunityOutcomesDto>();
+        outcomes.ShouldNotBeNull();
+        outcomes!.PeriodDays.ShouldBe(180);
+    }
+
+    [Fact]
+    public async Task GetOpportunityOutcomes_InvalidEntityTypes_Returns400()
+    {
+        var response = await _client.GetAsync("/dashboard/opportunities/outcomes?periodDays=180&entityTypes=endorsement");
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task GetOpportunityOutcomeItems_Returns200WithCorrectShape()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/outcomes/bound/items?periodDays=180");
@@ -290,6 +308,13 @@ public class DashboardEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetOpportunityOutcomeItems_InvalidOutcomeKey_Returns400()
     {
         var response = await _client.GetAsync("/dashboard/opportunities/outcomes/invalid/items?periodDays=180");
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetOpportunityOutcomeItems_InvalidEntityTypes_Returns400()
+    {
+        var response = await _client.GetAsync("/dashboard/opportunities/outcomes/bound/items?periodDays=180&entityTypes=endorsement");
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 

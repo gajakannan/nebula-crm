@@ -41,15 +41,10 @@ public class WorkflowSlaThresholdConfiguration : IEntityTypeConfiguration<Workfl
             Seed("379f3ad6-68f0-4d2f-b52f-5ab9bb40f157", "submission", "WaitingOnBroker", 2, 3, now),
 
             // Renewal thresholds
-            Seed("30efe68f-9e5c-4e7f-9191-e68ee0f8eb26", "renewal", "Created", 1, 3, now),
-            Seed("0e5f31e6-af58-4e30-8ea0-f2d6f862994e", "renewal", "Early", 7, 30, now),
-            Seed("f0f6f093-7e6e-45f5-ac84-76510ddfe371", "renewal", "DataReview", 2, 5, now),
-            Seed("bb695667-05cf-43dd-a89c-c05e4747967c", "renewal", "OutreachStarted", 3, 7, now),
-            Seed("2a620479-fc25-4a25-b0c5-1dce00a3693a", "renewal", "WaitingOnBroker", 5, 10, now),
+            Seed("30efe68f-9e5c-4e7f-9191-e68ee0f8eb26", "renewal", "Identified", 7, 30, now),
+            Seed("bb695667-05cf-43dd-a89c-c05e4747967c", "renewal", "Outreach", 3, 7, now),
             Seed("77ca3fa9-fddd-47ec-b4d2-84bcbf001687", "renewal", "InReview", 5, 14, now),
             Seed("f501f5dd-23d4-4250-9eab-65a70d0c08f5", "renewal", "Quoted", 7, 21, now),
-            Seed("d7fe40cd-c9a5-4fd5-b09c-47f10ff0f20f", "renewal", "Negotiation", 7, 21, now),
-            Seed("fdf17afe-4182-46e4-bf8b-3079e74b3579", "renewal", "BindRequested", 2, 5, now),
         ];
     }
 

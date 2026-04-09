@@ -46,11 +46,12 @@ public static class RenewalEndpoints
                 validation.Errors.GroupBy(e => e.PropertyName)
                     .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray()));
 
-        var (result, error) = await svc.TransitionAsync(renewalId, dto, user, ct);
+        var (result, error, missingItems) = await svc.TransitionAsync(renewalId, dto, user, ct);
         return error switch
         {
             "not_found" => ProblemDetailsHelper.NotFound("Renewal", renewalId),
             "invalid_transition" => ProblemDetailsHelper.InvalidTransition("current", dto.ToState),
+            "missing_transition_prerequisite" => ProblemDetailsHelper.MissingTransitionPrerequisite(missingItems ?? []),
             _ => Results.Created($"/renewals/{renewalId}/transitions", result),
         };
     }

@@ -29,6 +29,7 @@ stages:
     - boundary_genericness
     - api_contract
     - solution_contract
+    - knowledge_graph_sync
     - infra_non_strict
     - security_planning_light
   implementation:
@@ -38,6 +39,7 @@ stages:
     - boundary_genericness
     - api_contract
     - solution_contract
+    - knowledge_graph_sync
     - frontend_quality
     - infra_strict
     - security_planning_strict
@@ -47,6 +49,7 @@ stages:
     - boundary_genericness
     - api_contract
     - solution_contract
+    - knowledge_graph_sync
     - frontend_quality
     - infra_strict
     - security_planning_strict
@@ -73,6 +76,12 @@ gates:
     - python3
     - planning-mds/testing/validate-nebula-api-contract.py
     - planning-mds/api/nebula-api.yaml
+  knowledge_graph_sync:
+    description: Validate knowledge-graph integrity (IDs, references, paths, feature
+      coverage, code-index bindings, coverage-report freshness).
+    command:
+    - python3
+    - scripts/kg/validate.py
   frontend_quality:
     description: Enforce solution-owned frontend validation evidence and coverage artifacts.
     command:

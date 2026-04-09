@@ -10,6 +10,13 @@ public class RenewalRepository(AppDbContext db) : IRenewalRepository
     public async Task<Renewal?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         await db.Renewals.FirstOrDefaultAsync(r => r.Id == id, ct);
 
+    public async Task<Renewal?> GetByIdWithIncludesAsync(Guid id, CancellationToken ct = default) =>
+        await db.Renewals
+            .Include(r => r.Account)
+            .Include(r => r.Broker)
+            .Include(r => r.AssignedToUser)
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
+
     public async Task UpdateAsync(Renewal renewal, CancellationToken ct = default) =>
         await db.SaveChangesAsync(ct);
 }

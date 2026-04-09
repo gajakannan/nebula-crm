@@ -91,7 +91,7 @@ This glossary ensures consistent use of insurance terms in product requirements 
 **Type:** Entity
 **Definition:** The process of continuing insurance coverage for another term
 **Timing:** Typically starts 90-120 days before expiration
-**Outcome:** Renewed (bound), Lost (to competitor), or Lapsed (not renewed)
+**Outcome:** Completed (renewed/bound) or Lost (including competitive loss and non-renewal outcomes)
 **Example:** "ABC Corp's policy renews on 2025-02-01"
 **In Nebula:** Core workflow for retention management
 
@@ -218,7 +218,7 @@ This glossary ensures consistent use of insurance terms in product requirements 
 ### Lapse
 **Definition:** Policy expires without renewal
 **Reasons:** Insured chose not to renew, found coverage elsewhere
-**In Nebula:** Terminal state for renewal workflow
+**In Nebula:** Captured as a Lost renewal reason, not as a separate workflow state
 
 ---
 

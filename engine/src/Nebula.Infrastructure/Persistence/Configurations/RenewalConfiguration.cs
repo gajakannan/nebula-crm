@@ -12,10 +12,13 @@ public class RenewalConfiguration : IEntityTypeConfiguration<Renewal>
 
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.CurrentStatus).IsRequired().HasMaxLength(30).HasDefaultValue("Created");
+        builder.Property(e => e.CurrentStatus).IsRequired().HasMaxLength(30).HasDefaultValue("Identified");
         builder.Property(e => e.LineOfBusiness).HasMaxLength(50);
-        builder.Property(e => e.RenewalDate).IsRequired();
+        builder.Property(e => e.PolicyExpirationDate).IsRequired().HasColumnType("date");
+        builder.Property(e => e.TargetOutreachDate).IsRequired().HasColumnType("date");
         builder.Property(e => e.AssignedToUserId).IsRequired();
+        builder.Property(e => e.LostReasonCode).HasMaxLength(50);
+        builder.Property(e => e.LostReasonDetail).HasMaxLength(500);
         builder.Property(e => e.CreatedByUserId).IsRequired();
         builder.Property(e => e.UpdatedByUserId).IsRequired();
         builder.Property(e => e.DeletedByUserId);
@@ -31,9 +34,14 @@ public class RenewalConfiguration : IEntityTypeConfiguration<Renewal>
             .HasForeignKey(e => e.BrokerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(e => e.Submission)
+        builder.HasOne(e => e.AssignedToUser)
             .WithMany()
-            .HasForeignKey(e => e.SubmissionId)
+            .HasForeignKey(e => e.AssignedToUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.RenewalSubmission)
+            .WithMany()
+            .HasForeignKey(e => e.RenewalSubmissionId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(e => e.RowVersion)
@@ -49,7 +57,16 @@ public class RenewalConfiguration : IEntityTypeConfiguration<Renewal>
         builder.HasIndex(e => new { e.AssignedToUserId, e.CurrentStatus })
             .HasDatabaseName("IX_Renewals_AssignedToUserId_CurrentStatus");
 
-        builder.HasIndex(e => new { e.RenewalDate, e.CurrentStatus })
-            .HasDatabaseName("IX_Renewals_RenewalDate_Status");
+        builder.HasIndex(e => new { e.PolicyExpirationDate, e.CurrentStatus })
+            .HasDatabaseName("IX_Renewals_PolicyExpirationDate_CurrentStatus");
+
+        builder.HasIndex(e => e.PolicyId)
+            .HasDatabaseName("IX_Renewals_PolicyId_Active")
+            .HasFilter("\"IsDeleted\" = false AND \"CurrentStatus\" NOT IN ('Completed', 'Lost')")
+            .IsUnique();
+
+        builder.HasIndex(e => e.TargetOutreachDate)
+            .HasDatabaseName("IX_Renewals_TargetOutreachDate")
+            .HasFilter("\"IsDeleted\" = false AND \"CurrentStatus\" = 'Identified'");
     }
 }

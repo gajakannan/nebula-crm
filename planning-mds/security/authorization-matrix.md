@@ -132,7 +132,7 @@ No requirements invented. Gaps are marked "Not yet specified" with a reference t
 | ExternalUser | read | **DENY** | Pipeline data is InternalOnly. | F0001-S0002 Data Visibility |
 
 **Constraints applying to all ALLOW decisions on Pipeline Summary:**
-- Only non-terminal statuses are shown. Terminal statuses (Bound, Declined, Withdrawn, Lost, Lapsed) must be excluded. (F0001-S0002 Validation Rules)
+- Only non-terminal statuses are shown. Terminal statuses (Bound, Declined, Withdrawn, Completed, Lost) must be excluded. (F0001-S0002 Validation Rules)
 - Zero-count status pills must remain visible; they may not be hidden. (F0001-S0002 edge cases)
 - Mini-card expansion: up to 5 items per status; sorted by days-in-status descending (longest-stuck first). Same scope as counts. (F0001-S0002 edge cases)
 - "View all" navigation must carry the same authorization scope to the destination list screen. (F0001-S0002 AC)

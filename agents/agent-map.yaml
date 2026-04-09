@@ -54,6 +54,8 @@ agents:
       - planning-mds/knowledge-graph/canonical-nodes.yaml  # shared canonical nodes when Phase B introduces shared semantics
       - planning-mds/knowledge-graph/feature-mappings.yaml # finalize feature/story bindings
       - planning-mds/knowledge-graph/solution-ontology.yaml # only when ontology vocabulary itself changes
+      - planning-mds/knowledge-graph/code-index.yaml       # implementation bindings from canonical IDs into engine/experience code
+      - planning-mds/knowledge-graph/coverage-report.yaml  # generated via `python3 scripts/kg/validate.py --write-coverage-report`
       - planning-mds/features/**/feature-assembly-plan.md  # per-feature execution plan
       - planning-mds/features/**/PRD.md    # architecture traceability + solution design sections
       - planning-mds/features/**/README.md # feature ERD (Mermaid + ASCII), C4 component diagrams
@@ -64,6 +66,7 @@ agents:
     reads:
       - planning-mds/BLUEPRINT.md
       - planning-mds/architecture/SOLUTION-PATTERNS.md
+      - planning-mds/knowledge-graph/**
       - planning-mds/api/*.yaml
       - planning-mds/schemas/**
       - planning-mds/features/**
@@ -77,6 +80,7 @@ agents:
     reads:
       - planning-mds/BLUEPRINT.md
       - planning-mds/architecture/SOLUTION-PATTERNS.md
+      - planning-mds/knowledge-graph/**
       - planning-mds/api/*.yaml
       - planning-mds/schemas/**
       - planning-mds/features/**
@@ -92,6 +96,7 @@ agents:
     reads:
       - planning-mds/BLUEPRINT.md
       - planning-mds/architecture/SOLUTION-PATTERNS.md
+      - planning-mds/knowledge-graph/**
       - planning-mds/features/**
       - agents/ai-engineer/references/**
     writes:
@@ -104,6 +109,7 @@ agents:
     reads:
       - planning-mds/BLUEPRINT.md
       - planning-mds/architecture/SOLUTION-PATTERNS.md
+      - planning-mds/knowledge-graph/**
       - planning-mds/features/**
       - engine/**
       - experience/**
@@ -120,6 +126,7 @@ agents:
     reads:
       - planning-mds/BLUEPRINT.md
       - planning-mds/architecture/**
+      - planning-mds/knowledge-graph/**
       - engine/**
       - experience/**
       - neuron/**
@@ -139,6 +146,7 @@ agents:
     reads:
       - planning-mds/BLUEPRINT.md
       - planning-mds/architecture/SOLUTION-PATTERNS.md
+      - planning-mds/knowledge-graph/**
       - planning-mds/features/**
       - agents/frontend-developer/references/ux-audit-ruleset.md
       - engine/**
@@ -152,6 +160,7 @@ agents:
     reads:
       - planning-mds/BLUEPRINT.md
       - planning-mds/architecture/SOLUTION-PATTERNS.md
+      - planning-mds/knowledge-graph/**
       - planning-mds/security/**
       - agents/security/references/**
       - engine/**
@@ -200,7 +209,7 @@ agents:
 #   quality:       pass-rate + coverage thresholds; failing tests block
 #   editorial:     user reviews content (blog/docs)
 #   tracker-sync:  planning trackers synchronized; validation script must pass
-#   ontology-sync: feature mapping aligned with shared solution ontology; references and ownership boundaries verified
+#   ontology-sync: feature mapping aligned with shared solution ontology; references and ownership boundaries verified; MUST run `python3 scripts/kg/validate.py` and pass before closeout (coverage-report.yaml must be fresh — regenerate via `--write-coverage-report`)
 #   signoff:       required role signoffs verified before closeout
 #   clarification: PM identifies underspecified requirements for user input
 # ──────────────────────────────────────────────────────────────
@@ -230,6 +239,7 @@ actions:
         phase: B
       - gate: ontology-sync
         name: phase-b-ontology-sync
+        script: scripts/kg/validate.py
       - gate: approval
         name: phase-b-review
 
@@ -380,3 +390,4 @@ lifecycle:
   gates:
     - boundary_genericness: agents/scripts/validate-genericness.py
     - skill_regression: agents/scripts/run-skill-regression.py
+    - knowledge_graph_sync: scripts/kg/validate.py

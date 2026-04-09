@@ -36,7 +36,7 @@ public class SmokeTests
     [InlineData(typeof(Broker), new[] { "LegalName", "LicenseNumber", "State", "Status", "Email", "Phone", "BrokerTenantId", "ManagedByUserId", "MgaId", "PrimaryProgramId" })]
     [InlineData(typeof(Contact), new[] { "BrokerId", "AccountId", "FullName", "Email", "Phone", "Role" })]
     [InlineData(typeof(Submission), new[] { "AccountId", "BrokerId", "ProgramId", "LineOfBusiness", "CurrentStatus", "EffectiveDate", "PremiumEstimate", "AssignedToUserId" })]
-    [InlineData(typeof(Renewal), new[] { "AccountId", "BrokerId", "SubmissionId", "LineOfBusiness", "CurrentStatus", "RenewalDate", "AssignedToUserId" })]
+    [InlineData(typeof(Renewal), new[] { "AccountId", "BrokerId", "PolicyId", "LineOfBusiness", "CurrentStatus", "PolicyExpirationDate", "TargetOutreachDate", "AssignedToUserId", "LostReasonCode", "LostReasonDetail", "BoundPolicyId", "RenewalSubmissionId" })]
     [InlineData(typeof(TaskItem), new[] { "Title", "Description", "Status", "Priority", "DueDate", "AssignedToUserId", "LinkedEntityType", "LinkedEntityId", "CompletedAt" })]
     public void Domain_BaseEntityDescendant_HasExpectedProperties(Type entityType, string[] expectedProperties)
     {

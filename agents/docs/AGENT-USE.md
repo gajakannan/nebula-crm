@@ -79,6 +79,8 @@ Ontology context:
   - planning-mds/knowledge-graph/solution-ontology.yaml
   - planning-mds/knowledge-graph/canonical-nodes.yaml
   - planning-mds/knowledge-graph/feature-mappings.yaml
+  - planning-mds/knowledge-graph/code-index.yaml (when code routing or reverse lookup is needed)
+  - planning-mds/knowledge-graph/coverage-report.yaml (when coverage/freshness status matters)
 - use the matching mapping entry as the first-pass routing context
 - source precedence: raw feature/ADR/schema/API artifacts win over ontology mappings
 - if ontology drift is found, repair the authoritative source first if needed,
@@ -88,6 +90,10 @@ Ontology context:
 Use the ontology to resolve canonical workflow, workflow state, capability,
 schema, ADR, and entity links. Do not treat it as a substitute for reading the linked raw
 artifacts when details or verification matter.
+Use `python3 scripts/kg/lookup.py <feature-or-story-id>` to materialize the
+scope, or `python3 scripts/kg/lookup.py --file <repo-path>` for reverse lookup.
+Use `python3 scripts/kg/validate.py --write-coverage-report` when the committed
+coverage/freshness artifact needs to be refreshed after ontology changes.
 
 ### Action Template
 

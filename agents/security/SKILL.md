@@ -102,9 +102,14 @@ Always gather these before reviewing:
 - `planning-mds/BLUEPRINT.md`
 - `planning-mds/architecture/SOLUTION-PATTERNS.md`
 - `planning-mds/architecture/decisions/`
+- `planning-mds/knowledge-graph/` when the target feature or code path has ontology coverage
 - `planning-mds/security/` (if present)
 - Relevant backend/frontend source files
 - Deployment/runtime configuration files
+
+When ontology coverage exists for the target feature or code path, run
+`python3 scripts/kg/lookup.py <feature-or-story-id>` or
+`python3 scripts/kg/lookup.py --file <repo-path>` before broader file reads.
 
 Use these references as needed:
 - `agents/security/references/security-best-practices.md`

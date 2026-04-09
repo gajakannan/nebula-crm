@@ -36,11 +36,20 @@ public class DashboardService(IDashboardRepository dashboardRepo, BrokerScopeRes
     public Task<OpportunityHierarchyDto> GetOpportunityHierarchyAsync(ICurrentUserService user, int periodDays = 180, CancellationToken ct = default) =>
         dashboardRepo.GetOpportunityHierarchyAsync(user, periodDays, ct);
 
-    public Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(ICurrentUserService user, int periodDays = 180, CancellationToken ct = default) =>
-        dashboardRepo.GetOpportunityOutcomesAsync(user, periodDays, ct);
+    public Task<OpportunityOutcomesDto> GetOpportunityOutcomesAsync(
+        ICurrentUserService user,
+        int periodDays = 180,
+        IReadOnlyCollection<string>? entityTypes = null,
+        CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityOutcomesAsync(user, periodDays, entityTypes, ct);
 
-    public Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(ICurrentUserService user, string outcomeKey, int periodDays = 180, CancellationToken ct = default) =>
-        dashboardRepo.GetOpportunityOutcomeItemsAsync(user, outcomeKey, periodDays, ct);
+    public Task<OpportunityItemsDto> GetOpportunityOutcomeItemsAsync(
+        ICurrentUserService user,
+        string outcomeKey,
+        int periodDays = 180,
+        IReadOnlyCollection<string>? entityTypes = null,
+        CancellationToken ct = default) =>
+        dashboardRepo.GetOpportunityOutcomeItemsAsync(user, outcomeKey, periodDays, entityTypes, ct);
 
     public async Task<NudgesResponseDto> GetNudgesAsync(Guid userId, ICurrentUserService user, CancellationToken ct = default)
     {

@@ -8,8 +8,8 @@ public class WorkflowStateMachineTests
     [Theory]
     [InlineData("Submission", "Received", "Triaging")]
     [InlineData("Submission", "BindRequested", "Bound")]
-    [InlineData("Renewal", "Created", "DataReview")]
-    [InlineData("Renewal", "Quoted", "Bound")]
+    [InlineData("Renewal", "Identified", "Outreach")]
+    [InlineData("Renewal", "Quoted", "Completed")]
     public void IsValidTransition_WithAllowedTransition_ReturnsTrue(string workflowType, string from, string to)
     {
         WorkflowStateMachine.IsValidTransition(workflowType, from, to).ShouldBeTrue();
@@ -19,8 +19,8 @@ public class WorkflowStateMachineTests
     [InlineData("Submission", "Bound", "Quoted")]
     [InlineData("Submission", "Received", "WaitingOnBroker")]
     [InlineData("Submission", "Quoted", "Bound")]
-    [InlineData("Renewal", "Bound", "Quoted")]
-    [InlineData("Renewal", "Created", "Negotiation")]
+    [InlineData("Renewal", "Completed", "Quoted")]
+    [InlineData("Renewal", "Identified", "Completed")]
     [InlineData("Unknown", "Open", "Closed")]
     public void IsValidTransition_WithDisallowedTransition_ReturnsFalse(string workflowType, string from, string to)
     {
@@ -30,8 +30,8 @@ public class WorkflowStateMachineTests
     [Theory]
     [InlineData("Submission", "Bound", true)]
     [InlineData("Submission", "Received", false)]
-    [InlineData("Renewal", "Bound", true)]
-    [InlineData("Renewal", "Created", false)]
+    [InlineData("Renewal", "Completed", true)]
+    [InlineData("Renewal", "Identified", false)]
     [InlineData("Unknown", "Anything", false)]
     public void IsTerminalState_ReturnsExpectedValue(string workflowType, string state, bool expected)
     {

@@ -112,8 +112,8 @@ Renewals are always created in the context of an expiring policy. The renewal in
 - ADR-009 — WorkflowSlaThreshold for TargetOutreachDate computation
 
 **Related Stories:**
-- F0007-S0001 — Created renewals appear in the pipeline list
-- F0007-S0003 — Created renewal can be transitioned
+- F0007-S0001 — Newly identified renewals appear in the pipeline list
+- F0007-S0003 — Identified renewal can be transitioned
 - F0007-S0007 — Creation event appears in timeline
 
 ## Out of Scope

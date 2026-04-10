@@ -2638,8 +2638,8 @@ freshness:
       - experience/src/features/opportunities/types.ts
       - experience/src/pages/tests/DashboardPage.integration.test.tsx
       source_count: 74
-      last_modified: '2026-04-08'
-      source_hash: 47e0c536fc68600b
+      last_modified: '2026-04-09'
+      source_hash: d95c89f06a92a790
     capability:task-center:
       source_paths:
       - engine/src/Nebula.Application/DTOs/TaskBrokerUserDto.cs
@@ -3150,8 +3150,8 @@ freshness:
       - experience/src/features/opportunities/tests/OpportunityVisualizations.test.tsx
       - experience/src/features/opportunities/types.ts
       source_count: 54
-      last_modified: '2026-04-07'
-      source_hash: c42df514ac4b0108
+      last_modified: '2026-04-09'
+      source_hash: 28a69c581e974b4c
     endpoint:dashboard-nudges:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/DashboardEndpoints.cs

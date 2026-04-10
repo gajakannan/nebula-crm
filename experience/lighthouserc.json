@@ -20,7 +20,7 @@
     },
     "upload": {
       "target": "filesystem",
-      "outputDir": "planning-mds/operations/evidence/f0033/artifacts/lighthouse"
+      "outputDir": "../planning-mds/operations/evidence/f0033/artifacts/lighthouse"
     }
   }
 }

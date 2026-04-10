@@ -24,6 +24,16 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=5
+      sonarqube:
+        image: sonarqube:community
+        ports:
+          - 9002:9000
+        options: >-
+          --health-cmd="curl -sf http://localhost:9000/api/system/status | grep -q UP || exit 1"
+          --health-interval=15s
+          --health-timeout=10s
+          --health-retries=30
+          --health-start-period=120s
 
     env:
       ConnectionStrings__DefaultConnection: Host=localhost;Port=5433;Database=nebula;Username=postgres;Password=postgres
@@ -75,7 +85,7 @@ jobs:
         run: |
           dotnet sonarscanner begin \
             /k:"nebula-crm" \
-            /d:sonar.host.url="${SONAR_HOST_URL:-http://localhost:9001}" \
+            /d:sonar.host.url="${SONAR_HOST_URL:-http://localhost:9002}" \
             /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
             /d:sonar.javascript.lcov.reportPaths="experience/coverage/lcov.info" \
             ${SONAR_TOKEN:+/d:sonar.token="$SONAR_TOKEN"}

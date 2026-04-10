@@ -58,6 +58,9 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: experience/pnpm-lock.yaml
 
+      - name: Use project-local pnpm virtual store in CI
+        run: pnpm config set virtual-store-dir node_modules/.pnpm --location project
+
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 

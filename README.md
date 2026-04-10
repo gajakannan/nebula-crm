@@ -119,15 +119,18 @@ As of 2026-02-08, this repository is **published as a human-orchestrated framewo
 
 ## Frontend Installs On WSL
 
-If you run the repo from a Windows-mounted path such as `/mnt/c/...` in WSL, pnpm's default `node_modules/.pnpm` layout can fail with `EACCES` during package rename/import steps. The frontend now pins its pnpm virtual store to a Linux-side path via `experience/.npmrc`, so normal commands can stay the same:
+If you run the repo from a Windows-mounted path such as `/mnt/c/...` in WSL, pnpm can hit filesystem-specific `EACCES` errors during install. Do not commit a repo-level `virtual-store-dir` override to work around that: moving the virtual store outside the project tree breaks Vitest and Playwright module resolution.
+
+Recommended:
 
 ```bash
-cd experience
+git clone <repo> ~/src/nebula-crm
+cd ~/src/nebula-crm/experience
 pnpm install
 pnpm test
 ```
 
-If you need to reset the frontend install, remove both `experience/node_modules` and `${HOME}/.pnpm-virtual-store/nebula-crm-experience`.
+If you already installed with an older external virtual-store override, remove `experience/node_modules` and `${HOME}/.pnpm-virtual-store/nebula-crm-experience`, then reinstall from the current repo state.
 
 ## Reuse Workflow (New Project)
 

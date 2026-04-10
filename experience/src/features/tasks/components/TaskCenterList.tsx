@@ -8,6 +8,7 @@ import { useCurrentUser } from '@/features/auth';
 import { cn } from '@/lib/utils';
 import { getEntityPath } from '@/lib/navigation';
 import { Link } from 'react-router-dom';
+import type { MouseEvent } from 'react';
 import type {
   TaskListFilters,
   TaskListItemDto,
@@ -408,7 +409,7 @@ function DesktopTaskRow({
           linkedPath ? (
             <Link
               to={linkedPath}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: MouseEvent<HTMLAnchorElement>) => e.stopPropagation()}
               className="truncate text-xs text-nebula-violet hover:underline max-w-[120px] block"
             >
               {task.linkedEntityName}

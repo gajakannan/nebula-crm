@@ -327,7 +327,20 @@ def main() -> int:
             )
         else:
             existing = yaml.safe_load(COVERAGE_REPORT_PATH.read_text(encoding="utf-8")) or {}
-            if existing != coverage_report:
+
+            def _extract_hashes(rpt: dict[str, Any]) -> dict[str, str | None]:
+                """Extract only source_hash values for staleness comparison.
+
+                last_modified uses st_mtime which differs between local and CI
+                (git checkout sets all timestamps to checkout time), so we only
+                compare content hashes which are deterministic."""
+                hashes: dict[str, str | None] = {}
+                for section in ("canonical", "mappings", "code_bindings"):
+                    for key, entry in rpt.get("freshness", {}).get(section, {}).items():
+                        hashes[f"{section}/{key}"] = entry.get("source_hash")
+                return hashes
+
+            if _extract_hashes(existing) != _extract_hashes(coverage_report):
                 report.error(
                     "coverage-report.yaml is stale "
                     "(run python3 scripts/kg/validate.py --write-coverage-report)"

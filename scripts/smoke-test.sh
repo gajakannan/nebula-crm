@@ -203,11 +203,20 @@ resolve_user_id() {
     return 1
   fi
 
+  # Extract sub claim from JWT — IdpSubject is the JWT sub (a UUID), not the username
+  local idp_subject
+  idp_subject=$(echo "$CLAIMS_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin).get('sub',''))" 2>/dev/null)
+
+  if [[ -z "$idp_subject" ]]; then
+    echo "  FAIL: UserId resolution failed — ${user}"
+    return 1
+  fi
+
   USER_ID=$(docker compose exec -T db psql -U postgres -d nebula -t -A -c \
-    "SELECT \"Id\" FROM \"UserProfiles\" WHERE \"IdpSubject\" = '${user}' LIMIT 1;" 2>/dev/null | tr -d '[:space:]')
+    "SELECT \"Id\" FROM \"UserProfiles\" WHERE \"IdpSubject\" = '${idp_subject}' LIMIT 1;" 2>/dev/null | tr -d '[:space:]')
 
   if [[ -z "$USER_ID" ]]; then
-    echo "  FAIL: UserProfile not found for ${user}"
+    echo "  FAIL: UserProfile not found for ${user} (sub=${idp_subject})"
     return 1
   fi
   echo "  UserId: $USER_ID"

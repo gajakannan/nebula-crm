@@ -49,7 +49,7 @@ jobs:
 
       - name: Start API
         run: |
-          dotnet run --project engine/src/Nebula.Api/Nebula.Api.csproj &
+          dotnet run --no-launch-profile --project engine/src/Nebula.Api/Nebula.Api.csproj &
           sleep 15
 
       - name: Wait for API health

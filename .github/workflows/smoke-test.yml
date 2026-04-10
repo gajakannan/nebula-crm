@@ -64,6 +64,8 @@ jobs:
 
       - name: Run multi-role smoke tests
         run: ./scripts/smoke-test.sh --all-users
+        env:
+          COMPOSE_PROJECT_NAME: nebula-ci-${{ github.run_id }}
 
       - name: Collect service logs on failure
         if: failure()

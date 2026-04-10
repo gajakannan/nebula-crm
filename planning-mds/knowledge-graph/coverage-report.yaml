@@ -2444,8 +2444,8 @@ freshness:
       - experience/src/features/tasks/types.ts
       - experience/src/pages/TaskCenterPage.tsx
       source_count: 36
-      last_modified: '2026-03-31'
-      source_hash: c6c64b1a55d74ed6
+      last_modified: '2026-04-09'
+      source_hash: 57072c3591fb1a28
     entity:user-profile:
       source_paths:
       - engine/src/Nebula.Domain/Entities/UserProfile.cs
@@ -2670,8 +2670,8 @@ freshness:
       - experience/src/features/tasks/index.ts
       - experience/src/features/tasks/types.ts
       source_count: 27
-      last_modified: '2026-03-31'
-      source_hash: fdc5d4d2db29c6e2
+      last_modified: '2026-04-09'
+      source_hash: d12386ff5c5a5b71
     capability:broker-relationship-management:
       source_paths:
       - engine/src/Nebula.Application/DTOs/BrokerBrokerUserDto.cs

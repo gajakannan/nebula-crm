@@ -178,7 +178,7 @@ Use these as starting lines in fresh sessions:
 ```text
 Switch to Product Manager agent mode (agents/product-manager/SKILL.md).
 
-Refine F0006 submission intake workflow (planning-mds/features/F0006-submission-intake-workflow).
+Refine F{NNNN} <feature slug> workflow (planning-mds/features/F{NNNN}-{slug}).
 
 The PRD currently has a high-level feature statement, scope, architecture hints,
 and traceability but zero user stories, no persona references, no screen specs,
@@ -191,7 +191,7 @@ Read:
 - planning-mds/features/TRACKER-GOVERNANCE.md
 
 Deliverables:
-1. Refine the F0006 PRD and sharpen scope boundaries.
+1. Refine the target feature PRD and sharpen scope boundaries.
 2. Clarify MVP versus Future scope explicitly.
 3. Add user stories with acceptance criteria.
 4. Update README.md and STATUS.md in the feature folder.
@@ -202,7 +202,7 @@ Constraints:
 - Determine applicable rules and document them within the appropriate stories.
 
 When done:
-- run `python3 agents/product-manager/scripts/validate-stories.py planning-mds/features/F0006-submission-intake-workflow`
+- run `python3 agents/product-manager/scripts/validate-stories.py planning-mds/features/F{NNNN}-{slug}`
 - run `python3 agents/product-manager/scripts/generate-story-index.py planning-mds/features/`
 - run `python3 agents/product-manager/scripts/validate-trackers.py`
 ```
@@ -212,8 +212,8 @@ When done:
 ```text
 Switch to Architect agent mode (agents/architect/SKILL.md).
 
-Design the technical solution for F0006 submission intake workflow at
-planning-mds/features/F0006-submission-intake-workflow.
+Design the technical solution for F{NNNN} <feature slug> at
+planning-mds/features/F{NNNN}-{slug}.
 
 The Product Manager has completed story breakdown. Read the full feature folder
 for PRD, stories, and acceptance criteria.

@@ -16,6 +16,9 @@ jobs:
   smoke-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      AUTHENTIK_SECRET_KEY: nebula-ci-authentik-secret-key-not-for-prod
+      AUTHENTIK_BOOTSTRAP_PASSWORD: devpassword
 
     steps:
       - uses: actions/checkout@v4

@@ -375,8 +375,8 @@ describe('OpportunitiesSummary', () => {
     expect(screen.queryByRole('tab', { name: 'Mix' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Opportunity scope: All' })).toBeTruthy();
 
-    expect(screen.getByText('New Business')).toBeTruthy();
-    expect(screen.getByText('Renewals')).toBeTruthy();
+    expect(screen.getByLabelText('New Business opportunity lane')).toBeTruthy();
+    expect(screen.getByLabelText('Renewals opportunity lane')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Received stage, 10 opportunities' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Identified stage, 6 opportunities' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Bound outcome, 12 exits/i })).toBeTruthy();
@@ -417,13 +417,13 @@ describe('OpportunitiesSummary', () => {
     render(<OpportunitiesSummary />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Opportunity scope: All' }));
-    fireEvent.click(screen.getByLabelText('New Business'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /New Business/i }));
 
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: 'Received stage, 10 opportunities' })).toBeNull();
     });
 
-    expect(screen.getByText('Renewals')).toBeTruthy();
+    expect(screen.getByLabelText('Renewals opportunity lane')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Identified stage, 6 opportunities' })).toBeTruthy();
   });
 
@@ -537,7 +537,8 @@ describe('OpportunitiesSummary', () => {
 
     render(<OpportunitiesSummary />);
 
-    expect(screen.getByText('Unable to load opportunity flow')).toBeTruthy();
+    expect(screen.getByText('Unable to load new business flow')).toBeTruthy();
+    expect(screen.getByText('Unable to load renewals flow')).toBeTruthy();
   });
 
   it('renders empty timeline state with no popovers when all stage counts are zero', () => {
@@ -559,8 +560,8 @@ describe('OpportunitiesSummary', () => {
 
     render(<OpportunitiesSummary />);
 
-    expect(screen.getByText('No activity in period')).toBeTruthy();
-    const received = screen.getByRole('button', { name: /Received stage, 0 opportunities/i });
+    expect(screen.getAllByText('No activity in period')).toHaveLength(2);
+    const [received] = screen.getAllByRole('button', { name: /Received stage, 0 opportunities/i });
     fireEvent.click(received);
     expect(screen.queryByRole('dialog')).toBeNull();
   });

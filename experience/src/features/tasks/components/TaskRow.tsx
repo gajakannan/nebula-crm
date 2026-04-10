@@ -2,6 +2,7 @@ import type { TaskSummaryDto } from '../types';
 import { Badge } from '@/components/ui/Badge';
 import { getEntityPath } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
+import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 
 interface TaskRowProps {
@@ -46,7 +47,7 @@ export function TaskRow({ task }: TaskRowProps) {
               <Link
                 to={linkedPath}
                 className="hover:text-nebula-violet"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e: MouseEvent<HTMLAnchorElement>) => e.stopPropagation()}
               >
                 {task.linkedEntityName}
               </Link>

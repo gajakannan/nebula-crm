@@ -56,6 +56,9 @@ jobs:
       - name: Install dotnet-sonarscanner
         run: dotnet tool install --global dotnet-sonarscanner
 
+      - name: Use project-local pnpm virtual store in CI
+        run: pnpm --dir experience config set virtual-store-dir node_modules/.pnpm --location project
+
       - name: Install frontend dependencies
         run: pnpm --dir experience install --frozen-lockfile
 

@@ -8,7 +8,7 @@
       ],
       "numberOfRuns": 3,
       "settings": {
-        "chromeFlags": ["--no-sandbox", "--headless", "--user-data-dir=/tmp/lhci-chrome-profile"]
+        "chromeFlags": ["--no-sandbox", "--headless=new", "--disable-dev-shm-usage", "--disable-gpu", "--user-data-dir=/tmp/lhci-chrome-profile"]
       }
     },
     "assert": {

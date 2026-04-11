@@ -73,7 +73,8 @@
       "Bash(jq .message.content[].text)",
       "Bash(while IFS= read -r line)",
       "Bash(do echo:*)",
-      "Bash(du -sh /mnt/c/Users/gajap/sandbox/nebula-crm/agents/*)"
+      "Bash(du -sh /mnt/c/Users/gajap/sandbox/nebula-crm/agents/*)",
+      "Bash(gh api:*)"
     ]
   }
 }

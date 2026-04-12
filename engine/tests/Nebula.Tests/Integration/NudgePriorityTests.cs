@@ -109,13 +109,31 @@ public class NudgePriorityTests(CustomWebApplicationFactory factory)
             UpdatedByUserId = testUserId,
         });
 
+        var policy = new Policy
+        {
+            PolicyNumber = $"NPT-POL-{Guid.NewGuid().ToString("N")[..8]}",
+            AccountId = account.Id,
+            BrokerId = broker.Id,
+            Carrier = "Test Carrier",
+            LineOfBusiness = "Property",
+            EffectiveDate = now2.Date.AddYears(-1),
+            ExpirationDate = now2.Date.AddDays(7),
+            Premium = 50_000m,
+            CurrentStatus = "Active",
+            CreatedAt = now2,
+            UpdatedAt = now2,
+            CreatedByUserId = testUserId,
+            UpdatedByUserId = testUserId,
+        };
+        db.Policies.Add(policy);
+
         // Priority 3 seed: upcoming renewal due in 7 days.
         db.Renewals.Add(new Renewal
         {
             AccountId = account.Id,
             BrokerId = broker.Id,
             CurrentStatus = "Identified",
-            PolicyId = Guid.NewGuid(),
+            PolicyId = policy.Id,
             PolicyExpirationDate = now2.Date.AddDays(7),
             TargetOutreachDate = now2.Date.AddDays(-83),
             AssignedToUserId = testUserId,

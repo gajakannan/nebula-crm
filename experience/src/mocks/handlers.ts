@@ -6,8 +6,11 @@ import {
   buildOpportunityBreakdownFixture,
   buildOpportunityItemsFixture,
   createSubmission,
+  createRenewal,
   getSubmission,
   getSubmissionTimeline,
+  getRenewal,
+  getRenewalTimeline,
   dashboardKpisFixture,
   dashboardNudgesFixture,
   dashboardOpportunitiesFixture,
@@ -17,10 +20,13 @@ import {
   renewalAgingFixture,
   renewalFlowFixture,
   renewalOutcomesFixture,
+  listRenewals,
   searchUsers,
   transitionSubmission,
+  transitionRenewal,
   updateSubmission,
   assignSubmission,
+  assignRenewal,
   listSubmissions,
   submissionFlowFixture,
   taskFixture,
@@ -241,6 +247,117 @@ export const handlers = [
     const url = new URL(request.url)
     const result = getSubmissionTimeline(
       String(params.submissionId),
+      Number(url.searchParams.get('page') ?? '1'),
+      Number(url.searchParams.get('pageSize') ?? '20'),
+    )
+
+    if (!result) {
+      return HttpResponse.json({ title: 'Not found', status: 404, code: 'not_found' }, { status: 404 })
+    }
+
+    return HttpResponse.json(result)
+  }),
+
+  http.get(apiUrl('/renewals'), ({ request }) => {
+    const url = new URL(request.url)
+    return HttpResponse.json(listRenewals(url.searchParams))
+  }),
+
+  http.post(apiUrl('/renewals'), async ({ request }) => {
+    const result = createRenewal(await request.json() as never)
+
+    if ('code' in result) {
+      const status = result.code === 'duplicate_renewal'
+        ? 409
+        : result.code === 'not_found'
+          ? 404
+          : 400
+
+      return HttpResponse.json({
+        title: 'Create failed',
+        status,
+        code: result.code,
+        detail: result.detail,
+        errors: result.errors,
+      }, { status })
+    }
+
+    return HttpResponse.json(result, { status: 201 })
+  }),
+
+  http.get(apiUrl('/renewals/:renewalId'), ({ params }) => {
+    const result = getRenewal(String(params.renewalId))
+    if (!result) {
+      return HttpResponse.json({ title: 'Not found', status: 404, code: 'not_found' }, { status: 404 })
+    }
+
+    return HttpResponse.json(result)
+  }),
+
+  http.put(apiUrl('/renewals/:renewalId/assignment'), async ({ params, request }) => {
+    const result = assignRenewal(
+      String(params.renewalId),
+      parseRowVersion(request.headers.get('if-match')),
+      await request.json() as never,
+    )
+
+    if (!result) {
+      return HttpResponse.json({ title: 'Not found', status: 404, code: 'not_found' }, { status: 404 })
+    }
+
+    if ('code' in result) {
+      const status = result.code === 'precondition_failed'
+        ? 412
+        : result.code === 'assignment_not_allowed_in_terminal_state'
+          ? 409
+          : 400
+
+      return HttpResponse.json({
+        title: 'Assignment failed',
+        status,
+        code: result.code,
+        detail: result.detail,
+        errors: result.errors,
+      }, { status })
+    }
+
+    return HttpResponse.json(result)
+  }),
+
+  http.post(apiUrl('/renewals/:renewalId/transitions'), async ({ params, request }) => {
+    const result = transitionRenewal(
+      String(params.renewalId),
+      parseRowVersion(request.headers.get('if-match')),
+      await request.json() as never,
+    )
+
+    if (!result) {
+      return HttpResponse.json({ title: 'Not found', status: 404, code: 'not_found' }, { status: 404 })
+    }
+
+    if ('code' in result) {
+      const status = result.code === 'precondition_failed'
+        ? 412
+        : result.code === 'invalid_transition' || result.code === 'missing_transition_prerequisite'
+          ? 409
+          : 400
+
+      return HttpResponse.json({
+        title: 'Transition failed',
+        status,
+        code: result.code,
+        detail: result.detail,
+        errors: result.errors,
+      }, { status })
+    }
+
+    return HttpResponse.json(result, { status: 201 })
+  }),
+
+  http.get(apiUrl('/renewals/:renewalId/timeline'), ({ params, request }) => {
+    const url = new URL(request.url)
+    const result = getRenewalTimeline(
+      String(params.renewalId),
       Number(url.searchParams.get('page') ?? '1'),
       Number(url.searchParams.get('pageSize') ?? '20'),
     )

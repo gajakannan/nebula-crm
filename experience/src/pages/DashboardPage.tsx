@@ -1,5 +1,6 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { NudgeCardsSection } from '@/features/nudges';
+import { RenewalPipelineNudgeCard } from '@/features/renewals';
 import { OpportunitiesSummary } from '@/features/opportunities';
 import { StaleSubmissionNudgeCard } from '@/features/submissions';
 import { MyTasksWidget } from '@/features/tasks';
@@ -20,7 +21,8 @@ export default function DashboardPage() {
         </div>
 
         <StaleSubmissionNudgeCard />
-        <NudgeCardsSection excludeTypes={['StaleSubmission']} />
+        <RenewalPipelineNudgeCard />
+        <NudgeCardsSection excludeTypes={['StaleSubmission', 'UpcomingRenewal']} />
         <OpportunitiesSummary />
 
         <div className="canvas-section canvas-zone-break">

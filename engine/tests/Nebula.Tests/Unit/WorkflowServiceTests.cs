@@ -290,16 +290,24 @@ public class WorkflowServiceTests
     {
         var repo = new StubRenewalRepository();
         var now = DateTime.UtcNow;
+        var account = NewAccount(now);
+        var broker = NewBroker(now);
+        var policy = NewPolicy(now, account, broker);
+        var assignee = NewUserProfile(_user.UserId, "DistributionUser");
         var renewal = new Renewal
         {
-            AccountId = Guid.NewGuid(),
-            BrokerId = Guid.NewGuid(),
-            PolicyId = Guid.NewGuid(),
+            AccountId = account.Id,
+            BrokerId = broker.Id,
+            PolicyId = policy.Id,
             LineOfBusiness = "Property",
             CurrentStatus = "Identified",
             PolicyExpirationDate = now.Date.AddDays(45),
             TargetOutreachDate = now.Date.AddDays(5),
             AssignedToUserId = _user.UserId,
+            Account = account,
+            Broker = broker,
+            Policy = policy,
+            AssignedToUser = assignee,
             CreatedAt = now,
             CreatedByUserId = _user.UserId,
             UpdatedAt = now,
@@ -309,7 +317,7 @@ public class WorkflowServiceTests
 
         var service = CreateRenewalService(repo);
 
-        var result = await service.GetByIdAsync(renewal.Id);
+        var result = await service.GetByIdAsync(renewal.Id, _user);
 
         result.ShouldNotBeNull();
         result!.Id.ShouldBe(renewal.Id);
@@ -353,7 +361,8 @@ public class WorkflowServiceTests
 
         var (result, error, missingItems) = await service.TransitionAsync(
             Guid.NewGuid(),
-            new WorkflowTransitionRequestDto("Outreach", "seed"),
+            new RenewalTransitionRequestDto("Outreach", "seed"),
+            0,
             _user);
 
         result.ShouldBeNull();
@@ -365,18 +374,27 @@ public class WorkflowServiceTests
     public async Task RenewalService_TransitionAsync_InvalidTransition_ReturnsInvalidTransition()
     {
         var repo = new StubRenewalRepository();
+        var now = DateTime.UtcNow;
+        var account = NewAccount(now);
+        var broker = NewBroker(now);
+        var policy = NewPolicy(now, account, broker);
+        var assignee = NewUserProfile(_user.UserId, "DistributionUser");
         repo.Seed(new Renewal
         {
-            AccountId = Guid.NewGuid(),
-            BrokerId = Guid.NewGuid(),
-            PolicyId = Guid.NewGuid(),
+            AccountId = account.Id,
+            BrokerId = broker.Id,
+            PolicyId = policy.Id,
             CurrentStatus = "Identified",
-            PolicyExpirationDate = DateTime.UtcNow.Date.AddDays(30),
-            TargetOutreachDate = DateTime.UtcNow.Date.AddDays(-60),
+            PolicyExpirationDate = now.Date.AddDays(30),
+            TargetOutreachDate = now.Date.AddDays(-60),
             AssignedToUserId = _user.UserId,
-            CreatedAt = DateTime.UtcNow,
+            Account = account,
+            Broker = broker,
+            Policy = policy,
+            AssignedToUser = assignee,
+            CreatedAt = now,
             CreatedByUserId = _user.UserId,
-            UpdatedAt = DateTime.UtcNow,
+            UpdatedAt = now,
             UpdatedByUserId = _user.UserId,
         });
 
@@ -385,7 +403,8 @@ public class WorkflowServiceTests
 
         var (result, error, missingItems) = await service.TransitionAsync(
             seeded.Id,
-            new WorkflowTransitionRequestDto("Completed", "too early"),
+            new RenewalTransitionRequestDto("Completed", "too early"),
+            seeded.RowVersion,
             _user);
 
         result.ShouldBeNull();
@@ -400,18 +419,27 @@ public class WorkflowServiceTests
     public async Task RenewalService_TransitionAsync_ValidTransition_PersistsTransitionAndTimeline()
     {
         var repo = new StubRenewalRepository();
+        var now = DateTime.UtcNow;
+        var account = NewAccount(now);
+        var broker = NewBroker(now);
+        var policy = NewPolicy(now, account, broker);
+        var assignee = NewUserProfile(_user.UserId, "DistributionUser");
         repo.Seed(new Renewal
         {
-            AccountId = Guid.NewGuid(),
-            BrokerId = Guid.NewGuid(),
-            PolicyId = Guid.NewGuid(),
+            AccountId = account.Id,
+            BrokerId = broker.Id,
+            PolicyId = policy.Id,
             CurrentStatus = "Identified",
-            PolicyExpirationDate = DateTime.UtcNow.Date.AddDays(30),
-            TargetOutreachDate = DateTime.UtcNow.Date.AddDays(-60),
+            PolicyExpirationDate = now.Date.AddDays(30),
+            TargetOutreachDate = now.Date.AddDays(-60),
             AssignedToUserId = _user.UserId,
-            CreatedAt = DateTime.UtcNow.AddDays(-2),
+            Account = account,
+            Broker = broker,
+            Policy = policy,
+            AssignedToUser = assignee,
+            CreatedAt = now.AddDays(-2),
             CreatedByUserId = _user.UserId,
-            UpdatedAt = DateTime.UtcNow.AddDays(-2),
+            UpdatedAt = now.AddDays(-2),
             UpdatedByUserId = _user.UserId,
         });
 
@@ -420,7 +448,8 @@ public class WorkflowServiceTests
 
         var (result, error, missingItems) = await service.TransitionAsync(
             seeded.Id,
-            new WorkflowTransitionRequestDto("Outreach", "start"),
+            new RenewalTransitionRequestDto("Outreach", "start"),
+            seeded.RowVersion,
             _user);
 
         error.ShouldBeNull();
@@ -454,8 +483,20 @@ public class WorkflowServiceTests
             _unitOfWork);
     }
 
-    private RenewalService CreateRenewalService(StubRenewalRepository repo) =>
-        new(repo, _transitionRepo, _timelineRepo, _unitOfWork);
+    private RenewalService CreateRenewalService(StubRenewalRepository repo)
+    {
+        var userProfileRepo = new StubUserProfileRepository();
+        userProfileRepo.Seed(NewUserProfile(_user.UserId, "DistributionUser"));
+
+        return new RenewalService(
+            repo,
+            _transitionRepo,
+            _timelineRepo,
+            new StubReferenceDataRepository(),
+            userProfileRepo,
+            new StubWorkflowSlaThresholdRepository(),
+            _unitOfWork);
+    }
 
     private Account NewAccount(DateTime now) => new()
     {
@@ -479,6 +520,25 @@ public class WorkflowServiceTests
         CreatedAt = now,
         UpdatedAt = now,
         CreatedByUserId = _user.UserId,
+        UpdatedByUserId = _user.UserId,
+    };
+
+    private Policy NewPolicy(DateTime now, Account account, Broker broker) => new()
+    {
+        PolicyNumber = $"POL-{Guid.NewGuid():N}"[..12],
+        AccountId = account.Id,
+        BrokerId = broker.Id,
+        Carrier = "Acme Carrier",
+        LineOfBusiness = "Property",
+        EffectiveDate = now.Date.AddMonths(-11),
+        ExpirationDate = now.Date.AddDays(45),
+        Premium = 125000m,
+        CurrentStatus = "Active",
+        Account = account,
+        Broker = broker,
+        CreatedAt = now,
+        CreatedByUserId = _user.UserId,
+        UpdatedAt = now,
         UpdatedByUserId = _user.UserId,
     };
 
@@ -548,8 +608,22 @@ internal sealed class StubRenewalRepository : IRenewalRepository
     public Task<Renewal?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         Task.FromResult(_renewals.GetValueOrDefault(id));
 
-    public Task<Renewal?> GetByIdWithIncludesAsync(Guid id, CancellationToken ct = default) =>
+    public Task<Renewal?> GetByIdWithRelationsAsync(Guid id, CancellationToken ct = default) =>
         Task.FromResult(_renewals.GetValueOrDefault(id));
+
+    public Task AddAsync(Renewal renewal, CancellationToken ct = default)
+    {
+        _renewals[renewal.Id] = renewal;
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> HasActiveRenewalForPolicyAsync(Guid policyId, CancellationToken ct = default) =>
+        Task.FromResult(_renewals.Values.Any(renewal =>
+            renewal.PolicyId == policyId
+            && renewal.CurrentStatus is not ("Completed" or "Lost")));
+
+    public Task<PaginatedResult<Renewal>> ListAsync(RenewalListQuery query, CancellationToken ct = default) =>
+        Task.FromResult(new PaginatedResult<Renewal>([], query.Page, query.PageSize, 0));
 
     public Task UpdateAsync(Renewal renewal, CancellationToken ct = default)
     {
@@ -587,6 +661,10 @@ internal sealed class StubWorkflowTransitionRepository : IWorkflowTransitionRepo
 
 internal sealed class StubReferenceDataRepository : IReferenceDataRepository
 {
+    private readonly Dictionary<Guid, Policy> _policies = new();
+
+    public void Seed(Policy policy) => _policies[policy.Id] = policy;
+
     public Task<IReadOnlyList<Account>> GetAccountsAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<Account>>([]);
     public Task<IReadOnlyList<MGA>> GetMgasAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<MGA>>([]);
     public Task<IReadOnlyList<Nebula.Domain.Entities.Program>> GetProgramsAsync(CancellationToken ct = default) =>
@@ -594,8 +672,28 @@ internal sealed class StubReferenceDataRepository : IReferenceDataRepository
     public Task<IReadOnlyList<ReferenceSubmissionStatus>> GetSubmissionStatusesAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ReferenceSubmissionStatus>>([]);
     public Task<IReadOnlyList<ReferenceRenewalStatus>> GetRenewalStatusesAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<ReferenceRenewalStatus>>([]);
     public Task<Account?> GetAccountByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Account?>(null);
+    public Task<Policy?> GetPolicyByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult(_policies.GetValueOrDefault(id));
     public Task<Nebula.Domain.Entities.Program?> GetProgramByIdAsync(Guid id, CancellationToken ct = default) =>
         Task.FromResult<Nebula.Domain.Entities.Program?>(null);
+}
+
+internal sealed class StubWorkflowSlaThresholdRepository : IWorkflowSlaThresholdRepository
+{
+    public Task<WorkflowSlaThreshold?> GetThresholdAsync(
+        string entityType,
+        string status,
+        string? lineOfBusiness,
+        CancellationToken ct = default) =>
+        Task.FromResult<WorkflowSlaThreshold?>(new WorkflowSlaThreshold
+        {
+            EntityType = entityType,
+            Status = status,
+            LineOfBusiness = lineOfBusiness,
+            WarningDays = 60,
+            TargetDays = 90,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+        });
 }
 
 internal sealed class StubSubmissionDocumentChecklistReader : ISubmissionDocumentChecklistReader

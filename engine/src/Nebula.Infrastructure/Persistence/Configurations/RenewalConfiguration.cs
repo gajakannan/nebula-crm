@@ -34,6 +34,16 @@ public class RenewalConfiguration : IEntityTypeConfiguration<Renewal>
             .HasForeignKey(e => e.BrokerId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(e => e.Policy)
+            .WithMany()
+            .HasForeignKey(e => e.PolicyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.BoundPolicy)
+            .WithMany()
+            .HasForeignKey(e => e.BoundPolicyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(e => e.AssignedToUser)
             .WithMany()
             .HasForeignKey(e => e.AssignedToUserId)
@@ -59,6 +69,12 @@ public class RenewalConfiguration : IEntityTypeConfiguration<Renewal>
 
         builder.HasIndex(e => new { e.PolicyExpirationDate, e.CurrentStatus })
             .HasDatabaseName("IX_Renewals_PolicyExpirationDate_CurrentStatus");
+
+        builder.HasIndex(e => e.AccountId)
+            .HasDatabaseName("IX_Renewals_AccountId");
+
+        builder.HasIndex(e => e.BrokerId)
+            .HasDatabaseName("IX_Renewals_BrokerId");
 
         builder.HasIndex(e => e.PolicyId)
             .HasDatabaseName("IX_Renewals_PolicyId_Active")

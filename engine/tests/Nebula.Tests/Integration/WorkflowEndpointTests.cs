@@ -235,6 +235,215 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
         result!.Data.ShouldContain(item => item.EventType == "SubmissionCreated");
     }
 
+    [Fact]
+    public async Task CreateRenewal_WithValidPolicy_Returns201WithPolicyContext()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var policy = await SeedPolicyAsync(currentUserId, expirationDays: 45, lineOfBusiness: "Property");
+
+        var response = await _client.PostAsJsonAsync("/renewals", new RenewalCreateDto(
+            policy.Id,
+            null,
+            null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var result = await response.Content.ReadFromJsonAsync<RenewalDto>();
+        result.ShouldNotBeNull();
+        result!.PolicyId.ShouldBe(policy.Id);
+        result.CurrentStatus.ShouldBe("Identified");
+        result.AssignedToUserId.ShouldBe(currentUserId);
+        result.PolicyNumber.ShouldBe(policy.PolicyNumber);
+        result.PolicyCarrier.ShouldBe(policy.Carrier);
+        result.AccountName.ShouldNotBeNullOrWhiteSpace();
+        result.BrokerName.ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task CreateRenewal_ForPolicyWithExistingActiveRenewal_Returns409()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var policy = await SeedPolicyAsync(currentUserId, expirationDays: 60, lineOfBusiness: "Cyber");
+        await SeedRenewalAsync(currentUserId, "Identified", policy);
+
+        var response = await _client.PostAsJsonAsync("/renewals", new RenewalCreateDto(
+            policy.Id,
+            null,
+            null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        payload.GetProperty("code").GetString().ShouldBe("duplicate_renewal");
+    }
+
+    [Fact]
+    public async Task ListRenewals_WithUrgencyFilter_ReturnsMatchingRenewal()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var overduePolicy = await SeedPolicyAsync(currentUserId, expirationDays: 15, lineOfBusiness: "Property");
+        var onTrackPolicy = await SeedPolicyAsync(currentUserId, expirationDays: 180, lineOfBusiness: "Property");
+        var overdueRenewal = await SeedRenewalAsync(currentUserId, "Identified", overduePolicy);
+        await SeedRenewalAsync(currentUserId, "Identified", onTrackPolicy);
+
+        var response = await _client.GetAsync("/renewals?urgency=overdue&page=1&pageSize=25");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<RenewalListItemDto>>();
+        result.ShouldNotBeNull();
+        result!.Data.ShouldContain(item => item.Id == overdueRenewal.Id);
+        result.Data.ShouldAllBe(item => item.Urgency == "overdue");
+    }
+
+    [Fact]
+    public async Task GetRenewal_Existing_ReturnsDetailWithPolicyAccountAndBrokerContext()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var policy = await SeedPolicyAsync(currentUserId, expirationDays: 75, lineOfBusiness: "WorkersCompensation");
+        var renewal = await SeedRenewalAsync(currentUserId, "Identified", policy);
+
+        var response = await _client.GetAsync($"/renewals/{renewal.Id}");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<RenewalDto>();
+        result.ShouldNotBeNull();
+        result!.Id.ShouldBe(renewal.Id);
+        result.PolicyNumber.ShouldBe(policy.PolicyNumber);
+        result.PolicyCarrier.ShouldBe(policy.Carrier);
+        result.AccountIndustry.ShouldNotBeNullOrWhiteSpace();
+        result.BrokerLicenseNumber.ShouldNotBeNullOrWhiteSpace();
+        result.AvailableTransitions.ShouldContain("Outreach");
+    }
+
+    [Fact]
+    public async Task PostRenewalTransition_WithoutIfMatch_Returns412()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var policy = await SeedPolicyAsync(currentUserId, expirationDays: 60);
+        var renewal = await SeedRenewalAsync(currentUserId, "Identified", policy);
+
+        var response = await _client.PostAsJsonAsync(
+            $"/renewals/{renewal.Id}/transitions",
+            new RenewalTransitionRequestDto("Outreach", "starting outreach"));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.PreconditionFailed);
+    }
+
+    [Fact]
+    public async Task PostRenewalTransition_Valid_Returns201AndPersists()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var policy = await SeedPolicyAsync(currentUserId, expirationDays: 60);
+        var renewal = await SeedRenewalAsync(currentUserId, "Identified", policy);
+        var detail = await GetRenewalAsync(renewal.Id);
+
+        var response = await PostJsonAsync(
+            $"/renewals/{renewal.Id}/transitions",
+            new RenewalTransitionRequestDto("Outreach", "starting outreach"),
+            detail.RowVersion);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var result = await response.Content.ReadFromJsonAsync<WorkflowTransitionRecordDto>();
+        result.ShouldNotBeNull();
+        result!.FromState.ShouldBe("Identified");
+        result.ToState.ShouldBe("Outreach");
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var persisted = await db.Renewals.SingleAsync(entity => entity.Id == renewal.Id);
+        persisted.CurrentStatus.ShouldBe("Outreach");
+    }
+
+    [Fact]
+    public async Task PutRenewalAssignment_AsDistributionUser_Returns403()
+    {
+        var previousSubject = TestAuthHandler.TestSubject;
+        var previousRole = TestAuthHandler.TestRole;
+        var previousRoles = TestAuthHandler.TestNebulaRoles;
+
+        try
+        {
+            TestAuthHandler.TestSubject = $"dist-user-{Guid.NewGuid():N}";
+            TestAuthHandler.TestRole = "DistributionUser";
+            TestAuthHandler.TestNebulaRoles = ["DistributionUser"];
+
+            var currentUserId = await EnsureCurrentUserProfileAsync();
+            var policy = await SeedPolicyAsync(currentUserId, expirationDays: 45);
+            var renewal = await SeedRenewalAsync(currentUserId, "Identified", policy);
+            var detail = await GetRenewalAsync(renewal.Id);
+
+            var response = await PutJsonAsync(
+                $"/renewals/{renewal.Id}/assignment",
+                new RenewalAssignmentRequestDto(currentUserId),
+                detail.RowVersion);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+            var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+            payload.GetProperty("code").GetString().ShouldBe("policy_denied");
+        }
+        finally
+        {
+            TestAuthHandler.TestSubject = previousSubject;
+            TestAuthHandler.TestRole = previousRole;
+            TestAuthHandler.TestNebulaRoles = previousRoles;
+        }
+    }
+
+    [Fact]
+    public async Task PutRenewalAssignment_AsDistributionManager_Returns200AndPersists()
+    {
+        var previousSubject = TestAuthHandler.TestSubject;
+        var previousRole = TestAuthHandler.TestRole;
+        var previousRoles = TestAuthHandler.TestNebulaRoles;
+
+        try
+        {
+            TestAuthHandler.TestSubject = $"dist-manager-{Guid.NewGuid():N}";
+            TestAuthHandler.TestRole = "DistributionManager";
+            TestAuthHandler.TestNebulaRoles = ["DistributionManager"];
+
+            var currentUserId = await EnsureCurrentUserProfileAsync();
+            var assignee = await SeedUserProfileAsync($"dist-assignee-{Guid.NewGuid():N}", "DistributionUser", true);
+            var policy = await SeedPolicyAsync(currentUserId, expirationDays: 45);
+            var renewal = await SeedRenewalAsync(currentUserId, "Outreach", policy);
+            var detail = await GetRenewalAsync(renewal.Id);
+
+            var response = await PutJsonAsync(
+                $"/renewals/{renewal.Id}/assignment",
+                new RenewalAssignmentRequestDto(assignee.Id),
+                detail.RowVersion);
+
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            var result = await response.Content.ReadFromJsonAsync<RenewalDto>();
+            result.ShouldNotBeNull();
+            result!.AssignedToUserId.ShouldBe(assignee.Id);
+
+            using var scope = factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var persisted = await db.Renewals.SingleAsync(entity => entity.Id == renewal.Id);
+            persisted.AssignedToUserId.ShouldBe(assignee.Id);
+        }
+        finally
+        {
+            TestAuthHandler.TestSubject = previousSubject;
+            TestAuthHandler.TestRole = previousRole;
+            TestAuthHandler.TestNebulaRoles = previousRoles;
+        }
+    }
+
+    [Fact]
+    public async Task GetRenewalTimeline_ReturnsPagedEvents()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var policy = await SeedPolicyAsync(currentUserId, expirationDays: 45);
+        var renewal = await SeedRenewalAsync(currentUserId, "Identified", policy);
+
+        var response = await _client.GetAsync($"/renewals/{renewal.Id}/timeline?page=1&pageSize=10");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResult<TimelineEventDto>>();
+        result.ShouldNotBeNull();
+        result!.Data.ShouldContain(item => item.EventType == "RenewalCreated");
+    }
+
     private async Task<SubmissionDto> CreateSubmissionViaApiAsync(Guid currentUserId)
     {
         var (accountId, brokerId) = await SeedAccountAndBrokerAsync();
@@ -252,11 +461,100 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
         return (await response.Content.ReadFromJsonAsync<SubmissionDto>())!;
     }
 
+    private async Task<RenewalDto> GetRenewalAsync(Guid renewalId)
+    {
+        var response = await _client.GetAsync($"/renewals/{renewalId}");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        return (await response.Content.ReadFromJsonAsync<RenewalDto>())!;
+    }
+
     private async Task<SubmissionDto> GetSubmissionAsync(Guid submissionId)
     {
         var response = await _client.GetAsync($"/submissions/{submissionId}");
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         return (await response.Content.ReadFromJsonAsync<SubmissionDto>())!;
+    }
+
+    private async Task<Policy> SeedPolicyAsync(
+        Guid createdByUserId,
+        string region = "West",
+        string lineOfBusiness = "Property",
+        int expirationDays = 45)
+    {
+        var (accountId, brokerId) = await SeedAccountAndBrokerAsync(region);
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var account = await db.Accounts.SingleAsync(entity => entity.Id == accountId);
+        var broker = await db.Brokers.SingleAsync(entity => entity.Id == brokerId);
+        var now = DateTime.UtcNow;
+
+        var policy = new Policy
+        {
+            PolicyNumber = $"POL-{Guid.NewGuid():N}"[..12],
+            AccountId = accountId,
+            BrokerId = brokerId,
+            Carrier = "Acme Carrier",
+            LineOfBusiness = lineOfBusiness,
+            EffectiveDate = now.Date.AddDays(expirationDays - 365),
+            ExpirationDate = now.Date.AddDays(expirationDays),
+            Premium = 125000m,
+            CurrentStatus = "Active",
+            Account = account,
+            Broker = broker,
+            CreatedAt = now,
+            UpdatedAt = now,
+            CreatedByUserId = createdByUserId,
+            UpdatedByUserId = createdByUserId,
+        };
+
+        db.Policies.Add(policy);
+        await db.SaveChangesAsync();
+        return policy;
+    }
+
+    private async Task<Renewal> SeedRenewalAsync(Guid assignedToUserId, string status, Policy policy)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var now = DateTime.UtcNow;
+        var renewal = new Renewal
+        {
+            AccountId = policy.AccountId,
+            BrokerId = policy.BrokerId,
+            PolicyId = policy.Id,
+            CurrentStatus = status,
+            LineOfBusiness = policy.LineOfBusiness,
+            PolicyExpirationDate = policy.ExpirationDate,
+            TargetOutreachDate = policy.ExpirationDate.AddDays(-GetRenewalTargetDays(policy.LineOfBusiness)),
+            AssignedToUserId = assignedToUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+            CreatedByUserId = assignedToUserId,
+            UpdatedByUserId = assignedToUserId,
+        };
+
+        db.Renewals.Add(renewal);
+        db.WorkflowTransitions.Add(new WorkflowTransition
+        {
+            WorkflowType = "Renewal",
+            EntityId = renewal.Id,
+            FromState = null,
+            ToState = status,
+            ActorUserId = assignedToUserId,
+            OccurredAt = now,
+        });
+        db.ActivityTimelineEvents.Add(new ActivityTimelineEvent
+        {
+            EntityType = "Renewal",
+            EntityId = renewal.Id,
+            EventType = "RenewalCreated",
+            EventDescription = $"Renewal created from policy {policy.PolicyNumber}",
+            ActorUserId = assignedToUserId,
+            ActorDisplayName = "Test User",
+            OccurredAt = now,
+        });
+        await db.SaveChangesAsync();
+        return renewal;
     }
 
     private async Task<(Guid AccountId, Guid BrokerId)> SeedAccountAndBrokerAsync(string region = "West")
@@ -419,4 +717,11 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
         request.Headers.TryAddWithoutValidation("If-Match", $"\"{rowVersion}\"");
         return await _client.SendAsync(request);
     }
+
+    private static int GetRenewalTargetDays(string? lineOfBusiness) => lineOfBusiness switch
+    {
+        "WorkersCompensation" => 120,
+        "Cyber" => 60,
+        _ => 90,
+    };
 }

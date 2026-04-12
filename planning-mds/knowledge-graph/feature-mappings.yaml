@@ -233,13 +233,15 @@ features:
       - feature:F0020
   - id: feature:F0007
     path: planning-mds/features/F0007-renewal-pipeline
-    status: in-refinement
+    status: architecture-complete
     affects:
       - workflow:renewal
+      - endpoint:renewal-list
       - endpoint:renewal-detail
-      - endpoint:renewal-transitions-list
+      - endpoint:renewal-create
       - endpoint:renewal-transition
-      - endpoint:timeline-events
+      - endpoint:renewal-assignment
+      - endpoint:renewal-timeline
       - event:renewal-transitioned
       - config_key:workflow-sla-thresholds
       - migration:f0007-renewal-workflow-states-reconcile
@@ -621,11 +623,13 @@ stories:
     feature: feature:F0007
     affects:
       - workflow:renewal
+      - endpoint:renewal-list
       - entity:renewal
       - entity:policy
       - entity:account
       - entity:broker
       - entity:workflow-sla-threshold
+      - config_key:workflow-sla-thresholds
     governed_by:
       - adr:014-workflow-sla
     uses_schema:
@@ -646,7 +650,7 @@ stories:
     affects:
       - workflow:renewal
       - endpoint:renewal-detail
-      - endpoint:timeline-events
+      - endpoint:renewal-timeline
       - entity:renewal
       - entity:policy
       - entity:account
@@ -672,7 +676,6 @@ stories:
     feature: feature:F0007
     affects:
       - workflow:renewal
-      - endpoint:renewal-transitions-list
       - endpoint:renewal-transition
       - event:renewal-transitioned
       - entity:renewal
@@ -707,6 +710,8 @@ stories:
     path: planning-mds/features/F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md
     feature: feature:F0007
     affects:
+      - workflow:renewal
+      - endpoint:renewal-assignment
       - entity:renewal
       - entity:user-profile
       - entity:activity-timeline-event
@@ -757,6 +762,7 @@ stories:
     feature: feature:F0007
     affects:
       - workflow:renewal
+      - endpoint:renewal-create
       - config_key:workflow-sla-thresholds
       - migration:f0007-renewal-entity-shape-reconcile
       - entity:renewal
@@ -788,7 +794,7 @@ stories:
     path: planning-mds/features/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md
     feature: feature:F0007
     affects:
-      - endpoint:timeline-events
+      - endpoint:renewal-timeline
       - entity:renewal
       - entity:activity-timeline-event
       - entity:workflow-transition

@@ -318,29 +318,47 @@ F0004 extends the self-assigned-only task model with creator-based access for Di
 
 ---
 
-### 2.9 Renewal — Read / Transition
+### 2.9 Renewal — Read / Create / Transition / Assign (F0007)
+
+Applies to the F0007 Renewal Pipeline endpoints: `GET /renewals`, `POST /renewals`, `GET /renewals/{renewalId}`, `POST /renewals/{renewalId}/transitions`, `PUT /renewals/{renewalId}/assignment`, `GET /renewals/{renewalId}/timeline`.
 
 | Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
 |------|--------|----------|------------------------------|----------------------|
-| DistributionUser | read | **ALLOW** | Renewals assigned to the user only. Applies to `GET /renewals/{renewalId}`. | F0001-S0002; user requirement |
-| DistributionUser | transition | **ALLOW** | Only for assigned renewals and only for valid transitions. Applies to `POST /renewals/{renewalId}/transitions`. | BLUEPRINT §4.3; user requirement |
-| DistributionManager | read | **ALLOW** | All renewals within region. Applies to `GET /renewals/{renewalId}`. | F0001-S0002; user requirement |
-| DistributionManager | transition | **ALLOW** | Renewals within region; valid transitions only. Applies to `POST /renewals/{renewalId}/transitions`. | BLUEPRINT §4.3; user requirement |
-| Underwriter | read | **ALLOW** | Renewals assigned to or accessible by the user. Applies to `GET /renewals/{renewalId}`. | BLUEPRINT §4.4 |
-| Underwriter | transition | **ALLOW** | Underwriters can transition within underwriting stages. Applies to `POST /renewals/{renewalId}/transitions`. | BLUEPRINT §4.4; §4.3 |
-| RelationshipManager | read | **ALLOW** | Renewals linked to managed broker relationships. Applies to `GET /renewals/{renewalId}`. | F0001-S0002 Role Visibility |
-| RelationshipManager | transition | **DENY** | Read-only access; no renewal transitions in MVP. Applies to `POST /renewals/{renewalId}/transitions`. | BLUEPRINT §4.4 |
-| ProgramManager | read | **ALLOW** | Renewals within the user's programs. Applies to `GET /renewals/{renewalId}`. | F0001-S0002 Role Visibility |
-| ProgramManager | transition | **DENY** | Read-only access; no renewal transitions in MVP. Applies to `POST /renewals/{renewalId}/transitions`. | BLUEPRINT §4.4 |
-| Admin | read | **ALLOW** | Unscoped access. Applies to `GET /renewals/{renewalId}`. | BLUEPRINT §4.4 |
-| Admin | transition | **ALLOW** | Unscoped; valid transitions only. Applies to `POST /renewals/{renewalId}/transitions`. | BLUEPRINT §4.4; §4.3 |
+| DistributionUser | read | **ALLOW** | Renewals assigned to the user only. Applies to list, detail, and timeline endpoints. | F0001-S0002; F0007-S0001/S0002/S0007; user requirement |
+| DistributionUser | create | **ALLOW** | Distribution users may create a renewal from an expiring policy within their assigned scope. Applies to `POST /renewals`. | F0007-S0006 |
+| DistributionUser | transition | **ALLOW** | Only for assigned renewals and only for transitions in the Distribution-owned states (Identified ↔ Outreach ↔ InReview). | F0007-S0003; BLUEPRINT §4.3 |
+| DistributionUser | assign | **DENY** | Self-assignment only — no cross-user assignment. Use create-time `assignedToUserId`. | F0007-S0004 |
+| DistributionManager | read | **ALLOW** | All renewals within region. Applies to list, detail, and timeline endpoints. | F0001-S0002; F0007-S0001/S0002/S0007; user requirement |
+| DistributionManager | create | **ALLOW** | Region-scoped; may seed renewals on behalf of distribution users. | F0007-S0006 |
+| DistributionManager | transition | **ALLOW** | Renewals within region; valid transitions only in Distribution-owned states. | F0007-S0003; BLUEPRINT §4.3 |
+| DistributionManager | assign | **ALLOW** | Reassignment of renewal ownership within region. Applies to `PUT /renewals/{renewalId}/assignment`. Cannot assign terminal-state renewals. | F0007-S0004 |
+| Underwriter | read | **ALLOW** | Renewals assigned to or accessible by the user (post-handoff). | F0007-S0002/S0007; BLUEPRINT §4.4 |
+| Underwriter | create | **DENY** | Underwriters do not seed renewals; intake is distribution-owned. | F0007-S0006 |
+| Underwriter | transition | **ALLOW** | Underwriter-owned states (InReview → Quoted → Completed/Lost). Cannot perform Distribution-owned transitions. | F0007-S0003; BLUEPRINT §4.4, §4.3 |
+| Underwriter | assign | **DENY** | Underwriters do not reassign ownership in MVP. | F0007-S0004 |
+| RelationshipManager | read | **ALLOW** | Renewals linked to managed broker relationships. List, detail, and timeline. | F0001-S0002 Role Visibility; F0007-S0007 |
+| RelationshipManager | create | **DENY** | Out of scope — relationship managers do not seed pipeline records in MVP. | F0007 PRD scope |
+| RelationshipManager | transition | **DENY** | Read-only in MVP. | BLUEPRINT §4.4 |
+| RelationshipManager | assign | **DENY** | Read-only in MVP. | BLUEPRINT §4.4 |
+| ProgramManager | read | **ALLOW** | Renewals within the user's programs. List, detail, and timeline. | F0001-S0002 Role Visibility; F0007-S0007 |
+| ProgramManager | create | **DENY** | Out of scope in MVP. | F0007 PRD scope |
+| ProgramManager | transition | **DENY** | Read-only in MVP. | BLUEPRINT §4.4 |
+| ProgramManager | assign | **DENY** | Read-only in MVP. | BLUEPRINT §4.4 |
+| Admin | read | **ALLOW** | Unscoped access to all renewal endpoints. | BLUEPRINT §4.4 |
+| Admin | create | **ALLOW** | Unscoped. | F0007-S0006 |
+| Admin | transition | **ALLOW** | Unscoped; valid transitions only. | BLUEPRINT §4.4, §4.3 |
+| Admin | assign | **ALLOW** | Unscoped; cannot assign terminal-state renewals. | F0007-S0004 |
 | ExternalUser | all | **DENY** | No external portal in MVP. | BLUEPRINT §3.1 non-goals |
 
 **Constraints applying to all ALLOW decisions on Renewal:**
-- Applies to `POST /renewals/{renewalId}/transitions` only.
-- Invalid transition pairs return HTTP 409 with ProblemDetails code invalid_transition. (BLUEPRINT §4.3)
-- Missing transition prerequisites return HTTP 409 with ProblemDetails code missing_transition_prerequisite. (BLUEPRINT §4.3)
-- Every successful transition appends a WorkflowTransition and ActivityTimelineEvent record. (BLUEPRINT §4.3)
+- Role gating on transitions is enforced in the application layer via `WorkflowStateMachine.ValidateRenewalTransition` in addition to Casbin policy. Distribution roles cannot perform Underwriter-owned transitions and vice versa.
+- One active (non-deleted, non-terminal) renewal per `PolicyId` is enforced via filtered unique index `IX_Renewals_PolicyId_Active`. Duplicate creation returns HTTP 409 with code `duplicate_renewal`.
+- Lost transitions require `lostReasonCode`; Completed transitions require `boundPolicyId` (and may include `renewalSubmissionId`). Missing fields return HTTP 409 with code `missing_transition_prerequisite`. (BLUEPRINT §4.3)
+- Invalid transition pairs return HTTP 409 with code `invalid_transition`. (BLUEPRINT §4.3)
+- Assignment of a terminal-state renewal (`Completed`, `Lost`) returns HTTP 409 with code `assignment_not_allowed_in_terminal_state`.
+- State-changing mutations (`POST /renewals/{renewalId}/transitions`, `PUT /renewals/{renewalId}/assignment`) require `If-Match` and return HTTP 412 `precondition_failed` on stale rowVersion values. (API Guidelines + F0007 architecture)
+- Every successful transition appends a `WorkflowTransition` and `ActivityTimelineEvent` record. Assignment changes append an `ActivityTimelineEvent`. (BLUEPRINT §4.3)
+- Per-LOB timing windows (`WorkflowSlaThreshold` keyed on `LineOfBusiness`) drive overdue/approaching computation; defaults are used when no LOB-specific row exists. (ADR-009, ADR-014)
 
 ---
 

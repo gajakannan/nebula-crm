@@ -2,13 +2,15 @@
  * Global test setup for Vitest + React Testing Library.
  * Imported via vite.config.ts test.setupFiles.
  */
-import '@testing-library/jest-dom/vitest'
+import * as matchers from '@testing-library/jest-dom/matchers'
 import { cleanup } from '@testing-library/react'
 import { toHaveNoViolations } from 'jest-axe'
 import { afterAll, afterEach, beforeAll, expect } from 'vitest'
 import { server } from './mocks/server'
+import { resetRenewalMockState } from './mocks/renewals'
 import { resetSubmissionMockState } from './mocks/submissions'
 
+expect.extend(matchers)
 expect.extend(toHaveNoViolations)
 
 const defaultOidcTestEnv = {
@@ -50,6 +52,7 @@ beforeAll(() => {
 afterEach(() => {
   cleanup()
   server.resetHandlers()
+  resetRenewalMockState()
   resetSubmissionMockState()
   if (typeof window !== 'undefined') {
     window.localStorage.clear()

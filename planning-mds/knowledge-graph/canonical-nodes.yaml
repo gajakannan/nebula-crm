@@ -550,6 +550,19 @@ endpoints:
       - entity:submission
       - entity:activity-timeline-event
       - policy_rule:timeline-event-read
+  - id: endpoint:renewal-list
+    label: GET /renewals
+    method: GET
+    route: /renewals
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0007-renewal-pipeline/README.md
+      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
+    related_nodes:
+      - entity:renewal
+      - workflow:renewal
+      - policy_rule:renewal-read
+      - config_key:workflow-sla-thresholds
   - id: endpoint:renewal-detail
     label: GET /renewals/{renewalId}
     method: GET
@@ -559,19 +572,23 @@ endpoints:
       - planning-mds/features/F0007-renewal-pipeline/README.md
     related_nodes:
       - entity:renewal
+      - entity:policy
       - workflow:renewal
       - policy_rule:renewal-read
-  - id: endpoint:renewal-transitions-list
-    label: GET /renewals/{renewalId}/transitions
-    method: GET
-    route: /renewals/{renewalId}/transitions
+  - id: endpoint:renewal-create
+    label: POST /renewals
+    method: POST
+    route: /renewals
     source_docs:
       - planning-mds/api/nebula-api.yaml
       - planning-mds/features/F0007-renewal-pipeline/README.md
+      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
     related_nodes:
       - entity:renewal
-      - entity:workflow-transition
+      - entity:policy
       - workflow:renewal
+      - policy_rule:renewal-create
+      - config_key:workflow-sla-thresholds
   - id: endpoint:renewal-transition
     label: POST /renewals/{renewalId}/transitions
     method: POST
@@ -579,11 +596,37 @@ endpoints:
     source_docs:
       - planning-mds/api/nebula-api.yaml
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
+      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
     related_nodes:
       - entity:renewal
       - entity:workflow-transition
       - workflow:renewal
       - policy_rule:renewal-transition
+  - id: endpoint:renewal-assignment
+    label: PUT /renewals/{renewalId}/assignment
+    method: PUT
+    route: /renewals/{renewalId}/assignment
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0007-renewal-pipeline/README.md
+      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
+    related_nodes:
+      - entity:renewal
+      - entity:user-profile
+      - policy_rule:renewal-assign
+  - id: endpoint:renewal-timeline
+    label: GET /renewals/{renewalId}/timeline
+    method: GET
+    route: /renewals/{renewalId}/timeline
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0007-renewal-pipeline/README.md
+      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
+    related_nodes:
+      - entity:renewal
+      - entity:activity-timeline-event
+      - entity:workflow-transition
+      - policy_rule:timeline-event-read
   - id: endpoint:task-my-list
     label: GET /my/tasks
     method: GET

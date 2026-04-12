@@ -995,25 +995,6 @@ paths:
   /renewals/{renewalId}/transitions:
     parameters:
       - $ref: "#/components/parameters/RenewalId"
-    get:
-      operationId: listRenewalTransitions
-      summary: List renewal transitions
-      tags: [Renewals]
-      responses:
-        "200":
-          description: Renewal transition history
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowTransitionRecord"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
     post:
       operationId: transitionRenewal
       summary: Transition renewal workflow state

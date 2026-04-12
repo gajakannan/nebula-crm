@@ -6,15 +6,17 @@ interface ModalProps {
   open: boolean;
   onClose: () => void;
   title: string;
+  description?: string;
   children: React.ReactNode;
   className?: string;
 }
 
-export function Modal({ open, onClose, title, children, className }: ModalProps) {
+export function Modal({ open, onClose, title, description, children, className }: ModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previousActiveRef = useRef<HTMLElement | null>(null);
   const titleId = useId();
+  const descriptionId = useId();
 
   const handleClose = useCallback(() => onClose(), [onClose]);
 
@@ -104,6 +106,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         className={cn(
           'mx-4 w-full max-w-lg rounded-xl glass-card shadow-2xl',
@@ -111,7 +114,14 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         )}
       >
         <div className="flex items-center justify-between border-b border-surface-border px-5 py-4">
-          <h2 id={titleId} className="text-sm font-semibold text-text-primary">{title}</h2>
+          <div className="space-y-1 pr-4">
+            <h2 id={titleId} className="text-sm font-semibold text-text-primary">{title}</h2>
+            {description && (
+              <p id={descriptionId} className="text-sm text-text-secondary">
+                {description}
+              </p>
+            )}
+          </div>
           <button
             ref={closeButtonRef}
             type="button"

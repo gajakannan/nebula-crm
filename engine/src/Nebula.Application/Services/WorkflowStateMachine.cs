@@ -26,6 +26,16 @@ public static class WorkflowStateMachine
         ["Quoted"] = ["Completed", "Lost"],
     };
 
+    private static readonly Dictionary<(string From, string To), HashSet<string>> RenewalTransitionRoles = new()
+    {
+        [("Identified", "Outreach")] = ["DistributionUser", "DistributionManager", "Admin"],
+        [("Outreach", "InReview")] = ["DistributionUser", "DistributionManager", "Underwriter", "Admin"],
+        [("InReview", "Quoted")] = ["Underwriter", "Admin"],
+        [("InReview", "Lost")] = ["Underwriter", "Admin"],
+        [("Quoted", "Completed")] = ["Underwriter", "Admin"],
+        [("Quoted", "Lost")] = ["Underwriter", "Admin"],
+    };
+
     public static bool IsValidTransition(string workflowType, string from, string to) =>
         workflowType switch
         {
@@ -49,6 +59,32 @@ public static class WorkflowStateMachine
             "Renewal" => GetAvailableTransitions(RenewalTransitions, RenewalTerminalStates, from),
             _ => [],
         };
+
+    public static string? ValidateRenewalTransition(string from, string to, IReadOnlyList<string> userRoles)
+    {
+        if (!IsValidTransition("Renewal", from, to))
+            return "invalid_transition";
+
+        if (!RenewalTransitionRoles.TryGetValue((from, to), out var allowedRoles))
+            return "invalid_transition";
+
+        return userRoles.Any(role => allowedRoles.Contains(role, StringComparer.OrdinalIgnoreCase))
+            ? null
+            : "policy_denied";
+    }
+
+    public static IReadOnlyList<string> GetAvailableRenewalTransitions(string currentStatus, IReadOnlyList<string> userRoles)
+    {
+        if (!RenewalTransitions.TryGetValue(currentStatus, out var targets))
+            return [];
+
+        return targets
+            .Where(target =>
+                RenewalTransitionRoles.TryGetValue((currentStatus, target), out var allowedRoles)
+                && userRoles.Any(role => allowedRoles.Contains(role, StringComparer.OrdinalIgnoreCase)))
+            .OrderBy(target => target, StringComparer.Ordinal)
+            .ToList();
+    }
 
     private static bool IsValidTransition(
         IReadOnlyDictionary<string, HashSet<string>> transitions,

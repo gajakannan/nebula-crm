@@ -70,6 +70,18 @@ public static class ProblemDetailsHelper
         statusCode: 422,
         extensions: Ext("invalid_assignee"));
 
+    public static IResult DuplicateRenewal() => Results.Problem(
+        title: "Duplicate renewal",
+        detail: "An active renewal already exists for the specified policy.",
+        statusCode: 409,
+        extensions: Ext("duplicate_renewal"));
+
+    public static IResult AssignmentNotAllowedInTerminalState() => Results.Problem(
+        title: "Assignment not allowed",
+        detail: "Completed and lost renewals cannot be reassigned.",
+        statusCode: 409,
+        extensions: Ext("assignment_not_allowed_in_terminal_state"));
+
     public static IResult StatusChangeRestricted() => Results.Problem(
         title: "Status change restricted",
         detail: "Only the task assignee can change the task status.",
@@ -140,9 +152,12 @@ public static class ProblemDetailsHelper
             ["traceId"] = Activity.Current?.Id,
         });
 
-    public static IResult PreconditionFailed() => Results.Problem(
+    public static IResult PreconditionFailed() =>
+        PreconditionFailed("submission");
+
+    public static IResult PreconditionFailed(string resourceName) => Results.Problem(
         title: "Precondition failed",
-        detail: "The submission was modified by another user. Refresh the detail view and retry with the current rowVersion.",
+        detail: $"The {resourceName} was modified by another user. Refresh the detail view and retry with the current rowVersion.",
         statusCode: 412,
         extensions: Ext("precondition_failed"));
 

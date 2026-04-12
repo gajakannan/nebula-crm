@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         services.AddScoped<ITimelineRepository, TimelineRepository>();
         services.AddScoped<IWorkflowTransitionRepository, WorkflowTransitionRepository>();
+        services.AddScoped<IWorkflowSlaThresholdRepository, WorkflowSlaThresholdRepository>();
         services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
         services.AddScoped<ISubmissionDocumentChecklistReader, UnavailableSubmissionDocumentChecklistReader>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();

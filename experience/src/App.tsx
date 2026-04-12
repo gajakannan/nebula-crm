@@ -9,6 +9,8 @@ import BrokerDetailPage from './pages/BrokerDetailPage'
 import SubmissionsPage from './pages/SubmissionsPage'
 import CreateSubmissionPage from './pages/CreateSubmissionPage'
 import SubmissionDetailPage from './pages/SubmissionDetailPage'
+import RenewalsPage from './pages/RenewalsPage'
+import RenewalDetailPage from './pages/RenewalDetailPage'
 import TaskCenterPage from './pages/TaskCenterPage'
 import NotFoundPage from './pages/NotFoundPage'
 import { UnauthorizedPage } from './pages/UnauthorizedPage'
@@ -46,6 +48,8 @@ function AppInner() {
       <Route path="/submissions" element={<ProtectedRoute><SubmissionsPage /></ProtectedRoute>} />
       <Route path="/submissions/new" element={<ProtectedRoute><CreateSubmissionPage /></ProtectedRoute>} />
       <Route path="/submissions/:submissionId" element={<ProtectedRoute><SubmissionDetailPage /></ProtectedRoute>} />
+      <Route path="/renewals" element={<ProtectedRoute><RenewalsPage /></ProtectedRoute>} />
+      <Route path="/renewals/:renewalId" element={<ProtectedRoute><RenewalDetailPage /></ProtectedRoute>} />
       <Route path="/brokers" element={<ProtectedRoute><BrokerListPage /></ProtectedRoute>} />
       <Route path="/brokers/new" element={<ProtectedRoute><CreateBrokerPage /></ProtectedRoute>} />
       <Route path="/brokers/:brokerId" element={<ProtectedRoute><BrokerDetailPage /></ProtectedRoute>} />

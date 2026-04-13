@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   BriefcaseBusiness,
+  RotateCwSquare,
   Users,
   ClipboardList,
   PanelLeftClose,
@@ -15,6 +16,7 @@ import { useSidebar } from '@/hooks/useSidebar';
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
   { label: 'Submissions', href: '/submissions', icon: BriefcaseBusiness },
+  { label: 'Renewals', href: '/renewals', icon: RotateCwSquare },
   { label: 'Brokers', href: '/brokers', icon: Users },
   { label: 'Tasks', href: '/tasks', icon: ClipboardList },
 ];

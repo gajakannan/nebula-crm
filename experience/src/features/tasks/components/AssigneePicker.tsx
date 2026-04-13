@@ -14,6 +14,7 @@ interface AssigneePickerProps {
   readOnly?: boolean;
   required?: boolean;
   error?: string;
+  allowedRoles?: string[];
 }
 
 function roleBadgeVariant(role: string): 'default' | 'info' | 'warning' {
@@ -29,6 +30,7 @@ export function AssigneePicker({
   readOnly = false,
   required,
   error,
+  allowedRoles,
 }: AssigneePickerProps) {
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
@@ -55,6 +57,10 @@ export function AssigneePicker({
     setInputValue('');
     setOpen(false);
   }
+
+  const filteredUsers = data?.users.filter((user) => (
+    !allowedRoles || allowedRoles.some((allowedRole) => user.roles.includes(allowedRole))
+  ));
 
   function handleClear() {
     onSelect(null);
@@ -156,13 +162,13 @@ export function AssigneePicker({
               {isFetching && (
                 <li className="px-3 py-2 text-xs text-text-muted">Searching...</li>
               )}
-              {!isFetching && data && data.users.length === 0 && debouncedQuery.length >= 2 && (
+              {!isFetching && filteredUsers && filteredUsers.length === 0 && debouncedQuery.length >= 2 && (
                 <li className="px-3 py-2 text-xs text-text-muted">No users found.</li>
               )}
               {!isFetching && debouncedQuery.length < 2 && (
                 <li className="px-3 py-2 text-xs text-text-muted">Type at least 2 characters to search.</li>
               )}
-              {!isFetching && data?.users.map((user) => (
+              {!isFetching && filteredUsers?.map((user) => (
                 <li
                   key={user.userId}
                   role="option"

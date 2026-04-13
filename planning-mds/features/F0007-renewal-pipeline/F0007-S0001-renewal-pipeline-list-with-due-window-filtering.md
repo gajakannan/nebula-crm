@@ -80,7 +80,8 @@ The renewal pipeline list is the primary operating surface for renewal managemen
 - Distribution User — Sees own assigned renewals by default; can filter to team view if permitted
 - Distribution Manager — Sees all team renewals by default
 - Underwriter — Sees renewals in InReview/Quoted assigned to them
-- Relationship Manager — Read-only access to renewals for their accounts/brokers
+- Relationship Manager — Read-only access to renewals linked to managed broker relationships
+- Program Manager — Read-only access to renewals within their programs
 - Admin — Full visibility
 
 **Data Visibility:**

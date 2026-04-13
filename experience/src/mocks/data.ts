@@ -3,6 +3,14 @@ import type { DashboardKpisDto } from '@/features/kpis'
 import type { NudgesResponseDto } from '@/features/nudges'
 export { accountReferenceFixture, programReferenceFixture, searchUsers, listSubmissions, getSubmission, getSubmissionTimeline, createSubmission, updateSubmission, assignSubmission, transitionSubmission } from './submissions'
 export { brokerListFixture, buildBrokerListResponse } from './brokers'
+export {
+  assignRenewal,
+  createRenewal,
+  getRenewal,
+  getRenewalTimeline,
+  listRenewals,
+  transitionRenewal,
+} from './renewals'
 import type {
   DashboardOpportunitiesDto,
   OpportunityAgingDto,

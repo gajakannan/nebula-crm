@@ -40,6 +40,14 @@ vi.mock('./pages/SubmissionDetailPage', () => ({
   default: () => <div>submission-detail-page</div>,
 }))
 
+vi.mock('./pages/RenewalsPage', () => ({
+  default: () => <div>renewals-page</div>,
+}))
+
+vi.mock('./pages/RenewalDetailPage', () => ({
+  default: () => <div>renewal-detail-page</div>,
+}))
+
 vi.mock('./pages/TaskCenterPage', () => ({
   default: () => <div>task-center-page</div>,
 }))
@@ -70,6 +78,8 @@ describe('App routing', () => {
     ['/submissions', 'submissions-page'],
     ['/submissions/new', 'create-submission-page'],
     ['/submissions/submission-1', 'submission-detail-page'],
+    ['/renewals', 'renewals-page'],
+    ['/renewals/renewal-1', 'renewal-detail-page'],
     ['/brokers', 'broker-list-page'],
     ['/brokers/new', 'create-broker-page'],
     ['/brokers/broker-1', 'broker-detail-page'],

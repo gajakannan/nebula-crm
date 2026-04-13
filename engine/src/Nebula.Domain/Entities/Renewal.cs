@@ -17,6 +17,8 @@ public class Renewal : BaseEntity
 
     public Account Account { get; set; } = default!;
     public Broker Broker { get; set; } = default!;
+    public Policy Policy { get; set; } = default!;
+    public Policy? BoundPolicy { get; set; }
     public UserProfile AssignedToUser { get; set; } = default!;
     public Submission? RenewalSubmission { get; set; }
 }

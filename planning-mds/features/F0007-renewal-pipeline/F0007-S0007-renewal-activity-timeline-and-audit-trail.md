@@ -20,12 +20,12 @@ applies_to: product-manager
 
 ## Context & Background
 
-The renewal timeline is the audit backbone of the renewal pipeline. Every mutation — status transition, ownership change, outreach note, and creation — generates an immutable ActivityTimelineEvent record. The timeline is displayed on the Renewal Detail view and serves as the answer to "what happened with this renewal?" for compliance, management review, and daily operational context.
+The renewal timeline is the audit backbone of the renewal pipeline. Every system mutation — status transition, ownership change, and creation — generates an immutable ActivityTimelineEvent record. The timeline is displayed on the Renewal Detail view and serves as the answer to "what happened with this renewal?" for compliance, management review, and daily operational context. (User-authored notes are out of scope for MVP and deferred to F0021.)
 
 ## Acceptance Criteria
 
 **Happy Path — Timeline Display:**
-- **Given** a renewal with multiple events (creation, assignment, transition to Outreach, outreach note, transition to InReview)
+- **Given** a renewal with multiple events (creation, assignment, transition to Outreach, transition to InReview)
 - **When** a user views the Renewal Detail timeline section
 - **Then** all events are displayed in reverse chronological order (newest first) with: event type icon, event description, actor name, and timestamp
 
@@ -56,7 +56,7 @@ The renewal timeline is the audit backbone of the renewal pipeline. Every mutati
 
 **Checklist:**
 - [ ] Timeline displays all ActivityTimelineEvent records where EntityType=Renewal and EntityId matches
-- [ ] Events include: creation, status transitions, assignment changes, outreach notes
+- [ ] Events include: creation, status transitions, assignment changes
 - [ ] Each event shows: event type icon/label, description, actor display name, timestamp
 - [ ] Events are sorted reverse chronologically (newest first)
 - [ ] WorkflowTransition data (fromState, toState, reason) is surfaced in transition event descriptions
@@ -72,7 +72,7 @@ The renewal timeline is the audit backbone of the renewal pipeline. Every mutati
 - `id` (uuid): Event identifier
 - `entityType` (string): "Renewal"
 - `entityId` (uuid): Renewal ID
-- `eventType` (string): Type of event (StatusTransition, Assignment, Creation, Note, etc.)
+- `eventType` (string): Type of event (StatusTransition, Assignment, Creation)
 - `eventPayloadJson` (json): Structured event data (varies by type)
 - `actorUserId` (uuid): Who performed the action
 - `occurredAt` (datetime): When the event happened

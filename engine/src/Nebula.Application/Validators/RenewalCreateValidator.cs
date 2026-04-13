@@ -13,6 +13,7 @@ public class RenewalCreateValidator : AbstractValidator<RenewalCreateDto>
             .When(x => x.AssignedToUserId.HasValue);
         RuleFor(x => x.LineOfBusiness)
             .Must(LineOfBusinessValidation.IsValid)
+            .When(x => x.LineOfBusiness is not null)
             .WithMessage(LineOfBusinessValidation.ErrorMessage);
     }
 }

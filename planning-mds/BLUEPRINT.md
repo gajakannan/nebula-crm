@@ -170,7 +170,7 @@ Status: Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker 
 - [F0003: Task Center + Reminders](features/archive/F0003-task-center/PRD.md) - Done (API-only MVP, archived 2026-03-20)
 - [F0005: IdP Migration: Keycloak → authentik](features/archive/F0005-idp-migration/PRD.md) - Done (Archived)
 - [F0006: Submission Intake Workflow](features/archive/F0006-submission-intake-workflow/PRD.md) - Done (Archived 2026-04-04)
-- [F0007: Renewal Pipeline](features/F0007-renewal-pipeline/PRD.md) - Architecture Complete (7 stories; data model, API, workflow, Casbin, ADRs finalized 2026-03-26)
+- [F0007: Renewal Pipeline](features/F0007-renewal-pipeline/PRD.md) - Done (2026-04-11; 7 stories: pipeline list, detail, transitions, assignment, overdue visibility, create from policy, timeline)
 - [F0009: Authentication + Role-Based Login](features/archive/F0009-authentication-and-role-based-login/PRD.md) - Done (Archived; Phase 1)
 - [F0004: Task Center UI + Manager Assignment](features/archive/F0004-task-center-ui-and-assignment/PRD.md) - Done (Archived 2026-03-23; Phase 1)
 - [F0014: DevOps Smoke Test Automation](features/archive/F0014-devops-smoke-test-automation/PRD.md) - Done (Archived 2026-03-28; Infrastructure)
@@ -298,13 +298,13 @@ Status: Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker 
 - [F0006-S0008: Stale submission visibility and follow-up flags](features/archive/F0006-submission-intake-workflow/F0006-S0008-stale-submission-visibility-and-follow-up-flags.md) - Done (Archived)
 
 **CRM Release MVP Stories (Feature F0007: Renewal Pipeline):**
-- [F0007-S0001: Renewal pipeline list with due-window filtering](features/F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md) - Draft
-- [F0007-S0002: Renewal detail view with policy context and outreach history](features/F0007-renewal-pipeline/F0007-S0002-renewal-detail-view-with-policy-context.md) - Draft
-- [F0007-S0003: Renewal status transitions](features/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md) - Draft
-- [F0007-S0004: Renewal ownership assignment and handoff](features/F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md) - Draft
-- [F0007-S0005: Overdue renewal visibility and escalation flags](features/F0007-renewal-pipeline/F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md) - Draft
-- [F0007-S0006: Create renewal from expiring policy](features/F0007-renewal-pipeline/F0007-S0006-create-renewal-from-expiring-policy.md) - Draft
-- [F0007-S0007: Renewal activity timeline and audit trail](features/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md) - Draft
+- [F0007-S0001: Renewal pipeline list with due-window filtering](features/F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md) - Done
+- [F0007-S0002: Renewal detail view with policy context and outreach history](features/F0007-renewal-pipeline/F0007-S0002-renewal-detail-view-with-policy-context.md) - Done
+- [F0007-S0003: Renewal status transitions](features/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md) - Done
+- [F0007-S0004: Renewal ownership assignment and handoff](features/F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md) - Done
+- [F0007-S0005: Overdue renewal visibility and escalation flags](features/F0007-renewal-pipeline/F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md) - Done
+- [F0007-S0006: Create renewal from expiring policy](features/F0007-renewal-pipeline/F0007-S0006-create-renewal-from-expiring-policy.md) - Done
+- [F0007-S0007: Renewal activity timeline and audit trail](features/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md) - Done
 
 **Story Index:** See `planning-mds/features/STORY-INDEX.md` for auto-generated summary of all stories (if generated).
 
@@ -336,7 +336,7 @@ Screen baseline details:
 
 ## 4) Phase B — Architect Spec (Public Baseline)
 
-**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0003/F0004/F0005/F0006/F0009/F0012/F0013/F0014/F0015/F0033. Active work: F0007 (Architecture Complete).
+**Status: APPROVED (2026-02-14)** — Dashboard-first architecture approved as the planning baseline. Phase C implementation is complete for F0001/F0002/F0003/F0004/F0005/F0006/F0007/F0009/F0012/F0013/F0014/F0015/F0033.
 
 This section defines the build-ready technical baseline for the reference implementation.
 

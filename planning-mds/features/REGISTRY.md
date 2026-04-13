@@ -11,7 +11,7 @@
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
-| F0007 | Renewal Pipeline | Architecture Complete | CRM Release MVP | `F0007-renewal-pipeline/` |
+| F0007 | Renewal Pipeline | Done | CRM Release MVP | `F0007-renewal-pipeline/` |
 
 ## Abandoned Features
 

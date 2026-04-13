@@ -1,12 +1,17 @@
 # Feature Assembly Plan — F0007: Renewal Pipeline
 
 **Created:** 2026-03-26
+**Last Refined:** 2026-04-11
 **Author:** Architect Agent
-**Status:** Approved
+**Status:** Approved (refined)
 
 ## Overview
 
 F0007 redesigns the Renewal entity for policy-linked lifecycle tracking with 6 workflow states, role-gated transitions, configurable per-LOB timing windows, and ownership handoff. The existing Renewal entity, service, endpoints, DTOs, validator, repository, and configuration must all be restructured. The WorkflowStateMachine and OpportunityStatusCatalog must be updated to reflect the new 6-status model.
+
+### Implementation Drift Note (2026-04-11)
+
+The implementation is aligned to the shipped contracts, not the future-state Policy 360 experience. `planning-mds/api/nebula-api.yaml` currently exposes renewal create/list/detail/assignment/transition/timeline endpoints, but it does not yet expose a policy search/read picker endpoint for the UI. F0007 therefore implements renewal creation with direct `PolicyId` entry backed by the Policy stub delivered in this change set. If F0018 expands shared policy semantics later, that richer picker flow should land there and the ontology/KG mappings should be updated in the same change set.
 
 ## Build Order
 
@@ -58,6 +63,18 @@ F0007 redesigns the Renewal entity for policy-linked lifecycle tracking with 6 w
 ## Step 1 — Migration 006: Policy Stub Table
 
 > Skip if F0018 has already landed the Policy entity. Check: `db.Policies` DbSet exists and table has required columns.
+
+### Stub Lifecycle and F0018 Handoff (clarified 2026-04-11)
+
+F0007 owns this stub *only* because F0018 (Policy Lifecycle & Policy 360) has not yet been planned. The stub is intentionally minimal — it provides only the columns Renewal needs (`PolicyNumber`, `AccountId`, `BrokerId`, `Carrier`, `LineOfBusiness`, `EffectiveDate`, `ExpirationDate`, `Premium`, `CurrentStatus`) and is sufficient for renewal discovery, list, detail, transitions, and assignment. The migration is named `F0018_PolicyStub` (not `F0007_PolicyStub`) to signal that the Policy entity is F0018 surface area being landed early.
+
+When F0018 is planned and built:
+- F0018 must extend (not rewrite) the `Policies` table via additive migrations.
+- F0018 must preserve `PolicyNumber` uniqueness, the existing FKs, and the `xmin` concurrency token.
+- The `IRenewalRepository.HasActiveRenewalForPolicyAsync` and `RenewalService.CreateAsync` policy lookup paths will become consumers of F0018's `IPolicyRepository` — F0007 should not introduce its own `IPolicyRepository` interface.
+- F0007 reconcile migrations (`20260407151358_F0007_ReconcileRenewalWorkflowStates`, `20260408013334_F0007_ReconcileRenewalEntityShape`) already assume `PolicyId` exists; if F0018 lands first, this Step 1 is skipped but the column references remain valid.
+
+If F0018 reaches "Planned" status before F0007 build begins, this step should be removed from the F0007 build path and F0018-S0001 (or its equivalent Policy entity story) becomes a hard prerequisite for F0007-S0006.
 
 ### New Files
 

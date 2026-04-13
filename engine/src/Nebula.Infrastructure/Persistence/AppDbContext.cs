@@ -19,6 +19,7 @@ public class AppDbContext : DbContext, IUnitOfWork
     public DbSet<BrokerRegion> BrokerRegions => Set<BrokerRegion>();
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<Submission> Submissions => Set<Submission>();
+    public DbSet<Policy> Policies => Set<Policy>();
     public DbSet<Renewal> Renewals => Set<Renewal>();
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();

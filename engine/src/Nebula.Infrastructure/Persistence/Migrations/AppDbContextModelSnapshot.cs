@@ -382,6 +382,92 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                     b.ToTable("MGAs", (string)null);
                 });
 
+            modelBuilder.Entity("Nebula.Domain.Entities.Policy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BrokerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Carrier")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CurrentStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Active");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("EffectiveDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("LineOfBusiness")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("PolicyNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal?>("Premium")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("BrokerId");
+
+                    b.HasIndex("ExpirationDate")
+                        .HasDatabaseName("IX_Policies_ExpirationDate");
+
+                    b.HasIndex("PolicyNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Policies_PolicyNumber");
+
+                    b.ToTable("Policies", (string)null);
+                });
+
             modelBuilder.Entity("Nebula.Domain.Entities.Program", b =>
                 {
                     b.Property<Guid>("Id")
@@ -778,9 +864,13 @@ namespace Nebula.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("IX_Renewals_AccountId");
 
-                    b.HasIndex("BrokerId");
+                    b.HasIndex("BoundPolicyId");
+
+                    b.HasIndex("BrokerId")
+                        .HasDatabaseName("IX_Renewals_BrokerId");
 
                     b.HasIndex("CurrentStatus")
                         .HasDatabaseName("IX_Renewals_CurrentStatus");
@@ -1070,6 +1160,10 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<string>("LineOfBusiness")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -1086,9 +1180,9 @@ namespace Nebula.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EntityType", "Status")
+                    b.HasIndex("EntityType", "Status", "LineOfBusiness")
                         .IsUnique()
-                        .HasDatabaseName("UX_WorkflowSlaThresholds_EntityType_Status");
+                        .HasDatabaseName("UX_WorkflowSlaThresholds_EntityType_Status_LineOfBusiness");
 
                     b.ToTable("WorkflowSlaThresholds", null, t =>
                         {
@@ -1132,9 +1226,64 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
                             EntityType = "renewal",
                             Status = "Identified",
-                            TargetDays = 30,
+                            TargetDays = 90,
                             UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
-                            WarningDays = 7
+                            WarningDays = 60
+                        },
+                        new
+                        {
+                            Id = new Guid("1e92d4d0-b89a-4b5e-9e01-7d4cf14ed564"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            LineOfBusiness = "Property",
+                            Status = "Identified",
+                            TargetDays = 90,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 60
+                        },
+                        new
+                        {
+                            Id = new Guid("c47d2142-e4b2-4dc3-90c8-3f0da6a07f8b"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            LineOfBusiness = "GeneralLiability",
+                            Status = "Identified",
+                            TargetDays = 90,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 60
+                        },
+                        new
+                        {
+                            Id = new Guid("d7286c4c-38d5-4e57-9837-2b44cf2a86cf"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            LineOfBusiness = "WorkersCompensation",
+                            Status = "Identified",
+                            TargetDays = 120,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 90
+                        },
+                        new
+                        {
+                            Id = new Guid("0ebb7f8c-9709-4b54-a6a4-dcff0b2d3de5"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            LineOfBusiness = "ProfessionalLiability",
+                            Status = "Identified",
+                            TargetDays = 90,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 60
+                        },
+                        new
+                        {
+                            Id = new Guid("d5bc3dd5-17ec-4f56-a8c6-f5b503f17f0d"),
+                            CreatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EntityType = "renewal",
+                            LineOfBusiness = "Cyber",
+                            Status = "Identified",
+                            TargetDays = 60,
+                            UpdatedAt = new DateTime(2026, 3, 14, 0, 0, 0, 0, DateTimeKind.Utc),
+                            WarningDays = 45
                         },
                         new
                         {
@@ -1255,6 +1404,25 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                     b.Navigation("Broker");
                 });
 
+            modelBuilder.Entity("Nebula.Domain.Entities.Policy", b =>
+                {
+                    b.HasOne("Nebula.Domain.Entities.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Nebula.Domain.Entities.Broker", "Broker")
+                        .WithMany()
+                        .HasForeignKey("BrokerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+
+                    b.Navigation("Broker");
+                });
+
             modelBuilder.Entity("Nebula.Domain.Entities.Program", b =>
                 {
                     b.HasOne("Nebula.Domain.Entities.MGA", "Mga")
@@ -1280,9 +1448,20 @@ namespace Nebula.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Nebula.Domain.Entities.Policy", "BoundPolicy")
+                        .WithMany()
+                        .HasForeignKey("BoundPolicyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Nebula.Domain.Entities.Broker", "Broker")
                         .WithMany()
                         .HasForeignKey("BrokerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Nebula.Domain.Entities.Policy", "Policy")
+                        .WithMany()
+                        .HasForeignKey("PolicyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1295,7 +1474,11 @@ namespace Nebula.Infrastructure.Persistence.Migrations
 
                     b.Navigation("AssignedToUser");
 
+                    b.Navigation("BoundPolicy");
+
                     b.Navigation("Broker");
+
+                    b.Navigation("Policy");
 
                     b.Navigation("RenewalSubmission");
                 });

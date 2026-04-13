@@ -45,4 +45,25 @@ public class WorkflowStateMachineTests
 
         transitions.ShouldBe(["ReadyForUWReview", "WaitingOnBroker"]);
     }
+
+    [Fact]
+    public void ValidateRenewalTransition_ForDistributionUserIntoUnderwriterStage_ReturnsPolicyDenied()
+    {
+        var result = WorkflowStateMachine.ValidateRenewalTransition(
+            "InReview",
+            "Quoted",
+            ["DistributionUser"]);
+
+        result.ShouldBe("policy_denied");
+    }
+
+    [Fact]
+    public void GetAvailableRenewalTransitions_FiltersByRole()
+    {
+        var transitions = WorkflowStateMachine.GetAvailableRenewalTransitions(
+            "InReview",
+            ["Underwriter"]);
+
+        transitions.ShouldBe(["Lost", "Quoted"]);
+    }
 }

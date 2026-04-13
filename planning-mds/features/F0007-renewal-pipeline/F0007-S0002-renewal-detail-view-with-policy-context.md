@@ -85,6 +85,7 @@ The renewal detail view is where users spend time understanding and acting on a 
 - Distribution Manager — All renewals within ABAC scope
 - Underwriter — Renewals assigned to them in InReview/Quoted, plus read access to prior stages
 - Relationship Manager — Renewals for their accounts/brokers (read-only)
+- Program Manager — Renewals within their programs (read-only)
 - Admin — All renewals
 
 **Data Visibility:**

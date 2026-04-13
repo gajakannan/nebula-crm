@@ -9,6 +9,7 @@ public static class DevSeedData
     private const int BrokerSeedCount = 240;
     private const int SubmissionSeedCount = 320;
     private const int RenewalSeedCount = 320;
+    private const int PolicySeedCount = 480;
     private const int AccountSeedCount = 420;
 
     private static readonly string[] States = ["CA", "TX", "NY", "FL", "WA", "IL", "GA", "NC", "AZ", "CO", "NJ", "PA"];
@@ -86,6 +87,9 @@ public static class DevSeedData
 
         db.BrokerRegions.AddRange(BuildBrokerRegions(brokers, rng));
         db.Contacts.AddRange(BuildContacts(brokers, now, rng, userIds));
+        var policies = BuildPolicies(PolicySeedCount, now, rng, userIds, accounts, brokers);
+        db.Policies.AddRange(policies);
+        await db.SaveChangesAsync();
 
         var submissions = new List<Submission>(SubmissionSeedCount);
         var renewals = new List<Renewal>(RenewalSeedCount);
@@ -93,6 +97,10 @@ public static class DevSeedData
         var timelineEvents = new List<ActivityTimelineEvent>(400);
 
         var boundSubmissionIds = new List<Guid>();
+        var renewalPolicies = policies.OrderBy(_ => rng.Next()).Take(RenewalSeedCount).ToList();
+        var boundPolicies = policies
+            .Where(policy => renewalPolicies.All(selected => selected.Id != policy.Id))
+            .ToList();
 
         for (var i = 0; i < SubmissionSeedCount; i++)
         {
@@ -183,8 +191,9 @@ public static class DevSeedData
 
         for (var i = 0; i < RenewalSeedCount; i++)
         {
-            var account = accounts[rng.Next(accounts.Count)];
-            var broker = brokers[rng.Next(brokers.Count)];
+            var policy = renewalPolicies[i];
+            var account = policy.Account;
+            var broker = policy.Broker;
             var assignedTo = userIds[rng.Next(userIds.Length)];
             var path = GenerateWorkflowPath(
                 rng,
@@ -228,10 +237,11 @@ public static class DevSeedData
             {
                 AccountId = account.Id,
                 BrokerId = broker.Id,
-                PolicyId = Guid.NewGuid(),
-                LineOfBusiness = rng.NextDouble() < 0.08 ? null : LineOfBusinessCodes[rng.Next(LineOfBusinessCodes.Length)],
+                PolicyId = policy.Id,
+                Policy = policy,
+                LineOfBusiness = policy.LineOfBusiness,
                 CurrentStatus = path[^1],
-                PolicyExpirationDate = now.Date.AddDays(rng.Next(-60, 180)),
+                PolicyExpirationDate = policy.ExpirationDate,
                 AssignedToUserId = assignedTo,
                 CreatedAt = createdAt,
                 UpdatedAt = updatedAt,
@@ -241,7 +251,9 @@ public static class DevSeedData
             renewal.TargetOutreachDate = renewal.PolicyExpirationDate.AddDays(-GetRenewalTargetDays(renewal.LineOfBusiness));
             if (renewal.CurrentStatus == "Completed")
             {
-                renewal.BoundPolicyId = Guid.NewGuid();
+                renewal.BoundPolicyId = boundPolicies.Count > 0
+                    ? boundPolicies[rng.Next(boundPolicies.Count)].Id
+                    : null;
                 renewal.RenewalSubmissionId = boundSubmissionIds.Count > 0 && rng.NextDouble() < 0.55
                     ? boundSubmissionIds[rng.Next(boundSubmissionIds.Count)]
                     : null;
@@ -262,7 +274,7 @@ public static class DevSeedData
                     EntityType = "Renewal",
                     EntityId = renewal.Id,
                     EventType = "RenewalCreated",
-                    EventDescription = $"Renewal created for {account.Name}",
+                    EventDescription = $"Renewal created from policy {policy.PolicyNumber}",
                     ActorUserId = assignedTo,
                     ActorDisplayName = userNameById[assignedTo],
                     OccurredAt = createdAt,
@@ -325,6 +337,47 @@ public static class DevSeedData
         }
 
         return accounts;
+    }
+
+    private static List<Policy> BuildPolicies(
+        int count,
+        DateTime now,
+        Random rng,
+        Guid[] userIds,
+        IReadOnlyList<Account> accounts,
+        IReadOnlyList<Broker> brokers)
+    {
+        var policies = new List<Policy>(count);
+        for (var i = 1; i <= count; i++)
+        {
+            var createdBy = userIds[rng.Next(userIds.Length)];
+            var account = accounts[rng.Next(accounts.Count)];
+            var broker = brokers[rng.Next(brokers.Count)];
+            var expirationDate = now.Date.AddDays(rng.Next(-45, 210));
+            var effectiveDate = expirationDate.AddYears(-1);
+            var lineOfBusiness = rng.NextDouble() < 0.08 ? null : LineOfBusinessCodes[rng.Next(LineOfBusinessCodes.Length)];
+
+            policies.Add(new Policy
+            {
+                PolicyNumber = $"POL-{i:D6}",
+                AccountId = account.Id,
+                BrokerId = broker.Id,
+                Carrier = Pick(rng, CarrierNames),
+                LineOfBusiness = lineOfBusiness,
+                EffectiveDate = effectiveDate,
+                ExpirationDate = expirationDate,
+                Premium = Math.Round((decimal)(rng.Next(12_000, 250_000) + rng.NextDouble()), 2),
+                CurrentStatus = WeightedPick(rng, ("Active", 80), ("Expiring", 15), ("Bound", 5)),
+                Account = account,
+                Broker = broker,
+                CreatedAt = now.AddDays(-rng.Next(30, 720)),
+                UpdatedAt = now.AddDays(-rng.Next(0, 120)),
+                CreatedByUserId = createdBy,
+                UpdatedByUserId = createdBy,
+            });
+        }
+
+        return policies;
     }
 
     private static List<Broker> BuildBrokers(
@@ -791,6 +844,12 @@ public static class DevSeedData
     private static readonly string[] BrokerNameSuffixes =
     [
         "Brokerage", "Risk Partners", "Insurance Group", "Advisors", "Placement Services", "Wholesale", "Markets", "Agency"
+    ];
+
+    private static readonly string[] CarrierNames =
+    [
+        "Archway Specialty", "Blue Atlas Insurance", "Summit National", "Frontier Casualty",
+        "Compass Mutual", "Harbor Re", "Northstar Indemnity", "Sterling Insurance Co."
     ];
 
     private static readonly string[] FirstNames =

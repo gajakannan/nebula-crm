@@ -74,7 +74,9 @@
       "Bash(while IFS= read -r line)",
       "Bash(do echo:*)",
       "Bash(du -sh /mnt/c/Users/gajap/sandbox/nebula-crm/agents/*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(jobs)",
+      "Bash(npx --prefix experience vitest run --config experience/vitest.config.ts src/pages/tests/RenewalsPage.integration.test.tsx src/pages/tests/RenewalDetailPage.integration.test.tsx src/pages/tests/DashboardPage.integration.test.tsx)"
     ]
   }
 }

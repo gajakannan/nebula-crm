@@ -62,6 +62,10 @@ node_bindings:
           - engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
           - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
 
+  # entity:policy will be added when F0007 build creates the Policy stub
+  # (see planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md, Step 1)
+  # or when F0018 lands the canonical Policy entity, whichever comes first.
+
   - id: entity:broker
     paths:
       backend:
@@ -940,6 +944,25 @@ node_bindings:
         features:
           - experience/src/features/timeline/**
 
+  # F0007 endpoint bindings reference the existing RenewalEndpoints.cs surface,
+  # the shared Renewal*.cs DTOs and validators, and the existing repository.
+  # New artifacts (RenewalListItemDto, RenewalListQuery, RenewalAssignmentRequestDto,
+  # RenewalTransitionValidator, RenewalAssignmentValidator) will be picked up by
+  # the Renewal*.cs glob patterns once the build action creates them.
+  - id: endpoint:renewal-list
+    paths:
+      backend:
+        api:
+          - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
+        application:
+          - engine/src/Nebula.Application/Services/RenewalService.cs
+          - engine/src/Nebula.Application/DTOs/Renewal*.cs
+          - engine/src/Nebula.Application/Interfaces/IRenewalRepository.cs
+        infrastructure:
+          - engine/src/Nebula.Infrastructure/Repositories/RenewalRepository.cs
+        tests:
+          - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
+
   - id: endpoint:renewal-detail
     paths:
       backend:
@@ -951,14 +974,18 @@ node_bindings:
         tests:
           - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
 
-  - id: endpoint:renewal-transitions-list
+  - id: endpoint:renewal-create
     paths:
       backend:
         api:
           - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
         application:
           - engine/src/Nebula.Application/Services/RenewalService.cs
-          - engine/src/Nebula.Application/DTOs/WorkflowTransitionRecordDto.cs
+          - engine/src/Nebula.Application/DTOs/Renewal*.cs
+          - engine/src/Nebula.Application/Validators/RenewalCreateValidator.cs
+          - engine/src/Nebula.Application/Interfaces/IRenewalRepository.cs
+        infrastructure:
+          - engine/src/Nebula.Infrastructure/Repositories/RenewalRepository.cs
         tests:
           - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
 
@@ -970,9 +997,31 @@ node_bindings:
         application:
           - engine/src/Nebula.Application/Services/RenewalService.cs
           - engine/src/Nebula.Application/Services/WorkflowStateMachine.cs
-          - engine/src/Nebula.Application/Validators/WorkflowTransitionRequestValidator.cs
+          - engine/src/Nebula.Application/Validators/Renewal*.cs
         tests:
           - engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
+          - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
+
+  - id: endpoint:renewal-assignment
+    paths:
+      backend:
+        api:
+          - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
+        application:
+          - engine/src/Nebula.Application/Services/RenewalService.cs
+          - engine/src/Nebula.Application/DTOs/Renewal*.cs
+          - engine/src/Nebula.Application/Validators/Renewal*.cs
+        tests:
+          - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
+
+  - id: endpoint:renewal-timeline
+    paths:
+      backend:
+        api:
+          - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
+        application:
+          - engine/src/Nebula.Application/Services/RenewalService.cs
+        tests:
           - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
 
   - id: endpoint:task-my-list

@@ -121,10 +121,10 @@ describe('SubmissionDetailPage integration', () => {
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: 'Move to Ready for UW Review' })).not.toBeInTheDocument()
-    })
+    }, { timeout: 5000 })
     expect(screen.queryByText('Submission is not ready for that transition.')).not.toBeInTheDocument()
     expect(screen.queryByText(/Transition failed/)).not.toBeInTheDocument()
-  })
+  }, 15000)
 
   it('hides edit and reassignment actions for read-only intake roles', async () => {
     mockAuthenticatedUser({

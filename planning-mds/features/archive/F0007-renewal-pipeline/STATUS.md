@@ -2,7 +2,7 @@
 
 **Overall Status:** Done
 **Last Updated:** 2026-04-11
-**Archived:** —
+**Archived:** 2026-04-12
 
 ## Story Checklist
 

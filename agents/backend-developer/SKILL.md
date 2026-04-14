@@ -142,6 +142,12 @@ Your responsibility is to implement the **service layer** (engine/) based on req
 - Test authorization rules
 - Test validation rules
 
+### 9. Knowledge-Graph Closeout
+- Before marking a story done, update `planning-mds/knowledge-graph/code-index.yaml` with bindings for any new source files created during implementation (entities, services, endpoints, migrations, configurations).
+- Each binding maps a file glob or path to the canonical node it implements (e.g., `engine/src/**/Entities/Renewal.cs` → `entity:renewal`).
+- Run `python3 scripts/kg/validate.py` after adding bindings to confirm no broken references or drift.
+- If new domain concepts were introduced that don't have canonical nodes yet, flag this to the architect for ontology expansion — do not invent canonical nodes without architect approval.
+
 ## Tools & Permissions
 
 **Allowed Tools:** Read, Write, Edit, Bash (for dotnet commands)
@@ -302,6 +308,8 @@ engine/
 - [ ] No hardcoded secrets (use configuration)
 - [ ] Structured logging in place
 - [ ] Code follows SOLUTION-PATTERNS.md
+- [ ] Code-index bindings added for new source files (`code-index.yaml`)
+- [ ] `python3 scripts/kg/validate.py` exits 0
 - [ ] No compiler warnings
 - [ ] README includes setup and run instructions
 

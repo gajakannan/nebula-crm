@@ -87,13 +87,13 @@ Auto-generated index of all user stories across feature folders.
 
 | Story ID | Title | Priority | Phase | Persona |
 |----------|-------|----------|-------|---------|
-| [F0007-S0001](./F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md) | Renewal pipeline list with due-window filtering | Critical | CRM Release MVP | distribution user or distribution manager |
-| [F0007-S0002](./F0007-renewal-pipeline/F0007-S0002-renewal-detail-view-with-policy-context.md) | Renewal detail view with policy context and outreach history | Critical | CRM Release MVP | distribution user or underwriter |
-| [F0007-S0003](./F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md) | Renewal status transitions | Critical | CRM Release MVP | distribution user or underwriter |
-| [F0007-S0004](./F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md) | Renewal ownership assignment and handoff | High | CRM Release MVP | distribution manager |
-| [F0007-S0005](./F0007-renewal-pipeline/F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md) | Overdue renewal visibility and escalation flags | High | CRM Release MVP | distribution manager |
-| [F0007-S0006](./F0007-renewal-pipeline/F0007-S0006-create-renewal-from-expiring-policy.md) | Create renewal from expiring policy | Critical | CRM Release MVP | distribution user |
-| [F0007-S0007](./F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md) | Renewal activity timeline and audit trail | High | CRM Release MVP | distribution user, underwriter, or distribution manager |
+| [F0007-S0001](./archive/F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md) | Renewal pipeline list with due-window filtering | Critical | CRM Release MVP | distribution user or distribution manager |
+| [F0007-S0002](./archive/F0007-renewal-pipeline/F0007-S0002-renewal-detail-view-with-policy-context.md) | Renewal detail view with policy context and outreach history | Critical | CRM Release MVP | distribution user or underwriter |
+| [F0007-S0003](./archive/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md) | Renewal status transitions | Critical | CRM Release MVP | distribution user or underwriter |
+| [F0007-S0004](./archive/F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md) | Renewal ownership assignment and handoff | High | CRM Release MVP | distribution manager |
+| [F0007-S0005](./archive/F0007-renewal-pipeline/F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md) | Overdue renewal visibility and escalation flags | High | CRM Release MVP | distribution manager |
+| [F0007-S0006](./archive/F0007-renewal-pipeline/F0007-S0006-create-renewal-from-expiring-policy.md) | Create renewal from expiring policy | Critical | CRM Release MVP | distribution user |
+| [F0007-S0007](./archive/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md) | Renewal activity timeline and audit trail | High | CRM Release MVP | distribution user, underwriter, or distribution manager |
 
 ---
 

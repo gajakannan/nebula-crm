@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Iterable
@@ -14,6 +15,10 @@ from kg_common import (
     REF_FIELDS,
     REPO_ROOT,
     SECTION_TYPES,
+    VALID_PROVENANCE,
+    edge_ref_id,
+    edge_ref_ids,
+    edge_ref_provenance,
     excluded_feature_paths,
     expand_declared_pattern,
     iter_feature_dirs,
@@ -56,13 +61,71 @@ def validate_path_exists(report: ValidationReport, path_value: str, context: str
 def validate_references(report: ValidationReport, item: dict[str, Any], all_nodes: dict[str, Any]) -> None:
     item_id = item["id"]
     for field in REF_FIELDS:
-        for ref_id in item.get(field, []):
+        for ref in item.get(field, []):
+            ref_id = edge_ref_id(ref)
             if ref_id not in all_nodes:
                 report.error(f"Unknown reference in {item_id}.{field}: {ref_id}")
+            validate_edge_provenance(report, ref, f"{item_id}.{field}")
 
     feature_ref = item.get("feature")
     if feature_ref and feature_ref not in all_nodes:
         report.error(f"Unknown feature reference in {item_id}.feature: {feature_ref}")
+
+
+def validate_edge_provenance(report: ValidationReport, ref: Any, context: str) -> None:
+    """Validate provenance annotation on an edge reference."""
+    if isinstance(ref, str):
+        return
+    if not isinstance(ref, dict):
+        report.error(f"Edge reference in {context} is neither string nor object: {ref!r}")
+        return
+
+    ref_id = ref.get("id")
+    if not ref_id:
+        report.error(f"Edge reference object in {context} is missing 'id'")
+        return
+
+    prov = ref.get("provenance")
+    if prov is None:
+        return
+
+    if prov not in VALID_PROVENANCE:
+        report.error(f"Invalid provenance '{prov}' on {ref_id} in {context} (valid: {', '.join(sorted(VALID_PROVENANCE))})")
+        return
+
+    if prov == "inferred":
+        confidence = ref.get("confidence")
+        if confidence is None:
+            report.warn(f"Inferred edge {ref_id} in {context} is missing confidence score")
+        elif not isinstance(confidence, (int, float)) or confidence < 0.0 or confidence > 1.0:
+            report.error(f"Invalid confidence {confidence!r} on {ref_id} in {context} (must be 0.0–1.0)")
+        elif confidence < 0.5:
+            report.warn(f"Low-confidence inferred edge ({confidence}) on {ref_id} in {context}")
+
+    if prov == "ambiguous":
+        report.warn(f"Ambiguous edge {ref_id} in {context} — flagged for architect review")
+
+
+def validate_rationale_entry(
+    report: ValidationReport, entry: Any, node_id: str, all_nodes: dict[str, Any]
+) -> None:
+    """Validate a single rationale entry on a canonical node."""
+    if not isinstance(entry, dict):
+        report.error(f"Rationale entry on {node_id} is not an object: {entry!r}")
+        return
+
+    adr_ref = entry.get("adr")
+    if not adr_ref:
+        report.error(f"Rationale entry on {node_id} is missing 'adr' field")
+        return
+    if adr_ref not in all_nodes:
+        report.error(f"Rationale on {node_id} references unknown ADR: {adr_ref}")
+
+    if not entry.get("section"):
+        report.error(f"Rationale entry on {node_id} (adr: {adr_ref}) is missing 'section' field")
+
+    if not entry.get("summary"):
+        report.error(f"Rationale entry on {node_id} (adr: {adr_ref}) is missing 'summary' field")
 
 
 def iter_existing_files(paths: Iterable[str]) -> list[Path]:
@@ -183,12 +246,185 @@ def write_coverage_report(report_payload: dict[str, Any]) -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# Drift checkers
+# ---------------------------------------------------------------------------
+
+MEMORY_LINK_RE = re.compile(r"\[([^\]]+)\]\(\./?([\w.-]+\.md)\)")
+REPO_PATH_RE = re.compile(
+    r"`((?:agents|planning-mds|engine|experience|neuron|scripts|docker"
+    r"|\.github)/[\w./*\-]+)`"
+)
+
+
+def validate_external_memory_drift(report: ValidationReport, memory_dir: Path) -> None:
+    """Check an external agent memory directory for stale repo-path references.
+
+    Agent-agnostic: any coding agent that stores file-based memory can pass its
+    memory directory via --memory-dir. No vendor-specific path conventions are
+    assumed.
+
+    Checks performed:
+    1. If an index file (MEMORY.md or similar) links to .md files, verify they exist.
+    2. All .md files in the directory are scanned for backtick-quoted repo paths
+       that no longer resolve — a signal the memory is stale.
+    """
+    if not memory_dir.is_dir():
+        report.error(f"--memory-dir path is not a directory: {memory_dir}")
+        return
+
+    # Optional index file — check linked files if present
+    memory_md = memory_dir / "MEMORY.md"
+    if memory_md.exists():
+        content = memory_md.read_text(encoding="utf-8")
+        linked_files = {m.group(2): m.group(1) for m in MEMORY_LINK_RE.finditer(content)}
+
+        for filename in linked_files:
+            if not (memory_dir / filename).exists():
+                report.error(f"Memory index links to missing file: {filename}")
+
+        for path in sorted(memory_dir.glob("*.md")):
+            if path.name == "MEMORY.md":
+                continue
+            if path.name not in linked_files:
+                report.warn(f"Memory file not indexed: {path.name}")
+
+    # Scan all .md files for dead repo-path references
+    for path in sorted(memory_dir.glob("*.md")):
+        file_content = path.read_text(encoding="utf-8")
+        for match in REPO_PATH_RE.finditer(file_content):
+            ref_path = match.group(1)
+            if "*" in ref_path:
+                continue
+            if not (REPO_ROOT / ref_path).exists():
+                report.warn(
+                    f"Memory file {path.name} references missing repo path: {ref_path}"
+                )
+
+
+def parse_casbin_policy_pairs(policy_path: Path) -> set[tuple[str, str]]:
+    """Extract unique (resource, action) pairs from policy.csv."""
+    pairs: set[tuple[str, str]] = set()
+    for line in policy_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) >= 4 and parts[0] == "p":
+            pairs.add((parts[2], parts[3]))
+    return pairs
+
+
+def parse_casbin_role_map(
+    policy_path: Path,
+) -> dict[tuple[str, str], set[str]]:
+    """Map (resource, action) → set of roles from policy.csv."""
+    role_map: dict[tuple[str, str], set[str]] = {}
+    for line in policy_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) >= 4 and parts[0] == "p":
+            key = (parts[2], parts[3])
+            role_map.setdefault(key, set()).add(parts[1])
+    return role_map
+
+
+ROLE_SLUG_TO_CSV = {
+    "distribution-user": "DistributionUser",
+    "distribution-manager": "DistributionManager",
+    "underwriter": "Underwriter",
+    "relationship-manager": "RelationshipManager",
+    "program-manager": "ProgramManager",
+    "admin": "Admin",
+    "broker-user": "BrokerUser",
+}
+
+
+def validate_casbin_drift(
+    report: ValidationReport, bundle: dict[str, Any]
+) -> None:
+    """Cross-check policy_rule nodes against actual policy.csv entries."""
+    policy_path = REPO_ROOT / "planning-mds" / "security" / "policies" / "policy.csv"
+    if not policy_path.exists():
+        report.warn("policy.csv not found; skipping Casbin drift check")
+        return
+
+    actual_pairs = parse_casbin_policy_pairs(policy_path)
+    actual_roles = parse_casbin_role_map(policy_path)
+    canonical = bundle["canonical"]
+
+    declared_pairs: set[tuple[str, str]] = set()
+    declared_rules: dict[tuple[str, str], dict[str, Any]] = {}
+    for rule in canonical.get("policy_rules", []):
+        resource = rule.get("resource")
+        action = rule.get("action")
+        if resource and action:
+            pair = (resource, action)
+            declared_pairs.add(pair)
+            declared_rules[pair] = rule
+
+    # Pairs in policy.csv but not in canonical-nodes
+    for resource, action in sorted(actual_pairs - declared_pairs):
+        report.warn(
+            f"Casbin policy pair ({resource}, {action}) in policy.csv "
+            f"has no policy_rule node in canonical-nodes.yaml"
+        )
+
+    # Pairs in canonical-nodes but not in policy.csv
+    for resource, action in sorted(declared_pairs - actual_pairs):
+        report.error(
+            f"policy_rule declares ({resource}, {action}) but no matching "
+            f"lines exist in policy.csv"
+        )
+
+    # Role-level mismatch for shared pairs
+    for pair in sorted(declared_pairs & actual_pairs):
+        rule = declared_rules[pair]
+        declared_role_slugs = {
+            r.replace("role:", "") for r in rule.get("allowed_roles", [])
+        }
+        declared_csv_roles = {
+            ROLE_SLUG_TO_CSV[s]
+            for s in declared_role_slugs
+            if s in ROLE_SLUG_TO_CSV
+        }
+        actual_csv_roles = actual_roles.get(pair, set())
+
+        missing_in_ontology = actual_csv_roles - declared_csv_roles
+        missing_in_csv = declared_csv_roles - actual_csv_roles
+
+        resource, action = pair
+        for role in sorted(missing_in_ontology):
+            report.warn(
+                f"policy.csv grants {role} ({resource}, {action}) but "
+                f"policy_rule:{resource}-{action} omits it from allowed_roles"
+            )
+        for role in sorted(missing_in_csv):
+            report.warn(
+                f"policy_rule:{resource}-{action} declares {role} in "
+                f"allowed_roles but no matching policy.csv line exists"
+            )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate knowledge-graph integrity.")
     parser.add_argument(
         "--write-coverage-report",
         action="store_true",
         help="Write planning-mds/knowledge-graph/coverage-report.yaml using current KG state.",
+    )
+    parser.add_argument(
+        "--check-drift",
+        action="store_true",
+        help="Run drift checks: Casbin policy cross-check, and external memory staleness (if --memory-dir given).",
+    )
+    parser.add_argument(
+        "--memory-dir",
+        type=Path,
+        default=None,
+        help="Path to an external agent memory directory to scan for stale repo-path references. Agent-agnostic — works with any tool that stores .md memory files.",
     )
     args = parser.parse_args()
 
@@ -222,6 +458,8 @@ def main() -> int:
             for role_id in item.get("allowed_roles", []):
                 if role_id not in all_nodes:
                     report.error(f"Unknown role reference in {node_id}.allowed_roles: {role_id}")
+            for rationale_entry in item.get("rationale", []):
+                validate_rationale_entry(report, rationale_entry, node_id, all_nodes)
 
             if section == "workflows":
                 workflow_id = item["id"]
@@ -315,6 +553,11 @@ def main() -> int:
         edge_id = edge["id"]
         if edge_id in edge_usage and edge_usage[edge_id] == 0:
             report.warn(f"Declared edge type is unused: {edge_id}")
+
+    if args.check_drift:
+        validate_casbin_drift(report, bundle)
+        if args.memory_dir:
+            validate_external_memory_drift(report, args.memory_dir)
 
     coverage_report = build_coverage_report(bundle, mapped_feature_paths, excluded_paths, uncovered)
     if args.write_coverage_report:

@@ -945,12 +945,18 @@ Before Build Complete, verify required role signoffs across delivered features:
 4. If ontology-backed planning exists for touched features, update feature/path/status references in:
    - `planning-mds/knowledge-graph/feature-mappings.yaml`
 5. Record deferred follow-ups, known mitigations, and orphaned story handling before tracker validation
+6. **Knowledge-graph validation:**
+   - Confirm implementation agents added `code-index.yaml` bindings for new source files created during the build. If bindings are missing, add them now.
+   - Run `python3 scripts/kg/validate.py --check-drift` and resolve any errors before proceeding.
+   - If the build introduced new canonical nodes or rationale entries, confirm they are present in `canonical-nodes.yaml`.
 
 **Completion Criteria:**
 - [ ] Product Manager closeout executed after signoff passed
 - [ ] Delivered features have final status/archive decisions recorded
 - [ ] Deferred follow-ups and mitigation carry-overs captured
 - [ ] Ontology feature mappings updated if closeout changes feature path/status
+- [ ] Code-index bindings exist for new source files introduced during this build
+- [ ] `validate.py --check-drift` exits 0
 
 ---
 

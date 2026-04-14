@@ -90,10 +90,55 @@ Ontology context:
 Use the ontology to resolve canonical workflow, workflow state, capability,
 schema, ADR, and entity links. Do not treat it as a substitute for reading the linked raw
 artifacts when details or verification matter.
-Use `python3 scripts/kg/lookup.py <feature-or-story-id>` to materialize the
-scope, or `python3 scripts/kg/lookup.py --file <repo-path>` for reverse lookup.
-Use `python3 scripts/kg/validate.py --write-coverage-report` when the committed
-coverage/freshness artifact needs to be refreshed after ontology changes.
+
+### KG CLI Tools
+
+All tools are agent-agnostic and work from any terminal or agent runtime.
+
+| Command | Purpose |
+|---------|---------|
+| `python3 scripts/kg/lookup.py <id>` | Materialize ontology scope for a feature or story ID |
+| `python3 scripts/kg/lookup.py --file <path>` | Reverse lookup from a code file to ontology nodes |
+| `python3 scripts/kg/hint.py <path>` | Quick KG routing hint before searching — outputs matched nodes, features, stories, and Casbin rules for a file or directory. Use `--json` for structured output. |
+| `python3 scripts/kg/blast.py <node-id>` | Compute blast radius for a canonical node — all impacted features, stories, code bindings, Casbin rules, and resolved files |
+| `python3 scripts/kg/blast.py --file <path>` | Blast radius starting from a code file (reverse-binds to nodes first) |
+| `python3 scripts/kg/blast.py <feature-id>` | Blast radius for a feature by expanding its canonical node references. Use `--compact` for summary only. |
+| `python3 scripts/kg/validate.py` | Validate KG integrity (IDs, references, paths, coverage) |
+| `python3 scripts/kg/validate.py --check-drift` | Run drift checks: Casbin policy cross-check (policy_rule nodes vs policy.csv resource/action/role alignment). Add `--memory-dir <path>` to scan an external agent memory directory for stale repo-path references. |
+| `python3 scripts/kg/validate.py --write-coverage-report` | Refresh the committed `coverage-report.yaml` artifact |
+| `python3 scripts/kg/pagerank.py --top N` | Compute PageRank over the knowledge graph to surface hub nodes. Use `--type entity` to filter by node type. |
+| `python3 scripts/kg/cochange.py --top N` | Discover git co-change edges between canonical nodes. Use `--coverage-gaps` to find unbound files that co-change with bound files. |
+| `python3 scripts/kg/workstate.py --state-file <path> init --role <role> --scope <id>` | Initialize a session working-state file for compaction resilience |
+| `python3 scripts/kg/workstate.py --state-file <path> decision "<summary>"` | Record a decision to working state. Use `--files` and `--rationale` for detail. |
+| `python3 scripts/kg/workstate.py --state-file <path> dump --compact` | Dump compact working state for post-compaction context recovery |
+
+### When to Use Each Tool
+
+- **Before searching code**: run `hint.py <path>` to get KG context. This
+  replaces blind Glob/Grep with ontology-routed exploration.
+- **Before editing a shared entity, workflow, or schema**: run
+  `blast.py <node-id>` to see what features, Casbin rules, and code files
+  would be impacted.
+- **When planning a feature implementation**: run `lookup.py <feature-id>` to
+  materialize the full ontology scope as a starting context.
+- **After ontology changes**: run `validate.py --write-coverage-report` to
+  refresh freshness tracking, and `validate.py --check-drift` to catch
+  cross-artifact misalignment.
+
+- **During long sessions**: run `workstate.py init` at the start, then
+  `workstate.py decision` after key decisions and `workstate.py touch` after
+  significant file changes.  After context compaction, run
+  `workstate.py dump --compact` to recover structured session state instead
+  of re-deriving it from compressed conversation history.
+- **When assessing architectural risk**: run `pagerank.py --type entity` to
+  find hub entities that need the most ABAC and test coverage attention.
+- **When checking for undeclared dependencies**: run `cochange.py --coverage-gaps`
+  to find files that frequently co-change with bound files but have no
+  code-index binding.
+
+Agent-specific hook adapters (e.g., `.claude/settings.json` for Claude Code)
+can wire `hint.py` into their pre-search hooks, but the tools work
+standalone without any hook configuration.
 
 ### Action Template
 
@@ -115,6 +160,8 @@ Execution notes:
 
 Use these clauses when they apply:
 
+- `Before loading references, consult agents/ROUTER.md and load only the task-matched subset.`
+- `Before searching code, run python3 scripts/kg/hint.py <path> to get KG routing context.`
 - `If ontology coverage exists, load the matching knowledge-graph entry before reading raw files.`
 - `Use ontology mappings as compressed retrieval context only; source artifacts win on conflict.`
 - `If shared solution semantics changed, repair ontology drift in the same change set.`
@@ -144,9 +191,9 @@ Use these clauses when they apply:
 | Agent | Use When | Read First | Usually Updates | Typical Validation |
 |------|----------|------------|-----------------|--------------------|
 | `product-manager` | refining PRDs, stories, personas, MVP/future scope, tracker sync | `planning-mds/BLUEPRINT.md`, feature folder, dependency PRDs, `TRACKER-GOVERNANCE.md` | feature `PRD.md`, stories, `README.md`, `STATUS.md`, trackers | `python3 agents/product-manager/scripts/validate-stories.py`, `python3 agents/product-manager/scripts/generate-story-index.py planning-mds/features/`, `python3 agents/product-manager/scripts/validate-trackers.py` |
-| `architect` | data model, workflows, API contracts, ADRs, authorization, assembly plans | feature folder, `planning-mds/architecture/decisions/`, `planning-mds/architecture/SOLUTION-PATTERNS.md`, dependent PRDs | `planning-mds/architecture/**`, `planning-mds/api/*.yaml`, `planning-mds/schemas/*.json`, feature `feature-assembly-plan.md`, feature `STATUS.md` | `python3 agents/architect/scripts/validate-architecture.py planning-mds/BLUEPRINT.md`, `python3 agents/architect/scripts/validate-api-contract.py <api-file>`, tracker validation if trackers changed |
-| `backend-developer` | implementing `engine/` changes from approved feature plans | feature folder, `feature-assembly-plan.md`, `planning-mds/api/`, `planning-mds/schemas/`, `planning-mds/architecture/SOLUTION-PATTERNS.md` | `engine/**`, feature `STATUS.md`, feature `GETTING-STARTED.md` | `sh agents/backend-developer/scripts/run-tests.sh --strict` or repo-standard backend test command |
-| `frontend-developer` | implementing `experience/` screens, forms, API wiring, UX fixes | feature folder, `feature-assembly-plan.md`, screen specs, `planning-mds/api/`, `planning-mds/schemas/`, `agents/frontend-developer/references/ux-audit-ruleset.md` | `experience/**`, feature `STATUS.md`, feature `GETTING-STARTED.md` | `pnpm --dir experience lint`, `pnpm --dir experience lint:theme`, `pnpm --dir experience build`, `pnpm --dir experience test`, plus `pnpm --dir experience test:visual:theme` when theme/styling changed |
+| `architect` | data model, workflows, API contracts, ADRs, authorization, assembly plans | feature folder, `planning-mds/architecture/decisions/`, `planning-mds/architecture/SOLUTION-PATTERNS.md`, dependent PRDs | `planning-mds/architecture/**`, `planning-mds/api/*.yaml`, `planning-mds/schemas/*.json`, feature `feature-assembly-plan.md`, feature `STATUS.md` | `python3 agents/architect/scripts/validate-architecture.py planning-mds/BLUEPRINT.md`, `python3 agents/architect/scripts/validate-api-contract.py <api-file>`, `python3 scripts/kg/blast.py <node>` before shared entity/workflow changes, `python3 scripts/kg/validate.py --check-drift` after ontology changes, tracker validation if trackers changed |
+| `backend-developer` | implementing `engine/` changes from approved feature plans | feature folder, `feature-assembly-plan.md`, `planning-mds/api/`, `planning-mds/schemas/`, `planning-mds/architecture/SOLUTION-PATTERNS.md` | `engine/**`, feature `STATUS.md`, feature `GETTING-STARTED.md` | `python3 scripts/kg/hint.py <path>` before searching, `sh agents/backend-developer/scripts/run-tests.sh --strict` or repo-standard backend test command |
+| `frontend-developer` | implementing `experience/` screens, forms, API wiring, UX fixes | feature folder, `feature-assembly-plan.md`, screen specs, `planning-mds/api/`, `planning-mds/schemas/`, `agents/frontend-developer/references/ux-audit-ruleset.md` | `experience/**`, feature `STATUS.md`, feature `GETTING-STARTED.md` | `python3 scripts/kg/hint.py <path>` before searching, `pnpm --dir experience lint`, `pnpm --dir experience lint:theme`, `pnpm --dir experience build`, `pnpm --dir experience test`, plus `pnpm --dir experience test:visual:theme` when theme/styling changed |
 | `ai-engineer` | implementing `neuron/`, LLM integrations, MCP servers, prompts, agent workflows | feature folder, architecture docs, AI requirements, backend integration contracts | `neuron/**`, feature `STATUS.md`, feature `GETTING-STARTED.md`, `neuron/README.md` | `pytest tests/` and project-standard AI integration/evaluation commands |
 | `quality-engineer` | test planning, automated tests, coverage checks, E2E, performance, accessibility | stories, acceptance criteria, `feature-assembly-plan.md`, changed code, quality strategy | `engine/tests/**`, `experience/tests/**`, `neuron/tests/**`, feature `STATUS.md` | tier-specific test commands plus coverage artifacts; require evidence-backed pass decisions |
 | `devops` | Docker, compose, CI/CD, env wiring, deployment architecture, ops scripts | architecture docs, changed app code, deployment requirements | `Dockerfile`, `docker-compose*.yml`, `.github/workflows/**`, `scripts/**`, deployment docs, feature `STATUS.md` | repo-standard container, CI, and health-check commands |

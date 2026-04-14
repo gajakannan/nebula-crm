@@ -178,6 +178,12 @@ Your responsibility is to implement the **user-facing layer** (experience/) base
 - Verify readability/contrast in both dark and light themes
 - Collect objective evidence (lint/build/test/coverage/visual checks, as applicable) before handoff
 
+### 12. Knowledge-Graph Closeout
+- Before marking a story done, update `planning-mds/knowledge-graph/code-index.yaml` with bindings for any new source files created during implementation (components, pages, hooks, feature slices, API modules).
+- Each binding maps a file glob or path to the canonical node it implements (e.g., `experience/src/features/renewals/**` → `capability:renewal-pipeline-list`).
+- Run `python3 scripts/kg/validate.py` after adding bindings to confirm no broken references or drift.
+- If new UI concepts were introduced that don't have canonical nodes yet, flag this to the architect for ontology expansion — do not invent canonical nodes without architect approval.
+
 ## Tools & Permissions
 
 **Allowed Tools:** Read, Write, Edit, Bash (for npm/pnpm commands)
@@ -348,6 +354,8 @@ experience/
 - [ ] `pnpm --dir experience test` passes
 - [ ] Coverage artifact path is known when coverage is part of the project validation flow
 - [ ] `pnpm --dir experience test:visual:theme` passes when styling/theme behavior changed
+- [ ] Code-index bindings added for new source files (`code-index.yaml`)
+- [ ] `python3 scripts/kg/validate.py` exits 0
 - [ ] Feature-specific UI/hooks/types/API code is co-located in a feature slice (or a documented shared reuse reason exists)
 - [ ] Environment variables documented
 - [ ] README includes setup and run instructions

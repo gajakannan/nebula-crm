@@ -66,14 +66,70 @@ When a target feature or story has coverage in `feature-mappings.yaml`:
 When coverage does not exist yet, fall back to the current file-centric prompt
 pattern.
 
+## Edge Provenance
+
+Edge references in `feature-mappings.yaml` support an optional provenance
+annotation to distinguish ground-truth links from speculative ones:
+
+- **Bare string** (default): `entity:submission` — treated as `extracted`.
+- **Object form**: `{id: feature:F0018, provenance: inferred, confidence: 0.9}`
+
+Valid provenance values:
+
+| Value | Meaning | Validator behavior |
+|-------|---------|-------------------|
+| `extracted` | Ground truth from code/docs/config | No warnings |
+| `inferred` | Speculative link with confidence 0.0–1.0 | Warns if confidence < 0.5 |
+| `ambiguous` | Uncertain — flagged for architect review | Always warns |
+
+Both forms can be mixed in the same list. `lookup.py` surfaces provenance
+annotations in its output when present.
+
 ## Tooling
 
 - `python3 scripts/kg/validate.py` validates IDs, references, paths, feature
   coverage, code-index bindings, and report freshness.
 - `python3 scripts/kg/validate.py --write-coverage-report` refreshes the
   committed `coverage-report.yaml` artifact.
+- `python3 scripts/kg/validate.py --check-drift` runs drift checks: Casbin
+  policy cross-check (policy_rule nodes vs policy.csv resource/action/role
+  alignment). Add `--memory-dir <path>` to also scan an external agent memory
+  directory for stale repo-path references (agent-agnostic — works with any
+  tool that stores `.md` memory files).
 - `python3 scripts/kg/lookup.py F0007-S0003` returns the merged ontology scope
   for a mapped feature or story.
 - `python3 scripts/kg/lookup.py --file engine/src/Nebula.Domain/Entities/Submission.cs`
   performs reverse lookup from a code file back to ontology nodes and related
   planning scope.
+- `python3 scripts/kg/blast.py entity:submission` computes the blast radius for
+  a canonical node — impacted features, stories, code bindings, Casbin rules,
+  and resolved files.
+- `python3 scripts/kg/blast.py --file engine/src/Nebula.Domain/Entities/Submission.cs`
+  computes blast radius starting from a code file (reverse-binds to nodes
+  first).
+- `python3 scripts/kg/blast.py F0007` computes blast radius for a feature by
+  expanding its canonical node references.
+- `python3 scripts/kg/blast.py entity:renewal --compact` outputs the summary
+  counts only.
+- `python3 scripts/kg/hint.py engine/src/Nebula.Domain/Entities/Submission.cs`
+  outputs a compact KG routing hint (matched nodes, features, stories, Casbin
+  rules) for a given file or directory path. Accepts `--json` for structured
+  output. This is the agent-agnostic CLI — any agent or human can call it.
+
+## Agent Integration
+
+`hint.py` is the agent-agnostic entry point. Any coding agent can call it
+before searching to get KG routing context:
+
+```
+python3 scripts/kg/hint.py <repo-relative-path>       # human-readable
+python3 scripts/kg/hint.py --json <repo-relative-path> # structured JSON
+```
+
+Agent-specific adapters wrap `hint.py` for their hook systems:
+
+- **Claude Code**: `.claude/settings.json` configures a PreToolUse hook that
+  runs `scripts/kg/pretool_hook.py` before Glob/Grep. The adapter reads
+  Claude Code's stdin JSON format and delegates to `hint.py`.
+- **Other agents**: call `hint.py` directly or write a similar thin adapter
+  for their pre-search hook mechanism.

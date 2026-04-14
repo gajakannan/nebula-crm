@@ -607,12 +607,18 @@ Before setting feature status to `Done` or moving to archive, verify role signof
 4. If ontology-backed planning exists for the feature, update feature/path/status references in:
    - `planning-mds/knowledge-graph/feature-mappings.yaml`
 5. Record any orphaned stories, deferred follow-ups, or explicit mitigation carry-overs before final validation
+6. **Knowledge-graph validation:**
+   - Confirm implementation agents added `code-index.yaml` bindings for new source files created during the feature. If bindings are missing, add them now.
+   - Run `python3 scripts/kg/validate.py --check-drift` and resolve any errors before proceeding.
+   - If the feature introduced new canonical nodes or rationale entries, confirm they are present in `canonical-nodes.yaml`.
 
 **Completion Criteria:**
 - [ ] Product Manager closeout executed after signoff passed
 - [ ] Final feature status and archive decision recorded
 - [ ] Deferred follow-ups and mitigation notes captured
 - [ ] Ontology feature mapping updated if closeout changes feature path/status
+- [ ] Code-index bindings exist for new source files introduced by this feature
+- [ ] `validate.py --check-drift` exits 0
 
 ---
 

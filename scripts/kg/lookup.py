@@ -7,6 +7,9 @@ import sys
 from typing import Any
 
 from kg_common import (
+    edge_ref_id,
+    edge_ref_ids,
+    edge_ref_provenance,
     feature_or_story_by_id,
     load_bundle,
     match_bindings_for_path,
@@ -30,6 +33,8 @@ def build_scope_payload(target: dict[str, Any], bundle: dict[str, Any]) -> dict[
         if feature is not None:
             payload["feature"] = feature
 
+    provenance_annotations: dict[str, list[dict[str, Any]]] = {}
+
     for field in (
         "affects",
         "workflow_states",
@@ -44,7 +49,18 @@ def build_scope_payload(target: dict[str, Any], bundle: dict[str, Any]) -> dict[
     ):
         refs = target.get(field, [])
         if refs:
-            payload[field] = resolve_refs(refs, bundle)
+            ref_ids = edge_ref_ids(refs)
+            payload[field] = resolve_refs(ref_ids, bundle)
+            # Collect provenance for edges that have it
+            for ref in refs:
+                prov = edge_ref_provenance(ref)
+                if prov is not None:
+                    provenance_annotations.setdefault(field, []).append(
+                        {"id": edge_ref_id(ref), **prov}
+                    )
+
+    if provenance_annotations:
+        payload["provenance"] = provenance_annotations
 
     return payload
 

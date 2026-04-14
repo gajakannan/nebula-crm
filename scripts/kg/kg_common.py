@@ -55,6 +55,33 @@ REF_FIELDS = (
     "supersedes",
 )
 
+VALID_PROVENANCE = {"extracted", "inferred", "ambiguous"}
+
+
+def edge_ref_id(ref: str | dict[str, Any]) -> str:
+    """Extract the node ID from an edge reference (bare string or object)."""
+    if isinstance(ref, str):
+        return ref
+    return ref["id"]
+
+
+def edge_ref_provenance(ref: str | dict[str, Any]) -> dict[str, Any] | None:
+    """Extract provenance info from an edge reference, or None if bare string."""
+    if isinstance(ref, str):
+        return None
+    prov = ref.get("provenance")
+    if prov is None:
+        return None
+    result: dict[str, Any] = {"provenance": prov}
+    if prov == "inferred":
+        result["confidence"] = ref.get("confidence", 0.5)
+    return result
+
+
+def edge_ref_ids(refs: list[Any]) -> list[str]:
+    """Extract node IDs from a list of edge references (bare strings or objects)."""
+    return [edge_ref_id(r) for r in refs]
+
 
 def load_yaml(path: Path) -> dict[str, Any]:
     try:
@@ -290,14 +317,14 @@ def related_mapping_entries(
     for item in mappings.get("features", []):
         refs = set()
         for field in REF_FIELDS:
-            refs.update(item.get(field, []))
+            refs.update(edge_ref_ids(item.get(field, [])))
         if refs.intersection(wanted):
             features.append(dict(item))
 
     for item in mappings.get("stories", []):
         refs = {item.get("feature")} if item.get("feature") else set()
         for field in REF_FIELDS:
-            refs.update(item.get(field, []))
+            refs.update(edge_ref_ids(item.get(field, [])))
         if refs.intersection(wanted):
             stories.append(dict(item))
 

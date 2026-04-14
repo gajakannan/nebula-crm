@@ -4,7 +4,7 @@ summary:
   features_mapped: 20
   stories_mapped: 79
   features_excluded: 13
-  features_uncovered: 0
+  features_uncovered: 1
   code_bindings: 94
 coverage:
   mapped_feature_ids:
@@ -68,7 +68,8 @@ coverage:
   - id: feature:F0031
     path: planning-mds/features/F0031-data-import-deduplication-and-go-live-migration
     reason: Planned feature folder exists but ontology mapping backfill has not started.
-  uncovered_feature_paths: []
+  uncovered_feature_paths:
+  - planning-mds/features/archive/F0007-renewal-pipeline
   mapped_story_ids:
   - story:F0005-S0002
   - story:F0005-S0004
@@ -362,14 +363,13 @@ freshness:
       source_hash: 8107356fffe5f6e4
     workflow:renewal:
       source_paths:
-      - planning-mds/features/F0007-renewal-pipeline/README.md
       - planning-mds/architecture/feature-assembly-plan.md
       - planning-mds/architecture/decisions/ADR-010-temporal-durable-workflow-orchestration.md
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
       - planning-mds/api/nebula-api.yaml
-      source_count: 5
+      source_count: 4
       last_modified: '2026-04-11'
-      source_hash: df900ecd36b75e88
+      source_hash: 856c5c64b5b1d8b3
     capability:dashboard-home:
       source_paths:
       - planning-mds/features/archive/F0001-dashboard/README.md
@@ -659,50 +659,40 @@ freshness:
     endpoint:renewal-list:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/README.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
-      source_count: 3
-      last_modified: '2026-04-12'
-      source_hash: f09ad67fdff1bf41
+      source_count: 1
+      last_modified: '2026-04-11'
+      source_hash: f8edab709d950773
     endpoint:renewal-detail:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/README.md
-      source_count: 2
+      source_count: 1
       last_modified: '2026-04-11'
-      source_hash: 19b267e20c559f78
+      source_hash: f8edab709d950773
     endpoint:renewal-create:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/README.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
-      source_count: 3
-      last_modified: '2026-04-12'
-      source_hash: f09ad67fdff1bf41
+      source_count: 1
+      last_modified: '2026-04-11'
+      source_hash: f8edab709d950773
     endpoint:renewal-transition:
       source_paths:
       - planning-mds/api/nebula-api.yaml
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
-      source_count: 3
-      last_modified: '2026-04-12'
-      source_hash: 3d6d44f6a946c9f7
+      source_count: 2
+      last_modified: '2026-04-11'
+      source_hash: 20dbb9fb4ee06437
     endpoint:renewal-assignment:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/README.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
-      source_count: 3
-      last_modified: '2026-04-12'
-      source_hash: f09ad67fdff1bf41
+      source_count: 1
+      last_modified: '2026-04-11'
+      source_hash: f8edab709d950773
     endpoint:renewal-timeline:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/README.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
-      source_count: 3
-      last_modified: '2026-04-12'
-      source_hash: f09ad67fdff1bf41
+      source_count: 1
+      last_modified: '2026-04-11'
+      source_hash: f8edab709d950773
     endpoint:task-my-list:
       source_paths:
       - planning-mds/api/nebula-api.yaml
@@ -734,10 +724,9 @@ freshness:
     endpoint:timeline-events:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md
-      source_count: 2
+      source_count: 1
       last_modified: '2026-04-11'
-      source_hash: 9a952f88414dfefc
+      source_hash: f8edab709d950773
     ui_route:dashboard-home:
       source_paths:
       - experience/src/App.tsx
@@ -852,11 +841,10 @@ freshness:
       source_hash: eb5398f99d60aad1
     event:renewal-transitioned:
       source_paths:
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
-      source_count: 2
+      source_count: 1
       last_modified: '2026-03-26'
-      source_hash: b526b1c4681695ba
+      source_hash: 5047345141cd4f08
     config_key:authentication-authority:
       source_paths:
       - planning-mds/architecture/decisions/ADR-Authentication-Strategy.md
@@ -1623,22 +1611,10 @@ freshness:
       last_modified: '2026-04-04'
       source_hash: 03d48a862c390ba5
     feature:F0007:
-      source_paths:
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0002-renewal-detail-view-with-policy-context.md
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0006-create-renewal-from-expiring-policy.md
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md
-      - planning-mds/features/F0007-renewal-pipeline/GETTING-STARTED.md
-      - planning-mds/features/F0007-renewal-pipeline/PRD.md
-      - planning-mds/features/F0007-renewal-pipeline/README.md
-      - planning-mds/features/F0007-renewal-pipeline/STATUS.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
-      source_count: 12
-      last_modified: '2026-04-12'
-      source_hash: 25f3ad138bd7c1d6
+      source_paths: []
+      source_count: 0
+      last_modified: null
+      source_hash: null
     feature:F0009:
       source_paths:
       - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
@@ -1845,47 +1821,40 @@ freshness:
       last_modified: '2026-03-22'
       source_hash: db6c2874852055c2
     story:F0007-S0001:
-      source_paths:
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md
-      source_count: 1
-      last_modified: '2026-04-11'
-      source_hash: 22631c901ce1382b
+      source_paths: []
+      source_count: 0
+      last_modified: null
+      source_hash: null
     story:F0007-S0002:
-      source_paths:
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0002-renewal-detail-view-with-policy-context.md
-      source_count: 1
-      last_modified: '2026-04-11'
-      source_hash: 1ad03e1e822a8d57
+      source_paths: []
+      source_count: 0
+      last_modified: null
+      source_hash: null
     story:F0007-S0003:
-      source_paths:
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md
-      source_count: 1
-      last_modified: '2026-03-26'
-      source_hash: 29e2d44fbfdc0047
+      source_paths: []
+      source_count: 0
+      last_modified: null
+      source_hash: null
     story:F0007-S0004:
-      source_paths:
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md
-      source_count: 1
-      last_modified: '2026-03-26'
-      source_hash: 513964a2692aef67
+      source_paths: []
+      source_count: 0
+      last_modified: null
+      source_hash: null
     story:F0007-S0005:
-      source_paths:
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md
-      source_count: 1
-      last_modified: '2026-03-26'
-      source_hash: 862490c4a921ad41
+      source_paths: []
+      source_count: 0
+      last_modified: null
+      source_hash: null
     story:F0007-S0006:
-      source_paths:
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0006-create-renewal-from-expiring-policy.md
-      source_count: 1
-      last_modified: '2026-04-07'
-      source_hash: 655761d4ab1ed907
+      source_paths: []
+      source_count: 0
+      last_modified: null
+      source_hash: null
     story:F0007-S0007:
-      source_paths:
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md
-      source_count: 1
-      last_modified: '2026-04-11'
-      source_hash: 6e75441f191320b2
+      source_paths: []
+      source_count: 0
+      last_modified: null
+      source_hash: null
     story:F0009-S0004:
       source_paths:
       - planning-mds/features/archive/F0009-authentication-and-role-based-login/F0009-S0004-broker-user-access-boundaries.md
@@ -3664,7 +3633,6 @@ freshness:
       source_paths:
       - planning-mds/architecture/decisions/ADR-009-lob-classification-and-sla-configuration.md
       - planning-mds/architecture/decisions/ADR-014-workflow-sla-threshold-per-lob-extension.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
       - planning-mds/features/archive/F0006-submission-intake-workflow/feature-assembly-plan.md
       - engine/src/Nebula.Domain/Entities/WorkflowSlaThreshold.cs
       - engine/src/Nebula.Infrastructure/Persistence/Configurations/WorkflowSlaThresholdConfiguration.cs
@@ -3673,9 +3641,9 @@ freshness:
       - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260316014518_F0013_AddLineOfBusinessAndWorkflowSlaThresholds.Designer.cs
       - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260316014518_F0013_AddLineOfBusinessAndWorkflowSlaThresholds.cs
       - experience/src/features/opportunities/components/StageNodeStoryPanel.tsx
-      source_count: 11
-      last_modified: '2026-04-12'
-      source_hash: 4690ab6fb0bfc040
+      source_count: 10
+      last_modified: '2026-04-11'
+      source_hash: 0bdf7a1163f76c56
     config_key:published-configuration-sets:
       source_paths:
       - planning-mds/architecture/decisions/ADR-016-published-operational-configuration-governance.md

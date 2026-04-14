@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Glob|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/kg/pretool_hook.py",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  }
+}

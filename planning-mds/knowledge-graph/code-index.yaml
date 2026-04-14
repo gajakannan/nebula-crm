@@ -63,7 +63,7 @@ node_bindings:
           - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
 
   # entity:policy will be added when F0007 build creates the Policy stub
-  # (see planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md, Step 1)
+  # (see planning-mds/features/archive/F0007-renewal-pipeline/feature-assembly-plan.md, Step 1)
   # or when F0018 lands the canonical Policy entity, whichever comes first.
 
   - id: entity:broker
@@ -1340,7 +1340,7 @@ node_bindings:
         planning:
           - planning-mds/architecture/decisions/ADR-009-lob-classification-and-sla-configuration.md
           - planning-mds/architecture/decisions/ADR-014-workflow-sla-threshold-per-lob-extension.md
-          - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
+          - planning-mds/features/archive/F0007-renewal-pipeline/feature-assembly-plan.md
           - planning-mds/features/archive/F0006-submission-intake-workflow/feature-assembly-plan.md
       backend:
         domain:

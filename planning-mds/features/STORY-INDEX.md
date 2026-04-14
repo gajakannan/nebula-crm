@@ -2,7 +2,7 @@
 
 Auto-generated index of all user stories across feature folders.
 
-**Total Stories:** 79
+**Total Stories:** 90
 
 ---
 
@@ -178,6 +178,24 @@ Auto-generated index of all user stories across feature folders.
 
 ---
 
+## F0016 — Account 360 & Insured Management
+
+| Story ID | Title | Priority | Phase | Persona |
+|----------|-------|----------|-------|---------|
+| [F0016-S0001](./F0016-account-360-and-insured-management/F0016-S0001-account-list-with-search-and-filtering.md) | Account list with search and filtering | Critical | CRM Release MVP | distribution user, distribution manager, underwriter, or relationship manager |
+| [F0016-S0002](./F0016-account-360-and-insured-management/F0016-S0002-create-account.md) | Create account with duplicate detection hint | Critical | CRM Release MVP | distribution user or distribution manager |
+| [F0016-S0003](./F0016-account-360-and-insured-management/F0016-S0003-account-detail-and-profile-edit.md) | Account detail view with inline profile edit | Critical | CRM Release MVP | distribution user or distribution manager |
+| [F0016-S0004](./F0016-account-360-and-insured-management/F0016-S0004-account-360-composition.md) | Account 360 composed workspace (submissions, policies, renewals, contacts, activity) | Critical | CRM Release MVP | underwriter, distribution user, distribution manager, or relationship manager |
+| [F0016-S0005](./F0016-account-360-and-insured-management/F0016-S0005-account-contacts-management.md) | Account-scoped contacts (lightweight CRUD) | High | CRM Release MVP | distribution user, distribution manager, or relationship manager |
+| [F0016-S0006](./F0016-account-360-and-insured-management/F0016-S0006-account-relationships-broker-producer-territory.md) | Account relationships (broker of record, producer, territory) with audited history | High | CRM Release MVP | distribution manager |
+| [F0016-S0007](./F0016-account-360-and-insured-management/F0016-S0007-account-lifecycle-deactivate-reactivate-delete.md) | Account lifecycle transitions (deactivate, reactivate, delete) | Critical | CRM Release MVP | distribution manager or admin |
+| [F0016-S0008](./F0016-account-360-and-insured-management/F0016-S0008-account-merge-and-duplicate-handling.md) | Account merge (synchronous) with impact preview and audited history | Critical | CRM Release MVP | distribution manager or admin |
+| [F0016-S0009](./F0016-account-360-and-insured-management/F0016-S0009-deleted-merged-account-fallback-contract.md) | Deleted / merged account fallback contract for dependent submission, policy, renewal, timeline, and search views | Critical | CRM Release MVP | underwriter or distribution user |
+| [F0016-S0010](./F0016-account-360-and-insured-management/F0016-S0010-account-activity-timeline-and-audit.md) | Account-level activity timeline and audit trail (append-only) | High | CRM Release MVP | distribution user, distribution manager, underwriter, or relationship manager |
+| [F0016-S0011](./F0016-account-360-and-insured-management/F0016-S0011-account-summary-projection.md) | Account summary projection (policy / submission / renewal counts, last activity) | Medium | CRM Release MVP | underwriter, distribution user, or distribution manager |
+
+---
+
 ## F0033 — Structured Logging and QE Toolchain Activation
 
 | Story ID | Title | Priority | Phase | Persona |
@@ -194,7 +212,7 @@ Auto-generated index of all user stories across feature folders.
 
 | Phase | Count |
 |-------|-------|
-| CRM Release MVP | 15 |
+| CRM Release MVP | 26 |
 | Future | 1 |
 | Infrastructure | 10 |
 | MVP | 37 |
@@ -208,9 +226,9 @@ Auto-generated index of all user stories across feature folders.
 
 | Priority | Count |
 |----------|-------|
-| Critical | 23 |
-| High | 42 |
-| Medium | 10 |
+| Critical | 30 |
+| High | 45 |
+| Medium | 11 |
 
 ---
 

@@ -11,6 +11,7 @@
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
+| F0016 | Account 360 & Insured Management | In Refinement | CRM Release MVP | `F0016-account-360-and-insured-management/` |
 
 ## Abandoned Features
 
@@ -24,7 +25,6 @@
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
 | F0008 | Broker Insights | Planned | MVP | `F0008-broker-insights/` |
-| F0016 | Account 360 & Insured Management | Planned | CRM Release MVP | `F0016-account-360-and-insured-management/` |
 | F0017 | Broker/MGA Hierarchy, Producer Ownership & Territory Management | Planned | CRM Release MVP+ | `F0017-broker-mga-hierarchy-and-producer-ownership/` |
 | F0018 | Policy Lifecycle & Policy 360 | Planned | CRM Release MVP | `F0018-policy-lifecycle-and-policy-360/` |
 | F0019 | Submission Quoting, Proposal & Approval Workflow | Planned | CRM Release MVP | `F0019-submission-quoting-proposal-and-approval/` |

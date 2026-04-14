@@ -394,6 +394,51 @@ This section applies only when F0009 is enabled. It does not alter MVP InternalO
 
 ---
 
+### 2.11 Account (F0016)
+
+Resource: `account`. Actions: `read`, `create`, `update`, `deactivate`, `reactivate`, `delete`, `merge`, `contact:manage`, `relationship:change`. See [ADR-017](../architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md) for merge and tombstone contract.
+
+| Role | Action | Decision | Business Scope / Constraints | Story / AC Reference |
+|------|--------|----------|------------------------------|----------------------|
+| DistributionUser | read | **ALLOW** | Own region + assigned broker scope. Deleted accounts excluded unless admin. Merged surface as tombstone with survivor pointer. | F0016-S0001, S0003, S0004, S0009 |
+| DistributionUser | create | **ALLOW** | Own region; may create from-submission / from-policy. Duplicate hint advisory only. | F0016-S0002 |
+| DistributionUser | update | **ALLOW** | Own region + assigned broker scope. If-Match required. Disallowed on Merged/Deleted (409). | F0016-S0003 |
+| DistributionUser | deactivate / reactivate | **DENY** | Reserved for Manager/Admin. | F0016-S0007 |
+| DistributionUser | delete | **DENY** | Reserved for Manager/Admin. | F0016-S0007 |
+| DistributionUser | merge | **DENY** | Reserved for Manager/Admin. | F0016-S0008 |
+| DistributionUser | contact:manage | **ALLOW** | Scoped as read. No primary-contact reassignment across accounts. | F0016-S0005 |
+| DistributionUser | relationship:change | **DENY** | Reserved for Manager/Admin. | F0016-S0006 |
+| DistributionManager | read | **ALLOW** | Own territory. | F0016-S0001, S0004 |
+| DistributionManager | create | **ALLOW** | Own territory. | F0016-S0002 |
+| DistributionManager | update | **ALLOW** | Own territory. If-Match required. | F0016-S0003 |
+| DistributionManager | deactivate / reactivate | **ALLOW** | Own territory. State must match from-state. | F0016-S0007 |
+| DistributionManager | delete | **ALLOW** | Own territory. `reasonCode` required; `reasonDetail` required when reason=Other. | F0016-S0007 |
+| DistributionManager | merge | **ALLOW** | Own territory. Survivor must be Active; self-merge rejected. Synchronous commit; idempotent on retry. | F0016-S0008 |
+| DistributionManager | contact:manage | **ALLOW** | Own territory. | F0016-S0005 |
+| DistributionManager | relationship:change | **ALLOW** | Own territory. Appends AccountRelationshipHistory + ActivityTimelineEvent. | F0016-S0006 |
+| Underwriter | read | **ALLOW** | Read-only on accounts in assigned underwriting book. Tombstones render with stable display name. | F0016-S0001, S0004, S0009 |
+| Underwriter | create / update / deactivate / reactivate / delete / merge / contact:manage / relationship:change | **DENY** | Read-only role. | F0016 PRD §Role-Based Access |
+| RelationshipManager | read | **ALLOW** | Accounts linked to managed brokers. | F0016-S0001, S0004 |
+| RelationshipManager | create | **DENY** | Read-first role for accounts. | F0016 PRD §Role-Based Access |
+| RelationshipManager | update | **DENY** | Profile updates reserved for Distribution roles + Admin. | F0016 PRD §Role-Based Access |
+| RelationshipManager | contact:manage | **ALLOW** | Contacts on managed-broker accounts only. | F0016-S0005 |
+| RelationshipManager | deactivate / reactivate / delete / merge / relationship:change | **DENY** | Not in this role in MVP. | F0016 PRD §Role-Based Access |
+| ProgramManager | all | **DENY** | Accounts are not in ProgramManager scope in MVP. | F0016 PRD §Scope |
+| Admin | all | **ALLOW** | Full unscoped. Only role that may use `includeRemoved=true` on list. | F0016 PRD §Role-Based Access |
+| BrokerUser | all | **DENY** | No external account access in MVP. | F0016 PRD §Out of Scope |
+| ExternalUser | all | **DENY** | No external account access in MVP. | F0016 PRD §Out of Scope |
+
+**Constraints applying to all ALLOW decisions on Account:**
+
+- Account reads and writes enforce ABAC via Casbin on resource `account`; scope predicates reuse region / territory / broker patterns from F0002 and F0007.
+- Write endpoints require `If-Match` with `rowVersion`. Stale → 412.
+- Lifecycle transitions must follow the state machine in F0016 PRD §Account Lifecycle Workflow; invalid transitions return 409 `code=invalid_transition`.
+- Every mutation appends one `WorkflowTransition` (when lifecycle change) and one `ActivityTimelineEvent` on the account; merges append an additional mirror timeline event on the survivor.
+- Dependent list/detail endpoints (submissions, renewals, policies) MUST surface `accountDisplayName`, `accountStatus`, `accountSurvivorId` denormalized per ADR-017; failure to do so is a regression.
+- `includeRemoved=true` on `GET /accounts` is Admin-only; all other roles receive Active + Inactive (plus explicitly-requested Merged via filter).
+
+---
+
 ## 3. InternalOnly Content Rule
 
 All resources in this matrix are classified **InternalOnly** for MVP. No data is accessible to ExternalUser under any circumstances. This rule applies universally to all resources above.

@@ -150,7 +150,7 @@ workflows:
   - id: workflow:renewal
     label: Renewal lifecycle
     source_docs:
-      - planning-mds/features/F0007-renewal-pipeline/README.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/README.md
       - planning-mds/architecture/feature-assembly-plan.md
       - planning-mds/architecture/decisions/ADR-010-temporal-durable-workflow-orchestration.md
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
@@ -183,6 +183,38 @@ workflows:
         label: Completed
       - id: state:renewal:lost
         label: Lost
+  - id: workflow:account-lifecycle
+    label: Account lifecycle
+    source_docs:
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/F0016-account-360-and-insured-management/feature-assembly-plan.md
+      - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
+      - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
+      - planning-mds/api/nebula-api.yaml
+    rationale:
+      - adr: adr:011
+        section: "Decision"
+        summary: "Account lifecycle adopts the standardized state-machine + append-only transition history pattern used by Submission and Renewal workflows."
+      - adr: adr:017
+        section: "Decision"
+        summary: "Merged and Deleted are terminal tombstone states — no FK re-pointing occurs; dependent views consume survivorAccountId plus denormalized display/status fallbacks."
+    states:
+      - id: state:account:active
+        label: Active
+        transitions_to:
+          - state:account:inactive
+          - state:account:merged
+          - state:account:deleted
+      - id: state:account:inactive
+        label: Inactive
+        transitions_to:
+          - state:account:active
+          - state:account:merged
+          - state:account:deleted
+      - id: state:account:merged
+        label: Merged
+      - id: state:account:deleted
+        label: Deleted
 
 capabilities:
   - id: capability:dashboard-home
@@ -602,8 +634,8 @@ endpoints:
     route: /renewals
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/README.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/README.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/feature-assembly-plan.md
     related_nodes:
       - entity:renewal
       - workflow:renewal
@@ -615,7 +647,7 @@ endpoints:
     route: /renewals/{renewalId}
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/README.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/README.md
     related_nodes:
       - entity:renewal
       - entity:policy
@@ -627,8 +659,8 @@ endpoints:
     route: /renewals
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/README.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/README.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/feature-assembly-plan.md
     related_nodes:
       - entity:renewal
       - entity:policy
@@ -642,7 +674,7 @@ endpoints:
     source_docs:
       - planning-mds/api/nebula-api.yaml
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/feature-assembly-plan.md
     related_nodes:
       - entity:renewal
       - entity:workflow-transition
@@ -654,8 +686,8 @@ endpoints:
     route: /renewals/{renewalId}/assignment
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/README.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/README.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/feature-assembly-plan.md
     related_nodes:
       - entity:renewal
       - entity:user-profile
@@ -666,8 +698,8 @@ endpoints:
     route: /renewals/{renewalId}/timeline
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/README.md
-      - planning-mds/features/F0007-renewal-pipeline/feature-assembly-plan.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/README.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/feature-assembly-plan.md
     related_nodes:
       - entity:renewal
       - entity:activity-timeline-event
@@ -723,10 +755,192 @@ endpoints:
     route: /timeline/events
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md
     related_nodes:
       - entity:activity-timeline-event
       - capability:authorization-enforcement
+      - policy_rule:timeline-event-read
+  - id: endpoint:account-list
+    label: GET /accounts
+    method: GET
+    route: /accounts
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - workflow:account-lifecycle
+      - policy_rule:account-read
+  - id: endpoint:account-create
+    label: POST /accounts
+    method: POST
+    route: /accounts
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - workflow:account-lifecycle
+      - policy_rule:account-create
+  - id: endpoint:account-detail
+    label: GET /accounts/{accountId}
+    method: GET
+    route: /accounts/{accountId}
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
+    related_nodes:
+      - entity:account
+      - workflow:account-lifecycle
+      - policy_rule:account-read
+  - id: endpoint:account-update
+    label: PUT /accounts/{accountId}
+    method: PUT
+    route: /accounts/{accountId}
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - policy_rule:account-update
+  - id: endpoint:account-lifecycle
+    label: POST /accounts/{accountId}/lifecycle
+    method: POST
+    route: /accounts/{accountId}/lifecycle
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/feature-assembly-plan.md
+      - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
+      - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
+    related_nodes:
+      - entity:account
+      - entity:workflow-transition
+      - workflow:account-lifecycle
+      - policy_rule:account-deactivate
+      - policy_rule:account-reactivate
+      - policy_rule:account-delete
+  - id: endpoint:account-merge
+    label: POST /accounts/{accountId}/merge
+    method: POST
+    route: /accounts/{accountId}/merge
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/feature-assembly-plan.md
+      - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
+    related_nodes:
+      - entity:account
+      - entity:workflow-transition
+      - workflow:account-lifecycle
+      - policy_rule:account-merge
+  - id: endpoint:account-summary
+    label: GET /accounts/{accountId}/summary
+    method: GET
+    route: /accounts/{accountId}/summary
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - policy_rule:account-read
+  - id: endpoint:account-contact-list
+    label: GET /accounts/{accountId}/contacts
+    method: GET
+    route: /accounts/{accountId}/contacts
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - entity:contact
+      - policy_rule:account-read
+  - id: endpoint:account-contact-create
+    label: POST /accounts/{accountId}/contacts
+    method: POST
+    route: /accounts/{accountId}/contacts
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - entity:contact
+      - policy_rule:account-contact-manage
+  - id: endpoint:account-contact-update
+    label: PUT /accounts/{accountId}/contacts/{contactId}
+    method: PUT
+    route: /accounts/{accountId}/contacts/{contactId}
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - entity:contact
+      - policy_rule:account-contact-manage
+  - id: endpoint:account-contact-delete
+    label: DELETE /accounts/{accountId}/contacts/{contactId}
+    method: DELETE
+    route: /accounts/{accountId}/contacts/{contactId}
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - entity:contact
+      - policy_rule:account-contact-manage
+  - id: endpoint:account-relationship-change
+    label: POST /accounts/{accountId}/relationships
+    method: POST
+    route: /accounts/{accountId}/relationships
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - entity:broker
+      - policy_rule:account-relationship-change
+  - id: endpoint:account-submissions
+    label: GET /accounts/{accountId}/submissions
+    method: GET
+    route: /accounts/{accountId}/submissions
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - entity:submission
+      - policy_rule:account-read
+  - id: endpoint:account-renewals
+    label: GET /accounts/{accountId}/renewals
+    method: GET
+    route: /accounts/{accountId}/renewals
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - entity:renewal
+      - policy_rule:account-read
+  - id: endpoint:account-policies
+    label: GET /accounts/{accountId}/policies
+    method: GET
+    route: /accounts/{accountId}/policies
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - entity:policy
+      - policy_rule:account-read
+  - id: endpoint:account-timeline
+    label: GET /accounts/{accountId}/timeline
+    method: GET
+    route: /accounts/{accountId}/timeline
+    source_docs:
+      - planning-mds/api/nebula-api.yaml
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    related_nodes:
+      - entity:account
+      - entity:activity-timeline-event
       - policy_rule:timeline-event-read
 
 ui_routes:
@@ -883,7 +1097,7 @@ events:
     label: RenewalTransitioned
     event_type: RenewalTransitioned
     source_docs:
-      - planning-mds/features/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md
+      - planning-mds/features/archive/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
     related_nodes:
       - entity:renewal
@@ -1329,6 +1543,155 @@ policy_rules:
       - entity:activity-timeline-event
       - capability:authorization-enforcement
     notes: BrokerUser timeline reads remain limited to explicitly broker-visible event types and fields.
+  - id: policy_rule:account-read
+    label: account:read
+    resource: account
+    action: read
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+      - role:broker-user
+    related_nodes:
+      - entity:account
+      - capability:authorization-enforcement
+    notes: Broker/region/territory ABAC scoping applied per role; BrokerUser reads are broker-tenant scoped and return 410 on deleted and 200+survivorAccountId on merged.
+  - id: policy_rule:account-create
+    label: account:create
+    resource: account
+    action: create
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:admin
+    related_nodes:
+      - entity:account
+      - capability:authorization-enforcement
+  - id: policy_rule:account-update
+    label: account:update
+    resource: account
+    action: update
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:admin
+    related_nodes:
+      - entity:account
+      - capability:authorization-enforcement
+    notes: If-Match required; 412 on stale RowVersion. Update is profile-only; lifecycle, merge, and relationship changes have dedicated endpoints.
+  - id: policy_rule:account-deactivate
+    label: account:deactivate
+    resource: account
+    action: deactivate
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    allowed_roles:
+      - role:distribution-manager
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:account
+      - entity:workflow-transition
+      - workflow:account-lifecycle
+      - capability:authorization-enforcement
+  - id: policy_rule:account-reactivate
+    label: account:reactivate
+    resource: account
+    action: reactivate
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    allowed_roles:
+      - role:distribution-manager
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:account
+      - entity:workflow-transition
+      - workflow:account-lifecycle
+      - capability:authorization-enforcement
+  - id: policy_rule:account-delete
+    label: account:delete
+    resource: account
+    action: delete
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    allowed_roles:
+      - role:admin
+    related_nodes:
+      - entity:account
+      - entity:workflow-transition
+      - workflow:account-lifecycle
+      - capability:authorization-enforcement
+    notes: Terminal tombstone — no FK re-pointing. Dependent views return 410 Gone keyed by accountId.
+  - id: policy_rule:account-merge
+    label: account:merge
+    resource: account
+    action: merge
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
+    allowed_roles:
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:account
+      - entity:workflow-transition
+      - workflow:account-lifecycle
+      - capability:authorization-enforcement
+    notes: Tombstone-forward merge — source becomes Merged with MergedIntoAccountId set to survivorAccountId; no FK re-pointing. Dependent reads return 200 with survivorAccountId.
+  - id: policy_rule:account-contact-manage
+    label: account:contact:manage
+    resource: account
+    action: contact:manage
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:admin
+    related_nodes:
+      - entity:account
+      - entity:contact
+      - capability:authorization-enforcement
+  - id: policy_rule:account-relationship-change
+    label: account:relationship:change
+    resource: account
+    action: relationship:change
+    source_docs:
+      - planning-mds/security/authorization-matrix.md
+      - planning-mds/security/policies/policy.csv
+    allowed_roles:
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:account
+      - entity:broker
+      - capability:authorization-enforcement
+    notes: Appends AccountRelationshipHistory + ActivityTimelineEvent. Used for BrokerOfRecord, PrimaryProducer, Territory changes.
 
 evidence:
   - id: evidence:workflow-state-machine-tests
@@ -1420,6 +1783,9 @@ adrs:
   - id: adr:016
     label: Published Operational Configuration Governance
     path: planning-mds/architecture/decisions/ADR-016-published-operational-configuration-governance.md
+  - id: adr:017
+    label: Account Merge Tombstone and Fallback Contract
+    path: planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
   - id: adr:auth-token-storage
     label: Auth Token Storage
     path: planning-mds/architecture/decisions/ADR-Auth-Token-Storage.md
@@ -1568,3 +1934,33 @@ schemas:
   - id: schema:activity-event-payloads
     path: planning-mds/schemas/activity-event-payloads.schema.json
     related_nodes: [entity:activity-timeline-event]
+  - id: schema:account
+    path: planning-mds/schemas/account.schema.json
+    related_nodes: [entity:account, workflow:account-lifecycle]
+  - id: schema:account-list-item
+    path: planning-mds/schemas/account-list-item.schema.json
+    related_nodes: [entity:account, workflow:account-lifecycle]
+  - id: schema:account-summary
+    path: planning-mds/schemas/account-summary.schema.json
+    related_nodes: [entity:account]
+  - id: schema:account-create-request
+    path: planning-mds/schemas/account-create-request.schema.json
+    related_nodes: [entity:account]
+  - id: schema:account-update-request
+    path: planning-mds/schemas/account-update-request.schema.json
+    related_nodes: [entity:account]
+  - id: schema:account-lifecycle-request
+    path: planning-mds/schemas/account-lifecycle-request.schema.json
+    related_nodes: [entity:account, workflow:account-lifecycle, entity:workflow-transition]
+  - id: schema:account-merge-request
+    path: planning-mds/schemas/account-merge-request.schema.json
+    related_nodes: [entity:account, workflow:account-lifecycle]
+  - id: schema:account-contact
+    path: planning-mds/schemas/account-contact.schema.json
+    related_nodes: [entity:account, entity:contact]
+  - id: schema:account-contact-request
+    path: planning-mds/schemas/account-contact-request.schema.json
+    related_nodes: [entity:account, entity:contact]
+  - id: schema:account-relationship-request
+    path: planning-mds/schemas/account-relationship-request.schema.json
+    related_nodes: [entity:account, entity:broker]

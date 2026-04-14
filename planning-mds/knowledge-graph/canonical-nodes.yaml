@@ -45,6 +45,10 @@ entities:
     source_docs:
       - planning-mds/domain/glossary.md
       - planning-mds/architecture/decisions/ADR-012-shared-document-storage-and-metadata-architecture.md
+    rationale:
+      - adr: adr:012
+        section: "Decision"
+        summary: "Shared document subsystem prevents fragmented per-feature file models that would duplicate metadata rules, weaken auditability, and complicate access control."
   - id: entity:submission
     label: Submission
     source_docs:
@@ -73,12 +77,23 @@ entities:
     source_docs:
       - planning-mds/architecture/data-model.md
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
+    rationale:
+      - adr: adr:011
+        section: "Decision"
+        summary: "Append-only transition history ensures audit consistency and prevents ad hoc status edits across all CRM workflows."
   - id: entity:workflow-sla-threshold
     label: WorkflowSlaThreshold
     source_docs:
       - planning-mds/architecture/data-model.md
       - planning-mds/architecture/decisions/ADR-009-lob-classification-and-sla-configuration.md
       - planning-mds/architecture/decisions/ADR-014-workflow-sla-threshold-per-lob-extension.md
+    rationale:
+      - adr: adr:009
+        section: "Decision §2"
+        summary: "Per-entity-type, per-status SLA thresholds enable aging band computation (on-time/approaching/overdue) for dashboard gauges."
+      - adr: adr:014-workflow-sla
+        section: "Decision"
+        summary: "Extended with LOB dimension so SLA targets vary by line of business rather than being entity-wide defaults."
 
 workflows:
   - id: workflow:submission
@@ -91,6 +106,10 @@ workflows:
     notes: >
       F0006 owns the intake half of this workflow through ReadyForUWReview.
       F0019 extends the downstream quote, bind, decline, and withdrawal path.
+    rationale:
+      - adr: adr:011
+        section: "Decision"
+        summary: "Explicit state machine with declared transitions and append-only history prevents ad hoc status edits and enables audit-ready reporting."
     states:
       - id: state:submission:received
         label: Received
@@ -136,6 +155,13 @@ workflows:
       - planning-mds/architecture/decisions/ADR-010-temporal-durable-workflow-orchestration.md
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
       - planning-mds/api/nebula-api.yaml
+    rationale:
+      - adr: adr:011
+        section: "F0007 Renewal Workflow Specification"
+        summary: "First full application of the standardized state-machine pattern beyond submissions; six states with terminal Completed/Lost."
+      - adr: adr:010
+        section: "Decision"
+        summary: "Temporal adopted for durable orchestration of renewal reminders and escalations that must survive deploys and restarts."
     states:
       - id: state:renewal:identified
         label: Identified
@@ -175,6 +201,10 @@ capabilities:
       - planning-mds/features/archive/F0001-dashboard/README.md
       - planning-mds/features/archive/F0013-dashboard-framed-storytelling-canvas/README.md
       - planning-mds/architecture/decisions/ADR-002-dashboard-data-aggregation.md
+    rationale:
+      - adr: adr:002
+        section: "Decision"
+        summary: "Backend-for-frontend aggregation over individual module endpoints ensures single widget failure isolation and stays within the p95 < 2s dashboard budget."
   - id: capability:dashboard-broker-activity-feed
     label: Dashboard Broker Activity Feed
     source_docs:
@@ -184,6 +214,10 @@ capabilities:
     source_docs:
       - planning-mds/features/archive/F0001-dashboard/README.md
       - planning-mds/architecture/decisions/ADR-003-task-entity-nudge-engine.md
+    rationale:
+      - adr: adr:003
+        section: "Decision"
+        summary: "Backend nudge computation aggregates overdue tasks, stale submissions, and upcoming renewals into a prioritized list; keeps nudge logic server-side for ABAC enforcement and p95 < 500ms budget."
   - id: capability:dashboard-storytelling-canvas
     label: Dashboard Storytelling Canvas
     source_docs:
@@ -213,6 +247,10 @@ capabilities:
       - planning-mds/features/archive/F0002-broker-relationship-management/F0002-S0009-adopt-native-casbin-enforcer.md
       - planning-mds/features/archive/F0009-authentication-and-role-based-login/F0009-S0004-broker-user-access-boundaries.md
       - planning-mds/architecture/decisions/ADR-008-casbin-enforcer-adoption.md
+    rationale:
+      - adr: adr:008
+        section: "Decision"
+        summary: "Native Casbin enforcer replaces hand-rolled policy parser to eliminate syntax drift from Casbin semantics and avoid manual parser changes for new policy conditions."
   - id: capability:task-center
     label: Task Center
     source_docs:
@@ -236,12 +274,20 @@ capabilities:
     source_docs:
       - planning-mds/features/archive/F0005-idp-migration/README.md
       - planning-mds/architecture/decisions/ADR-006-authentik-idp-migration.md
+    rationale:
+      - adr: adr:006
+        section: "Decision Drivers"
+        summary: "Pre-production window to switch from Keycloak to authentik for operational simplicity and to introduce a stable internal UserId layer that makes the app IdP-agnostic."
   - id: capability:claims-principal-normalization
     label: Claims Principal Normalization
     source_docs:
       - planning-mds/features/archive/F0005-idp-migration/README.md
       - planning-mds/architecture/decisions/ADR-006-authentik-idp-migration.md
       - planning-mds/architecture/SOLUTION-PATTERNS.md
+    rationale:
+      - adr: adr:006
+        section: "Context §3–4"
+        summary: "Claims normalization layer maps authentik JWT claims to Nebula's role model, keeping authorization logic IdP-agnostic."
   - id: capability:principal-key-normalization
     label: Principal Key Normalization
     source_docs:
@@ -811,6 +857,10 @@ events:
       - entity:submission
       - entity:workflow-transition
       - entity:activity-timeline-event
+    rationale:
+      - adr: adr:011
+        section: "Decision"
+        summary: "Immutable transition events with timestamps, actor identity, and reason enable auditable reporting over structured transition history."
   - id: event:task-created
     label: TaskCreated
     event_type: TaskCreated
@@ -839,6 +889,10 @@ events:
       - entity:renewal
       - entity:workflow-transition
       - entity:activity-timeline-event
+    rationale:
+      - adr: adr:011
+        section: "F0007 Renewal Workflow Specification"
+        summary: "Renewal transitions follow the same append-only audit pattern as submission transitions for consistent cross-workflow reporting."
 
 config_keys:
   - id: config_key:authentication-authority
@@ -896,6 +950,10 @@ config_keys:
       - entity:workflow-sla-threshold
       - workflow:submission
       - workflow:renewal
+    rationale:
+      - adr: adr:009
+        section: "Decision §2"
+        summary: "SLA configuration stored as entities rather than hardcoded day-range buckets, enabling per-status warning/target thresholds."
   - id: config_key:published-configuration-sets
     label: Published Operational Configuration Sets
     key: published-configuration-sets
@@ -903,6 +961,10 @@ config_keys:
       - planning-mds/architecture/decisions/ADR-016-published-operational-configuration-governance.md
     related_nodes:
       - adr:016
+    rationale:
+      - adr: adr:016
+        section: "Decision"
+        summary: "Governed publish semantics with versioning and validation prevent ad hoc runtime configuration and ensure audit trails for rollback."
 
 migrations:
   - id: migration:initial-create

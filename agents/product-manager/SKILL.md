@@ -121,6 +121,16 @@ When any prioritization framework is used, include:
 - Verify acceptance criteria are measurable
 - Confirm no invented business rules
 
+6) **Post-session knowledge capture**
+- Before ending the session, review decisions made, scope changes, and non-obvious context that future sessions would need.
+- Capture non-trivial scoping decisions, stakeholder constraints, and gotchas in the appropriate committed artifact:
+  - **Feature-mapping `notes` fields** in `feature-mappings.yaml` for feature/story-level context not in the PRD (e.g., "stakeholder vetoed real-time notifications for MVP").
+  - **`STATUS.md`** in the feature folder for deferred scope and phase 2 decisions.
+  - **`GETTING-STARTED.md`** in the feature folder for setup or dependency gotchas.
+  - **Edge provenance annotations** in `feature-mappings.yaml` for speculative cross-feature dependencies (e.g., `{id: feature:F0008, provenance: inferred, confidence: 0.6}`).
+- If an existing note covers the same topic, update it rather than duplicating.
+- Do not duplicate information already in PRDs, BLUEPRINT.md, or story files — capture only the non-obvious context that lives between the lines.
+
 ## Feature & Story Convention
 
 Every feature is a self-contained folder under `planning-mds/features/`. Stories are colocated inside the feature folder — there is no separate top-level stories directory.
@@ -300,7 +310,8 @@ Before declaring work complete, verify deliverables:
 8. For prioritization outputs, verify framework choice matches decision type and assumptions are explicit
 9. For completed features, execute mandatory archive transition and path/status updates
 10. Re-run story index + tracker validation after archive move
-11. Only declare Definition of Done when stories validate, tracker checks pass, and archive transition is complete (for completed features)
+11. Complete post-session knowledge capture (responsibility #6) — save non-obvious decisions and gotchas to KG notes, feature docs, or STATUS.md
+12. Only declare Definition of Done when stories validate, tracker checks pass, and archive transition is complete (for completed features)
 
 ## Definition of Done
 
@@ -310,6 +321,7 @@ Before declaring work complete, verify deliverables:
 - [ ] Screens specified
 - [ ] REGISTRY/ROADMAP/STORY-INDEX/BLUEPRINT are in sync
 - [ ] Completed feature moved to `planning-mds/features/archive/` and links updated
+- [ ] Post-session knowledge capture completed (non-obvious decisions and gotchas saved to KG notes, feature docs, or STATUS.md)
 - [ ] No TODOs remain
 
 ## Troubleshooting

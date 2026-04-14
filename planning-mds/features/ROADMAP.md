@@ -58,7 +58,7 @@ This document is the working prioritization view for feature sequencing.
 
 | Feature | Phase | Completion State |
 |---------|-------|------------------|
-| [F0007 — Renewal Pipeline](./F0007-renewal-pipeline/README.md) | CRM Release MVP | Done (2026-04-11) — 7 stories: pipeline list, detail view, transitions, assignment, overdue visibility, create from policy, timeline |
+| [F0007 — Renewal Pipeline](./archive/F0007-renewal-pipeline/README.md) | CRM Release MVP | Done and archived (2026-04-12) — 7 stories: pipeline list, detail view, transitions, assignment, overdue visibility, create from policy, timeline |
 | [F0006 — Submission Intake Workflow](./archive/F0006-submission-intake-workflow/README.md) | CRM Release MVP | Done and archived (2026-04-04) — 8 stories: pipeline list, create flow, detail workspace, intake transitions, completeness, assignment, timeline, stale visibility |
 | [F0033 — Structured Logging and QE Toolchain Activation](./archive/F0033-structured-logging-and-qe-toolchain-activation/README.md) | Infrastructure | Done and archived (2026-03-30) — 5 stories: Serilog baseline, Bruno API validation, Lighthouse CI, Pact contract testing, SonarQube Community |
 | [F0014 — DevOps Smoke Test Automation](./archive/F0014-devops-smoke-test-automation/PRD.md) | Infrastructure | Done and archived (2026-03-28) — 3 stories: blueprint fixes, multi-role smoke test, CI workflow |

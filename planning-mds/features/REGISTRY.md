@@ -11,7 +11,6 @@
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
-| F0007 | Renewal Pipeline | Done | CRM Release MVP | `F0007-renewal-pipeline/` |
 
 ## Abandoned Features
 
@@ -47,6 +46,7 @@
 
 | Feature ID | Name | Archived Date | Folder |
 |------------|------|---------------|--------|
+| F0007 | Renewal Pipeline | 2026-04-12 | `archive/F0007-renewal-pipeline/` |
 | F0006 | Submission Intake Workflow | 2026-04-04 | `archive/F0006-submission-intake-workflow/` |
 | F0001 | Dashboard | 2026-03-07 | `archive/F0001-dashboard/` |
 | F0002 | Broker & MGA Relationship Management | 2026-03-10 | `archive/F0002-broker-relationship-management/` |

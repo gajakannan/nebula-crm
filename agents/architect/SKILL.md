@@ -137,6 +137,22 @@ Your responsibility is to define **HOW** to build what the Product Manager speci
    - If a discovered gap requires solution lifecycle activation, feature planning, runtime wiring, or evidence changes, track that as solution work under `planning-mds/**`, runtime config, and app code
    - Do not hide solution enforcement gaps by updating agent guidance alone
 
+13) **Post-session knowledge capture**
+   - Before ending the session, review decisions made, gotchas discovered, and non-obvious context that future sessions would need.
+   - Capture non-trivial decisions and gotchas in the appropriate committed artifact:
+     - **Canonical node `notes` fields** in `canonical-nodes.yaml` for entity/workflow/capability-level gotchas (e.g., "renewal entity shape required a reconciliation migration because the earlier stub had diverged").
+     - **Feature-mapping `notes` fields** in `feature-mappings.yaml` for feature/story-level context not in the PRD or assembly plan.
+     - **ADR prose** for architectural decisions that warrant a permanent record.
+     - **`GETTING-STARTED.md`** in the feature folder for setup gotchas (e.g., "authentik requires app-password tokens for ROPC").
+   - If an existing note covers the same topic, update it rather than duplicating.
+   - Do not duplicate information already in ADRs, BLUEPRINT.md, or feature docs — capture only the non-obvious context that lives between the lines.
+
+14) **Structural knowledge-graph updates**
+   - After creating or approving an ADR, add `rationale:` entries on the canonical nodes whose design the ADR governs. Each entry needs `adr` (canonical ADR node ID), `section` (human-readable anchor), and `summary` (one-line WHY).
+   - After design sessions that introduce new entities, workflows, capabilities, or endpoints, add corresponding canonical nodes in `canonical-nodes.yaml` — not just notes on existing nodes.
+   - After adding canonical nodes or rationale entries, run `python3 scripts/kg/validate.py` to confirm no broken references.
+   - When the session produced new code-index-worthy paths (e.g., new API contract files, schema files, architecture docs), add bindings in `code-index.yaml` so future agents can resolve those files to canonical nodes.
+
 ## Capability Recommendation
 
 **Recommended Capability Tier:** High (complex architecture reasoning)
@@ -382,7 +398,9 @@ Before declaring work complete, verify each deliverable:
 7. Validate tracker consistency when planning trackers were touched during architecture updates (manually or by delegating `agents/product-manager/scripts/validate-trackers.py`)
 8. Verify feature assembly execution plan (`planning-mds/features/F{NNNN}-{slug}/feature-assembly-plan.md`) exists and is implementation-ready: every API endpoint has a corresponding Step with file paths, code signatures, logic flow, Casbin pattern, and HTTP response table. Cross-check against OpenAPI endpoints — no endpoint should be missing from the plan.
 9. If inconsistencies found → fix, re-validate
-10. Only declare Definition of Done when all cross-checks pass
+10. Complete post-session knowledge capture (responsibility #13) — save non-obvious decisions and gotchas to KG notes, ADRs, or feature docs
+11. Complete structural KG updates (responsibility #14) — add rationale entries for new ADRs, canonical nodes for new design elements, code-index bindings for new artifacts, and run `validate.py` clean
+12. Only declare Definition of Done when all cross-checks pass
 
 ## Definition of Done
 
@@ -403,6 +421,8 @@ Before declaring work complete, verify each deliverable:
 - Validation strategy documented (JSON Schema for both frontend and backend)
 - **Feature assembly execution plan** created at `planning-mds/features/F{NNNN}-{slug}/feature-assembly-plan.md` (colocated with feature) with implementation-level detail (per-step file paths, code signatures, logic flows, Casbin per-endpoint, HTTP response tables, migration SQL, integration checkpoints). Referenced from umbrella `planning-mds/architecture/feature-assembly-plan.md`.
 - Tracker-governance checks pass when planning trackers changed
+- Post-session knowledge capture completed (non-obvious decisions and gotchas saved to KG notes, ADRs, or feature docs)
+- Structural KG updates completed (rationale entries for ADRs, canonical nodes for new design elements, code-index bindings for new artifacts, `validate.py` exits 0)
 - No TODOs remain
 
 ## Troubleshooting

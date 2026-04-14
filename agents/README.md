@@ -118,6 +118,17 @@ Files outside `agents/` that are part of the framework but live at the repo root
 | `lifecycle-stage.yaml` | Lifecycle stage declaration and required gate matrix |
 | `CONTRIBUTING.md` | Framework contribution guidelines |
 
+## Context Efficiency
+
+20,700+ lines of reference docs across 11 roles. Do not load all references
+for a role — load the task-matched subset.
+
+- **[ROUTER.md](./ROUTER.md)** — maps task types to the specific reference
+  files needed. Consult before loading any `references/` file.
+- **[KG tools](./docs/AGENT-USE.md)** — run `python3 scripts/kg/hint.py <path>`
+  before searching code, `python3 scripts/kg/blast.py <node>` before editing
+  shared entities.
+
 ## How to Use
 
 ### For Users

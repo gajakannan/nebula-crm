@@ -107,6 +107,49 @@ node_types:
     description: Verification or signoff artifact proving completion or review.
     owner: product-manager
 
+provenance:
+  description: >
+    Optional annotation on edge references to indicate how the link was
+    established. When omitted, the edge is treated as extracted (ground truth).
+  values:
+    - id: extracted
+      description: >
+        Ground truth derived from committed code, docs, or configuration.
+        This is the default when provenance is omitted.
+    - id: inferred
+      description: >
+        Speculative or analyst-inferred link. Must include a confidence
+        score (0.0–1.0). validate.py warns on confidence < 0.5.
+      fields:
+        confidence: { type: float, range: [0.0, 1.0], required: true }
+    - id: ambiguous
+      description: >
+        Link whose correctness is uncertain — flagged for architect review.
+        validate.py always warns on ambiguous edges.
+  syntax: >
+    Edge references accept two forms:
+      - Bare string (default): "entity:submission" — treated as extracted.
+      - Object form: { id: "entity:submission", provenance: "inferred", confidence: 0.7 }
+    Both forms may be mixed in the same list.
+
+rationale:
+  description: >
+    Optional annotation on canonical nodes that captures WHY a design decision
+    was made, linking to the governing ADR and section. Makes architectural
+    reasoning first-class and queryable through lookup.py rather than locked
+    in ADR prose.
+  fields:
+    adr: { type: string, required: true, description: "Canonical ADR node ID (e.g. adr:009)." }
+    section: { type: string, required: true, description: "Human-readable section anchor within the ADR (e.g. 'Decision §2')." }
+    summary: { type: string, required: true, description: "One-line summary of the WHY — the reasoning, not a restatement of what the node is." }
+  syntax: >
+    rationale is a list of objects on any canonical node:
+      rationale:
+        - adr: adr:009
+          section: "Decision §2"
+          summary: "Per-status SLA thresholds needed for aging band computation."
+    Each entry must reference a valid ADR ID from canonical-nodes.yaml.
+
 edge_types:
   - id: belongs_to_feature
     from: [story]

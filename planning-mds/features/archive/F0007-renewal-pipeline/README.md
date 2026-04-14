@@ -1,8 +1,9 @@
 # F0007 — Renewal Pipeline
 
-**Status:** In Refinement
+**Status:** Done (Archived)
 **Priority:** Critical
 **Phase:** CRM Release MVP
+**Archived:** 2026-04-12
 
 ## Overview
 
@@ -20,16 +21,16 @@ Track upcoming renewals with proactive workflow stages, ownership, and timing vi
 
 | ID | Title | Priority | Status |
 |----|-------|----------|--------|
-| [F0007-S0001](./F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md) | Renewal pipeline list with due-window filtering | Critical | Draft |
-| [F0007-S0002](./F0007-S0002-renewal-detail-view-with-policy-context.md) | Renewal detail view with policy context and outreach history | Critical | Draft |
-| [F0007-S0003](./F0007-S0003-renewal-status-transitions.md) | Renewal status transitions | Critical | Draft |
-| [F0007-S0004](./F0007-S0004-renewal-ownership-assignment-and-handoff.md) | Renewal ownership assignment and handoff | High | Draft |
-| [F0007-S0005](./F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md) | Overdue renewal visibility and escalation flags | High | Draft |
-| [F0007-S0006](./F0007-S0006-create-renewal-from-expiring-policy.md) | Create renewal from expiring policy | Critical | Draft |
-| [F0007-S0007](./F0007-S0007-renewal-activity-timeline-and-audit-trail.md) | Renewal activity timeline and audit trail | High | Draft |
+| [F0007-S0001](./F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md) | Renewal pipeline list with due-window filtering | Critical | Done |
+| [F0007-S0002](./F0007-S0002-renewal-detail-view-with-policy-context.md) | Renewal detail view with policy context and outreach history | Critical | Done |
+| [F0007-S0003](./F0007-S0003-renewal-status-transitions.md) | Renewal status transitions | Critical | Done |
+| [F0007-S0004](./F0007-S0004-renewal-ownership-assignment-and-handoff.md) | Renewal ownership assignment and handoff | High | Done |
+| [F0007-S0005](./F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md) | Overdue renewal visibility and escalation flags | High | Done |
+| [F0007-S0006](./F0007-S0006-create-renewal-from-expiring-policy.md) | Create renewal from expiring policy | Critical | Done |
+| [F0007-S0007](./F0007-S0007-renewal-activity-timeline-and-audit-trail.md) | Renewal activity timeline and audit trail | High | Done |
 
 **Total Stories:** 7
-**Completed:** 0 / 7
+**Completed:** 7 / 7
 
 ---
 

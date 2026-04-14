@@ -340,26 +340,525 @@ paths:
   # ──────────────────────────────────────────────────────────────
   # Account, MGA, Program endpoints (existing)
   # ──────────────────────────────────────────────────────────────
+  # ──────────────────────────────────────────────────────────────
+  # Account endpoints (F0016 — Account 360 & Insured Management)
+  # ──────────────────────────────────────────────────────────────
   /accounts:
     get:
       operationId: listAccounts
-      summary: List accounts
+      summary: List accounts with search and filtering
+      description: |
+        Returns a paginated, filterable list of accounts. Supports search by
+        displayName / legalName / taxId (prefix and contains), and filter by
+        status, territory, broker-of-record, region, and primary LOB.
+        ABAC-scoped to the authenticated user (region/territory/broker scope).
+        Deleted accounts are excluded by default; `includeRemoved=true` is
+        admin-only and returns Deleted accounts too. Merged accounts are
+        returned only when filtered explicitly.
       tags: [Accounts]
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Case-insensitive search across displayName / legalName / taxId.
+          schema: { type: string, minLength: 1, maxLength: 100 }
+        - name: status
+          in: query
+          required: false
+          description: Comma-separated status filter. Defaults to Active,Inactive.
+          schema: { type: string }
+        - name: territoryCode
+          in: query
+          required: false
+          schema: { type: string }
+        - name: region
+          in: query
+          required: false
+          schema: { type: string }
+        - name: brokerOfRecordId
+          in: query
+          required: false
+          schema: { type: string, format: uuid }
+        - name: primaryLineOfBusiness
+          in: query
+          required: false
+          schema: { type: string }
+        - name: include
+          in: query
+          required: false
+          description: Comma-separated include hints. `summary` adds per-row counts.
+          schema: { type: string }
+        - name: includeRemoved
+          in: query
+          required: false
+          description: Admin-only. Include Deleted accounts when true. Default false.
+          schema: { type: boolean, default: false }
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [displayName, lastActivityAt, status, territoryCode]
+            default: displayName
+        - name: sortDir
+          in: query
+          required: false
+          schema: { type: string, enum: [asc, desc], default: asc }
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
       responses:
         "200":
-          description: Account list
+          description: Paginated account list
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Account"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
+                type: object
+                required: [data, page, pageSize, totalCount, totalPages]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AccountListItem"
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  totalPages: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      operationId: createAccount
+      summary: Create an account
+      description: |
+        Creates an insured account. Optionally links an originating submission
+        or policy for the from-submission / from-policy convenience flow.
+        Returns a duplicate-hint payload (200 advisory) but does not block on
+        name-match or tax-id-match unless `Idempotency-Key` repeats.
+      tags: [Accounts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountCreateRequest"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /accounts/{accountId}:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      operationId: getAccountById
+      summary: Get account detail (tombstone-aware)
+      description: |
+        Returns full account detail. For Merged accounts returns `200` with
+        `status=Merged` and `survivorAccountId` populated (frontend navigates
+        to survivor). For Deleted accounts returns `410 Gone` with a
+        ProblemDetails body including `stableDisplayName`, `removedAt`,
+        `reasonCode`. See ADR-017.
+      tags: [Accounts]
+      responses:
+        "200":
+          description: Account detail (Active, Inactive, or Merged)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "410":
+          description: Account deleted (tombstone)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+    put:
+      operationId: updateAccount
+      summary: Update account profile
+      description: |
+        Updates profile fields. Requires If-Match (RowVersion). Returns 412 on
+        stale token. Allowed only when status ∈ {Active, Inactive}.
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountUpdateRequest"
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+
+  /accounts/{accountId}/lifecycle:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    post:
+      operationId: transitionAccountLifecycle
+      summary: Transition account lifecycle (deactivate / reactivate / delete)
+      description: |
+        Applies a lifecycle transition per the account state machine.
+        `toState=Inactive` deactivates an Active account; `toState=Active`
+        reactivates an Inactive account; `toState=Deleted` requires
+        `reasonCode` (and `reasonDetail` when reasonCode=Other).
+        Appends one WorkflowTransition and one ActivityTimelineEvent.
+        Role: DistributionManager or Admin.
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountLifecycleRequest"
+      responses:
+        "200":
+          description: Transition applied; returns updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+
+  /accounts/{accountId}/merge:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    post:
+      operationId: mergeAccount
+      summary: Merge this account into a survivor
+      description: |
+        Merges this (source) account into `survivorAccountId`. Source must be
+        Active or Inactive; survivor must be Active; self-merge rejected.
+        Commit is synchronous. Source transitions to Merged; `MergedIntoAccountId`
+        set; RemovedAt stamped; StableDisplayName frozen. Appends a
+        WorkflowTransition and ActivityTimelineEvent on source AND one mirror
+        ActivityTimelineEvent on survivor. Retry-idempotent on same input.
+        See ADR-017. Role: DistributionManager or Admin.
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountMergeRequest"
+      responses:
+        "200":
+          description: Merge applied; returns source account in Merged state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+
+  /accounts/{accountId}/summary:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      operationId: getAccountSummary
+      summary: Account 360 overview payload (counts + last activity)
+      tags: [Accounts]
+      responses:
+        "200":
+          description: Summary payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountSummary"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "410":
+          description: Account deleted (tombstone)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /accounts/{accountId}/contacts:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      operationId: listAccountContacts
+      summary: List contacts on an account
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated contact list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page, pageSize, totalCount, totalPages]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AccountContact"
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  totalPages: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      operationId: createAccountContact
+      summary: Create an account contact
+      tags: [Accounts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountContactRequest"
+      responses:
+        "201":
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountContact"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /accounts/{accountId}/contacts/{contactId}:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+      - $ref: "#/components/parameters/ContactId"
+    put:
+      operationId: updateAccountContact
+      summary: Update an account contact
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountContactRequest"
+      responses:
+        "200":
+          description: Updated contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountContact"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+    delete:
+      operationId: deleteAccountContact
+      summary: Soft-delete an account contact
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+      responses:
+        "204":
+          description: Deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+
+  /accounts/{accountId}/relationships:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    post:
+      operationId: changeAccountRelationship
+      summary: Change broker-of-record / primary-producer / territory
+      description: |
+        Applies a relationship change and appends one AccountRelationshipHistory
+        row plus one ActivityTimelineEvent on the account. Requires If-Match.
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountRelationshipRequest"
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+
+  /accounts/{accountId}/submissions:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      operationId: listAccountSubmissions
+      summary: Submissions rail for Account 360
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated submission list (ABAC-scoped)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page, pageSize, totalCount, totalPages]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SubmissionListItem"
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  totalPages: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /accounts/{accountId}/renewals:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      operationId: listAccountRenewals
+      summary: Renewals rail for Account 360
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated renewal list (ABAC-scoped)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page, pageSize, totalCount, totalPages]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RenewalListItem"
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  totalPages: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /accounts/{accountId}/policies:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      operationId: listAccountPolicies
+      summary: Policies rail for Account 360 (Policy stub today; F0018 later)
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated policy list (ABAC-scoped). Stub payload until F0018.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page, pageSize, totalCount, totalPages]
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  totalPages: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /accounts/{accountId}/timeline:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      operationId: listAccountTimeline
+      summary: Activity timeline rail for an account
+      description: Append-only; paginated newest-first.
+      tags: [Accounts]
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated timeline events
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page, pageSize, totalCount, totalPages]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TimelineEvent"
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  totalPages: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /mgas:
     get:
@@ -1878,6 +2377,13 @@ components:
       schema:
         type: string
         format: uuid
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     TaskId:
       name: taskId
       in: path
@@ -2294,23 +2800,230 @@ components:
           type: integer
 
     # ── Account / MGA / Program Schemas ─────────────────────────
+    # ── Account Schemas (F0016 — Account 360 & Insured Management) ──
     Account:
       type: object
-      description: Insured account profile.
+      description: |
+        Insured account. Tombstone-aware: Merged accounts include `survivorAccountId`;
+        Deleted accounts return 410 Gone from GET and are not represented by this
+        schema. See ADR-017.
       required:
         - id
-        - name
+        - displayName
+        - stableDisplayName
         - status
+        - rowVersion
+        - createdAt
+        - updatedAt
       properties:
-        id:
+        id: { type: string, format: uuid }
+        displayName: { type: string, maxLength: 200 }
+        stableDisplayName:
           type: string
-          format: uuid
-        name:
-          type: string
+          maxLength: 200
+          description: Snapshot used by the dependent-view fallback contract (ADR-017). Frozen when status ∈ {Merged, Deleted}.
+        legalName: { type: string, nullable: true, maxLength: 200 }
+        taxId: { type: string, nullable: true, maxLength: 50 }
+        industry: { type: string, nullable: true, maxLength: 100 }
+        primaryLineOfBusiness: { type: string, nullable: true, maxLength: 50 }
         status:
           type: string
-        industry:
+          enum: [Active, Inactive, Merged, Deleted]
+        brokerOfRecordId: { type: string, format: uuid, nullable: true }
+        brokerOfRecordName: { type: string, nullable: true }
+        primaryProducerUserId: { type: string, format: uuid, nullable: true }
+        primaryProducerDisplayName: { type: string, nullable: true }
+        territoryCode: { type: string, nullable: true, maxLength: 50 }
+        region: { type: string, nullable: true, maxLength: 50 }
+        address1: { type: string, nullable: true }
+        address2: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        state: { type: string, nullable: true }
+        postalCode: { type: string, nullable: true }
+        country: { type: string, nullable: true }
+        mergedIntoAccountId:
           type: string
+          format: uuid
+          nullable: true
+          description: Survivor account id when status=Merged.
+        survivorAccountId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Alias for mergedIntoAccountId on merged reads; present for client convenience.
+        deleteReasonCode: { type: string, nullable: true }
+        deleteReasonDetail: { type: string, nullable: true, maxLength: 500 }
+        removedAt: { type: string, format: date-time, nullable: true }
+        rowVersion: { type: string }
+        createdAt: { type: string, format: date-time }
+        createdByUserId: { type: string, format: uuid, nullable: true }
+        updatedAt: { type: string, format: date-time }
+        updatedByUserId: { type: string, format: uuid, nullable: true }
+
+    AccountListItem:
+      type: object
+      description: Row returned by GET /accounts.
+      required: [id, displayName, status, rowVersion]
+      properties:
+        id: { type: string, format: uuid }
+        displayName: { type: string }
+        legalName: { type: string, nullable: true }
+        taxId: { type: string, nullable: true }
+        status:
+          type: string
+          enum: [Active, Inactive, Merged, Deleted]
+        brokerOfRecordId: { type: string, format: uuid, nullable: true }
+        brokerOfRecordName: { type: string, nullable: true }
+        territoryCode: { type: string, nullable: true }
+        region: { type: string, nullable: true }
+        primaryLineOfBusiness: { type: string, nullable: true }
+        lastActivityAt: { type: string, format: date-time, nullable: true }
+        activePolicyCount: { type: integer, nullable: true, description: "Present when include=summary" }
+        openSubmissionCount: { type: integer, nullable: true, description: "Present when include=summary" }
+        renewalDueCount: { type: integer, nullable: true, description: "Present when include=summary" }
+        rowVersion: { type: string }
+
+    AccountSummary:
+      type: object
+      description: Account 360 overview payload.
+      required: [id, displayName, status, activePolicyCount, openSubmissionCount, renewalDueCount]
+      properties:
+        id: { type: string, format: uuid }
+        displayName: { type: string }
+        status:
+          type: string
+          enum: [Active, Inactive, Merged, Deleted]
+        brokerOfRecordName: { type: string, nullable: true }
+        primaryProducerDisplayName: { type: string, nullable: true }
+        territoryCode: { type: string, nullable: true }
+        region: { type: string, nullable: true }
+        activePolicyCount: { type: integer }
+        openSubmissionCount: { type: integer }
+        renewalDueCount: { type: integer }
+        lastActivityAt: { type: string, format: date-time, nullable: true }
+        rowVersion: { type: string }
+
+    AccountCreateRequest:
+      type: object
+      description: Request body for POST /accounts.
+      required: [displayName]
+      properties:
+        displayName: { type: string, maxLength: 200 }
+        legalName: { type: string, nullable: true, maxLength: 200 }
+        taxId: { type: string, nullable: true, maxLength: 50 }
+        industry: { type: string, nullable: true, maxLength: 100 }
+        primaryLineOfBusiness: { type: string, nullable: true, maxLength: 50 }
+        brokerOfRecordId: { type: string, format: uuid, nullable: true }
+        primaryProducerUserId: { type: string, format: uuid, nullable: true }
+        territoryCode: { type: string, nullable: true, maxLength: 50 }
+        region: { type: string, nullable: true, maxLength: 50 }
+        address1: { type: string, nullable: true }
+        address2: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        state: { type: string, nullable: true }
+        postalCode: { type: string, nullable: true }
+        country: { type: string, nullable: true }
+        linkFromSubmissionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Convenience link — attach this new account to an existing submission on commit.
+        linkFromPolicyId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Convenience link — attach this new account to an existing policy on commit.
+
+    AccountUpdateRequest:
+      type: object
+      description: Request body for PUT /accounts/{accountId}. Requires If-Match.
+      properties:
+        displayName: { type: string, maxLength: 200 }
+        legalName: { type: string, nullable: true, maxLength: 200 }
+        taxId: { type: string, nullable: true, maxLength: 50 }
+        industry: { type: string, nullable: true, maxLength: 100 }
+        primaryLineOfBusiness: { type: string, nullable: true, maxLength: 50 }
+        territoryCode: { type: string, nullable: true, maxLength: 50 }
+        region: { type: string, nullable: true, maxLength: 50 }
+        address1: { type: string, nullable: true }
+        address2: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        state: { type: string, nullable: true }
+        postalCode: { type: string, nullable: true }
+        country: { type: string, nullable: true }
+
+    AccountLifecycleRequest:
+      type: object
+      description: Body for POST /accounts/{accountId}/lifecycle (deactivate / reactivate / delete).
+      required: [toState]
+      properties:
+        toState:
+          type: string
+          enum: [Active, Inactive, Deleted]
+        reasonCode:
+          type: string
+          nullable: true
+          enum: [DuplicateOfAnother, InvalidOrTestRecord, ReplacedByExternalSystem, RequestedByInsured, Other, null]
+          description: Required when toState=Deleted.
+        reasonDetail:
+          type: string
+          nullable: true
+          maxLength: 500
+          description: Required when reasonCode=Other; optional otherwise.
+
+    AccountMergeRequest:
+      type: object
+      description: Body for POST /accounts/{accountId}/merge. Source is the {accountId}; survivor is in the body.
+      required: [survivorAccountId]
+      properties:
+        survivorAccountId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+          nullable: true
+          maxLength: 500
+
+    AccountContact:
+      type: object
+      required: [id, accountId, fullName, isPrimary, rowVersion]
+      properties:
+        id: { type: string, format: uuid }
+        accountId: { type: string, format: uuid }
+        fullName: { type: string, maxLength: 200 }
+        role: { type: string, nullable: true, maxLength: 100 }
+        email: { type: string, format: email, nullable: true, maxLength: 200 }
+        phone: { type: string, nullable: true, maxLength: 50 }
+        isPrimary: { type: boolean }
+        rowVersion: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    AccountContactRequest:
+      type: object
+      required: [fullName]
+      properties:
+        fullName: { type: string, maxLength: 200 }
+        role: { type: string, nullable: true, maxLength: 100 }
+        email: { type: string, format: email, nullable: true, maxLength: 200 }
+        phone: { type: string, nullable: true, maxLength: 50 }
+        isPrimary: { type: boolean, default: false }
+
+    AccountRelationshipRequest:
+      type: object
+      description: Body for POST /accounts/{accountId}/relationships — broker-of-record / producer / territory change.
+      required: [relationshipType, newValue]
+      properties:
+        relationshipType:
+          type: string
+          enum: [BrokerOfRecord, PrimaryProducer, Territory]
+        newValue:
+          type: string
+          description: Broker id (uuid) / user id (uuid) / territory code depending on relationshipType.
+        notes:
+          type: string
+          nullable: true
+          maxLength: 500
 
     MGA:
       type: object

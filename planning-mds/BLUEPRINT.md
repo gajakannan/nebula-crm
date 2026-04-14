@@ -181,7 +181,7 @@ Status: Phase C implementation is complete for F0001 (Dashboard), F0002 (Broker 
 - [F0013: Dashboard Framed Storytelling Canvas](features/archive/F0013-dashboard-framed-storytelling-canvas/PRD.md) - Done (Archived)
 
 **CRM Release MVP (Planned):**
-- F0016: Account 360 & Insured Management - Planned
+- [F0016: Account 360 & Insured Management](features/F0016-account-360-and-insured-management/PRD.md) - In Refinement (11 stories: list, create, profile edit, 360 composition, contacts, relationships, lifecycle, merge, deleted/merged fallback contract, timeline, summary projection)
 - F0018: Policy Lifecycle & Policy 360 - Planned
 - F0019: Submission Quoting, Proposal & Approval Workflow - Planned
 - F0020: Document Management & ACORD Intake - Planned

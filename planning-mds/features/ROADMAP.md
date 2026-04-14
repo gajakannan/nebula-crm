@@ -18,7 +18,7 @@ This document is the working prioritization view for feature sequencing.
 
 | Feature | Phase | Why Now |
 |---------|-------|---------|
-| [F0016 — Account 360 & Insured Management](./F0016-account-360-and-insured-management/README.md) | CRM Release MVP | Adds insured-centric context required by underwriters and distribution users before deeper policy and renewal workflows land. |
+| [F0016 — Account 360 & Insured Management](./F0016-account-360-and-insured-management/README.md) | CRM Release MVP | In Refinement. Adds insured-centric context required by underwriters and distribution users; also owns the Deleted / Merged Account Fallback Contract that every dependent module must adopt. |
 | [F0020 — Document Management & ACORD Intake](./F0020-document-management-and-acord-intake/README.md) | CRM Release MVP | Removes document chasing and supports completeness checks for submissions and underwriting review. |
 
 ## Next

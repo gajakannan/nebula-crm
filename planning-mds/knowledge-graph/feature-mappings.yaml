@@ -11,9 +11,6 @@ coverage:
     - id: feature:F0008
       path: planning-mds/features/F0008-broker-insights
       reason: Planned feature folder exists but ontology mapping backfill has not started.
-    - id: feature:F0016
-      path: planning-mds/features/F0016-account-360-and-insured-management
-      reason: Planned feature folder exists but ontology mapping backfill has not started.
     - id: feature:F0017
       path: planning-mds/features/F0017-broker-mga-hierarchy-and-producer-ownership
       reason: Planned feature folder exists but ontology mapping backfill has not started.
@@ -232,7 +229,7 @@ features:
       - {id: feature:F0016, provenance: inferred, confidence: 0.8}
       - {id: feature:F0020, provenance: inferred, confidence: 0.7}
   - id: feature:F0007
-    path: planning-mds/features/F0007-renewal-pipeline
+    path: planning-mds/features/archive/F0007-renewal-pipeline
     status: architecture-complete
     affects:
       - workflow:renewal
@@ -363,6 +360,76 @@ features:
       - feature:F0001
     supersedes:
       - feature:F0010
+  - id: feature:F0016
+    path: planning-mds/features/F0016-account-360-and-insured-management
+    status: in-refinement
+    affects:
+      - workflow:account-lifecycle
+      - endpoint:account-list
+      - endpoint:account-create
+      - endpoint:account-detail
+      - endpoint:account-update
+      - endpoint:account-lifecycle
+      - endpoint:account-merge
+      - endpoint:account-summary
+      - endpoint:account-contact-list
+      - endpoint:account-contact-create
+      - endpoint:account-contact-update
+      - endpoint:account-contact-delete
+      - endpoint:account-relationship-change
+      - endpoint:account-submissions
+      - endpoint:account-renewals
+      - endpoint:account-policies
+      - endpoint:account-timeline
+      - entity:account
+      - entity:contact
+      - entity:activity-timeline-event
+      - entity:workflow-transition
+      - entity:broker
+    governed_by:
+      - adr:008
+      - adr:009
+      - adr:011
+      - adr:012
+      - adr:017
+    uses_schema:
+      - schema:account
+      - schema:account-list-item
+      - schema:account-summary
+      - schema:account-create-request
+      - schema:account-update-request
+      - schema:account-lifecycle-request
+      - schema:account-merge-request
+      - schema:account-contact
+      - schema:account-contact-request
+      - schema:account-relationship-request
+      - schema:timeline-event
+      - schema:activity-event-payloads
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0002
+      - {id: feature:F0018, provenance: inferred, confidence: 0.5, note: "Soft; reads F0007-seeded Policy stub in MVP"}
+      - {id: feature:F0020, provenance: inferred, confidence: 0.6, note: "Soft; Account 360 documents rail"}
+    restricted_to_role:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+      - role:broker-user
+    enforced_by_policy:
+      - policy_rule:account-read
+      - policy_rule:account-create
+      - policy_rule:account-update
+      - policy_rule:account-deactivate
+      - policy_rule:account-reactivate
+      - policy_rule:account-delete
+      - policy_rule:account-merge
+      - policy_rule:account-contact-manage
+      - policy_rule:account-relationship-change
+      - policy_rule:timeline-event-read
   - id: feature:F0019
     path: planning-mds/features/F0019-submission-quoting-proposal-and-approval
     status: planned
@@ -619,7 +686,7 @@ stories:
       - policy_rule:task-delete
       - policy_rule:user-search
   - id: story:F0007-S0001
-    path: planning-mds/features/F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md
+    path: planning-mds/features/archive/F0007-renewal-pipeline/F0007-S0001-renewal-pipeline-list-with-due-window-filtering.md
     feature: feature:F0007
     affects:
       - workflow:renewal
@@ -645,7 +712,7 @@ stories:
     enforced_by_policy:
       - policy_rule:renewal-read
   - id: story:F0007-S0002
-    path: planning-mds/features/F0007-renewal-pipeline/F0007-S0002-renewal-detail-view-with-policy-context.md
+    path: planning-mds/features/archive/F0007-renewal-pipeline/F0007-S0002-renewal-detail-view-with-policy-context.md
     feature: feature:F0007
     affects:
       - workflow:renewal
@@ -672,7 +739,7 @@ stories:
       - policy_rule:renewal-read
       - policy_rule:timeline-event-read
   - id: story:F0007-S0003
-    path: planning-mds/features/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md
+    path: planning-mds/features/archive/F0007-renewal-pipeline/F0007-S0003-renewal-status-transitions.md
     feature: feature:F0007
     affects:
       - workflow:renewal
@@ -707,7 +774,7 @@ stories:
       - evidence:workflow-state-machine-tests
       - evidence:workflow-endpoint-integration-tests
   - id: story:F0007-S0004
-    path: planning-mds/features/F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md
+    path: planning-mds/features/archive/F0007-renewal-pipeline/F0007-S0004-renewal-ownership-assignment-and-handoff.md
     feature: feature:F0007
     affects:
       - workflow:renewal
@@ -731,7 +798,7 @@ stories:
       - policy_rule:renewal-assign
       - policy_rule:user-search
   - id: story:F0007-S0005
-    path: planning-mds/features/F0007-renewal-pipeline/F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md
+    path: planning-mds/features/archive/F0007-renewal-pipeline/F0007-S0005-overdue-renewal-visibility-and-escalation-flags.md
     feature: feature:F0007
     affects:
       - workflow:renewal
@@ -758,7 +825,7 @@ stories:
       - policy_rule:renewal-read
       - policy_rule:dashboard-nudge-read
   - id: story:F0007-S0006
-    path: planning-mds/features/F0007-renewal-pipeline/F0007-S0006-create-renewal-from-expiring-policy.md
+    path: planning-mds/features/archive/F0007-renewal-pipeline/F0007-S0006-create-renewal-from-expiring-policy.md
     feature: feature:F0007
     affects:
       - workflow:renewal
@@ -791,7 +858,7 @@ stories:
     enforced_by_policy:
       - policy_rule:renewal-create
   - id: story:F0007-S0007
-    path: planning-mds/features/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md
+    path: planning-mds/features/archive/F0007-renewal-pipeline/F0007-S0007-renewal-activity-timeline-and-audit-trail.md
     feature: feature:F0007
     affects:
       - endpoint:renewal-timeline
@@ -1859,3 +1926,245 @@ stories:
       - capability:sonarqube-reporting
       - capability:qe-toolchain-activation
       - capability:frontend-quality-gates
+  - id: story:F0016-S0001
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0001-account-list-with-search-and-filtering.md
+    feature: feature:F0016
+    affects:
+      - endpoint:account-list
+      - entity:account
+      - entity:broker
+    uses_schema:
+      - schema:account-list-item
+    uses_api_contract:
+      - api:nebula-rest
+    restricted_to_role:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+      - role:broker-user
+    enforced_by_policy:
+      - policy_rule:account-read
+  - id: story:F0016-S0002
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0002-create-account.md
+    feature: feature:F0016
+    affects:
+      - endpoint:account-create
+      - entity:account
+      - entity:activity-timeline-event
+    uses_schema:
+      - schema:account-create-request
+      - schema:account
+    uses_api_contract:
+      - api:nebula-rest
+    restricted_to_role:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:admin
+    enforced_by_policy:
+      - policy_rule:account-create
+  - id: story:F0016-S0003
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0003-account-detail-and-profile-edit.md
+    feature: feature:F0016
+    affects:
+      - endpoint:account-detail
+      - endpoint:account-update
+      - entity:account
+      - entity:activity-timeline-event
+    governed_by:
+      - adr:017
+    uses_schema:
+      - schema:account
+      - schema:account-update-request
+    uses_api_contract:
+      - api:nebula-rest
+    restricted_to_role:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:admin
+    enforced_by_policy:
+      - policy_rule:account-read
+      - policy_rule:account-update
+  - id: story:F0016-S0004
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0004-account-360-composition.md
+    feature: feature:F0016
+    affects:
+      - endpoint:account-detail
+      - endpoint:account-summary
+      - endpoint:account-submissions
+      - endpoint:account-renewals
+      - endpoint:account-policies
+      - entity:account
+      - entity:submission
+      - entity:renewal
+      - entity:policy
+    uses_schema:
+      - schema:account
+      - schema:account-summary
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - {id: feature:F0018, provenance: inferred, confidence: 0.5}
+      - {id: feature:F0020, provenance: inferred, confidence: 0.6}
+    enforced_by_policy:
+      - policy_rule:account-read
+  - id: story:F0016-S0005
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0005-account-contacts-management.md
+    feature: feature:F0016
+    affects:
+      - endpoint:account-contact-list
+      - endpoint:account-contact-create
+      - endpoint:account-contact-update
+      - endpoint:account-contact-delete
+      - entity:account
+      - entity:contact
+      - entity:activity-timeline-event
+    uses_schema:
+      - schema:account-contact
+      - schema:account-contact-request
+    uses_api_contract:
+      - api:nebula-rest
+    restricted_to_role:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:admin
+    enforced_by_policy:
+      - policy_rule:account-contact-manage
+  - id: story:F0016-S0006
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0006-account-relationships-broker-producer-territory.md
+    feature: feature:F0016
+    affects:
+      - endpoint:account-relationship-change
+      - entity:account
+      - entity:broker
+      - entity:activity-timeline-event
+    uses_schema:
+      - schema:account-relationship-request
+    uses_api_contract:
+      - api:nebula-rest
+    restricted_to_role:
+      - role:distribution-manager
+      - role:admin
+    enforced_by_policy:
+      - policy_rule:account-relationship-change
+  - id: story:F0016-S0007
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0007-account-lifecycle-deactivate-reactivate-delete.md
+    feature: feature:F0016
+    affects:
+      - workflow:account-lifecycle
+      - endpoint:account-lifecycle
+      - entity:account
+      - entity:workflow-transition
+      - entity:activity-timeline-event
+    workflow_states:
+      - state:account:active
+      - state:account:inactive
+      - state:account:deleted
+    governed_by:
+      - adr:011
+      - adr:017
+    uses_schema:
+      - schema:account-lifecycle-request
+      - schema:activity-event-payloads
+    uses_api_contract:
+      - api:nebula-rest
+    restricted_to_role:
+      - role:distribution-manager
+      - role:underwriter
+      - role:admin
+    enforced_by_policy:
+      - policy_rule:account-deactivate
+      - policy_rule:account-reactivate
+      - policy_rule:account-delete
+  - id: story:F0016-S0008
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0008-account-merge-and-duplicate-handling.md
+    feature: feature:F0016
+    affects:
+      - workflow:account-lifecycle
+      - endpoint:account-merge
+      - entity:account
+      - entity:workflow-transition
+      - entity:activity-timeline-event
+    workflow_states:
+      - state:account:active
+      - state:account:inactive
+      - state:account:merged
+    governed_by:
+      - adr:011
+      - adr:017
+    uses_schema:
+      - schema:account-merge-request
+      - schema:activity-event-payloads
+    uses_api_contract:
+      - api:nebula-rest
+    restricted_to_role:
+      - role:distribution-manager
+      - role:admin
+    enforced_by_policy:
+      - policy_rule:account-merge
+  - id: story:F0016-S0009
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0009-deleted-merged-account-fallback-contract.md
+    feature: feature:F0016
+    affects:
+      - endpoint:account-detail
+      - endpoint:account-list
+      - endpoint:account-submissions
+      - endpoint:account-renewals
+      - endpoint:account-policies
+      - entity:account
+      - entity:submission
+      - entity:renewal
+      - entity:policy
+    governed_by:
+      - adr:017
+    uses_schema:
+      - schema:account
+      - schema:account-list-item
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - story:F0016-S0007
+      - story:F0016-S0008
+    enforced_by_policy:
+      - policy_rule:account-read
+  - id: story:F0016-S0010
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0010-account-activity-timeline-and-audit.md
+    feature: feature:F0016
+    affects:
+      - endpoint:account-timeline
+      - entity:account
+      - entity:activity-timeline-event
+      - entity:workflow-transition
+    governed_by:
+      - adr:011
+    uses_schema:
+      - schema:timeline-event
+      - schema:activity-event-payloads
+    uses_api_contract:
+      - api:nebula-rest
+    enforced_by_policy:
+      - policy_rule:timeline-event-read
+      - policy_rule:account-read
+  - id: story:F0016-S0011
+    path: planning-mds/features/F0016-account-360-and-insured-management/F0016-S0011-account-summary-projection.md
+    feature: feature:F0016
+    affects:
+      - endpoint:account-summary
+      - entity:account
+      - entity:submission
+      - entity:renewal
+      - entity:policy
+    uses_schema:
+      - schema:account-summary
+    uses_api_contract:
+      - api:nebula-rest
+    enforced_by_policy:
+      - policy_rule:account-read

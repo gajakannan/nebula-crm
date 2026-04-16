@@ -6,6 +6,9 @@ import DashboardPage from './pages/DashboardPage'
 import BrokerListPage from './pages/BrokerListPage'
 import CreateBrokerPage from './pages/CreateBrokerPage'
 import BrokerDetailPage from './pages/BrokerDetailPage'
+import AccountsPage from './pages/AccountsPage'
+import CreateAccountPage from './pages/CreateAccountPage'
+import AccountDetailPage from './pages/AccountDetailPage'
 import SubmissionsPage from './pages/SubmissionsPage'
 import CreateSubmissionPage from './pages/CreateSubmissionPage'
 import SubmissionDetailPage from './pages/SubmissionDetailPage'
@@ -45,6 +48,9 @@ function AppInner() {
 
       {/* Protected routes — valid OIDC session required */}
       <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+      <Route path="/accounts" element={<ProtectedRoute><AccountsPage /></ProtectedRoute>} />
+      <Route path="/accounts/new" element={<ProtectedRoute><CreateAccountPage /></ProtectedRoute>} />
+      <Route path="/accounts/:accountId" element={<ProtectedRoute><AccountDetailPage /></ProtectedRoute>} />
       <Route path="/submissions" element={<ProtectedRoute><SubmissionsPage /></ProtectedRoute>} />
       <Route path="/submissions/new" element={<ProtectedRoute><CreateSubmissionPage /></ProtectedRoute>} />
       <Route path="/submissions/:submissionId" element={<ProtectedRoute><SubmissionDetailPage /></ProtectedRoute>} />

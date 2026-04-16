@@ -565,6 +565,10 @@ function toListItem(renewal: MockRenewalRecord): RenewalListItemDto {
 
   return {
     id: renewal.id,
+    accountId: renewal.accountId,
+    accountDisplayName: account?.name ?? 'Unknown account',
+    accountStatus: 'Active',
+    accountSurvivorId: null,
     accountName: account?.name ?? 'Unknown account',
     accountIndustry: account?.industry ?? 'Unknown industry',
     accountPrimaryState: accountPrimaryStateById.get(renewal.accountId) ?? 'Unknown state',
@@ -607,6 +611,9 @@ function toDetail(renewal: MockRenewalRecord): RenewalDto {
     urgency: getRenewalUrgency(renewal),
     availableTransitions: transitionMap[renewal.currentStatus],
     assignedUserDisplayName: assignee?.displayName ?? null,
+    accountDisplayName: account?.name ?? null,
+    accountStatus: 'Active',
+    accountSurvivorId: null,
     accountName: account?.name ?? null,
     accountIndustry: account?.industry ?? null,
     accountPrimaryState: accountPrimaryStateById.get(renewal.accountId) ?? null,

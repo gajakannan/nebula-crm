@@ -2,6 +2,10 @@ namespace Nebula.Application.DTOs;
 
 public record RenewalListItemDto(
     Guid Id,
+    Guid AccountId,
+    string AccountDisplayName,
+    string AccountStatus,
+    Guid? AccountSurvivorId,
     string AccountName,
     string AccountIndustry,
     string AccountPrimaryState,

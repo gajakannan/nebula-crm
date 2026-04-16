@@ -138,6 +138,6 @@ export const api = {
     fetchApi<T>(path, { method: 'POST', body: JSON.stringify(body), headers }),
   put: <T>(path: string, body: unknown, headers?: Record<string, string>) =>
     fetchApi<T>(path, { method: 'PUT', body: JSON.stringify(body), headers }),
-  delete: (path: string) =>
-    fetchApiNoBody(path, { method: 'DELETE' }),
+  delete: (path: string, headers?: Record<string, string>) =>
+    fetchApiNoBody(path, { method: 'DELETE', headers }),
 }

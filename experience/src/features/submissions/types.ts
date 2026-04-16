@@ -15,6 +15,10 @@ export type SubmissionDocumentCheckStatus = 'pass' | 'missing' | 'unavailable';
 
 export interface SubmissionListItemDto {
   id: string;
+  accountId: string;
+  accountDisplayName: string;
+  accountStatus: string;
+  accountSurvivorId: string | null;
   accountName: string;
   brokerName: string;
   lineOfBusiness: string | null;
@@ -57,6 +61,9 @@ export interface SubmissionDto {
   premiumEstimate: number | null;
   description: string | null;
   assignedToUserId: string;
+  accountDisplayName: string;
+  accountStatus: string;
+  accountSurvivorId: string | null;
   accountName: string;
   accountRegion: string | null;
   accountIndustry: string | null;

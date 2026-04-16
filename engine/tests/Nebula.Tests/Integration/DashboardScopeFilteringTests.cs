@@ -186,10 +186,12 @@ public class DashboardScopeFilteringTests : IClassFixture<CustomWebApplicationFa
 
         if (!await db.Accounts.AnyAsync(account => account.Id == ScopeAccountWestId))
         {
+            const string displayName = "Scope Account West";
             db.Accounts.Add(new Account
             {
                 Id = ScopeAccountWestId,
-                Name = "Scope Account West",
+                Name = displayName,
+                StableDisplayName = displayName,
                 Industry = "Manufacturing",
                 PrimaryState = "CA",
                 Region = "West",
@@ -203,10 +205,12 @@ public class DashboardScopeFilteringTests : IClassFixture<CustomWebApplicationFa
 
         if (!await db.Accounts.AnyAsync(account => account.Id == ScopeAccountEastId))
         {
+            const string displayName = "Scope Account East";
             db.Accounts.Add(new Account
             {
                 Id = ScopeAccountEastId,
-                Name = "Scope Account East",
+                Name = displayName,
+                StableDisplayName = displayName,
                 Industry = "Technology",
                 PrimaryState = "TX",
                 Region = "East",
@@ -297,6 +301,8 @@ public class DashboardScopeFilteringTests : IClassFixture<CustomWebApplicationFa
         if (db.Submissions.Any(submission => submission.Id == submissionId))
             return;
 
+        var account = db.Accounts.Local.FirstOrDefault(existingAccount => existingAccount.Id == accountId)
+            ?? db.Accounts.Single(existingAccount => existingAccount.Id == accountId);
         db.Submissions.Add(new Submission
         {
             Id = submissionId,
@@ -308,6 +314,9 @@ public class DashboardScopeFilteringTests : IClassFixture<CustomWebApplicationFa
             EffectiveDate = DateTime.UtcNow.Date,
             PremiumEstimate = 250000m,
             AssignedToUserId = assignedToUserId,
+            AccountDisplayNameAtLink = account.StableDisplayName,
+            AccountStatusAtRead = account.Status,
+            AccountSurvivorId = account.MergedIntoAccountId,
             CreatedAt = createdAtUtc,
             UpdatedAt = DateTime.UtcNow,
             CreatedByUserId = assignedToUserId,

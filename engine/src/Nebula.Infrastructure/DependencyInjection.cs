@@ -12,6 +12,9 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
         services.AddScoped<IBrokerRepository, BrokerRepository>();
+        services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<IAccountContactRepository, AccountContactRepository>();
+        services.AddScoped<IAccountRelationshipHistoryRepository, AccountRelationshipHistoryRepository>();
         services.AddScoped<IContactRepository, ContactRepository>();
         services.AddScoped<ISubmissionRepository, SubmissionRepository>();
         services.AddScoped<IRenewalRepository, RenewalRepository>();

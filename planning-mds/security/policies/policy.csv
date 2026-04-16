@@ -205,6 +205,45 @@ p, Admin,               renewal, transition, true
 p, Admin,               renewal, assign,     true
 
 # ─────────────────────────────────────────────────────────────────────────────
+# §2.4a Account — Read / Create / Update / Lifecycle / Merge / Contact / Relationship
+# Query-layer scope mirrors the feature-local account contract (F0016).
+# ─────────────────────────────────────────────────────────────────────────────
+
+p, DistributionUser,    account, read,                true
+p, DistributionUser,    account, create,              true
+p, DistributionUser,    account, update,              true
+p, DistributionUser,    account, contact:manage,      true
+
+p, DistributionManager, account, read,                true
+p, DistributionManager, account, create,              true
+p, DistributionManager, account, update,              true
+p, DistributionManager, account, deactivate,          true
+p, DistributionManager, account, reactivate,          true
+p, DistributionManager, account, delete,              true
+p, DistributionManager, account, merge,               true
+p, DistributionManager, account, contact:manage,      true
+p, DistributionManager, account, relationship:change, true
+
+p, Underwriter,         account, read,           true
+
+p, RelationshipManager, account, read,                true
+p, RelationshipManager, account, contact:manage,      true
+
+p, ProgramManager,      account, read,           true
+
+p, Admin,               account, read,                true
+p, Admin,               account, create,              true
+p, Admin,               account, update,              true
+p, Admin,               account, deactivate,          true
+p, Admin,               account, reactivate,          true
+p, Admin,               account, delete,              true
+p, Admin,               account, merge,               true
+p, Admin,               account, contact:manage,      true
+p, Admin,               account, relationship:change, true
+
+p, BrokerUser,          account, read,           true
+
+# ─────────────────────────────────────────────────────────────────────────────
 # §2.5 Dashboard — KPI Cards
 # Read-only. No mutations from this view (F0001-S0001 AC Checklist).
 # Scope enforced at query layer per role:

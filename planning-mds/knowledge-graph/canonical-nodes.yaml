@@ -186,8 +186,8 @@ workflows:
   - id: workflow:account-lifecycle
     label: Account lifecycle
     source_docs:
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
-      - planning-mds/features/F0016-account-360-and-insured-management/feature-assembly-plan.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/feature-assembly-plan.md
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
       - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
       - planning-mds/api/nebula-api.yaml
@@ -766,7 +766,7 @@ endpoints:
     route: /accounts
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - workflow:account-lifecycle
@@ -777,7 +777,7 @@ endpoints:
     route: /accounts
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - workflow:account-lifecycle
@@ -788,7 +788,7 @@ endpoints:
     route: /accounts/{accountId}
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
     related_nodes:
       - entity:account
@@ -800,7 +800,7 @@ endpoints:
     route: /accounts/{accountId}
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - policy_rule:account-update
@@ -810,7 +810,7 @@ endpoints:
     route: /accounts/{accountId}/lifecycle
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/feature-assembly-plan.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/feature-assembly-plan.md
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
       - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
     related_nodes:
@@ -826,7 +826,7 @@ endpoints:
     route: /accounts/{accountId}/merge
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/feature-assembly-plan.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/feature-assembly-plan.md
       - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
     related_nodes:
       - entity:account
@@ -839,7 +839,7 @@ endpoints:
     route: /accounts/{accountId}/summary
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - policy_rule:account-read
@@ -849,7 +849,7 @@ endpoints:
     route: /accounts/{accountId}/contacts
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - entity:contact
@@ -860,7 +860,7 @@ endpoints:
     route: /accounts/{accountId}/contacts
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - entity:contact
@@ -871,7 +871,7 @@ endpoints:
     route: /accounts/{accountId}/contacts/{contactId}
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - entity:contact
@@ -882,7 +882,7 @@ endpoints:
     route: /accounts/{accountId}/contacts/{contactId}
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - entity:contact
@@ -893,7 +893,7 @@ endpoints:
     route: /accounts/{accountId}/relationships
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - entity:broker
@@ -904,7 +904,7 @@ endpoints:
     route: /accounts/{accountId}/submissions
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - entity:submission
@@ -915,7 +915,7 @@ endpoints:
     route: /accounts/{accountId}/renewals
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - entity:renewal
@@ -926,7 +926,7 @@ endpoints:
     route: /accounts/{accountId}/policies
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - entity:policy
@@ -937,7 +937,7 @@ endpoints:
     route: /accounts/{accountId}/timeline
     source_docs:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     related_nodes:
       - entity:account
       - entity:activity-timeline-event
@@ -979,6 +979,31 @@ ui_routes:
     related_nodes:
       - entity:broker
       - capability:broker-360
+  - id: ui_route:accounts-list
+    label: /accounts
+    route: /accounts
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/AccountsPage.tsx
+    related_nodes:
+      - entity:account
+  - id: ui_route:account-create
+    label: /accounts/new
+    route: /accounts/new
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/CreateAccountPage.tsx
+    related_nodes:
+      - entity:account
+  - id: ui_route:account-detail
+    label: /accounts/:accountId
+    route: /accounts/:accountId
+    source_docs:
+      - experience/src/App.tsx
+      - experience/src/pages/AccountDetailPage.tsx
+    related_nodes:
+      - entity:account
+      - workflow:account-lifecycle
   - id: ui_route:submissions-list
     label: /submissions
     route: /submissions
@@ -1230,6 +1255,26 @@ migrations:
       - entity:renewal
       - workflow:renewal
       - config_key:workflow-sla-thresholds
+  - id: migration:f0016-account-lifecycle
+    label: F0016 Account Lifecycle
+    path: engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414120000_F0016_AccountLifecycle.cs
+    related_nodes:
+      - entity:account
+      - workflow:account-lifecycle
+  - id: migration:f0016-account-contacts-and-relationship-history
+    label: F0016 Account Contacts And Relationship History
+    path: engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414121000_F0016_AccountContactsAndRelationshipHistory.cs
+    related_nodes:
+      - entity:account
+      - entity:contact
+  - id: migration:f0016-dependent-fallback-denormalization
+    label: F0016 Dependent Fallback Denormalization
+    path: engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414122000_F0016_DependentFallbackDenormalization.cs
+    related_nodes:
+      - entity:account
+      - entity:submission
+      - entity:renewal
+      - entity:policy
 
 roles:
   - id: role:distribution-user
@@ -1550,7 +1595,7 @@ policy_rules:
     source_docs:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
     allowed_roles:
       - role:distribution-user
       - role:distribution-manager
@@ -1573,8 +1618,6 @@ policy_rules:
     allowed_roles:
       - role:distribution-user
       - role:distribution-manager
-      - role:underwriter
-      - role:relationship-manager
       - role:admin
     related_nodes:
       - entity:account
@@ -1589,8 +1632,6 @@ policy_rules:
     allowed_roles:
       - role:distribution-user
       - role:distribution-manager
-      - role:underwriter
-      - role:relationship-manager
       - role:admin
     related_nodes:
       - entity:account
@@ -1605,7 +1646,6 @@ policy_rules:
       - planning-mds/security/policies/policy.csv
     allowed_roles:
       - role:distribution-manager
-      - role:underwriter
       - role:admin
     related_nodes:
       - entity:account
@@ -1621,7 +1661,6 @@ policy_rules:
       - planning-mds/security/policies/policy.csv
     allowed_roles:
       - role:distribution-manager
-      - role:underwriter
       - role:admin
     related_nodes:
       - entity:account
@@ -1636,6 +1675,7 @@ policy_rules:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
     allowed_roles:
+      - role:distribution-manager
       - role:admin
     related_nodes:
       - entity:account
@@ -1670,7 +1710,6 @@ policy_rules:
     allowed_roles:
       - role:distribution-user
       - role:distribution-manager
-      - role:underwriter
       - role:relationship-manager
       - role:admin
     related_nodes:

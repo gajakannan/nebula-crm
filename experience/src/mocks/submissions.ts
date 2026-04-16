@@ -607,6 +607,10 @@ function buildSubmission({
 function toListItem(record: MockSubmissionRecord): SubmissionListItemDto {
   return {
     id: record.id,
+    accountId: record.accountId,
+    accountDisplayName: record.accountName,
+    accountStatus: 'Active',
+    accountSurvivorId: null,
     accountName: record.accountName,
     brokerName: record.brokerName,
     lineOfBusiness: record.lineOfBusiness,
@@ -634,6 +638,9 @@ function toDetail(record: MockSubmissionRecord): SubmissionDto {
     premiumEstimate: record.premiumEstimate,
     description: record.description,
     assignedToUserId: record.assignedToUserId,
+    accountDisplayName: record.accountName,
+    accountStatus: 'Active',
+    accountSurvivorId: null,
     accountName: record.accountName,
     accountRegion: record.accountRegion,
     accountIndustry: record.accountIndustry,

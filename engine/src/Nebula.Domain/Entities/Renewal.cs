@@ -14,6 +14,9 @@ public class Renewal : BaseEntity
     public string? LostReasonDetail { get; set; }
     public Guid? BoundPolicyId { get; set; }
     public Guid? RenewalSubmissionId { get; set; }
+    public string? AccountDisplayNameAtLink { get; set; }
+    public string? AccountStatusAtRead { get; set; }
+    public Guid? AccountSurvivorId { get; set; }
 
     public Account Account { get; set; } = default!;
     public Broker Broker { get; set; } = default!;

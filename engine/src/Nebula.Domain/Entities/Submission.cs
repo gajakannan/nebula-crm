@@ -12,6 +12,9 @@ public class Submission : BaseEntity
     public decimal? PremiumEstimate { get; set; }
     public string? Description { get; set; }
     public Guid AssignedToUserId { get; set; }
+    public string? AccountDisplayNameAtLink { get; set; }
+    public string? AccountStatusAtRead { get; set; }
+    public Guid? AccountSurvivorId { get; set; }
 
     public Account Account { get; set; } = default!;
     public Broker Broker { get; set; } = default!;

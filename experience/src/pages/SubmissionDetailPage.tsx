@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Select } from '@/components/ui/Select';
 import { TextInput } from '@/components/ui/TextInput';
+import { AccountReference, AccountStatusBadge, useAccount } from '@/features/accounts';
 import { usePrograms } from '@/features/submissions/hooks/useReferenceData';
 import { AssigneePicker, type UserSummaryDto } from '@/features/tasks';
 import {
@@ -45,6 +46,11 @@ export default function SubmissionDetailPage() {
   const updateSubmission = useUpdateSubmission(submissionId);
   const assignSubmission = useAssignSubmission(submissionId);
   const transitionSubmission = useTransitionSubmission(submissionId);
+  const survivorQuery = useAccount(
+    submissionQuery.data?.accountStatus === 'Merged' && submissionQuery.data.accountSurvivorId
+      ? submissionQuery.data.accountSurvivorId
+      : '',
+  );
 
   const [editOpen, setEditOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
@@ -230,11 +236,20 @@ export default function SubmissionDetailPage() {
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <SubmissionStatusBadge status={submission.currentStatus} />
+                <AccountStatusBadge status={submission.accountStatus} />
                 {submission.isStale && <Pill>Stale</Pill>}
               </div>
               <div>
-                <h2 className="text-2xl font-semibold text-text-primary">{submission.accountName}</h2>
+                <h2 className="text-2xl font-semibold text-text-primary">{submission.accountDisplayName}</h2>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-text-secondary">
+                  <AccountReference
+                    accountId={submission.accountId}
+                    displayName={submission.accountDisplayName}
+                    status={submission.accountStatus}
+                    survivorAccountId={submission.accountSurvivorId}
+                    survivorName={survivorQuery.data?.displayName}
+                    className="font-medium text-text-primary hover:text-nebula-violet"
+                  />
                   <Link to={`/brokers/${submission.brokerId}`} className="hover:text-nebula-violet">
                     {submission.brokerName}
                   </Link>

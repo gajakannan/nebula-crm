@@ -3,6 +3,7 @@
  * Add entries here as new pages are implemented.
  */
 const REGISTERED_ROUTES: Record<string, (id: string) => string> = {
+  'Account': (id) => `/accounts/${id}`,
   'Broker': (id) => `/brokers/${id}`,
   'Renewal': (id) => `/renewals/${id}`,
   'Submission': (id) => `/submissions/${id}`,

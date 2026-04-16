@@ -6,10 +6,6 @@ public static class ReferenceDataEndpoints
 {
     public static IEndpointRouteBuilder MapReferenceDataEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/accounts", async (ReferenceDataService svc, CancellationToken ct) =>
-            Results.Ok(await svc.GetAccountsAsync(ct)))
-            .WithTags("Accounts").RequireAuthorization();
-
         app.MapGet("/mgas", async (ReferenceDataService svc, CancellationToken ct) =>
             Results.Ok(await svc.GetMgasAsync(ct)))
             .WithTags("MGAs").RequireAuthorization();

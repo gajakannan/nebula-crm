@@ -11,7 +11,6 @@
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
-| F0016 | Account 360 & Insured Management | In Refinement | CRM Release MVP | `F0016-account-360-and-insured-management/` |
 
 ## Abandoned Features
 
@@ -46,6 +45,7 @@
 
 | Feature ID | Name | Archived Date | Folder |
 |------------|------|---------------|--------|
+| F0016 | Account 360 & Insured Management | 2026-04-14 | `archive/F0016-account-360-and-insured-management/` |
 | F0007 | Renewal Pipeline | 2026-04-12 | `archive/F0007-renewal-pipeline/` |
 | F0006 | Submission Intake Workflow | 2026-04-04 | `archive/F0006-submission-intake-workflow/` |
 | F0001 | Dashboard | 2026-03-07 | `archive/F0001-dashboard/` |

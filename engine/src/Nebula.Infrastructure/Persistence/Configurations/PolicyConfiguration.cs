@@ -21,6 +21,8 @@ public class PolicyConfiguration : IEntityTypeConfiguration<Policy>
         builder.Property(e => e.ExpirationDate).IsRequired().HasColumnType("date");
         builder.Property(e => e.Premium).HasColumnType("decimal(18,2)");
         builder.Property(e => e.CurrentStatus).IsRequired().HasMaxLength(30).HasDefaultValue("Active");
+        builder.Property(e => e.AccountDisplayNameAtLink).HasMaxLength(200);
+        builder.Property(e => e.AccountStatusAtRead).HasMaxLength(20);
         builder.Property(e => e.CreatedByUserId).IsRequired();
         builder.Property(e => e.UpdatedByUserId).IsRequired();
         builder.Property(e => e.DeletedByUserId);
@@ -48,6 +50,9 @@ public class PolicyConfiguration : IEntityTypeConfiguration<Policy>
 
         builder.HasIndex(e => e.ExpirationDate)
             .HasDatabaseName("IX_Policies_ExpirationDate");
+
+        builder.HasIndex(e => e.AccountId)
+            .HasDatabaseName("IX_Policies_AccountId");
 
         builder.HasQueryFilter(e => !e.IsDeleted);
     }

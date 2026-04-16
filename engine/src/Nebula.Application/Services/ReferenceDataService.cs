@@ -5,12 +5,6 @@ namespace Nebula.Application.Services;
 
 public class ReferenceDataService(IReferenceDataRepository refRepo)
 {
-    public async Task<IReadOnlyList<AccountDto>> GetAccountsAsync(CancellationToken ct = default)
-    {
-        var accounts = await refRepo.GetAccountsAsync(ct);
-        return accounts.Select(a => new AccountDto(a.Id, a.Name, a.Status, a.Industry)).ToList();
-    }
-
     public async Task<IReadOnlyList<MgaDto>> GetMgasAsync(CancellationToken ct = default)
     {
         var mgas = await refRepo.GetMgasAsync(ct);

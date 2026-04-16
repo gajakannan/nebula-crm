@@ -18,6 +18,10 @@ export type RenewalLostReasonCode =
 
 export interface RenewalListItemDto {
   id: string;
+  accountId: string;
+  accountDisplayName: string;
+  accountStatus: string;
+  accountSurvivorId: string | null;
   accountName: string;
   accountIndustry: string;
   accountPrimaryState: string;
@@ -53,6 +57,9 @@ export interface RenewalDto {
   urgency: RenewalUrgency;
   availableTransitions: RenewalStatus[];
   assignedUserDisplayName: string | null;
+  accountDisplayName: string | null;
+  accountStatus: string;
+  accountSurvivorId: string | null;
   accountName: string | null;
   accountIndustry: string | null;
   accountPrimaryState: string | null;
@@ -104,6 +111,8 @@ export interface RenewalListQuery {
   status?: string;
   assignedToUserId?: string;
   lineOfBusiness?: string;
+  accountId?: string;
+  brokerId?: string;
   urgency?: 'overdue' | 'approaching';
   sort?: 'policyExpirationDate' | 'accountName' | 'currentStatus' | 'assignedToUserId';
   sortDir?: 'asc' | 'desc';

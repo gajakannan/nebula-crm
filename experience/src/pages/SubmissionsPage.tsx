@@ -4,6 +4,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { AccountReference, AccountStatusBadge } from '@/features/accounts';
 import { useBrokers } from '@/features/brokers';
 import { AssigneePicker, type UserSummaryDto } from '@/features/tasks';
 import {
@@ -287,12 +288,13 @@ export default function SubmissionsPage() {
                           <SubmissionStatusBadge status={submission.currentStatus} />
                         </td>
                         <td className="py-3 pr-4">
-                          <Link
-                            to={`/submissions/${submission.id}`}
+                          <AccountReference
+                            accountId={submission.accountId}
+                            displayName={submission.accountDisplayName}
+                            status={submission.accountStatus}
+                            survivorAccountId={submission.accountSurvivorId}
                             className="font-medium text-text-primary hover:text-nebula-violet"
-                          >
-                            {submission.accountName}
-                          </Link>
+                          />
                         </td>
                         <td className="py-3 pr-4">{submission.brokerName}</td>
                         <td className="py-3 pr-4">{getLineOfBusinessLabel(submission.lineOfBusiness)}</td>
@@ -323,13 +325,16 @@ export default function SubmissionsPage() {
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <SubmissionStatusBadge status={submission.currentStatus} />
-                      {submission.isStale && (
-                        <span className="rounded-full border border-status-warning/35 bg-status-warning/20 px-2 py-0.5 text-xs font-medium text-text-primary">
-                          Stale
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <AccountStatusBadge status={submission.accountStatus} />
+                        {submission.isStale && (
+                          <span className="rounded-full border border-status-warning/35 bg-status-warning/20 px-2 py-0.5 text-xs font-medium text-text-primary">
+                            Stale
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="mt-3 text-sm font-semibold text-text-primary">{submission.accountName}</p>
+                    <p className="mt-3 text-sm font-semibold text-text-primary">{submission.accountDisplayName}</p>
                     <p className="mt-1 text-xs text-text-secondary">{submission.brokerName}</p>
                     <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-text-muted">
                       <span>{getLineOfBusinessLabel(submission.lineOfBusiness)}</span>

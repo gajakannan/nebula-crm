@@ -13,6 +13,8 @@ public class AppDbContext : DbContext, IUnitOfWork
     public Task CommitAsync(CancellationToken ct = default) => SaveChangesAsync(ct);
 
     public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<AccountContact> AccountContacts => Set<AccountContact>();
+    public DbSet<AccountRelationshipHistory> AccountRelationshipHistory => Set<AccountRelationshipHistory>();
     public DbSet<MGA> MGAs => Set<MGA>();
     public DbSet<Program> Programs => Set<Program>();
     public DbSet<Broker> Brokers => Set<Broker>();

@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { TextInput } from '@/components/ui/TextInput';
+import { AccountReference, AccountStatusBadge, useAccount } from '@/features/accounts';
 import { useCurrentUser } from '@/features/auth';
 import { getLineOfBusinessLabel } from '@/features/submissions';
 import {
@@ -51,6 +52,11 @@ export default function RenewalDetailPage() {
   const renewalQuery = useRenewal(renewalId);
   const assignRenewal = useAssignRenewal(renewalId);
   const transitionRenewal = useTransitionRenewal(renewalId);
+  const survivorQuery = useAccount(
+    renewalQuery.data?.accountStatus === 'Merged' && renewalQuery.data.accountSurvivorId
+      ? renewalQuery.data.accountSurvivorId
+      : '',
+  );
 
   const [assignOpen, setAssignOpen] = useState(false);
   const [selectedAssignee, setSelectedAssignee] = useState<UserSummaryDto | null>(null);
@@ -242,6 +248,7 @@ export default function RenewalDetailPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <RenewalStatusBadge status={renewal.currentStatus} />
                 <RenewalUrgencyBadge urgency={renewal.urgency} />
+                <AccountStatusBadge status={renewal.accountStatus} />
                 <span className="rounded-full border border-surface-border bg-surface-card px-2 py-0.5 text-[11px] font-medium text-text-muted">
                   Renewal {renewal.id.slice(0, 8)}
                 </span>
@@ -249,9 +256,17 @@ export default function RenewalDetailPage() {
 
               <div>
                 <h2 className="text-2xl font-semibold text-text-primary">
-                  {renewal.accountName ?? renewal.policyNumber ?? 'Renewal detail'}
+                  {renewal.accountDisplayName ?? renewal.accountName ?? renewal.policyNumber ?? 'Renewal detail'}
                 </h2>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-text-secondary">
+                  <AccountReference
+                    accountId={renewal.accountId}
+                    displayName={renewal.accountDisplayName ?? renewal.accountName ?? 'Unknown account'}
+                    status={renewal.accountStatus}
+                    survivorAccountId={renewal.accountSurvivorId}
+                    survivorName={survivorQuery.data?.displayName}
+                    className="font-medium text-text-primary hover:text-nebula-violet"
+                  />
                   {renewal.policyNumber && <span>{renewal.policyNumber}</span>}
                   {renewal.brokerName && (
                     <>

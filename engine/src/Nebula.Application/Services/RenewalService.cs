@@ -69,6 +69,8 @@ public class RenewalService(
 
         if (await renewalRepo.HasActiveRenewalForPolicyAsync(dto.PolicyId, ct))
             return (null, "duplicate_renewal", null);
+        if (IsTerminalAccountState(policy.Account.Status))
+            return (null, "policy_denied", "Renewals cannot be created from merged or deleted accounts.");
 
         var assigneeId = dto.AssignedToUserId ?? user.UserId;
         var assignee = await ResolveAssigneeAsync(assigneeId, user, ct);
@@ -98,6 +100,9 @@ public class RenewalService(
             PolicyExpirationDate = policy.ExpirationDate,
             TargetOutreachDate = policy.ExpirationDate.AddDays(-targetDays),
             AssignedToUserId = assigneeProfile.Id,
+            AccountDisplayNameAtLink = policy.Account.StableDisplayName,
+            AccountStatusAtRead = policy.Account.Status,
+            AccountSurvivorId = policy.Account.MergedIntoAccountId,
             CreatedAt = now,
             CreatedByUserId = user.UserId,
             UpdatedAt = now,
@@ -331,15 +336,20 @@ public class RenewalService(
     private async Task<RenewalListItemDto> MapListItemAsync(Renewal renewal, CancellationToken ct)
     {
         var urgency = await ComputeUrgencyAsync(renewal.CurrentStatus, renewal.PolicyExpirationDate, renewal.LineOfBusiness, ct);
+        var fallback = BuildAccountFallback(renewal);
 
         return new RenewalListItemDto(
             renewal.Id,
-            renewal.Account.Name,
-            renewal.Account.Industry,
+            renewal.AccountId,
+            fallback.DisplayName,
+            fallback.Status,
+            fallback.SurvivorAccountId,
+            fallback.DisplayName,
+            renewal.Account.Industry ?? string.Empty,
             renewal.Account.PrimaryState,
             renewal.Broker.LegalName,
-            renewal.Broker.LicenseNumber,
-            renewal.Broker.State,
+            renewal.Broker.LicenseNumber ?? string.Empty,
+            renewal.Broker.State ?? string.Empty,
             renewal.Policy.PolicyNumber,
             renewal.Policy.Carrier,
             renewal.LineOfBusiness,
@@ -355,6 +365,7 @@ public class RenewalService(
     private async Task<RenewalDto> MapDetailAsync(Renewal renewal, ICurrentUserService user, CancellationToken ct)
     {
         var urgency = await ComputeUrgencyAsync(renewal.CurrentStatus, renewal.PolicyExpirationDate, renewal.LineOfBusiness, ct);
+        var fallback = BuildAccountFallback(renewal);
 
         return new RenewalDto(
             renewal.Id,
@@ -373,7 +384,10 @@ public class RenewalService(
             urgency,
             WorkflowStateMachine.GetAvailableRenewalTransitions(renewal.CurrentStatus, user.Roles),
             renewal.AssignedToUser.DisplayName,
-            renewal.Account.Name,
+            fallback.DisplayName,
+            fallback.Status,
+            fallback.SurvivorAccountId,
+            fallback.DisplayName,
             renewal.Account.Industry,
             renewal.Account.PrimaryState,
             renewal.Broker.LegalName,
@@ -388,6 +402,22 @@ public class RenewalService(
             renewal.CreatedByUserId,
             renewal.UpdatedAt,
             renewal.UpdatedByUserId);
+    }
+
+    private static (string DisplayName, string Status, Guid? SurvivorAccountId) BuildAccountFallback(Renewal renewal)
+    {
+        var displayName = string.IsNullOrWhiteSpace(renewal.AccountDisplayNameAtLink)
+            ? renewal.Account.StableDisplayName
+            : renewal.AccountDisplayNameAtLink;
+        if (string.IsNullOrWhiteSpace(displayName))
+            displayName = renewal.Account.Name;
+
+        var status = string.IsNullOrWhiteSpace(renewal.AccountStatusAtRead)
+            ? renewal.Account.Status
+            : renewal.AccountStatusAtRead;
+
+        var survivorAccountId = renewal.AccountSurvivorId ?? renewal.Account.MergedIntoAccountId;
+        return (displayName, status, survivorAccountId);
     }
 
     private async Task<string?> ComputeUrgencyAsync(
@@ -486,6 +516,10 @@ public class RenewalService(
         return HasRole(user, "DistributionUser")
             && NormalizeRegions(user.Regions).Contains(policy.Account.Region, StringComparer.OrdinalIgnoreCase);
     }
+
+    private static bool IsTerminalAccountState(string status) =>
+        string.Equals(status, AccountStatuses.Merged, StringComparison.Ordinal)
+        || string.Equals(status, AccountStatuses.Deleted, StringComparison.Ordinal);
 
     private static bool CanOwnRenewalStage(UserProfile assignee, string currentStatus)
     {

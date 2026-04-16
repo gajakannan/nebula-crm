@@ -198,13 +198,13 @@ public class RenewalRepository(AppDbContext db) : IRenewalRepository
 
         return (sort, descending) switch
         {
-            ("accountname", false) => query.OrderBy(renewal => renewal.Account.Name).ThenBy(renewal => renewal.PolicyExpirationDate),
-            ("accountname", true) => query.OrderByDescending(renewal => renewal.Account.Name).ThenByDescending(renewal => renewal.PolicyExpirationDate),
+            ("accountname", false) => query.OrderBy(renewal => renewal.AccountDisplayNameAtLink ?? renewal.Account.Name).ThenBy(renewal => renewal.PolicyExpirationDate),
+            ("accountname", true) => query.OrderByDescending(renewal => renewal.AccountDisplayNameAtLink ?? renewal.Account.Name).ThenByDescending(renewal => renewal.PolicyExpirationDate),
             ("currentstatus", false) => query.OrderBy(renewal => renewal.CurrentStatus).ThenBy(renewal => renewal.PolicyExpirationDate),
             ("currentstatus", true) => query.OrderByDescending(renewal => renewal.CurrentStatus).ThenByDescending(renewal => renewal.PolicyExpirationDate),
             ("assignedtouserid", false) => query.OrderBy(renewal => renewal.AssignedToUserId).ThenBy(renewal => renewal.PolicyExpirationDate),
             ("assignedtouserid", true) => query.OrderByDescending(renewal => renewal.AssignedToUserId).ThenByDescending(renewal => renewal.PolicyExpirationDate),
-            _ => query.OrderBy(renewal => renewal.PolicyExpirationDate).ThenBy(renewal => renewal.Account.Name),
+            _ => query.OrderBy(renewal => renewal.PolicyExpirationDate).ThenBy(renewal => renewal.AccountDisplayNameAtLink ?? renewal.Account.Name),
         };
     }
 

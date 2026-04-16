@@ -155,8 +155,8 @@ public class SubmissionRepository(AppDbContext db) : ISubmissionRepository
 
         return (sort, descending) switch
         {
-            ("accountname", false) => query.OrderBy(submission => submission.Account.Name).ThenBy(submission => submission.CreatedAt),
-            ("accountname", true) => query.OrderByDescending(submission => submission.Account.Name).ThenByDescending(submission => submission.CreatedAt),
+            ("accountname", false) => query.OrderBy(submission => submission.AccountDisplayNameAtLink ?? submission.Account.Name).ThenBy(submission => submission.CreatedAt),
+            ("accountname", true) => query.OrderByDescending(submission => submission.AccountDisplayNameAtLink ?? submission.Account.Name).ThenByDescending(submission => submission.CreatedAt),
             ("brokername", false) => query.OrderBy(submission => submission.Broker.LegalName).ThenBy(submission => submission.CreatedAt),
             ("brokername", true) => query.OrderByDescending(submission => submission.Broker.LegalName).ThenByDescending(submission => submission.CreatedAt),
             ("currentstatus", false) => query.OrderBy(submission => submission.CurrentStatus).ThenBy(submission => submission.CreatedAt),

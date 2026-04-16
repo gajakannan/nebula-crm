@@ -499,6 +499,9 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
             ExpirationDate = now.Date.AddDays(expirationDays),
             Premium = 125000m,
             CurrentStatus = "Active",
+            AccountDisplayNameAtLink = account.StableDisplayName,
+            AccountStatusAtRead = account.Status,
+            AccountSurvivorId = account.MergedIntoAccountId,
             Account = account,
             Broker = broker,
             CreatedAt = now,
@@ -517,6 +520,7 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var now = DateTime.UtcNow;
+        var account = await db.Accounts.SingleAsync(entity => entity.Id == policy.AccountId);
         var renewal = new Renewal
         {
             AccountId = policy.AccountId,
@@ -527,6 +531,9 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
             PolicyExpirationDate = policy.ExpirationDate,
             TargetOutreachDate = policy.ExpirationDate.AddDays(-GetRenewalTargetDays(policy.LineOfBusiness)),
             AssignedToUserId = assignedToUserId,
+            AccountDisplayNameAtLink = account.StableDisplayName,
+            AccountStatusAtRead = account.Status,
+            AccountSurvivorId = account.MergedIntoAccountId,
             CreatedAt = now,
             UpdatedAt = now,
             CreatedByUserId = assignedToUserId,
@@ -567,6 +574,7 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
         var account = new Account
         {
             Name = $"Submission Account {Guid.NewGuid():N}",
+            StableDisplayName = string.Empty,
             Industry = "Technology",
             PrimaryState = "CA",
             Region = region,
@@ -576,6 +584,7 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
             CreatedByUserId = currentUserId,
             UpdatedByUserId = currentUserId,
         };
+        account.StableDisplayName = account.Name;
 
         var broker = new Broker
         {
@@ -607,6 +616,7 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
         using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var now = DateTime.UtcNow;
+        var account = await db.Accounts.SingleAsync(entity => entity.Id == accountId);
 
         var submission = new Submission
         {
@@ -619,6 +629,9 @@ public class WorkflowEndpointTests(CustomWebApplicationFactory factory)
             PremiumEstimate = 25000m,
             Description = "Seeded submission",
             AssignedToUserId = assignedToUserId,
+            AccountDisplayNameAtLink = account.StableDisplayName,
+            AccountStatusAtRead = account.Status,
+            AccountSurvivorId = account.MergedIntoAccountId,
             CreatedAt = now,
             UpdatedAt = now,
             CreatedByUserId = assignedToUserId,

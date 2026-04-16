@@ -27,17 +27,25 @@ public class SubmissionService(
         var staleFlags = await submissionRepo.GetStaleFlagsAsync(result.Data.Select(submission => submission.Id).ToArray(), ct);
 
         var mapped = result.Data
-            .Select(submission => new SubmissionListItemDto(
-                submission.Id,
-                submission.Account.Name,
-                submission.Broker.LegalName,
-                submission.LineOfBusiness,
-                submission.CurrentStatus,
-                submission.EffectiveDate,
-                submission.AssignedToUserId,
-                submission.AssignedToUser.DisplayName,
-                submission.CreatedAt,
-                staleFlags.GetValueOrDefault(submission.Id)))
+            .Select(submission =>
+            {
+                var fallback = BuildAccountFallback(submission);
+                return new SubmissionListItemDto(
+                    submission.Id,
+                    submission.AccountId,
+                    fallback.DisplayName,
+                    fallback.Status,
+                    fallback.SurvivorAccountId,
+                    fallback.DisplayName,
+                    submission.Broker.LegalName,
+                    submission.LineOfBusiness,
+                    submission.CurrentStatus,
+                    submission.EffectiveDate,
+                    submission.AssignedToUserId,
+                    submission.AssignedToUser.DisplayName,
+                    submission.CreatedAt,
+                    staleFlags.GetValueOrDefault(submission.Id));
+            })
             .ToList();
 
         return new PaginatedResult<SubmissionListItemDto>(mapped, result.Page, result.PageSize, result.TotalCount);
@@ -77,6 +85,8 @@ public class SubmissionService(
         var account = await referenceDataRepo.GetAccountByIdAsync(dto.AccountId, ct);
         if (account is null)
             return (null, "invalid_account");
+        if (IsTerminalAccountState(account.Status))
+            return (null, "invalid_account");
 
         var broker = await brokerRepo.GetByIdAsync(dto.BrokerId, ct);
         if (broker is null || !string.Equals(broker.Status, "Active", StringComparison.Ordinal))
@@ -108,6 +118,9 @@ public class SubmissionService(
             PremiumEstimate = dto.PremiumEstimate,
             Description = dto.Description,
             AssignedToUserId = user.UserId,
+            AccountDisplayNameAtLink = account.StableDisplayName,
+            AccountStatusAtRead = account.Status,
+            AccountSurvivorId = account.MergedIntoAccountId,
             CreatedAt = now,
             CreatedByUserId = user.UserId,
             UpdatedAt = now,
@@ -456,6 +469,7 @@ public class SubmissionService(
     {
         var staleFlags = await submissionRepo.GetStaleFlagsAsync([submission.Id], ct);
         var completeness = await EvaluateCompletenessAsync(submission, ct);
+        var fallback = BuildAccountFallback(submission);
         var availableTransitions = WorkflowStateMachine.GetAvailableTransitions("Submission", submission.CurrentStatus)
             .Where(target => CanPerformTransition(user, submission.CurrentStatus, target))
             .ToList();
@@ -472,7 +486,10 @@ public class SubmissionService(
             submission.PremiumEstimate,
             submission.Description,
             submission.AssignedToUserId,
-            submission.Account.Name,
+            fallback.DisplayName,
+            fallback.Status,
+            fallback.SurvivorAccountId,
+            fallback.DisplayName,
             submission.Account.Region,
             submission.Account.Industry,
             submission.Broker.LegalName,
@@ -487,6 +504,22 @@ public class SubmissionService(
             submission.CreatedByUserId,
             submission.UpdatedAt,
             submission.UpdatedByUserId);
+    }
+
+    private static (string DisplayName, string Status, Guid? SurvivorAccountId) BuildAccountFallback(Submission submission)
+    {
+        var displayName = string.IsNullOrWhiteSpace(submission.AccountDisplayNameAtLink)
+            ? submission.Account.StableDisplayName
+            : submission.AccountDisplayNameAtLink;
+        if (string.IsNullOrWhiteSpace(displayName))
+            displayName = submission.Account.Name;
+
+        var status = string.IsNullOrWhiteSpace(submission.AccountStatusAtRead)
+            ? submission.Account.Status
+            : submission.AccountStatusAtRead;
+
+        var survivorAccountId = submission.AccountSurvivorId ?? submission.Account.MergedIntoAccountId;
+        return (displayName, status, survivorAccountId);
     }
 
     private static WorkflowTransitionRecordDto MapTransition(WorkflowTransition transition) => new(
@@ -533,6 +566,10 @@ public class SubmissionService(
         && (HasRole(user, "Admin")
             || HasRole(user, "DistributionManager")
             || HasRole(user, "DistributionUser"));
+
+    private static bool IsTerminalAccountState(string status) =>
+        string.Equals(status, AccountStatuses.Merged, StringComparison.Ordinal)
+        || string.Equals(status, AccountStatuses.Deleted, StringComparison.Ordinal);
 
     private static bool CanTransitionSubmission(ICurrentUserService user, Submission submission) =>
         CanReadSubmission(user, submission)

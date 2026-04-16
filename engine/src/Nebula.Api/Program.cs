@@ -121,6 +121,8 @@ builder.Services.AddInfrastructure();
 
 // Application services
 builder.Services.AddScoped<BrokerService>();
+builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<AccountContactService>();
 builder.Services.AddScoped<ContactService>();
 builder.Services.AddScoped<SubmissionService>();
 builder.Services.AddScoped<RenewalService>();
@@ -261,6 +263,7 @@ app.MapHealthChecks("/healthz").AllowAnonymous();
 // API endpoints
 app.MapAuthEndpoints();
 app.MapBrokerEndpoints();
+app.MapAccountEndpoints();
 app.MapContactEndpoints();
 app.MapReferenceDataEndpoints();
 app.MapSubmissionEndpoints();

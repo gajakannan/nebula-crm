@@ -6,6 +6,7 @@ import { ErrorFallback } from '@/components/ui/ErrorFallback';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { TextInput } from '@/components/ui/TextInput';
+import { AccountReference, AccountStatusBadge } from '@/features/accounts';
 import { useCurrentUser } from '@/features/auth';
 import {
   LINE_OF_BUSINESS_OPTIONS,
@@ -357,6 +358,7 @@ export default function RenewalsPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <RenewalStatusBadge status={renewal.currentStatus} />
                         <RenewalUrgencyBadge urgency={renewal.urgency} />
+                        <AccountStatusBadge status={renewal.accountStatus} />
                         <span className="rounded-full border border-surface-border bg-surface-card px-2 py-0.5 text-[11px] font-medium text-text-muted">
                           {renewal.policyNumber}
                         </span>
@@ -368,8 +370,17 @@ export default function RenewalsPage() {
                           state={{ returnTo: `/renewals${searchParams.toString() ? `?${searchParams.toString()}` : ''}` }}
                           className="text-lg font-semibold text-text-primary transition-colors hover:text-nebula-violet"
                         >
-                          {renewal.accountName}
+                          {renewal.policyNumber}
                         </Link>
+                        <div className="mt-1">
+                          <AccountReference
+                            accountId={renewal.accountId}
+                            displayName={renewal.accountDisplayName ?? renewal.accountName}
+                            status={renewal.accountStatus}
+                            survivorAccountId={renewal.accountSurvivorId}
+                            className="text-sm font-medium text-text-primary hover:text-nebula-violet"
+                          />
+                        </div>
                         <p className="mt-1 text-sm text-text-secondary">
                           {renewal.brokerName}
                           {renewal.brokerState ? ` · ${renewal.brokerState}` : ''}

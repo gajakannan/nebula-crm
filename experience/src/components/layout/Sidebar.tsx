@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   BriefcaseBusiness,
   RotateCwSquare,
+  Building2,
   Users,
   ClipboardList,
   PanelLeftClose,
@@ -15,6 +16,7 @@ import { useSidebar } from '@/hooks/useSidebar';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { label: 'Accounts', href: '/accounts', icon: Building2 },
   { label: 'Submissions', href: '/submissions', icon: BriefcaseBusiness },
   { label: 'Renewals', href: '/renewals', icon: RotateCwSquare },
   { label: 'Brokers', href: '/brokers', icon: Users },

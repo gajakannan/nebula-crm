@@ -1,11 +1,11 @@
 version: 0
 summary:
-  canonical_nodes: 266
+  canonical_nodes: 272
   features_mapped: 21
   stories_mapped: 90
   features_excluded: 12
   features_uncovered: 0
-  code_bindings: 94
+  code_bindings: 127
 coverage:
   mapped_feature_ids:
   - feature:F0001
@@ -381,14 +381,14 @@ freshness:
       source_hash: 18dd94da10d05f07
     workflow:account-lifecycle:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
-      - planning-mds/features/F0016-account-360-and-insured-management/feature-assembly-plan.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/feature-assembly-plan.md
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
       - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
       - planning-mds/api/nebula-api.yaml
       source_count: 5
-      last_modified: '2026-04-14'
-      source_hash: 6fda1e926ed4d906
+      last_modified: '2026-04-15'
+      source_hash: 067a2e4cf2987bd2
     capability:dashboard-home:
       source_paths:
       - planning-mds/features/archive/F0001-dashboard/README.md
@@ -760,182 +760,203 @@ freshness:
     endpoint:account-list:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-create:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-detail:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
       source_count: 3
-      last_modified: '2026-04-14'
-      source_hash: 118fbb608054fc06
+      last_modified: '2026-04-15'
+      source_hash: 01b8e72596869d9b
     endpoint:account-update:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-lifecycle:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/feature-assembly-plan.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/feature-assembly-plan.md
       - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
       - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
       source_count: 4
       last_modified: '2026-04-14'
-      source_hash: 4437ba0bfb57a52b
+      source_hash: 4dca15294083e0bf
     endpoint:account-merge:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/feature-assembly-plan.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/feature-assembly-plan.md
       - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
       source_count: 3
       last_modified: '2026-04-14'
-      source_hash: e20c458b81e9e36b
+      source_hash: 8111b6e88e550760
     endpoint:account-summary:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-contact-list:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-contact-create:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-contact-update:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-contact-delete:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-relationship-change:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-submissions:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-renewals:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-policies:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     endpoint:account-timeline:
       source_paths:
       - planning-mds/api/nebula-api.yaml
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: ca99c94cd9eb5ac2
+      last_modified: '2026-04-15'
+      source_hash: 0317179ecb30d52d
     ui_route:dashboard-home:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/DashboardPage.tsx
       source_count: 2
-      last_modified: '2026-04-11'
-      source_hash: df85e6ec46ce2003
+      last_modified: '2026-04-15'
+      source_hash: 5182db0a09627aa8
     ui_route:brokers-list:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/BrokerListPage.tsx
       source_count: 2
-      last_modified: '2026-04-11'
-      source_hash: 284f50270d863e57
+      last_modified: '2026-04-15'
+      source_hash: 896dc1629ddc9e6e
     ui_route:broker-create:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/CreateBrokerPage.tsx
       source_count: 2
-      last_modified: '2026-04-11'
-      source_hash: 50942a9dc3da130a
+      last_modified: '2026-04-15'
+      source_hash: 33f88da86e55ec50
     ui_route:broker-detail:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/BrokerDetailPage.tsx
       source_count: 2
-      last_modified: '2026-04-11'
-      source_hash: 1572ed6d79e26e9e
+      last_modified: '2026-04-15'
+      source_hash: 9fc31895fe64625b
+    ui_route:accounts-list:
+      source_paths:
+      - experience/src/App.tsx
+      - experience/src/pages/AccountsPage.tsx
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: 1f3d2761f2a07953
+    ui_route:account-create:
+      source_paths:
+      - experience/src/App.tsx
+      - experience/src/pages/CreateAccountPage.tsx
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: 35b8385f12fa8baf
+    ui_route:account-detail:
+      source_paths:
+      - experience/src/App.tsx
+      - experience/src/pages/AccountDetailPage.tsx
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: 11ef7bb6ab8ce097
     ui_route:submissions-list:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/SubmissionsPage.tsx
       source_count: 2
-      last_modified: '2026-04-11'
-      source_hash: f56a1ec1cd6c055e
+      last_modified: '2026-04-15'
+      source_hash: 28b6b2dd46697a15
     ui_route:submission-create:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/CreateSubmissionPage.tsx
       source_count: 2
-      last_modified: '2026-04-11'
-      source_hash: 0d2c415969a67abd
+      last_modified: '2026-04-15'
+      source_hash: 00c9f4a32b75d25a
     ui_route:submission-detail:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/SubmissionDetailPage.tsx
       source_count: 2
-      last_modified: '2026-04-11'
-      source_hash: bd45a07a70bc64fd
+      last_modified: '2026-04-15'
+      source_hash: cfb1d72b36997e2d
     ui_route:task-center:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/TaskCenterPage.tsx
       source_count: 2
-      last_modified: '2026-04-11'
-      source_hash: e7225c08962bf60a
+      last_modified: '2026-04-15'
+      source_hash: d0434bbd5abd8a72
     ui_route:login:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/LoginPage.tsx
       source_count: 2
-      last_modified: '2026-04-11'
-      source_hash: bc18797a98fa2343
+      last_modified: '2026-04-15'
+      source_hash: f957e80b1ad6cf80
     event:broker-created:
       source_paths:
       - planning-mds/features/archive/F0002-broker-relationship-management/README.md
@@ -1082,56 +1103,74 @@ freshness:
       source_count: 1
       last_modified: '2026-04-08'
       source_hash: f5d5b28e423a667b
+    migration:f0016-account-lifecycle:
+      source_paths:
+      - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414120000_F0016_AccountLifecycle.cs
+      source_count: 1
+      last_modified: '2026-04-15'
+      source_hash: bc6e8852aa475b29
+    migration:f0016-account-contacts-and-relationship-history:
+      source_paths:
+      - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414121000_F0016_AccountContactsAndRelationshipHistory.cs
+      source_count: 1
+      last_modified: '2026-04-15'
+      source_hash: e6f01f1d3ea687f5
+    migration:f0016-dependent-fallback-denormalization:
+      source_paths:
+      - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414122000_F0016_DependentFallbackDenormalization.cs
+      source_count: 1
+      last_modified: '2026-04-15'
+      source_hash: feabbd2e770f21ae
     role:distribution-user:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     role:distribution-manager:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     role:underwriter:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     role:relationship-manager:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     role:program-manager:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     role:admin:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     role:broker-user:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
       source_count: 3
-      last_modified: '2026-04-14'
-      source_hash: d14d5a5409ae38b6
+      last_modified: '2026-04-15'
+      source_hash: 1b17622d5502cce8
     role:external-user:
       source_paths:
       - planning-mds/security/authorization-matrix.md
@@ -1144,169 +1183,169 @@ freshness:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
       source_count: 3
-      last_modified: '2026-04-14'
-      source_hash: d14d5a5409ae38b6
+      last_modified: '2026-04-15'
+      source_hash: 1b17622d5502cce8
     policy_rule:broker-search:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
       source_count: 3
-      last_modified: '2026-04-14'
-      source_hash: d14d5a5409ae38b6
+      last_modified: '2026-04-15'
+      source_hash: 1b17622d5502cce8
     policy_rule:contact-read:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
       source_count: 3
-      last_modified: '2026-04-14'
-      source_hash: d14d5a5409ae38b6
+      last_modified: '2026-04-15'
+      source_hash: 1b17622d5502cce8
     policy_rule:renewal-read:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:renewal-create:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:renewal-transition:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:renewal-assign:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:dashboard-nudge-read:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
       source_count: 3
-      last_modified: '2026-04-14'
-      source_hash: d14d5a5409ae38b6
+      last_modified: '2026-04-15'
+      source_hash: 1b17622d5502cce8
     policy_rule:task-read:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
       source_count: 3
-      last_modified: '2026-04-14'
-      source_hash: d14d5a5409ae38b6
+      last_modified: '2026-04-15'
+      source_hash: 1b17622d5502cce8
     policy_rule:task-create:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:task-update:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:task-delete:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:user-search:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:timeline-event-read:
       source_paths:
       - planning-mds/security/policies/policy.csv
       - planning-mds/security/authorization-matrix.md
       - planning-mds/features/archive/F0009-authentication-and-role-based-login/BROKER-VISIBILITY-MATRIX.md
       source_count: 3
-      last_modified: '2026-04-14'
-      source_hash: d14d5a5409ae38b6
+      last_modified: '2026-04-15'
+      source_hash: 1b17622d5502cce8
     policy_rule:account-read:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
       source_count: 3
-      last_modified: '2026-04-14'
-      source_hash: c1182994966fecd6
+      last_modified: '2026-04-15'
+      source_hash: 657966fac2242e1d
     policy_rule:account-create:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:account-update:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:account-deactivate:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:account-reactivate:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:account-delete:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:account-merge:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       - planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
       source_count: 3
-      last_modified: '2026-04-14'
-      source_hash: bad0cb4b92c90ab4
+      last_modified: '2026-04-15'
+      source_hash: a9b24f29b5972b23
     policy_rule:account-contact-manage:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     policy_rule:account-relationship-change:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
       source_count: 2
-      last_modified: '2026-04-14'
-      source_hash: 2bdb2df015af632f
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
     evidence:workflow-state-machine-tests:
       source_paths:
       - engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
@@ -1317,8 +1356,8 @@ freshness:
       source_paths:
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 1
-      last_modified: '2026-04-11'
-      source_hash: 7f2dcac5d3127ea2
+      last_modified: '2026-04-15'
+      source_hash: 1be56d4edfae9788
     evidence:broker-list-pact-tests:
       source_paths:
       - engine/tests/Nebula.Tests/Contracts/BrokerListProviderPactTests.cs
@@ -1963,25 +2002,30 @@ freshness:
       source_hash: 054db46b3efa4e1a
     feature:F0016:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0001-account-list-with-search-and-filtering.md
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0002-create-account.md
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0003-account-detail-and-profile-edit.md
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0004-account-360-composition.md
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0005-account-contacts-management.md
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0006-account-relationships-broker-producer-territory.md
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0007-account-lifecycle-deactivate-reactivate-delete.md
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0008-account-merge-and-duplicate-handling.md
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0009-deleted-merged-account-fallback-contract.md
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0010-account-activity-timeline-and-audit.md
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0011-account-summary-projection.md
-      - planning-mds/features/F0016-account-360-and-insured-management/GETTING-STARTED.md
-      - planning-mds/features/F0016-account-360-and-insured-management/PRD.md
-      - planning-mds/features/F0016-account-360-and-insured-management/README.md
-      - planning-mds/features/F0016-account-360-and-insured-management/STATUS.md
-      - planning-mds/features/F0016-account-360-and-insured-management/feature-assembly-plan.md
-      source_count: 16
-      last_modified: '2026-04-14'
-      source_hash: d0b27301db22dfe2
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-ARCHITECT-REVIEW.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-CODE-REVIEW-REPORT.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-DEVOPS-VALIDATION.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-QE-REPORT.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0001-account-list-with-search-and-filtering.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0002-create-account.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0003-account-detail-and-profile-edit.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0004-account-360-composition.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0005-account-contacts-management.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0006-account-relationships-broker-producer-territory.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0007-account-lifecycle-deactivate-reactivate-delete.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0008-account-merge-and-duplicate-handling.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0009-deleted-merged-account-fallback-contract.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0010-account-activity-timeline-and-audit.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0011-account-summary-projection.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-SECURITY-REVIEW-REPORT.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/GETTING-STARTED.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/PRD.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/README.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/STATUS.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/feature-assembly-plan.md
+      source_count: 21
+      last_modified: '2026-04-15'
+      source_hash: 0fb17f41ce72fcd5
     feature:F0019:
       source_paths:
       - planning-mds/features/F0019-submission-quoting-proposal-and-approval/GETTING-STARTED.md
@@ -2577,70 +2621,70 @@ freshness:
       source_hash: d4e5a7c01c281ed6
     story:F0016-S0001:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0001-account-list-with-search-and-filtering.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0001-account-list-with-search-and-filtering.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: 27240dc55d5cfecc
+      source_hash: fcffde0b55fbd306
     story:F0016-S0002:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0002-create-account.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0002-create-account.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: 0a30062786e99a14
+      source_hash: 816ce3f8be637a2d
     story:F0016-S0003:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0003-account-detail-and-profile-edit.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0003-account-detail-and-profile-edit.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: 44cfbdc1cabfa3dd
+      source_hash: d489019676db7a95
     story:F0016-S0004:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0004-account-360-composition.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0004-account-360-composition.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: 1e2e481f6b5715c2
+      source_hash: 00e083e1174c95ce
     story:F0016-S0005:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0005-account-contacts-management.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0005-account-contacts-management.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: f0ccd209953185ac
+      source_hash: c58ed69dd9dd19e0
     story:F0016-S0006:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0006-account-relationships-broker-producer-territory.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0006-account-relationships-broker-producer-territory.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: 8405b37ea0213664
+      source_hash: df17d870c0024192
     story:F0016-S0007:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0007-account-lifecycle-deactivate-reactivate-delete.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0007-account-lifecycle-deactivate-reactivate-delete.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: 59866ac2c9ee3c17
+      source_hash: d6c776fb4b0e6508
     story:F0016-S0008:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0008-account-merge-and-duplicate-handling.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0008-account-merge-and-duplicate-handling.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: 73c01636f911d24f
+      source_hash: f1cd89e25f1b68c2
     story:F0016-S0009:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0009-deleted-merged-account-fallback-contract.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0009-deleted-merged-account-fallback-contract.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: e242d8945cc43096
+      source_hash: 2fa7c7f2ccb1178a
     story:F0016-S0010:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0010-account-activity-timeline-and-audit.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0010-account-activity-timeline-and-audit.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: b8c7ce7542a048a9
+      source_hash: ae78d279a8629013
     story:F0016-S0011:
       source_paths:
-      - planning-mds/features/F0016-account-360-and-insured-management/F0016-S0011-account-summary-projection.md
+      - planning-mds/features/archive/F0016-account-360-and-insured-management/F0016-S0011-account-summary-projection.md
       source_count: 1
       last_modified: '2026-04-14'
-      source_hash: 1478b34698567a84
+      source_hash: ce3401a0008ab779
   code_bindings:
     entity:submission:
       source_paths:
@@ -2689,8 +2733,8 @@ freshness:
       - experience/src/pages/tests/SubmissionDetailPage.integration.test.tsx
       - experience/src/pages/tests/CreateSubmissionPage.integration.test.tsx
       source_count: 44
-      last_modified: '2026-04-12'
-      source_hash: 85b44e7147c79672
+      last_modified: '2026-04-15'
+      source_hash: b5991283886193a7
     entity:renewal:
       source_paths:
       - engine/src/Nebula.Domain/Entities/Renewal.cs
@@ -2725,8 +2769,8 @@ freshness:
       - engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 31
-      last_modified: '2026-04-11'
-      source_hash: f4e89342dc5b70ee
+      last_modified: '2026-04-15'
+      source_hash: 9f1ada08f82495b9
     entity:broker:
       source_paths:
       - engine/src/Nebula.Domain/Entities/Broker.cs
@@ -2892,8 +2936,8 @@ freshness:
       - engine/tests/Nebula.Tests/Unit/WorkflowServiceTests.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 12
-      last_modified: '2026-04-11'
-      source_hash: 220ba8ca7517dff8
+      last_modified: '2026-04-15'
+      source_hash: 2b1708c3ef1b8911
     workflow:submission:
       source_paths:
       - engine/src/Nebula.Application/Services/WorkflowStateMachine.cs
@@ -2920,8 +2964,8 @@ freshness:
       - experience/src/features/submissions/lib/validation.ts
       - experience/src/features/submissions/types.ts
       source_count: 23
-      last_modified: '2026-04-11'
-      source_hash: 7877cf7882bddfec
+      last_modified: '2026-04-15'
+      source_hash: ed0eac24e13ef5a4
     workflow:renewal:
       source_paths:
       - engine/src/Nebula.Application/Services/WorkflowStateMachine.cs
@@ -2932,8 +2976,8 @@ freshness:
       - engine/tests/Nebula.Tests/Unit/WorkflowServiceTests.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 7
-      last_modified: '2026-04-11'
-      source_hash: 97ffb6a88bdd46ed
+      last_modified: '2026-04-15'
+      source_hash: 4a8b3136e362f566
     capability:authorization-enforcement:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -2946,8 +2990,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/DashboardReadAuthorizationTests.cs
       - engine/tests/Nebula.Tests/Integration/BrokerUserAccessTests.cs
       source_count: 9
-      last_modified: '2026-03-31'
-      source_hash: d83731395e788800
+      last_modified: '2026-04-15'
+      source_hash: a4ce1f3e28ebcd0c
     capability:dashboard-home:
       source_paths:
       - engine/src/Nebula.Application/DTOs/DashboardKpisDto.cs
@@ -3025,8 +3069,8 @@ freshness:
       - experience/src/features/opportunities/types.ts
       - experience/src/pages/tests/DashboardPage.integration.test.tsx
       source_count: 74
-      last_modified: '2026-04-11'
-      source_hash: 622943616a121549
+      last_modified: '2026-04-15'
+      source_hash: 6b881be73ab528b8
     capability:task-center:
       source_paths:
       - engine/src/Nebula.Application/DTOs/TaskBrokerUserDto.cs
@@ -3120,8 +3164,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
       - engine/tests/Nebula.Tests/Unit/CasbinAuthorizationServiceTests.cs
       source_count: 9
-      last_modified: '2026-04-14'
-      source_hash: daaa2b08d2342e19
+      last_modified: '2026-04-15'
+      source_hash: f21468f59cc23515
     role:distribution-manager:
       source_paths:
       - planning-mds/security/authorization-matrix.md
@@ -3134,8 +3178,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
       - engine/tests/Nebula.Tests/Unit/CasbinAuthorizationServiceTests.cs
       source_count: 9
-      last_modified: '2026-04-14'
-      source_hash: daaa2b08d2342e19
+      last_modified: '2026-04-15'
+      source_hash: f21468f59cc23515
     role:underwriter:
       source_paths:
       - planning-mds/security/authorization-matrix.md
@@ -3148,8 +3192,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
       - engine/tests/Nebula.Tests/Unit/CasbinAuthorizationServiceTests.cs
       source_count: 9
-      last_modified: '2026-04-14'
-      source_hash: daaa2b08d2342e19
+      last_modified: '2026-04-15'
+      source_hash: f21468f59cc23515
     role:relationship-manager:
       source_paths:
       - planning-mds/security/authorization-matrix.md
@@ -3162,8 +3206,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
       - engine/tests/Nebula.Tests/Unit/CasbinAuthorizationServiceTests.cs
       source_count: 9
-      last_modified: '2026-04-14'
-      source_hash: daaa2b08d2342e19
+      last_modified: '2026-04-15'
+      source_hash: f21468f59cc23515
     role:program-manager:
       source_paths:
       - planning-mds/security/authorization-matrix.md
@@ -3176,8 +3220,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
       - engine/tests/Nebula.Tests/Unit/CasbinAuthorizationServiceTests.cs
       source_count: 9
-      last_modified: '2026-04-14'
-      source_hash: daaa2b08d2342e19
+      last_modified: '2026-04-15'
+      source_hash: f21468f59cc23515
     role:admin:
       source_paths:
       - planning-mds/security/authorization-matrix.md
@@ -3190,8 +3234,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
       - engine/tests/Nebula.Tests/Unit/CasbinAuthorizationServiceTests.cs
       source_count: 9
-      last_modified: '2026-04-14'
-      source_hash: daaa2b08d2342e19
+      last_modified: '2026-04-15'
+      source_hash: f21468f59cc23515
     role:broker-user:
       source_paths:
       - planning-mds/security/authorization-matrix.md
@@ -3208,8 +3252,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/BrokerUserAccessTests.cs
       - engine/tests/Nebula.Tests/Unit/BrokerScopeResolverTests/BrokerScopeResolverTests.cs
       source_count: 13
-      last_modified: '2026-04-14'
-      source_hash: 52dabe04cd274564
+      last_modified: '2026-04-15'
+      source_hash: 799211f97621cafc
     role:external-user:
       source_paths:
       - planning-mds/security/authorization-matrix.md
@@ -3236,8 +3280,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/BrokerEndpointTests.cs
       - engine/tests/Nebula.Tests/Integration/BrokerUserAccessTests.cs
       source_count: 13
-      last_modified: '2026-04-14'
-      source_hash: ae6fe2c06ab7a395
+      last_modified: '2026-04-15'
+      source_hash: 025c8a7eacbad1ff
     policy_rule:broker-search:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3253,8 +3297,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/BrokerAuthorizationTests.cs
       - engine/tests/Nebula.Tests/Integration/BrokerUserAccessTests.cs
       source_count: 12
-      last_modified: '2026-04-14'
-      source_hash: de08f4d41d49c140
+      last_modified: '2026-04-15'
+      source_hash: 68159df4b227f266
     policy_rule:contact-read:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3271,8 +3315,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/BrokerAuthorizationTests.cs
       - engine/tests/Nebula.Tests/Integration/BrokerUserAccessTests.cs
       source_count: 13
-      last_modified: '2026-04-14'
-      source_hash: 73feb8dadc13bd48
+      last_modified: '2026-04-15'
+      source_hash: 137fb569caf434e8
     policy_rule:renewal-read:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3288,8 +3332,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       - engine/tests/Nebula.Tests/Unit/WorkflowServiceTests.cs
       source_count: 12
-      last_modified: '2026-04-14'
-      source_hash: e65cf281727d0d4a
+      last_modified: '2026-04-15'
+      source_hash: c4201726f6e9e4bf
     policy_rule:renewal-create:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3306,8 +3350,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       - engine/tests/Nebula.Tests/Unit/WorkflowServiceTests.cs
       source_count: 13
-      last_modified: '2026-04-14'
-      source_hash: 240f849145549634
+      last_modified: '2026-04-15'
+      source_hash: 4bae86ac2538761f
     policy_rule:renewal-transition:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3324,8 +3368,8 @@ freshness:
       - engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
       - engine/tests/Nebula.Tests/Unit/WorkflowServiceTests.cs
       source_count: 13
-      last_modified: '2026-04-14'
-      source_hash: 1b4ecb1f2fed9b01
+      last_modified: '2026-04-15'
+      source_hash: 54dc95fc879fb816
     policy_rule:renewal-assign:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3341,8 +3385,8 @@ freshness:
       - engine/src/Nebula.Api/Endpoints/UserEndpoints.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 12
-      last_modified: '2026-04-14'
-      source_hash: 98f6dd97fec73e5a
+      last_modified: '2026-04-15'
+      source_hash: f713f946ac972e1f
     policy_rule:dashboard-nudge-read:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3360,8 +3404,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/DashboardScopeFilteringTests.cs
       - engine/tests/Nebula.Tests/Integration/BrokerUserAccessTests.cs
       source_count: 14
-      last_modified: '2026-04-14'
-      source_hash: f28427a67e84efd9
+      last_modified: '2026-04-15'
+      source_hash: 03a443bce5e64726
     policy_rule:task-read:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3378,8 +3422,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/TaskEndpointTests.cs
       - engine/tests/Nebula.Tests/Integration/BrokerUserAccessTests.cs
       source_count: 13
-      last_modified: '2026-04-14'
-      source_hash: eee33d14c44dea4f
+      last_modified: '2026-04-15'
+      source_hash: d31bad9226f99ef8
     policy_rule:task-create:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3394,8 +3438,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/TaskEndpointTests.cs
       - engine/tests/Nebula.Tests/Unit/TaskServiceTests.cs
       source_count: 11
-      last_modified: '2026-04-14'
-      source_hash: ea7af7e1f2d88c43
+      last_modified: '2026-04-15'
+      source_hash: 3b9b1d578ce9edc0
     policy_rule:task-update:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3410,8 +3454,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/TaskEndpointTests.cs
       - engine/tests/Nebula.Tests/Unit/TaskServiceTests.cs
       source_count: 11
-      last_modified: '2026-04-14'
-      source_hash: 442f01d4e066b7b8
+      last_modified: '2026-04-15'
+      source_hash: d2c7639e7d3ce77d
     policy_rule:task-delete:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3425,8 +3469,8 @@ freshness:
       - engine/tests/Nebula.Tests/Integration/TaskEndpointTests.cs
       - engine/tests/Nebula.Tests/Unit/TaskServiceTests.cs
       source_count: 10
-      last_modified: '2026-04-14'
-      source_hash: 402c151f171dc9bb
+      last_modified: '2026-04-15'
+      source_hash: ebe1c144c166256e
     policy_rule:user-search:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3441,8 +3485,8 @@ freshness:
       - engine/src/Nebula.Api/Endpoints/UserEndpoints.cs
       - engine/src/Nebula.Infrastructure/Repositories/UserProfileRepository.cs
       source_count: 11
-      last_modified: '2026-04-14'
-      source_hash: 8d1d86dec432dc12
+      last_modified: '2026-04-15'
+      source_hash: 9e463aee948b93ec
     policy_rule:timeline-event-read:
       source_paths:
       - planning-mds/security/policies/model.conf
@@ -3459,8 +3503,8 @@ freshness:
       - engine/src/Nebula.Api/Endpoints/TimelineEndpoints.cs
       - engine/src/Nebula.Infrastructure/Repositories/TimelineRepository.cs
       source_count: 13
-      last_modified: '2026-04-14'
-      source_hash: 168238883894fc37
+      last_modified: '2026-04-15'
+      source_hash: b04a031c7bb25881
     endpoint:dashboard-kpis:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/DashboardEndpoints.cs
@@ -3478,8 +3522,8 @@ freshness:
       - experience/src/features/kpis/index.ts
       - experience/src/features/kpis/types.ts
       source_count: 14
-      last_modified: '2026-04-11'
-      source_hash: e585bc16dd5370f3
+      last_modified: '2026-04-15'
+      source_hash: 7686a323ff9b4870
     endpoint:dashboard-opportunity-flow:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/DashboardEndpoints.cs
@@ -3537,8 +3581,8 @@ freshness:
       - experience/src/features/opportunities/tests/OpportunityVisualizations.test.tsx
       - experience/src/features/opportunities/types.ts
       source_count: 54
-      last_modified: '2026-04-11'
-      source_hash: 059dd0f0c76ebe06
+      last_modified: '2026-04-15'
+      source_hash: 09519d306e33a646
     endpoint:dashboard-nudges:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/DashboardEndpoints.cs
@@ -3554,8 +3598,8 @@ freshness:
       - experience/src/features/nudges/index.ts
       - experience/src/features/nudges/types.ts
       source_count: 12
-      last_modified: '2026-04-11'
-      source_hash: c5e2ff026eaba720
+      last_modified: '2026-04-15'
+      source_hash: 2a06a9dc00a041a1
     endpoint:broker-list:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/BrokerEndpoints.cs
@@ -3605,8 +3649,8 @@ freshness:
       - experience/src/pages/SubmissionsPage.tsx
       - experience/src/pages/tests/SubmissionsPage.integration.test.tsx
       source_count: 7
-      last_modified: '2026-04-11'
-      source_hash: 6a346cf8edbe4bc4
+      last_modified: '2026-04-15'
+      source_hash: 5ec9ae407263d102
     endpoint:submission-detail:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/SubmissionEndpoints.cs
@@ -3616,8 +3660,8 @@ freshness:
       - experience/src/pages/SubmissionDetailPage.tsx
       - experience/src/pages/tests/SubmissionDetailPage.integration.test.tsx
       source_count: 6
-      last_modified: '2026-04-12'
-      source_hash: 3e6ebc96a93bec0b
+      last_modified: '2026-04-15'
+      source_hash: 04733e60656ead68
     endpoint:submission-create:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/SubmissionEndpoints.cs
@@ -3627,8 +3671,8 @@ freshness:
       - experience/src/pages/CreateSubmissionPage.tsx
       - experience/src/pages/tests/CreateSubmissionPage.integration.test.tsx
       source_count: 6
-      last_modified: '2026-04-11'
-      source_hash: 7f50a077d9aceeb7
+      last_modified: '2026-04-15'
+      source_hash: db38982cc61ebec5
     endpoint:submission-transition:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/SubmissionEndpoints.cs
@@ -3638,8 +3682,8 @@ freshness:
       - engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 6
-      last_modified: '2026-04-11'
-      source_hash: 17ff23a9d110f1c9
+      last_modified: '2026-04-15'
+      source_hash: 63efc1192935dabf
     endpoint:submission-assignment:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/SubmissionEndpoints.cs
@@ -3647,8 +3691,8 @@ freshness:
       - engine/src/Nebula.Application/Validators/SubmissionAssignmentValidator.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 4
-      last_modified: '2026-04-11'
-      source_hash: 9ea38928f31d546e
+      last_modified: '2026-04-15'
+      source_hash: f13dda96ac03340b
     endpoint:submission-timeline:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/SubmissionEndpoints.cs
@@ -3662,8 +3706,8 @@ freshness:
       - experience/src/features/timeline/hooks/useTimelineEvents.ts
       - experience/src/features/timeline/index.ts
       source_count: 10
-      last_modified: '2026-04-11'
-      source_hash: 019644bc319a4a50
+      last_modified: '2026-04-15'
+      source_hash: 00a7d23781ef9c6c
     endpoint:renewal-list:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
@@ -3679,8 +3723,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Repositories/RenewalRepository.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 12
-      last_modified: '2026-04-11'
-      source_hash: 369b225fa2870968
+      last_modified: '2026-04-15'
+      source_hash: 40058785232cca02
     endpoint:renewal-detail:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
@@ -3688,8 +3732,8 @@ freshness:
       - engine/src/Nebula.Application/DTOs/RenewalDto.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 4
-      last_modified: '2026-04-11'
-      source_hash: 915887a597c80d81
+      last_modified: '2026-04-15'
+      source_hash: ef8a7b5ec442bcdc
     endpoint:renewal-create:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
@@ -3706,8 +3750,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Repositories/RenewalRepository.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 13
-      last_modified: '2026-04-11'
-      source_hash: 08b6af0c69b35449
+      last_modified: '2026-04-15'
+      source_hash: 39456701a6212544
     endpoint:renewal-transition:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
@@ -3720,8 +3764,8 @@ freshness:
       - engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 9
-      last_modified: '2026-04-11'
-      source_hash: ce4c3ad6faad1687
+      last_modified: '2026-04-15'
+      source_hash: ca6e0a4aad8a5d8d
     endpoint:renewal-assignment:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
@@ -3739,16 +3783,16 @@ freshness:
       - engine/src/Nebula.Application/Validators/RenewalUpdateValidator.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 14
-      last_modified: '2026-04-11'
-      source_hash: 38fd30c2091c9b22
+      last_modified: '2026-04-15'
+      source_hash: e976df392e00c01e
     endpoint:renewal-timeline:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
       - engine/src/Nebula.Application/Services/RenewalService.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 3
-      last_modified: '2026-04-11'
-      source_hash: 5cc316b6b519b33c
+      last_modified: '2026-04-15'
+      source_hash: fa8416f6c50d49d9
     endpoint:task-my-list:
       source_paths:
       - engine/src/Nebula.Api/Endpoints/TaskEndpoints.cs
@@ -3811,8 +3855,8 @@ freshness:
       - experience/src/pages/DashboardPage.tsx
       - experience/src/pages/tests/DashboardPage.integration.test.tsx
       source_count: 3
-      last_modified: '2026-04-11'
-      source_hash: 7ef3c4f72807b14c
+      last_modified: '2026-04-15'
+      source_hash: 9c28543d5d3cd691
     ui_route:brokers-list:
       source_paths:
       - experience/src/App.tsx
@@ -3820,55 +3864,55 @@ freshness:
       - experience/src/features/brokers/tests/BrokerListPage.a11y.test.tsx
       - experience/src/features/brokers/tests/BrokerListPage.integration.test.tsx
       source_count: 4
-      last_modified: '2026-04-11'
-      source_hash: 9944bd3f6038f1d7
+      last_modified: '2026-04-15'
+      source_hash: 9d98a8322f31c9ab
     ui_route:broker-create:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/CreateBrokerPage.tsx
       - experience/src/pages/tests/CreateBrokerPage.integration.test.tsx
       source_count: 3
-      last_modified: '2026-04-11'
-      source_hash: 8f18963076e4f694
+      last_modified: '2026-04-15'
+      source_hash: f51012284c8b70a3
     ui_route:broker-detail:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/BrokerDetailPage.tsx
       - experience/src/pages/tests/BrokerDetailPage.integration.test.tsx
       source_count: 3
-      last_modified: '2026-04-11'
-      source_hash: e34d9265830083ef
+      last_modified: '2026-04-15'
+      source_hash: 0d7a902f85b6f8b1
     ui_route:submissions-list:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/SubmissionsPage.tsx
       - experience/src/pages/tests/SubmissionsPage.integration.test.tsx
       source_count: 3
-      last_modified: '2026-04-11'
-      source_hash: 595c2107a74c7757
+      last_modified: '2026-04-15'
+      source_hash: 75933c8817eb452d
     ui_route:submission-create:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/CreateSubmissionPage.tsx
       - experience/src/pages/tests/CreateSubmissionPage.integration.test.tsx
       source_count: 3
-      last_modified: '2026-04-11'
-      source_hash: ee47d56edc17dfe8
+      last_modified: '2026-04-15'
+      source_hash: 537e85313beb5644
     ui_route:submission-detail:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/SubmissionDetailPage.tsx
       - experience/src/pages/tests/SubmissionDetailPage.integration.test.tsx
       source_count: 3
-      last_modified: '2026-04-12'
-      source_hash: 03a7a2e5ec98a01e
+      last_modified: '2026-04-15'
+      source_hash: 659b7d23c374e81f
     ui_route:task-center:
       source_paths:
       - experience/src/App.tsx
       - experience/src/pages/TaskCenterPage.tsx
       source_count: 2
-      last_modified: '2026-04-11'
-      source_hash: e7225c08962bf60a
+      last_modified: '2026-04-15'
+      source_hash: d0434bbd5abd8a72
     ui_route:login:
       source_paths:
       - experience/src/App.tsx
@@ -3887,8 +3931,8 @@ freshness:
       - experience/src/features/auth/useCurrentUser.ts
       - experience/src/features/auth/useSessionTeardown.ts
       source_count: 15
-      last_modified: '2026-04-11'
-      source_hash: 64620fdb6ec22e12
+      last_modified: '2026-04-15'
+      source_hash: a2c65de30c389b70
     event:broker-created:
       source_paths:
       - engine/src/Nebula.Application/Services/BrokerService.cs
@@ -3926,8 +3970,8 @@ freshness:
       - engine/src/Nebula.Domain/Entities/WorkflowTransition.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 4
-      last_modified: '2026-04-11'
-      source_hash: 889ec8f8e0f5a5f8
+      last_modified: '2026-04-15'
+      source_hash: 9ecf2ed8ddfe67b7
     event:submission-transitioned:
       source_paths:
       - engine/src/Nebula.Application/Services/SubmissionService.cs
@@ -3937,8 +3981,8 @@ freshness:
       - engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 6
-      last_modified: '2026-04-11'
-      source_hash: 8e37b78776143b14
+      last_modified: '2026-04-15'
+      source_hash: d9aef221346d8efa
     event:task-created:
       source_paths:
       - engine/src/Nebula.Application/Services/TaskService.cs
@@ -3964,8 +4008,8 @@ freshness:
       - engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 6
-      last_modified: '2026-04-11'
-      source_hash: 33f5c50b258c41a6
+      last_modified: '2026-04-15'
+      source_hash: c3430bc744af4165
     config_key:authentication-authority:
       source_paths:
       - planning-mds/architecture/decisions/ADR-Authentication-Strategy.md
@@ -3973,16 +4017,16 @@ freshness:
       - engine/src/Nebula.Api/Program.cs
       - engine/src/Nebula.Api/Endpoints/AuthEndpoints.cs
       source_count: 4
-      last_modified: '2026-03-28'
-      source_hash: 020e0698aae1156b
+      last_modified: '2026-04-15'
+      source_hash: d5b78635dd549b27
     config_key:authentication-audience:
       source_paths:
       - planning-mds/architecture/decisions/ADR-Authentication-Strategy.md
       - planning-mds/features/archive/F0005-idp-migration/F0005-S0002-claims-normalization-backend.md
       - engine/src/Nebula.Api/Program.cs
       source_count: 3
-      last_modified: '2026-03-28'
-      source_hash: 339ce543bcbef132
+      last_modified: '2026-04-15'
+      source_hash: e2d5ee4fbd6f9b03
     config_key:oidc-authority:
       source_paths:
       - planning-mds/features/archive/F0005-idp-migration/F0005-S0003-frontend-oidc-flow.md
@@ -4027,8 +4071,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260316014518_F0013_AddLineOfBusinessAndWorkflowSlaThresholds.cs
       - experience/src/features/opportunities/components/StageNodeStoryPanel.tsx
       source_count: 11
-      last_modified: '2026-04-14'
-      source_hash: 991861d9eddd7ec9
+      last_modified: '2026-04-15'
+      source_hash: 6ce493c860981faf
     config_key:published-configuration-sets:
       source_paths:
       - planning-mds/architecture/decisions/ADR-016-published-operational-configuration-governance.md
@@ -4074,8 +4118,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Persistence/Migrations/AppDbContextModelSnapshot.cs
       - engine/src/Nebula.Infrastructure/Persistence/Configurations/SubmissionConfiguration.cs
       source_count: 3
-      last_modified: '2026-04-11'
-      source_hash: 28459b059b57fe4c
+      last_modified: '2026-04-15'
+      source_hash: ae74eba34b360731
     migration:f0007-renewal-workflow-states-reconcile:
       source_paths:
       - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260407151358_F0007_ReconcileRenewalWorkflowStates.cs
@@ -4090,8 +4134,8 @@ freshness:
       - engine/src/Nebula.Infrastructure/Persistence/Migrations/AppDbContextModelSnapshot.cs
       - engine/src/Nebula.Infrastructure/Persistence/Configurations/RenewalConfiguration.cs
       source_count: 3
-      last_modified: '2026-04-11'
-      source_hash: 72ee94a6dc435b99
+      last_modified: '2026-04-15'
+      source_hash: 73d7406074f32d5f
     evidence:workflow-state-machine-tests:
       source_paths:
       - engine/tests/Nebula.Tests/Unit/WorkflowStateMachineTests.cs
@@ -4102,8 +4146,8 @@ freshness:
       source_paths:
       - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
       source_count: 1
-      last_modified: '2026-04-11'
-      source_hash: 7f2dcac5d3127ea2
+      last_modified: '2026-04-15'
+      source_hash: 1be56d4edfae9788
     evidence:broker-list-pact-tests:
       source_paths:
       - engine/tests/Nebula.Tests/Contracts/BrokerListProviderPactTests.cs
@@ -4122,3 +4166,514 @@ freshness:
       source_count: 1
       last_modified: '2026-04-08'
       source_hash: b0ca0f9a95e73bb5
+    entity:account:
+      source_paths:
+      - engine/src/Nebula.Domain/Entities/Account.cs
+      - engine/src/Nebula.Domain/Entities/AccountContact.cs
+      - engine/src/Nebula.Domain/Entities/AccountRelationshipHistory.cs
+      - engine/src/Nebula.Domain/Workflow/AccountLifecycleStateMachine.cs
+      - engine/src/Nebula.Application/DTOs/AccountContactDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountContactRequestDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountCreateRequestDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountLifecycleRequestDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountListItemDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountListQuery.cs
+      - engine/src/Nebula.Application/DTOs/AccountMergeRequestDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountPolicyListItemDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountReferenceDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountRelationshipRequestDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountSummaryDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountSummaryProjection.cs
+      - engine/src/Nebula.Application/DTOs/AccountUpdateRequestDto.cs
+      - engine/src/Nebula.Application/Interfaces/IAccountContactRepository.cs
+      - engine/src/Nebula.Application/Interfaces/IAccountRelationshipHistoryRepository.cs
+      - engine/src/Nebula.Application/Interfaces/IAccountRepository.cs
+      - engine/src/Nebula.Application/Services/AccountContactService.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Validators/AccountContactRequestValidator.cs
+      - engine/src/Nebula.Application/Validators/AccountCreateValidator.cs
+      - engine/src/Nebula.Application/Validators/AccountLifecycleValidator.cs
+      - engine/src/Nebula.Application/Validators/AccountMergeValidator.cs
+      - engine/src/Nebula.Application/Validators/AccountRelationshipRequestValidator.cs
+      - engine/src/Nebula.Application/Validators/AccountUpdateValidator.cs
+      - engine/src/Nebula.Application/Services/SubmissionService.cs
+      - engine/src/Nebula.Application/Services/RenewalService.cs
+      - engine/src/Nebula.Infrastructure/Repositories/AccountContactRepository.cs
+      - engine/src/Nebula.Infrastructure/Repositories/AccountRelationshipHistoryRepository.cs
+      - engine/src/Nebula.Infrastructure/Repositories/AccountRepository.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Configurations/AccountConfiguration.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Configurations/AccountContactConfiguration.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Configurations/AccountRelationshipHistoryConfiguration.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414120000_F0016_AccountLifecycle.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414121000_F0016_AccountContactsAndRelationshipHistory.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414122000_F0016_DependentFallbackDenormalization.cs
+      - engine/src/Nebula.Infrastructure/Persistence/DevSeedData.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Api/Endpoints/SubmissionEndpoints.cs
+      - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
+      - engine/tests/Nebula.Tests/Integration/DashboardScopeFilteringTests.cs
+      - engine/tests/Nebula.Tests/Integration/NudgePriorityTests.cs
+      - experience/src/App.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      - experience/src/pages/AccountsPage.tsx
+      - experience/src/pages/CreateAccountPage.tsx
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/pages/SubmissionsPage.tsx
+      - experience/src/pages/SubmissionDetailPage.tsx
+      - experience/src/pages/RenewalsPage.tsx
+      - experience/src/pages/RenewalDetailPage.tsx
+      source_count: 60
+      last_modified: '2026-04-15'
+      source_hash: 8f9f84cbcb8b8aac
+    workflow:account-lifecycle:
+      source_paths:
+      - engine/src/Nebula.Domain/Workflow/AccountLifecycleStateMachine.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      source_count: 5
+      last_modified: '2026-04-15'
+      source_hash: c9485e8f46b85b58
+    policy_rule:account-read:
+      source_paths:
+      - planning-mds/security/policies/model.conf
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - engine/src/Nebula.Application/Interfaces/IAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/CasbinAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Interfaces/IAccountRepository.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Infrastructure/Repositories/AccountRepository.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      source_count: 11
+      last_modified: '2026-04-15'
+      source_hash: 7dc5499c2d10baa7
+    policy_rule:account-create:
+      source_paths:
+      - planning-mds/security/policies/model.conf
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - engine/src/Nebula.Application/Interfaces/IAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/CasbinAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Validators/AccountCreateValidator.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      source_count: 10
+      last_modified: '2026-04-15'
+      source_hash: 870e862ada45c972
+    policy_rule:account-update:
+      source_paths:
+      - planning-mds/security/policies/model.conf
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - engine/src/Nebula.Application/Interfaces/IAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/CasbinAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Validators/AccountUpdateValidator.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      source_count: 10
+      last_modified: '2026-04-15'
+      source_hash: 61b4c41fdc485471
+    policy_rule:account-deactivate:
+      source_paths:
+      - planning-mds/security/policies/model.conf
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - engine/src/Nebula.Application/Interfaces/IAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/CasbinAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Domain/Workflow/AccountLifecycleStateMachine.cs
+      - engine/src/Nebula.Application/Validators/AccountLifecycleValidator.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      source_count: 11
+      last_modified: '2026-04-15'
+      source_hash: 942a276c2ebc31d1
+    policy_rule:account-reactivate:
+      source_paths:
+      - planning-mds/security/policies/model.conf
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - engine/src/Nebula.Application/Interfaces/IAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/CasbinAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Domain/Workflow/AccountLifecycleStateMachine.cs
+      - engine/src/Nebula.Application/Validators/AccountLifecycleValidator.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      source_count: 11
+      last_modified: '2026-04-15'
+      source_hash: 942a276c2ebc31d1
+    policy_rule:account-delete:
+      source_paths:
+      - planning-mds/security/policies/model.conf
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - engine/src/Nebula.Application/Interfaces/IAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/CasbinAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Domain/Workflow/AccountLifecycleStateMachine.cs
+      - engine/src/Nebula.Application/Validators/AccountLifecycleValidator.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      source_count: 11
+      last_modified: '2026-04-15'
+      source_hash: 942a276c2ebc31d1
+    policy_rule:account-merge:
+      source_paths:
+      - planning-mds/security/policies/model.conf
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - engine/src/Nebula.Application/Interfaces/IAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/CasbinAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Validators/AccountMergeValidator.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      source_count: 10
+      last_modified: '2026-04-15'
+      source_hash: 3b1d8f3ab413e1ac
+    policy_rule:account-contact-manage:
+      source_paths:
+      - planning-mds/security/policies/model.conf
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - engine/src/Nebula.Application/Interfaces/IAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/CasbinAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
+      - engine/src/Nebula.Application/Services/AccountContactService.cs
+      - engine/src/Nebula.Application/Validators/AccountContactRequestValidator.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      source_count: 10
+      last_modified: '2026-04-15'
+      source_hash: 6e6090477aac6dd1
+    policy_rule:account-relationship-change:
+      source_paths:
+      - planning-mds/security/policies/model.conf
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      - engine/src/Nebula.Application/Interfaces/IAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/CasbinAuthorizationService.cs
+      - engine/src/Nebula.Infrastructure/Authorization/PolicyAuthorizationService.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Validators/AccountRelationshipRequestValidator.cs
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      source_count: 10
+      last_modified: '2026-04-15'
+      source_hash: 4d53c9a3106d8c2c
+    endpoint:account-list:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/DTOs/AccountListItemDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountListQuery.cs
+      - engine/src/Nebula.Infrastructure/Repositories/AccountRepository.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/App.tsx
+      - experience/src/pages/AccountsPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 12
+      last_modified: '2026-04-15'
+      source_hash: 6a9f189b6c3d100e
+    endpoint:account-create:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Validators/AccountCreateValidator.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/App.tsx
+      - experience/src/pages/CreateAccountPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 10
+      last_modified: '2026-04-15'
+      source_hash: 905aeb3956934537
+    endpoint:account-detail:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/DTOs/AccountDto.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/App.tsx
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 10
+      last_modified: '2026-04-15'
+      source_hash: c466973dad57fc38
+    endpoint:account-update:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Validators/AccountUpdateValidator.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 9
+      last_modified: '2026-04-15'
+      source_hash: f4f10e18f38fa8b7
+    endpoint:account-lifecycle:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Domain/Workflow/AccountLifecycleStateMachine.cs
+      - engine/src/Nebula.Application/Validators/AccountLifecycleValidator.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 10
+      last_modified: '2026-04-15'
+      source_hash: 9d6c7e3416075442
+    endpoint:account-merge:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Validators/AccountMergeValidator.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 9
+      last_modified: '2026-04-15'
+      source_hash: cf7fc6ec1b4459c5
+    endpoint:account-summary:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/DTOs/AccountSummaryDto.cs
+      - engine/src/Nebula.Application/DTOs/AccountSummaryProjection.cs
+      - engine/src/Nebula.Infrastructure/Repositories/AccountRepository.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountsPage.tsx
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 12
+      last_modified: '2026-04-15'
+      source_hash: d3acbdfe4afa58f3
+    endpoint:account-contact-list:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountContactService.cs
+      - engine/src/Nebula.Application/DTOs/AccountContactDto.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 9
+      last_modified: '2026-04-15'
+      source_hash: 57b80440d2eabd70
+    endpoint:account-contact-create:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountContactService.cs
+      - engine/src/Nebula.Application/Validators/AccountContactRequestValidator.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 9
+      last_modified: '2026-04-15'
+      source_hash: 50878d74393755c7
+    endpoint:account-contact-update:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountContactService.cs
+      - engine/src/Nebula.Application/Validators/AccountContactRequestValidator.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 9
+      last_modified: '2026-04-15'
+      source_hash: 50878d74393755c7
+    endpoint:account-contact-delete:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountContactService.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 8
+      last_modified: '2026-04-15'
+      source_hash: 1e304b04620be65d
+    endpoint:account-relationship-change:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Validators/AccountRelationshipRequestValidator.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 9
+      last_modified: '2026-04-15'
+      source_hash: 82da4b5fa9047a3e
+    endpoint:account-submissions:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Api/Endpoints/SubmissionEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Services/SubmissionService.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/pages/SubmissionsPage.tsx
+      - experience/src/pages/SubmissionDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 13
+      last_modified: '2026-04-15'
+      source_hash: a6414d8528cc17b7
+    endpoint:account-renewals:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Api/Endpoints/RenewalEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Services/RenewalService.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - engine/tests/Nebula.Tests/Integration/WorkflowEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/pages/RenewalsPage.tsx
+      - experience/src/pages/RenewalDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 13
+      last_modified: '2026-04-15'
+      source_hash: a7da08935eee2fe2
+    endpoint:account-policies:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/DTOs/AccountPolicyListItemDto.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 9
+      last_modified: '2026-04-15'
+      source_hash: 24b63f46eb9f96a2
+    endpoint:account-timeline:
+      source_paths:
+      - engine/src/Nebula.Api/Endpoints/AccountEndpoints.cs
+      - engine/src/Nebula.Api/Endpoints/TimelineEndpoints.cs
+      - engine/src/Nebula.Application/Services/AccountService.cs
+      - engine/src/Nebula.Application/Services/TimelineService.cs
+      - engine/tests/Nebula.Tests/Integration/AccountEndpointTests.cs
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 10
+      last_modified: '2026-04-15'
+      source_hash: 0e999c15fd476c62
+    ui_route:accounts-list:
+      source_paths:
+      - experience/src/App.tsx
+      - experience/src/pages/AccountsPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 6
+      last_modified: '2026-04-15'
+      source_hash: f8f0741f293b583f
+    ui_route:account-create:
+      source_paths:
+      - experience/src/App.tsx
+      - experience/src/pages/CreateAccountPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 6
+      last_modified: '2026-04-15'
+      source_hash: 81a7ee1bafe35af5
+    ui_route:account-detail:
+      source_paths:
+      - experience/src/App.tsx
+      - experience/src/pages/AccountDetailPage.tsx
+      - experience/src/features/accounts/components/AccountReference.tsx
+      - experience/src/features/accounts/hooks.ts
+      - experience/src/features/accounts/index.ts
+      - experience/src/features/accounts/types.ts
+      source_count: 6
+      last_modified: '2026-04-15'
+      source_hash: a3bbff4d2b6ea530
+    migration:f0016-account-lifecycle:
+      source_paths:
+      - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414120000_F0016_AccountLifecycle.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Configurations/AccountConfiguration.cs
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: 9e0289d2a451df81
+    migration:f0016-account-contacts-and-relationship-history:
+      source_paths:
+      - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414121000_F0016_AccountContactsAndRelationshipHistory.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Configurations/AccountContactConfiguration.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Configurations/AccountRelationshipHistoryConfiguration.cs
+      source_count: 3
+      last_modified: '2026-04-15'
+      source_hash: e148047b4cbc3e3d
+    migration:f0016-dependent-fallback-denormalization:
+      source_paths:
+      - engine/src/Nebula.Infrastructure/Persistence/Migrations/20260414122000_F0016_DependentFallbackDenormalization.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Configurations/SubmissionConfiguration.cs
+      - engine/src/Nebula.Infrastructure/Persistence/Configurations/RenewalConfiguration.cs
+      source_count: 3
+      last_modified: '2026-04-15'
+      source_hash: 02539b10d4805693

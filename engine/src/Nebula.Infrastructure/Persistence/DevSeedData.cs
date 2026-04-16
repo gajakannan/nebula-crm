@@ -14,8 +14,10 @@ public static class DevSeedData
 
     private static readonly string[] States = ["CA", "TX", "NY", "FL", "WA", "IL", "GA", "NC", "AZ", "CO", "NJ", "PA"];
     private static readonly string[] Regions = ["West", "Central", "East", "South"];
+    private static readonly string[] Cities = ["Los Angeles", "Dallas", "New York", "Miami", "Seattle", "Chicago", "Atlanta", "Charlotte", "Phoenix", "Denver", "Newark", "Philadelphia"];
     private static readonly string[] Industries = ["Manufacturing", "Healthcare", "Construction", "Retail", "Logistics", "Technology", "Hospitality", "Agriculture"];
     private static readonly string[] BrokerRoles = ["Primary", "Producer", "Account Manager", "Service", "Accounting"];
+    private static readonly string[] AccountContactRoles = ["Risk Manager", "Controller", "Operations Lead", "Owner", "Finance", "HR"];
     private static readonly string[] TaskPriorities = ["Low", "Normal", "High", "Urgent"];
     private static readonly string[] LineOfBusinessCodes = LineOfBusinessCatalog.Definitions.Select(definition => definition.Code).ToArray();
 
@@ -83,6 +85,10 @@ public static class DevSeedData
         var devBroker = brokers.FirstOrDefault(b => b.Status == "Active") ?? brokers[0];
         devBroker.BrokerTenantId = BrokerUserDevTenantId;
         db.Brokers.AddRange(brokers);
+        await db.SaveChangesAsync();
+
+        AssignAccountRelationships(accounts, brokers, userIds, rng, now);
+        db.AccountContacts.AddRange(BuildAccountContacts(accounts, now, rng, userIds));
         await db.SaveChangesAsync();
 
         db.BrokerRegions.AddRange(BuildBrokerRegions(brokers, rng));
@@ -159,6 +165,9 @@ public static class DevSeedData
                 PremiumEstimate = Math.Round((decimal)(rng.Next(12_000, 250_000) + rng.NextDouble()), 2),
                 Description = rng.NextDouble() < 0.45 ? "Seeded submission intake record for development workflows." : null,
                 AssignedToUserId = assignedTo,
+                AccountDisplayNameAtLink = account.StableDisplayName,
+                AccountStatusAtRead = account.Status,
+                AccountSurvivorId = account.MergedIntoAccountId,
                 CreatedAt = createdAt,
                 UpdatedAt = updatedAt,
                 CreatedByUserId = assignedTo,
@@ -243,6 +252,9 @@ public static class DevSeedData
                 CurrentStatus = path[^1],
                 PolicyExpirationDate = policy.ExpirationDate,
                 AssignedToUserId = assignedTo,
+                AccountDisplayNameAtLink = account.StableDisplayName,
+                AccountStatusAtRead = account.Status,
+                AccountSurvivorId = account.MergedIntoAccountId,
                 CreatedAt = createdAt,
                 UpdatedAt = updatedAt,
                 CreatedByUserId = assignedTo,
@@ -281,6 +293,8 @@ public static class DevSeedData
                 });
             }
         }
+
+        ApplySeededAccountLifecycleFixtures(accounts, submissions, renewals, policies, now, userIds[0]);
 
         db.Renewals.AddRange(renewals);
         db.WorkflowTransitions.AddRange(transitions);
@@ -322,12 +336,23 @@ public static class DevSeedData
             var createdBy = userIds[rng.Next(userIds.Length)];
             var region = Regions[rng.Next(Regions.Length)];
             var state = States[rng.Next(States.Length)];
+            var displayName = $"{Pick(rng, CompanyPrefixes)} {Pick(rng, CompanySuffixes)} {i:D3}";
             accounts.Add(new Account
             {
-                Name = $"{Pick(rng, CompanyPrefixes)} {Pick(rng, CompanySuffixes)} {i:D3}",
+                Name = displayName,
+                StableDisplayName = displayName,
+                LegalName = rng.NextDouble() < 0.18 ? null : $"{displayName} Holdings LLC",
+                TaxId = rng.NextDouble() < 0.12 ? null : $"TIN-{i:D8}",
                 Industry = Industries[rng.Next(Industries.Length)],
+                PrimaryLineOfBusiness = rng.NextDouble() < 0.15 ? null : LineOfBusinessCodes[rng.Next(LineOfBusinessCodes.Length)],
                 PrimaryState = state,
                 Region = region,
+                TerritoryCode = $"{region[..1].ToUpperInvariant()}-{((i - 1) % 12) + 1:D2}",
+                Address1 = $"{100 + i} {region} Avenue",
+                Address2 = rng.NextDouble() < 0.2 ? $"Suite {rng.Next(100, 900)}" : null,
+                City = Cities[rng.Next(Cities.Length)],
+                PostalCode = $"{90000 + (i % 10000):D5}",
+                Country = "USA",
                 Status = rng.NextDouble() < 0.9 ? "Active" : "Inactive",
                 CreatedAt = now.AddDays(-rng.Next(30, 540)),
                 UpdatedAt = now.AddDays(-rng.Next(1, 120)),
@@ -337,6 +362,63 @@ public static class DevSeedData
         }
 
         return accounts;
+    }
+
+    private static void AssignAccountRelationships(
+        IReadOnlyList<Account> accounts,
+        IReadOnlyList<Broker> brokers,
+        Guid[] userIds,
+        Random rng,
+        DateTime now)
+    {
+        foreach (var account in accounts)
+        {
+            if (rng.NextDouble() < 0.82)
+                account.BrokerOfRecordId = brokers[rng.Next(brokers.Count)].Id;
+
+            if (rng.NextDouble() < 0.88)
+                account.PrimaryProducerUserId = userIds[rng.Next(userIds.Length)];
+
+            account.UpdatedAt = now.AddDays(-rng.Next(0, 45));
+        }
+    }
+
+    private static IEnumerable<AccountContact> BuildAccountContacts(
+        IReadOnlyList<Account> accounts,
+        DateTime now,
+        Random rng,
+        Guid[] userIds)
+    {
+        var contacts = new List<AccountContact>(accounts.Count * 2);
+        foreach (var account in accounts)
+        {
+            var contactCount = rng.NextDouble() < 0.55 ? 1 : 2;
+            for (var i = 0; i < contactCount; i++)
+            {
+                var createdBy = userIds[rng.Next(userIds.Length)];
+                var first = Pick(rng, FirstNames);
+                var last = Pick(rng, LastNames);
+                var createdAt = now.AddDays(-rng.Next(5, 540));
+                var updatedAt = createdAt.AddDays(rng.Next(0, 120));
+                if (updatedAt > now)
+                    updatedAt = now;
+                contacts.Add(new AccountContact
+                {
+                    AccountId = account.Id,
+                    FullName = $"{first} {last}",
+                    Role = AccountContactRoles[rng.Next(AccountContactRoles.Length)],
+                    Email = $"{first.ToLowerInvariant()}.{last.ToLowerInvariant()}.{account.Id.ToString("N")[..6]}{i}@example.local",
+                    Phone = $"+1-{rng.Next(200, 999)}-{rng.Next(200, 999)}-{rng.Next(1000, 9999)}",
+                    IsPrimary = i == 0,
+                    CreatedAt = createdAt,
+                    UpdatedAt = updatedAt,
+                    CreatedByUserId = createdBy,
+                    UpdatedByUserId = createdBy,
+                });
+            }
+        }
+
+        return contacts;
     }
 
     private static List<Policy> BuildPolicies(
@@ -368,6 +450,9 @@ public static class DevSeedData
                 ExpirationDate = expirationDate,
                 Premium = Math.Round((decimal)(rng.Next(12_000, 250_000) + rng.NextDouble()), 2),
                 CurrentStatus = WeightedPick(rng, ("Active", 80), ("Expiring", 15), ("Bound", 5)),
+                AccountDisplayNameAtLink = account.StableDisplayName,
+                AccountStatusAtRead = account.Status,
+                AccountSurvivorId = account.MergedIntoAccountId,
                 Account = account,
                 Broker = broker,
                 CreatedAt = now.AddDays(-rng.Next(30, 720)),
@@ -378,6 +463,75 @@ public static class DevSeedData
         }
 
         return policies;
+    }
+
+    private static void ApplySeededAccountLifecycleFixtures(
+        IReadOnlyList<Account> accounts,
+        IReadOnlyList<Submission> submissions,
+        IReadOnlyList<Renewal> renewals,
+        IReadOnlyList<Policy> policies,
+        DateTime now,
+        Guid actorUserId)
+    {
+        var accountsWithDependents = accounts
+            .Where(account =>
+                string.Equals(account.Status, AccountStatuses.Active, StringComparison.Ordinal)
+                && (submissions.Any(submission => submission.AccountId == account.Id)
+                    || renewals.Any(renewal => renewal.AccountId == account.Id)
+                    || policies.Any(policy => policy.AccountId == account.Id)))
+            .Take(3)
+            .ToArray();
+
+        if (accountsWithDependents.Length < 3)
+            return;
+
+        var survivor = accountsWithDependents[0];
+        var merged = accountsWithDependents[1];
+        var deleted = accountsWithDependents[2];
+
+        merged.Status = AccountStatuses.Merged;
+        merged.MergedIntoAccountId = survivor.Id;
+        merged.RemovedAt = now.AddDays(-7);
+        merged.UpdatedAt = now.AddDays(-7);
+        merged.UpdatedByUserId = actorUserId;
+
+        deleted.Status = AccountStatuses.Deleted;
+        deleted.RemovedAt = now.AddDays(-3);
+        deleted.DeleteReasonCode = "Duplicate";
+        deleted.DeleteReasonDetail = "Dev-seeded duplicate account archived for fallback contract coverage.";
+        deleted.UpdatedAt = now.AddDays(-3);
+        deleted.UpdatedByUserId = actorUserId;
+
+        ApplyFallbackState(merged, submissions, renewals, policies);
+        ApplyFallbackState(deleted, submissions, renewals, policies);
+    }
+
+    private static void ApplyFallbackState(
+        Account account,
+        IEnumerable<Submission> submissions,
+        IEnumerable<Renewal> renewals,
+        IEnumerable<Policy> policies)
+    {
+        foreach (var submission in submissions.Where(submission => submission.AccountId == account.Id))
+        {
+            submission.AccountDisplayNameAtLink = account.StableDisplayName;
+            submission.AccountStatusAtRead = account.Status;
+            submission.AccountSurvivorId = account.MergedIntoAccountId;
+        }
+
+        foreach (var renewal in renewals.Where(renewal => renewal.AccountId == account.Id))
+        {
+            renewal.AccountDisplayNameAtLink = account.StableDisplayName;
+            renewal.AccountStatusAtRead = account.Status;
+            renewal.AccountSurvivorId = account.MergedIntoAccountId;
+        }
+
+        foreach (var policy in policies.Where(policy => policy.AccountId == account.Id))
+        {
+            policy.AccountDisplayNameAtLink = account.StableDisplayName;
+            policy.AccountStatusAtRead = account.Status;
+            policy.AccountSurvivorId = account.MergedIntoAccountId;
+        }
     }
 
     private static List<Broker> BuildBrokers(

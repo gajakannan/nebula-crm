@@ -15,6 +15,8 @@ export function useRenewals({
   status,
   assignedToUserId,
   lineOfBusiness,
+  accountId,
+  brokerId,
   urgency,
   sort = 'policyExpirationDate',
   sortDir = 'asc',
@@ -28,6 +30,8 @@ export function useRenewals({
   if (status) params.set('status', status);
   if (assignedToUserId) params.set('assignedToUserId', assignedToUserId);
   if (lineOfBusiness) params.set('lineOfBusiness', lineOfBusiness);
+  if (accountId) params.set('accountId', accountId);
+  if (brokerId) params.set('brokerId', brokerId);
   if (urgency) params.set('urgency', urgency);
   if (typeof includeTerminal === 'boolean') params.set('includeTerminal', String(includeTerminal));
   params.set('sort', sort);
@@ -39,7 +43,7 @@ export function useRenewals({
     queryKey: [
       'renewals',
       'list',
-      { dueWindow, status, assignedToUserId, lineOfBusiness, urgency, sort, sortDir, page, pageSize, includeTerminal },
+      { dueWindow, status, assignedToUserId, lineOfBusiness, accountId, brokerId, urgency, sort, sortDir, page, pageSize, includeTerminal },
     ],
     queryFn: () => api.get<PaginatedResponse<RenewalListItemDto>>(`/renewals?${params.toString()}`),
     enabled,

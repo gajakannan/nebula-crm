@@ -152,6 +152,29 @@ public static class ProblemDetailsHelper
             ["traceId"] = Activity.Current?.Id,
         });
 
+    public static IResult MergeTooLarge(int linkedCount, int threshold) => Results.Problem(
+        title: "Merge too large",
+        detail: $"Merge involves {linkedCount} linked records, exceeding the synchronous threshold of {threshold}. Contact an administrator to perform a bulk merge.",
+        statusCode: 413,
+        extensions: new Dictionary<string, object?>
+        {
+            ["code"] = "merge_too_large",
+            ["linkedCount"] = linkedCount,
+            ["threshold"] = threshold,
+            ["traceId"] = Activity.Current?.Id,
+        });
+
+    public static IResult IdempotencyKeyConflict(string key) => Results.Problem(
+        title: "Idempotency key conflict",
+        detail: $"Idempotency key '{key}' was previously used for a different operation or resource.",
+        statusCode: 409,
+        extensions: new Dictionary<string, object?>
+        {
+            ["code"] = "idempotency_key_conflict",
+            ["key"] = key,
+            ["traceId"] = Activity.Current?.Id,
+        });
+
     public static IResult PreconditionFailed() =>
         PreconditionFailed("submission");
 

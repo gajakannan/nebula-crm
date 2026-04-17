@@ -27,6 +27,7 @@ public static class AccountEndpoints
         group.MapGet("/{accountId:guid}", GetAccount);
         group.MapPut("/{accountId:guid}", UpdateAccount);
         group.MapPost("/{accountId:guid}/lifecycle", TransitionLifecycle);
+        group.MapGet("/{accountId:guid}/merge-preview", GetMergePreview);
         group.MapPost("/{accountId:guid}/merge", MergeAccount);
         group.MapGet("/{accountId:guid}/summary", GetSummary);
         group.MapGet("/{accountId:guid}/contacts", ListContacts);
@@ -229,11 +230,35 @@ public static class AccountEndpoints
         };
     }
 
+    private const string MergeOperationKey = "account.merge";
+
+    private static async Task<IResult> GetMergePreview(
+        Guid accountId,
+        Guid survivorId,
+        AccountService svc,
+        ICurrentUserService user,
+        IAuthorizationService authz,
+        CancellationToken ct)
+    {
+        if (!await HasAccessAsync(user, authz, "account", "merge"))
+            return ProblemDetailsHelper.PolicyDenied();
+
+        var (preview, error) = await svc.GetMergePreviewAsync(accountId, survivorId, user, ct);
+        return error switch
+        {
+            "not_found" => ProblemDetailsHelper.NotFound("Account", accountId),
+            "survivor_not_found" => ProblemDetailsHelper.NotFound("Account", survivorId),
+            "self_merge" => Results.Problem(title: "Invalid merge", detail: "An account cannot be merged into itself.", statusCode: 409),
+            _ => Results.Ok(preview),
+        };
+    }
+
     private static async Task<IResult> MergeAccount(
         Guid accountId,
         AccountMergeRequestDto dto,
         IValidator<AccountMergeRequestDto> validator,
         AccountService svc,
+        IIdempotencyStore idempotencyStore,
         ICurrentUserService user,
         IAuthorizationService authz,
         HttpContext httpContext,
@@ -251,8 +276,21 @@ public static class AccountEndpoints
         if (!TryParseExpectedRowVersion(httpContext, out var rowVersion))
             return ProblemDetailsHelper.PreconditionFailed("account");
 
-        var (result, error) = await svc.MergeAsync(accountId, dto, rowVersion, user, ct);
-        return error switch
+        var idempotencyKey = ReadIdempotencyKey(httpContext);
+        if (idempotencyKey is not null)
+        {
+            var existing = await idempotencyStore.GetAsync(idempotencyKey, MergeOperationKey, ct);
+            if (existing is not null)
+            {
+                if (existing.ResourceId != accountId)
+                    return ProblemDetailsHelper.IdempotencyKeyConflict(idempotencyKey);
+
+                return ReplayIdempotentResponse(existing);
+            }
+        }
+
+        var (result, error, linkedCount) = await svc.MergeAsync(accountId, dto, rowVersion, user, ct);
+        var response = error switch
         {
             "not_found" => ProblemDetailsHelper.NotFound("Account", accountId),
             "survivor_not_found" => ProblemDetailsHelper.NotFound("Account", dto.SurvivorAccountId),
@@ -261,8 +299,42 @@ public static class AccountEndpoints
             "merge_conflict" => Results.Problem(title: "Merge conflict", detail: "Account was already merged into a different survivor.", statusCode: 409),
             "survivor_not_active" => Results.Problem(title: "Invalid survivor", detail: "Survivor account must be Active.", statusCode: 409),
             "invalid_transition" => ProblemDetailsHelper.InvalidTransition("current", AccountStatuses.Merged),
+            "merge_too_large" => ProblemDetailsHelper.MergeTooLarge(linkedCount ?? 0, AccountService.MergeLinkedRecordsThreshold),
             _ => Results.Ok(result),
         };
+
+        if (idempotencyKey is not null && error is null)
+        {
+            await idempotencyStore.SaveAsync(new IdempotencyRecord
+            {
+                IdempotencyKey = idempotencyKey,
+                Operation = MergeOperationKey,
+                ResourceId = accountId,
+                ActorUserId = user.UserId,
+                ResponseStatusCode = StatusCodes.Status200OK,
+                ResponsePayloadJson = JsonSerializer.Serialize(result),
+                CreatedAt = DateTime.UtcNow,
+            }, ct);
+        }
+
+        return response;
+    }
+
+    private static string? ReadIdempotencyKey(HttpContext httpContext)
+    {
+        var raw = httpContext.Request.Headers["Idempotency-Key"].FirstOrDefault();
+        return string.IsNullOrWhiteSpace(raw) ? null : raw.Trim();
+    }
+
+    private static IResult ReplayIdempotentResponse(IdempotencyRecord record)
+    {
+        if (record.ResponseStatusCode == StatusCodes.Status200OK && record.ResponsePayloadJson is not null)
+        {
+            var dto = JsonSerializer.Deserialize<AccountDto>(record.ResponsePayloadJson, JsonOptions);
+            return Results.Ok(dto);
+        }
+
+        return Results.StatusCode(record.ResponseStatusCode);
     }
 
     private static async Task<IResult> GetSummary(

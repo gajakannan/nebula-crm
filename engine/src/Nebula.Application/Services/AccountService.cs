@@ -18,6 +18,11 @@ public class AccountService(
     IUnitOfWork unitOfWork,
     BrokerScopeResolver scopeResolver)
 {
+    public const int MergeLinkedRecordsThreshold = 500;
+
+    private static string? NormalizeTaxId(string? taxId) =>
+        string.IsNullOrWhiteSpace(taxId) ? null : taxId.Trim().ToUpperInvariant();
+
     public async Task<PaginatedResult<AccountListItemDto>> ListAsync(
         AccountListQuery query,
         ICurrentUserService user,
@@ -107,7 +112,7 @@ public class AccountService(
         {
             Name = name,
             LegalName = dto.LegalName,
-            TaxId = dto.TaxId?.Trim(),
+            TaxId = NormalizeTaxId(dto.TaxId),
             Industry = dto.Industry,
             PrimaryLineOfBusiness = dto.PrimaryLineOfBusiness,
             Status = AccountStatuses.Active,
@@ -197,7 +202,7 @@ public class AccountService(
         }
 
         ApplyNullableField("legalName", dto.LegalName, account.LegalName, presentFields, changedFields, value => account.LegalName = value);
-        ApplyNullableField("taxId", dto.TaxId?.Trim(), account.TaxId, presentFields, changedFields, value => account.TaxId = value);
+        ApplyNullableField("taxId", NormalizeTaxId(dto.TaxId), account.TaxId, presentFields, changedFields, value => account.TaxId = value);
         ApplyNullableField("industry", dto.Industry, account.Industry, presentFields, changedFields, value => account.Industry = value);
         ApplyNullableField("primaryLineOfBusiness", dto.PrimaryLineOfBusiness, account.PrimaryLineOfBusiness, presentFields, changedFields, value => account.PrimaryLineOfBusiness = value);
         ApplyNullableField("territoryCode", dto.TerritoryCode, account.TerritoryCode, presentFields, changedFields, value => account.TerritoryCode = value);
@@ -474,7 +479,46 @@ public class AccountService(
         return (MapToDto(account), null);
     }
 
-    public async Task<(AccountDto? Dto, string? ErrorCode)> MergeAsync(
+    public async Task<(AccountMergePreviewDto? Dto, string? ErrorCode)> GetMergePreviewAsync(
+        Guid id,
+        Guid survivorId,
+        ICurrentUserService user,
+        CancellationToken ct = default)
+    {
+        if (id == survivorId)
+            return (null, "self_merge");
+
+        var brokerScopeId = await ResolveBrokerScopeAsync(user, ct);
+        var accessibleSource = await accountRepo.GetAccessibleByIdAsync(id, user, brokerScopeId, ct);
+        if (accessibleSource is null)
+            return (null, "not_found");
+
+        var source = await accountRepo.GetByIdWithRelationsAsync(id, ct)
+            ?? throw new InvalidOperationException("Accessible account could not be loaded with relations.");
+
+        var accessibleSurvivor = await accountRepo.GetAccessibleByIdAsync(survivorId, user, brokerScopeId, ct);
+        if (accessibleSurvivor is null)
+            return (null, "survivor_not_found");
+
+        var survivor = await accountRepo.GetByIdWithRelationsAsync(survivorId, ct)
+            ?? throw new InvalidOperationException("Accessible survivor account could not be loaded with relations.");
+
+        var impact = await accountRepo.GetMergeImpactAsync(source.Id, ct);
+        return (new AccountMergePreviewDto(
+            source.Id,
+            survivor.Id,
+            source.DisplayName,
+            survivor.DisplayName,
+            impact.SubmissionCount,
+            impact.PolicyCount,
+            impact.RenewalCount,
+            impact.ContactCount,
+            impact.TimelineCount,
+            impact.TotalLinked,
+            MergeLinkedRecordsThreshold), null);
+    }
+
+    public async Task<(AccountDto? Dto, string? ErrorCode, int? LinkedCount)> MergeAsync(
         Guid id,
         AccountMergeRequestDto dto,
         uint expectedRowVersion,
@@ -482,37 +526,41 @@ public class AccountService(
         CancellationToken ct = default)
     {
         if (id == dto.SurvivorAccountId)
-            return (null, "self_merge");
+            return (null, "self_merge", null);
 
         var brokerScopeId = await ResolveBrokerScopeAsync(user, ct);
         var accessible = await accountRepo.GetAccessibleByIdAsync(id, user, brokerScopeId, ct);
         if (accessible is null)
-            return (null, "not_found");
+            return (null, "not_found", null);
 
         var source = await accountRepo.GetByIdWithRelationsAsync(id, ct)
             ?? throw new InvalidOperationException("Accessible account could not be loaded with relations.");
 
         if (source.RowVersion != expectedRowVersion)
-            return (null, "precondition_failed");
+            return (null, "precondition_failed", null);
 
         var accessibleSurvivor = await accountRepo.GetAccessibleByIdAsync(dto.SurvivorAccountId, user, brokerScopeId, ct);
         if (accessibleSurvivor is null)
-            return (null, "survivor_not_found");
+            return (null, "survivor_not_found", null);
         var survivor = await accountRepo.GetByIdWithRelationsAsync(dto.SurvivorAccountId, ct)
             ?? throw new InvalidOperationException("Accessible survivor account could not be loaded with relations.");
 
         if (source.Status == AccountStatuses.Merged)
         {
             return source.MergedIntoAccountId == dto.SurvivorAccountId
-                ? (MapToDto(source), null)
-                : (null, "merge_conflict");
+                ? (MapToDto(source), null, null)
+                : (null, "merge_conflict", null);
         }
 
         if (AccountLifecycleStateMachine.IsTerminal(source.Status))
-            return (null, "invalid_transition");
+            return (null, "invalid_transition", null);
 
         if (!string.Equals(survivor.Status, AccountStatuses.Active, StringComparison.Ordinal))
-            return (null, "survivor_not_active");
+            return (null, "survivor_not_active", null);
+
+        var impact = await accountRepo.GetMergeImpactAsync(source.Id, ct);
+        if (impact.TotalLinked > MergeLinkedRecordsThreshold)
+            return (null, "merge_too_large", impact.TotalLinked);
 
         var now = DateTime.UtcNow;
         var fromState = source.Status;
@@ -579,10 +627,10 @@ public class AccountService(
         }
         catch (DbUpdateConcurrencyException)
         {
-            return (null, "precondition_failed");
+            return (null, "precondition_failed", null);
         }
 
-        return (MapToDto(source), null);
+        return (MapToDto(source), null, impact.TotalLinked);
     }
 
     public async Task<(AccountSummaryDto? Dto, string? ErrorCode, string? StableDisplayName, DateTime? RemovedAt, string? ReasonCode)> GetSummaryAsync(

@@ -125,6 +125,36 @@ public class AccountRepository(AppDbContext db) : IAccountRepository
         return new PaginatedResult<Policy>(data, page, pageSize, totalCount);
     }
 
+    public async Task<AccountMergeImpactProjection> GetMergeImpactAsync(Guid accountId, CancellationToken ct = default)
+    {
+        var submissionCount = await db.Submissions
+            .Where(submission => submission.AccountId == accountId)
+            .CountAsync(ct);
+
+        var policyCount = await db.Policies
+            .Where(policy => policy.AccountId == accountId)
+            .CountAsync(ct);
+
+        var renewalCount = await db.Renewals
+            .Where(renewal => renewal.AccountId == accountId)
+            .CountAsync(ct);
+
+        var contactCount = await db.AccountContacts
+            .Where(contact => contact.AccountId == accountId)
+            .CountAsync(ct);
+
+        var timelineCount = await db.ActivityTimelineEvents
+            .Where(evt => evt.EntityType == "Account" && evt.EntityId == accountId)
+            .CountAsync(ct);
+
+        return new AccountMergeImpactProjection(
+            submissionCount,
+            policyCount,
+            renewalCount,
+            contactCount,
+            timelineCount);
+    }
+
     public async Task PropagateFallbackStateAsync(
         Guid accountId,
         string displayName,
@@ -162,7 +192,7 @@ public class AccountRepository(AppDbContext db) : IAccountRepository
         return await db.Accounts.AnyAsync(account =>
             account.Status == AccountStatuses.Active
             && account.TaxId != null
-            && account.TaxId.Trim().ToUpper() == normalizedTaxId
+            && account.TaxId == normalizedTaxId
             && (!excludeAccountId.HasValue || account.Id != excludeAccountId.Value), ct);
     }
 

@@ -18,8 +18,8 @@ public class SubmissionConfiguration : IEntityTypeConfiguration<Submission>
         builder.Property(e => e.ExpirationDate).HasColumnType("date");
         builder.Property(e => e.PremiumEstimate).HasPrecision(18, 2);
         builder.Property(e => e.Description).HasMaxLength(2000);
-        builder.Property(e => e.AccountDisplayNameAtLink).HasMaxLength(200);
-        builder.Property(e => e.AccountStatusAtRead).HasMaxLength(20);
+        builder.Property(e => e.AccountDisplayNameAtLink).IsRequired().HasMaxLength(200);
+        builder.Property(e => e.AccountStatusAtRead).IsRequired().HasMaxLength(20);
         builder.Property(e => e.AssignedToUserId).IsRequired();
         builder.Property(e => e.CreatedByUserId).IsRequired();
         builder.Property(e => e.UpdatedByUserId).IsRequired();

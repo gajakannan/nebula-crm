@@ -75,5 +75,15 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
 
         builder.HasIndex(e => e.MergedIntoAccountId)
             .HasDatabaseName("IX_Accounts_MergedIntoAccountId");
+
+        builder.HasIndex(e => e.TaxId)
+            .HasDatabaseName("IX_Accounts_TaxId_Active")
+            .HasFilter("\"Status\" = 'Active' AND \"TaxId\" IS NOT NULL AND \"IsDeleted\" = false")
+            .IsUnique();
+
+        builder.HasIndex(e => e.Name)
+            .HasDatabaseName("IX_Accounts_DisplayName_Trgm")
+            .HasMethod("gin")
+            .HasOperators("gin_trgm_ops");
     }
 }

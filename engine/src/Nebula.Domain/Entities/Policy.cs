@@ -11,8 +11,8 @@ public class Policy : BaseEntity
     public DateTime ExpirationDate { get; set; }
     public decimal? Premium { get; set; }
     public string CurrentStatus { get; set; } = "Active";
-    public string? AccountDisplayNameAtLink { get; set; }
-    public string? AccountStatusAtRead { get; set; }
+    public string AccountDisplayNameAtLink { get; set; } = default!;
+    public string AccountStatusAtRead { get; set; } = default!;
     public Guid? AccountSurvivorId { get; set; }
 
     public Account Account { get; set; } = default!;

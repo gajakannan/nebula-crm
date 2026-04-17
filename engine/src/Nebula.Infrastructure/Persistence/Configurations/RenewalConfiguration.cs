@@ -19,8 +19,8 @@ public class RenewalConfiguration : IEntityTypeConfiguration<Renewal>
         builder.Property(e => e.AssignedToUserId).IsRequired();
         builder.Property(e => e.LostReasonCode).HasMaxLength(50);
         builder.Property(e => e.LostReasonDetail).HasMaxLength(500);
-        builder.Property(e => e.AccountDisplayNameAtLink).HasMaxLength(200);
-        builder.Property(e => e.AccountStatusAtRead).HasMaxLength(20);
+        builder.Property(e => e.AccountDisplayNameAtLink).IsRequired().HasMaxLength(200);
+        builder.Property(e => e.AccountStatusAtRead).IsRequired().HasMaxLength(20);
         builder.Property(e => e.CreatedByUserId).IsRequired();
         builder.Property(e => e.UpdatedByUserId).IsRequired();
         builder.Property(e => e.DeletedByUserId);

@@ -24,6 +24,7 @@ public interface IAccountRepository
         Guid? brokerScopeId,
         CancellationToken ct = default);
     Task<PaginatedResult<Policy>> ListPoliciesAsync(Guid accountId, int page, int pageSize, CancellationToken ct = default);
+    Task<AccountMergeImpactProjection> GetMergeImpactAsync(Guid accountId, CancellationToken ct = default);
     Task PropagateFallbackStateAsync(
         Guid accountId,
         string displayName,

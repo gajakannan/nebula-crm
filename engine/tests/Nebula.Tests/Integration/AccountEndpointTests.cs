@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Nebula.Application.Common;
 using Nebula.Application.DTOs;
+using Nebula.Application.Services;
 using Nebula.Domain.Entities;
 using Nebula.Domain.Workflow;
 using Nebula.Infrastructure.Persistence;
@@ -260,6 +261,121 @@ public class AccountEndpointTests(CustomWebApplicationFactory factory)
         var timeline = await timelineResponse.Content.ReadFromJsonAsync<PaginatedResult<TimelineEventDto>>();
         timeline.ShouldNotBeNull();
         timeline!.Data.ShouldContain(item => item.EventType == "AccountMerged");
+    }
+
+    [Fact]
+    public async Task MergePreview_ReturnsLinkedRecordCounts()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var sourceId = await SeedAccountAsync(currentUserId, $"Preview Src {Guid.NewGuid():N}"[..20]);
+        var survivorId = await SeedAccountAsync(currentUserId, $"Preview Surv {Guid.NewGuid():N}"[..20]);
+        var brokerId = await SeedBrokerAsync(currentUserId);
+        await SeedSubmissionAsync(currentUserId, sourceId, brokerId, "Received", "Cyber");
+        var policy = await SeedPolicyAsync(currentUserId, sourceId, brokerId, "Property", 30);
+        await SeedRenewalAsync(currentUserId, sourceId, brokerId, policy.Id, "Property", "Identified");
+
+        var response = await _client.GetAsync($"/accounts/{sourceId}/merge-preview?survivorId={survivorId}");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var preview = await response.Content.ReadFromJsonAsync<AccountMergePreviewDto>();
+        preview.ShouldNotBeNull();
+        preview!.SourceAccountId.ShouldBe(sourceId);
+        preview.SurvivorAccountId.ShouldBe(survivorId);
+        preview.SubmissionCount.ShouldBe(1);
+        preview.PolicyCount.ShouldBe(1);
+        preview.RenewalCount.ShouldBe(1);
+        preview.TotalLinked.ShouldBeGreaterThanOrEqualTo(3);
+        preview.Threshold.ShouldBe(AccountService.MergeLinkedRecordsThreshold);
+    }
+
+    [Fact]
+    public async Task MergePreview_RejectsSelfMergeWithConflict()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var accountId = await SeedAccountAsync(currentUserId, $"Self Preview {Guid.NewGuid():N}"[..20]);
+
+        var response = await _client.GetAsync($"/accounts/{accountId}/merge-preview?survivorId={accountId}");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task MergeAccount_ReturnsContentTooLarge_WhenLinkedRecordsExceedThreshold()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var sourceId = await SeedAccountAsync(currentUserId, $"Large Src {Guid.NewGuid():N}"[..20]);
+        var survivorId = await SeedAccountAsync(currentUserId, $"Large Surv {Guid.NewGuid():N}"[..20]);
+        await SeedAccountTimelineEventsAsync(sourceId, currentUserId, AccountService.MergeLinkedRecordsThreshold + 1);
+        var source = await GetAccountAsync(sourceId);
+
+        var response = await PostJsonAsync(
+            $"/accounts/{sourceId}/merge",
+            new AccountMergeRequestDto(survivorId, "too large"),
+            source.RowVersion);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.RequestEntityTooLarge);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        problem.GetProperty("code").GetString().ShouldBe("merge_too_large");
+        problem.GetProperty("threshold").GetInt32().ShouldBe(AccountService.MergeLinkedRecordsThreshold);
+    }
+
+    [Fact]
+    public async Task MergeAccount_WithIdempotencyKey_ReplaysFirstResponseAndDoesNotDuplicateTimeline()
+    {
+        var currentUserId = await EnsureCurrentUserProfileAsync();
+        var sourceId = await SeedAccountAsync(currentUserId, $"Idemp Src {Guid.NewGuid():N}"[..20]);
+        var survivorId = await SeedAccountAsync(currentUserId, $"Idemp Surv {Guid.NewGuid():N}"[..20]);
+        var source = await GetAccountAsync(sourceId);
+        var idempotencyKey = $"merge-{Guid.NewGuid():N}";
+
+        var first = await PostJsonAsync(
+            $"/accounts/{sourceId}/merge",
+            new AccountMergeRequestDto(survivorId, "idempotent merge"),
+            source.RowVersion,
+            idempotencyKey);
+        first.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var firstBody = await first.Content.ReadFromJsonAsync<AccountDto>();
+        firstBody.ShouldNotBeNull();
+        firstBody!.Status.ShouldBe(AccountStatuses.Merged);
+
+        var second = await PostJsonAsync(
+            $"/accounts/{sourceId}/merge",
+            new AccountMergeRequestDto(survivorId, "idempotent merge"),
+            source.RowVersion,
+            idempotencyKey);
+        second.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var secondBody = await second.Content.ReadFromJsonAsync<AccountDto>();
+        secondBody.ShouldNotBeNull();
+        secondBody!.Id.ShouldBe(firstBody.Id);
+        secondBody.Status.ShouldBe(AccountStatuses.Merged);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var mergedTimelineEvents = await db.ActivityTimelineEvents
+            .Where(evt => evt.EntityType == "Account" && evt.EntityId == sourceId && evt.EventType == "AccountMerged")
+            .CountAsync();
+        mergedTimelineEvents.ShouldBe(1);
+    }
+
+    private async Task SeedAccountTimelineEventsAsync(Guid accountId, Guid actorUserId, int count)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var now = DateTime.UtcNow;
+        for (var index = 0; index < count; index++)
+        {
+            db.ActivityTimelineEvents.Add(new ActivityTimelineEvent
+            {
+                EntityType = "Account",
+                EntityId = accountId,
+                EventType = "AccountStubEvent",
+                EventDescription = $"seed event {index}",
+                ActorUserId = actorUserId,
+                ActorDisplayName = "Test User",
+                OccurredAt = now.AddSeconds(-index),
+            });
+        }
+        await db.SaveChangesAsync();
     }
 
     private async Task<AccountDto> CreateAccountViaApiAsync(string displayName)
@@ -577,12 +693,17 @@ public class AccountEndpointTests(CustomWebApplicationFactory factory)
     }
 
     private async Task<HttpResponseMessage> PostJsonAsync<TBody>(string url, TBody body, string rowVersion)
+        => await PostJsonAsync(url, body, rowVersion, idempotencyKey: null);
+
+    private async Task<HttpResponseMessage> PostJsonAsync<TBody>(string url, TBody body, string rowVersion, string? idempotencyKey)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = JsonContent.Create(body),
         };
         request.Headers.TryAddWithoutValidation("If-Match", $"\"{rowVersion}\"");
+        if (!string.IsNullOrWhiteSpace(idempotencyKey))
+            request.Headers.TryAddWithoutValidation("Idempotency-Key", idempotencyKey);
         return await _client.SendAsync(request);
     }
 

@@ -25,6 +25,7 @@ public class AccountRelationshipHistoryConfiguration : IEntityTypeConfiguration<
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(e => new { e.AccountId, e.EffectiveAt })
-            .HasDatabaseName("IX_AccountRelationshipHistory_AccountId_EffectiveAt");
+            .HasDatabaseName("IX_AccountRelationshipHistory_AccountId_EffectiveAt")
+            .IsDescending(false, true);
     }
 }

@@ -1,8 +1,9 @@
 # F0016 — Account 360 & Insured Management — Status
 
 **Overall Status:** Done
-**Last Updated:** 2026-04-14
+**Last Updated:** 2026-04-15
 **Archived:** 2026-04-14
+**Post-Closeout Hardening:** 2026-04-15 (see "Post-Closeout Hardening" section below)
 
 ## Story Checklist
 
@@ -77,11 +78,11 @@
 | F0016-S0007 | Security Reviewer | Codex (Security Reviewer role) | PASS | [F0016-SECURITY-REVIEW-REPORT.md](./F0016-SECURITY-REVIEW-REPORT.md) | 2026-04-14 | `account:deactivate`, `account:reactivate`, and `account:delete` are separately gated and limited to intended roles. |
 | F0016-S0007 | DevOps | Codex (DevOps role) | PASS | [F0016-DEVOPS-VALIDATION.md](./F0016-DEVOPS-VALIDATION.md) | 2026-04-14 | Lifecycle migration adds status/delete metadata with explicit backfill and rollback coverage. |
 | F0016-S0007 | Architect | Codex (Architect role) | PASS | [F0016-ARCHITECT-REVIEW.md](./F0016-ARCHITECT-REVIEW.md) | 2026-04-14 | Lifecycle transitions match ADR-011/017: Active↔Inactive plus terminal Deleted semantics. |
-| F0016-S0008 | Quality Engineer | Codex (Quality Engineer role) | PASS | [F0016-QE-REPORT.md](./F0016-QE-REPORT.md) | 2026-04-14 | Merge semantics, survivor forwarding, and dependent fallback rendering are covered end-to-end in API integration tests. |
-| F0016-S0008 | Code Reviewer | Codex (Code Reviewer role) | PASS | [F0016-CODE-REVIEW-REPORT.md](./F0016-CODE-REVIEW-REPORT.md) | 2026-04-14 | Merge logic updates the source account, dependent fallback snapshots, and timeline/workflow history atomically. |
-| F0016-S0008 | Security Reviewer | Codex (Security Reviewer role) | PASS | [F0016-SECURITY-REVIEW-REPORT.md](./F0016-SECURITY-REVIEW-REPORT.md) | 2026-04-14 | `account:merge` is manager/admin-only and merged accounts remain terminal for writes. |
-| F0016-S0008 | DevOps | Codex (DevOps role) | PASS | [F0016-DEVOPS-VALIDATION.md](./F0016-DEVOPS-VALIDATION.md) | 2026-04-14 | Merge relies on survivor pointers and dependent snapshot columns introduced by the F0016 migrations. |
-| F0016-S0008 | Architect | Codex (Architect role) | PASS | [F0016-ARCHITECT-REVIEW.md](./F0016-ARCHITECT-REVIEW.md) | 2026-04-14 | Tombstone-forward merge semantics preserve MVP simplicity and avoid scope creep into bulk FK rewrites. |
+| F0016-S0008 | Quality Engineer | Codex (Quality Engineer role) | PASS | [F0016-QE-REPORT.md](./F0016-QE-REPORT.md) | 2026-04-15 | Re-verified after hardening: merge-preview, 413 threshold, and idempotency-key replay are now covered by 4 new integration tests (`MergePreview_ReturnsLinkedRecordCounts`, `MergePreview_RejectsSelfMergeWithConflict`, `MergeAccount_ReturnsContentTooLarge_WhenLinkedRecordsExceedThreshold`, `MergeAccount_WithIdempotencyKey_ReplaysFirstResponseAndDoesNotDuplicateTimeline`). |
+| F0016-S0008 | Code Reviewer | Codex (Code Reviewer role) | PASS | [F0016-CODE-REVIEW-REPORT.md](./F0016-CODE-REVIEW-REPORT.md) | 2026-04-15 | Re-verified after hardening: merge-preview endpoint, 500-record threshold guard, and `Idempotency-Key` replay logic implemented. Merge service returns 3-tuple; idempotency stays at HTTP layer. |
+| F0016-S0008 | Security Reviewer | Codex (Security Reviewer role) | PASS | [F0016-SECURITY-REVIEW-REPORT.md](./F0016-SECURITY-REVIEW-REPORT.md) | 2026-04-15 | Re-verified: `account:merge` ABAC gates both merge-preview and merge; idempotency key is actor-scoped; 413 prevents unbounded transaction. |
+| F0016-S0008 | DevOps | Codex (DevOps role) | PASS | [F0016-DEVOPS-VALIDATION.md](./F0016-DEVOPS-VALIDATION.md) | 2026-04-15 | Re-verified: migration `20260415120000_F0016_MergeHardening` adds `IdempotencyRecords` table, backfills NOT NULL fallback columns, fixes index directions, normalizes TaxId. Down() reverses all changes. |
+| F0016-S0008 | Architect | Codex (Architect role) | PASS | [F0016-ARCHITECT-REVIEW.md](./F0016-ARCHITECT-REVIEW.md) | 2026-04-15 | Re-verified: all three S0008 checklist gaps (merge-preview, threshold, idempotency) now implemented per PRD and ADR-017. |
 | F0016-S0009 | Quality Engineer | Codex (Quality Engineer role) | PASS | [F0016-QE-REPORT.md](./F0016-QE-REPORT.md) | 2026-04-14 | Submission and renewal list/detail views now render stable account fallbacks for merged/deleted accounts and respect deleted 410 semantics. |
 | F0016-S0009 | Code Reviewer | Codex (Code Reviewer role) | PASS | [F0016-CODE-REVIEW-REPORT.md](./F0016-CODE-REVIEW-REPORT.md) | 2026-04-14 | Dependent DTO/service changes consistently project fallback display name, status, and survivor identifiers. |
 | F0016-S0009 | Security Reviewer | Codex (Security Reviewer role) | PASS | [F0016-SECURITY-REVIEW-REPORT.md](./F0016-SECURITY-REVIEW-REPORT.md) | 2026-04-14 | Tombstone payloads expose only the stable fields needed for safe fallback rendering. |
@@ -128,6 +129,10 @@
 - Two implementation defects found during signoff were fixed in-scope:
   - `AccountRepository` summary projection now uses an EF-translatable terminal-status array.
   - `AccountService.ChangeRelationshipAsync` now records short workflow transition state labels instead of overflowing the shared `WorkflowTransitions.ToState` column.
+- Six post-closeout hardening fixes landed on 2026-04-15 (triggered by independent re-validation via `F0016-REQUIREMENTS-VALIDATION.md` and `F0016-ARCHITECTURE-VALIDATION.md`):
+  - H1: merge-preview endpoint, H2: 500-record threshold, H3: idempotency-key replay
+  - M1: NOT NULL fallback columns, M2: DESC index direction, M3: EF-modeled account indexes + TaxId normalization
+  - Migration: `20260415120000_F0016_MergeHardening.cs` (hand-written, reversible)
 
 ## Validation Evidence
 
@@ -147,6 +152,14 @@
   - `docker compose up -d db authentik-server authentik-worker api`
   - `docker compose ps` showed `db` healthy, `authentik-server` healthy, `api` started
   - `authentik-worker` remained unhealthy because of an existing blueprint failure (`nebula-roles-mapping` / `authorization_flow` null) outside F0016 scope; recorded for Architect/PM follow-up instead of repaired here
+
+- Post-closeout hardening build passed on 2026-04-15:
+  - `dotnet build engine/src/Nebula.Api/Nebula.Api.csproj` — 0 errors, 3 pre-existing warnings
+  - `dotnet build engine/tests/Nebula.Tests/Nebula.Tests.csproj` — 0 errors, 8 pre-existing warnings
+- Post-closeout hardening tests passed on 2026-04-15:
+  - `dotnet test engine/tests/Nebula.Tests/Nebula.Tests.csproj --filter "FullyQualifiedName~AccountEndpointTests"`
+  - Result: `Passed: 9, Failed: 0, Total: 9` (5 pre-existing + 4 new merge hardening tests)
+  - 7 pre-existing failures in `DashboardRepositoryKpiTests`/`DashboardRepositoryBreakdownAndAgingTests`/`DashboardEndpointTests` confirmed as baseline regressions from F0016 base commit (reproduced with hardening changes stashed)
 
 ## Backend Progress
 
@@ -168,9 +181,9 @@
 - [x] Frontend lint passing
 - [x] Frontend unit tests passing
 - [x] Frontend build passing
-- [ ] Dedicated accessibility audit recorded
-- [ ] Dedicated visual regression evidence recorded
-- [ ] Dedicated responsive layout evidence recorded
+- [ ] Dedicated accessibility audit recorded (deferred — see follow-ups table)
+- [ ] Dedicated visual regression evidence recorded (deferred — see follow-ups table)
+- [ ] Dedicated responsive layout evidence recorded (deferred — see follow-ups table)
 
 ## Cross-Cutting
 
@@ -180,11 +193,29 @@
 - [x] Knowledge-graph bindings updated at closeout
 - [x] Tracker sync executed
 
+## Post-Closeout Hardening (2026-04-15)
+
+Independent re-validation (`F0016-REQUIREMENTS-VALIDATION.md`, `F0016-ARCHITECTURE-VALIDATION.md`) found 3 high and 3 medium gaps. All 6 were fixed in a single hardening pass:
+
+| # | Severity | Finding | Fix | Files Changed |
+|---|----------|---------|-----|---------------|
+| H1 | High | `GET /api/accounts/{id}/merge-preview` not implemented | Added merge-preview endpoint returning `AccountMergePreviewDto` (submission/policy/renewal/contact/timeline counts) | `AccountEndpoints.cs`, `AccountService.cs`, `AccountRepository.cs`, `AccountMergePreviewDto.cs`, `AccountMergeImpactProjection.cs` |
+| H2 | High | 500-record merge threshold not enforced server-side | `AccountService.MergeAsync` now checks `GetMergeImpactAsync` and returns `merge_too_large` → HTTP 413 | `AccountService.cs`, `AccountEndpoints.cs`, `ProblemDetailsHelper.cs` |
+| H3 | High | `Idempotency-Key` retry semantics missing on merge | Endpoint reads header, stores `IdempotencyRecord` on success, replays cached response on retry | `AccountEndpoints.cs`, `IdempotencyRecord.cs`, `IIdempotencyStore.cs`, `IdempotencyStore.cs`, `IdempotencyRecordConfiguration.cs`, `AppDbContext.cs`, `DependencyInjection.cs` |
+| M1 | Medium | Denormalized fallback columns nullable (violates ADR-017) | Added `.IsRequired()` on `AccountDisplayNameAtLink`/`AccountStatusAtRead` in 3 EF configs; migration backfills nulls then `ALTER COLUMN NOT NULL` | `SubmissionConfiguration.cs`, `RenewalConfiguration.cs`, `PolicyConfiguration.cs`, `Submission.cs`, `Renewal.cs`, `Policy.cs` |
+| M2 | Medium | `AccountRelationshipHistory(AccountId, EffectiveAt)` index ASC instead of DESC | Added `.IsDescending(false, true)` to EF config; migration drops and recreates index with `EffectiveAt DESC` | `AccountRelationshipHistoryConfiguration.cs` |
+| M3 | Medium | `TaxId` filtered unique + `DisplayName_Trgm` gin indexes raw-SQL only | Added `HasIndex().HasFilter().IsUnique()` and `HasIndex().HasMethod("gin").HasOperators("gin_trgm_ops")` to `AccountConfiguration.cs`; TaxId normalized to UPPER(TRIM) at write time | `AccountConfiguration.cs`, `AccountService.cs`, `AccountRepository.cs` |
+
+**Migration:** `20260415120000_F0016_MergeHardening.cs` (hand-written, includes reversible `Down()`)
+**New tests:** 4 integration tests in `AccountEndpointTests.cs` covering merge-preview, self-merge rejection, 413 threshold, and idempotency replay
+**Build:** 0 errors on both API and test projects
+
 ## Closeout Summary
 
 **Implementation Complete:** 2026-04-14  
-**Tests:** 36 targeted backend integration tests passed; 91 frontend unit tests passed; frontend lint/theme/build/typecheck all passed  
-**Defects found and fixed:** 2 feature defects fixed during signoff (`AccountRepository` EF translation failure, relationship-change workflow transition width overflow)  
+**Post-Closeout Hardening:** 2026-04-15 — 6 findings fixed (3 high, 3 medium); 4 new integration tests added  
+**Tests:** 9 targeted AccountEndpointTests passed (5 original + 4 new); 91 frontend unit tests passed; frontend lint/theme/build/typecheck all passed  
+**Defects found and fixed:** 2 feature defects fixed during signoff (`AccountRepository` EF translation failure, relationship-change workflow transition width overflow) + 6 hardening fixes from independent re-validation  
 **Residual risks:** 1 non-feature blocker remains outside F0016 scope — `authentik-worker` is unhealthy in compose because of a pre-existing blueprint/import drift, which prevents a clean authenticated end-to-end container smoke until the identity stack issue is triaged by Architect/PM
 
 ## Deferred Non-Blocking Follow-ups
@@ -196,3 +227,4 @@
 | Unmerge / undelete recovery flows | Explicitly out of MVP | N/A | Product / Architect |
 | Documents rail wiring once F0020 lands | F0016 intentionally ships a read boundary, not document ownership | F0020 | Frontend / Backend |
 | Territory hierarchy and rule-based auto-assignment | Deferred to the broader ownership and hierarchy work | F0017 | Product / Architect |
+| Dedicated accessibility, visual regression, and responsive layout audits | Not required by NFRs; left unchecked in DoD checklist per validation finding M5 | N/A | Frontend / QE |

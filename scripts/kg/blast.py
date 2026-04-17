@@ -16,11 +16,14 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 from typing import Any
 
 from kg_common import (
     REF_FIELDS,
     edge_ref_ids,
+    emit_telemetry,
+    estimate_tokens,
     expand_declared_pattern,
     load_bundle,
     match_bindings_for_path,
@@ -218,6 +221,13 @@ def main() -> int:
         action="store_true",
         help="Output summary only, omit resolved file lists.",
     )
+    parser.add_argument("--run-id", default=None, help="Correlation ID stamped onto emitted telemetry.")
+    parser.add_argument(
+        "--telemetry-file",
+        type=Path,
+        default=None,
+        help="Append one JSONL telemetry event for this invocation.",
+    )
     args = parser.parse_args()
 
     if not args.target and not args.file_path:
@@ -260,6 +270,25 @@ def main() -> int:
     else:
         json.dump(report, sys.stdout, indent=2)
     sys.stdout.write("\n")
+
+    emit_telemetry(
+        args.telemetry_file,
+        args.run_id,
+        "blast",
+        {
+            "query": query,
+            "nodes_returned": report["direct_nodes"],
+            "nodes_count": len(report["direct_nodes"]),
+            "neighbor_nodes": report["neighbor_nodes"],
+            "policy_rule_count": report["summary"]["policy_rule_count"],
+            "resolved_file_count": report["summary"]["resolved_file_count"],
+            "empty_scope": not report["direct_nodes"],
+            "ambiguous_count": 0,
+            "hint_emitted": False,
+            "confidence_band": "high",
+            "tokens_estimated": estimate_tokens(report if not args.compact else report["summary"]),
+        },
+    )
     return 0
 
 

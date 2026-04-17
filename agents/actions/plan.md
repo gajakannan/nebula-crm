@@ -26,6 +26,99 @@ Ready for Build
 
 ---
 
+## Retrieval Contract
+
+Retuned by `python3 scripts/kg/eval.py`; do not hand-edit without running eval.
+
+```yaml
+tier_defaults:
+  plan:
+    greenfield:      { start_tier: file-centric, max_auto_tier: 2 }
+    refinement:      { start_tier: 2,            max_auto_tier: 3 }
+    drift-reconcile: { start_tier: 3,            max_auto_tier: 4 }
+```
+
+- `python3 scripts/kg/lookup.py <feature-id>` is a first-pass scope resolver and retrieval aid, not an authoritative source of truth.
+- Raw artifacts win on conflict: feature folder, ADRs, API contracts, schemas, and policy artifacts outrank KG output.
+- Navigate instead of eager-loading: open linked raw artifacts on demand when the current gate needs detail or drift repair.
+
+## Context Files
+
+Load in this order when the work is feature-scoped:
+
+1. `agents/ROUTER.md`
+2. `agents/agent-map.yaml`
+3. `agents/docs/AGENT-USE.md`
+4. `agents/actions/plan.md`
+5. `planning-mds/knowledge-graph/solution-ontology.yaml`
+6. `planning-mds/knowledge-graph/canonical-nodes.yaml`
+7. `planning-mds/knowledge-graph/feature-mappings.yaml`
+8. `planning-mds/knowledge-graph/code-index.yaml`
+9. `planning-mds/knowledge-graph/coverage-report.yaml`
+10. `planning-mds/features/F{NNNN}-{slug}/**` when the feature folder exists
+
+## On-Demand Paths
+
+- `planning-mds/api/nebula-api.yaml`
+- `planning-mds/security/authorization-matrix.md`
+- `planning-mds/security/policies/policy.csv`
+- `planning-mds/knowledge-graph/*.yaml` beyond what `lookup.py` already returned
+- `agents/<role>/references/**` only after a matching `agents/ROUTER.md` row
+
+## Deliverables Contract
+
+- PM artifacts: `PRD.md`, stories, personas, trackers, feature folder scaffolding, and feature mapping stubs
+- Architect artifacts: data model, workflow design, API contracts, ADRs, authorization deltas, and completed KG bindings
+- KG artifacts: `planning-mds/knowledge-graph/feature-mappings.yaml`, plus `canonical-nodes.yaml` or `solution-ontology.yaml` only when shared semantics or ontology vocabulary changed
+- Tracker artifacts: `planning-mds/features/REGISTRY.md`, `planning-mds/features/ROADMAP.md`, `planning-mds/BLUEPRINT.md`, and generated story index as needed
+- `feature-assembly-plan.md` is not a plan deliverable; it belongs to `agents/actions/feature.md` Step 0
+
+## Ownership Contract
+
+- `product-manager` owns `planning-mds/knowledge-graph/feature-mappings.yaml`, stories, PRD, personas, and planning trackers
+- `architect` owns `planning-mds/knowledge-graph/canonical-nodes.yaml`, `planning-mds/knowledge-graph/solution-ontology.yaml`, ADRs, API contracts, schemas, and authorization artifacts
+- Other roles flag drift but do not silently redefine canonical shared semantics
+
+## Forbidden
+
+- Hand-enumerating schemas, ADRs, or contract files when `lookup.py` output is already available
+- Loading `agents/<role>/references/**` without a `agents/ROUTER.md` row match
+- Treating lookup/KG mappings as authoritative over raw artifacts
+- Non-architect roles editing `planning-mds/knowledge-graph/canonical-nodes.yaml` or `planning-mds/knowledge-graph/solution-ontology.yaml`
+- Proceeding past any gate without an explicit approval token
+- Widening scope outside the current feature or declared plan target
+- Climbing past `max_auto_tier` without recording `workstate.py escalate`
+
+## Gate Contract
+
+- `G1 CLARIFICATION` — Step 1.5 Requirements Clarification
+- `G2 TRACKER SYNC (A)` — Step 1.75 Mandatory tracker synchronization before Phase A approval
+- `G3 PHASE A APPROVAL` — Step 2 Phase A Review
+- `G4 ONTOLOGY SYNC (B)` — Step 3.5 Mandatory ontology synchronization before Phase B approval
+- `G5 PHASE B APPROVAL` — Step 4 Phase B Review
+
+## Stop Conditions
+
+- `validate.py` exits non-zero and cannot be repaired within the declared scope
+- A required approval gate lacks an explicit approval token
+- Scope drifts outside the declared feature or planning target
+- A non-architect attempts to edit architect-owned canonical semantics
+- `INSUFFICIENT_CONTEXT`: `lookup.py` returns empty scope for a declared in-scope node, or only ambiguous / low-confidence (`inferred`, `confidence < 0.5`) matches on a node about to be edited, or the workflow needs to climb past `max_auto_tier`; halt the current gate, invoke `workstate.py escalate <reason> --nodes ... --opened-raw ...`, open the raw artifacts, and do not proceed with weak matches
+
+## Exit Validation
+
+Run in this order:
+
+1. `python3 agents/product-manager/scripts/validate-stories.py {FEATURE_PATH}`
+2. `python3 agents/product-manager/scripts/generate-story-index.py planning-mds/features/`
+3. `python3 agents/product-manager/scripts/validate-trackers.py`
+4. `python3 scripts/kg/validate.py --write-coverage-report` when KG changed
+5. `python3 scripts/kg/validate.py`
+6. `python3 scripts/kg/validate.py --check-drift`
+7. `python3 scripts/kg/validate_templates.py`
+
+---
+
 ## Execution Steps
 
 ### Step 1: Execute Product Manager (Phase A)

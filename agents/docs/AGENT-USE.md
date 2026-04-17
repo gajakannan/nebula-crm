@@ -97,20 +97,25 @@ All tools are agent-agnostic and work from any terminal or agent runtime.
 
 | Command | Purpose |
 |---------|---------|
-| `python3 scripts/kg/lookup.py <id>` | Materialize ontology scope for a feature or story ID |
+| `python3 scripts/kg/lookup.py <id>` | Materialize first-pass ontology scope for a feature or story ID. Use `--tier`, `--fields`, and `--allow-missing` to control retrieval budget and greenfield fallback. |
 | `python3 scripts/kg/lookup.py --file <path>` | Reverse lookup from a code file to ontology nodes |
-| `python3 scripts/kg/hint.py <path>` | Quick KG routing hint before searching — outputs matched nodes, features, stories, and Casbin rules for a file or directory. Use `--json` for structured output. |
-| `python3 scripts/kg/blast.py <node-id>` | Compute blast radius for a canonical node — all impacted features, stories, code bindings, Casbin rules, and resolved files |
+| `python3 scripts/kg/hint.py <path>` | Quick KG routing hint before searching — outputs matched nodes, features, stories, and Casbin rules for a file or directory. Use `--json` for structured output, plus `--run-id` and `--telemetry-file` for correlation. |
+| `python3 scripts/kg/blast.py <node-id>` | Compute blast radius for a canonical node — all impacted features, stories, code bindings, Casbin rules, and resolved files. Supports `--run-id` and `--telemetry-file`. |
 | `python3 scripts/kg/blast.py --file <path>` | Blast radius starting from a code file (reverse-binds to nodes first) |
 | `python3 scripts/kg/blast.py <feature-id>` | Blast radius for a feature by expanding its canonical node references. Use `--compact` for summary only. |
 | `python3 scripts/kg/validate.py` | Validate KG integrity (IDs, references, paths, coverage) |
 | `python3 scripts/kg/validate.py --check-drift` | Run drift checks: Casbin policy cross-check (policy_rule nodes vs policy.csv resource/action/role alignment). Add `--memory-dir <path>` to scan an external agent memory directory for stale repo-path references. |
 | `python3 scripts/kg/validate.py --write-coverage-report` | Refresh the committed `coverage-report.yaml` artifact |
+| `python3 scripts/kg/validate_templates.py` | Validate prompt templates against the action-contract sections in `plan.md` and `feature.md` |
+| `python3 scripts/kg/eval.py --since <ref>` | Score retrieval quality offline against historical closeout commits and telemetry |
+| `python3 scripts/kg/telemetry_rotate.py .kg-state/telemetry.jsonl` | Rotate and prune local retrieval telemetry JSONL files |
 | `python3 scripts/kg/pagerank.py --top N` | Compute PageRank over the knowledge graph to surface hub nodes. Use `--type entity` to filter by node type. |
 | `python3 scripts/kg/cochange.py --top N` | Discover git co-change edges between canonical nodes. Use `--coverage-gaps` to find unbound files that co-change with bound files. |
-| `python3 scripts/kg/workstate.py --state-file <path> init --role <role> --scope <id>` | Initialize a session working-state file for compaction resilience |
-| `python3 scripts/kg/workstate.py --state-file <path> decision "<summary>"` | Record a decision to working state. Use `--files` and `--rationale` for detail. |
+| `python3 scripts/kg/workstate.py --state-file <path> init --role <role> --scope <id> --run-id <uuid>` | Initialize a session working-state file for compaction resilience and correlation. Add `--mode <name>` when applicable. |
+| `python3 scripts/kg/workstate.py --state-file <path> decision "<summary>" --topic <slug>` | Record a decision to working state. Use `--files`, `--rationale`, and `--supersedes` for detail and current-view supersession. |
+| `python3 scripts/kg/workstate.py --state-file <path> escalate "<reason>"` | Record an explicit insufficient-context escalation, including raw artifacts opened during escalation. |
 | `python3 scripts/kg/workstate.py --state-file <path> dump --compact` | Dump compact working state for post-compaction context recovery |
+| `python3 scripts/kg/workstate.py --state-file <path> dump --current-view` | Dump the current-view projection with superseded topic decisions filtered out |
 
 ### When to Use Each Tool
 
@@ -120,7 +125,7 @@ All tools are agent-agnostic and work from any terminal or agent runtime.
   `blast.py <node-id>` to see what features, Casbin rules, and code files
   would be impacted.
 - **When planning a feature implementation**: run `lookup.py <feature-id>` to
-  materialize the full ontology scope as a starting context.
+  materialize a first-pass ontology scope as a starting context.
 - **After ontology changes**: run `validate.py --write-coverage-report` to
   refresh freshness tracking, and `validate.py --check-drift` to catch
   cross-artifact misalignment.
@@ -156,6 +161,20 @@ Execution notes:
 - capture evidence per agents/docs/MANUAL-ORCHESTRATION-RUNBOOK.md
 ```
 
+## Action Prompt Templates
+
+Use the prompt templates in `agents/templates/prompts/` as the canonical
+operator starting points for `plan` and `feature` action sessions:
+
+- `agents/templates/prompts/plan-automation-safe.md`
+- `agents/templates/prompts/plan-operator-friendly.md`
+- `agents/templates/prompts/feature-automation-safe.md`
+- `agents/templates/prompts/feature-operator-friendly.md`
+
+These templates encode the current retrieval budget, gate IDs, required tool
+invocations, and exit-validation order. Keep them aligned with the action docs
+via `python3 scripts/kg/validate_templates.py`.
+
 ## Common Prompt Clauses
 
 Use these clauses when they apply:
@@ -185,6 +204,12 @@ Use these clauses when they apply:
   role.
 - Code Reviewer and Security should treat unresolved ontology drift as a
   cross-artifact consistency issue when shared semantics changed.
+
+## STATUS.md Evidence Semantics
+
+`STATUS.md` evidence rows are append-only audit history. To query "the current
+verdict per (story, role)," compute it as a view over the table (latest row per
+key), not by mutating or removing prior rows.
 
 ## Agent Quick Reference
 

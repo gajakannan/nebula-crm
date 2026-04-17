@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 import fnmatch
+import json
+import math
+import os
 import re
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Tuple
 
@@ -56,6 +60,13 @@ REF_FIELDS = (
 )
 
 VALID_PROVENANCE = {"extracted", "inferred", "ambiguous"}
+TELEMETRY_ENV_VARS = {
+    "action": "NEBULA_ACTION",
+    "feature_id": "NEBULA_FEATURE_ID",
+    "mode": "NEBULA_MODE",
+    "gate": "NEBULA_GATE",
+    "topic": "NEBULA_TOPIC",
+}
 
 
 def edge_ref_id(ref: str | dict[str, Any]) -> str:
@@ -142,27 +153,35 @@ def normalize_target_id(target: str) -> str:
     return stripped
 
 
-def load_bundle() -> dict[str, Any]:
-    ontology = load_yaml(KG_DIR / "solution-ontology.yaml")
-    canonical = load_yaml(KG_DIR / "canonical-nodes.yaml")
-    mappings = load_yaml(KG_DIR / "feature-mappings.yaml")
-    code_index = load_yaml(KG_DIR / "code-index.yaml")
-
+def build_bundle(
+    ontology: Mapping[str, Any],
+    canonical: Mapping[str, Any],
+    mappings: Mapping[str, Any],
+    code_index: Mapping[str, Any],
+) -> dict[str, Any]:
     canonical_nodes = flatten_canonical_nodes(canonical)
     mapping_nodes = flatten_mapping_nodes(mappings)
     all_nodes = {**canonical_nodes, **mapping_nodes}
     bindings = build_binding_index(code_index)
 
     return {
-        "ontology": ontology,
-        "canonical": canonical,
-        "mappings": mappings,
-        "code_index": code_index,
+        "ontology": dict(ontology),
+        "canonical": dict(canonical),
+        "mappings": dict(mappings),
+        "code_index": dict(code_index),
         "canonical_nodes": canonical_nodes,
         "mapping_nodes": mapping_nodes,
         "all_nodes": all_nodes,
         "bindings": bindings,
     }
+
+
+def load_bundle() -> dict[str, Any]:
+    ontology = load_yaml(KG_DIR / "solution-ontology.yaml")
+    canonical = load_yaml(KG_DIR / "canonical-nodes.yaml")
+    mappings = load_yaml(KG_DIR / "feature-mappings.yaml")
+    code_index = load_yaml(KG_DIR / "code-index.yaml")
+    return build_bundle(ontology, canonical, mappings, code_index)
 
 
 def flatten_canonical_nodes(canonical: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
@@ -383,6 +402,65 @@ def type_regex_map() -> dict[str, re.Pattern[str]]:
         "feature": re.compile(r"^feature:F\d{4}$"),
         "story": re.compile(r"^story:F\d{4}-S\d{4}$"),
     }
+
+
+def now_iso() -> str:
+    return datetime.now(UTC).isoformat(timespec="seconds")
+
+
+def telemetry_context_from_env() -> dict[str, str | None]:
+    """Read the shared Nebula telemetry context from environment variables.
+
+    Supported environment variables:
+    - NEBULA_ACTION
+    - NEBULA_FEATURE_ID
+    - NEBULA_MODE
+    - NEBULA_GATE
+    - NEBULA_TOPIC
+    """
+    return {
+        field: os.getenv(env_name) or None
+        for field, env_name in TELEMETRY_ENV_VARS.items()
+    }
+
+
+def estimate_tokens(value: Any) -> int:
+    """Best-effort token estimate for telemetry budgeting.
+
+    This intentionally stays lightweight and deterministic so CLIs can emit
+    comparable telemetry without depending on a tokenizer package.
+    """
+    serialized = json.dumps(value, sort_keys=True, ensure_ascii=False, default=str)
+    return max(1, math.ceil(len(serialized) / 4))
+
+
+def emit_telemetry(
+    telemetry_file: Path | None,
+    run_id: str | None,
+    tool: str,
+    event: dict[str, Any],
+) -> None:
+    """Append a single JSONL telemetry event.
+
+    The payload is enriched with the shared action context from environment
+    variables when present. If telemetry_file is None, this is a no-op.
+    """
+    if telemetry_file is None:
+        return
+
+    payload = {
+        "ts": now_iso(),
+        "run_id": run_id,
+        "tool": tool,
+        **telemetry_context_from_env(),
+        "payload": event,
+    }
+
+    telemetry_file.parent.mkdir(parents=True, exist_ok=True)
+    with telemetry_file.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=False))
+        handle.write("\n")
+        handle.flush()
 
 
 def main_exception(message: str) -> None:

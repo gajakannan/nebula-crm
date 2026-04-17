@@ -22,6 +22,8 @@ from pathlib import Path
 from typing import Any
 
 from kg_common import (
+    emit_telemetry,
+    estimate_tokens,
     load_bundle,
     match_bindings_for_path,
     normalize_repo_path,
@@ -107,6 +109,13 @@ def main() -> int:
         dest="as_json",
         help="Output as JSON instead of human-readable text.",
     )
+    parser.add_argument("--run-id", default=None, help="Correlation ID stamped onto emitted telemetry.")
+    parser.add_argument(
+        "--telemetry-file",
+        type=Path,
+        default=None,
+        help="Append one JSONL telemetry event for this invocation.",
+    )
     args = parser.parse_args()
 
     normalized = normalize_repo_path(args.path)
@@ -121,6 +130,21 @@ def main() -> int:
 
     matches = match_path(normalized, bundle)
     if not matches:
+        emit_telemetry(
+            args.telemetry_file,
+            args.run_id,
+            "hint",
+            {
+                "path": normalized,
+                "nodes_returned": [],
+                "nodes_count": 0,
+                "empty_scope": True,
+                "ambiguous_count": 0,
+                "hint_emitted": False,
+                "confidence_band": "low",
+                "tokens_estimated": 1,
+            },
+        )
         return 0
 
     node_ids = [m["id"] for m in matches]
@@ -140,6 +164,32 @@ def main() -> int:
     else:
         print(format_text(normalized, node_ids, features, stories, policy_rules))
 
+    emit_telemetry(
+        args.telemetry_file,
+        args.run_id,
+        "hint",
+        {
+            "path": normalized,
+            "nodes_returned": node_ids,
+            "nodes_count": len(node_ids),
+            "feature_ids": [f["id"] for f in features],
+            "story_ids": [s["id"] for s in stories],
+            "policy_rule_ids": policy_rules,
+            "empty_scope": False,
+            "ambiguous_count": 0,
+            "hint_emitted": False,
+            "confidence_band": "high",
+            "tokens_estimated": estimate_tokens(
+                {
+                    "path": normalized,
+                    "nodes": node_ids,
+                    "features": [f["id"] for f in features],
+                    "stories": [s["id"] for s in stories],
+                    "policy_rules": policy_rules,
+                }
+            ),
+        },
+    )
     return 0
 
 

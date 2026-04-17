@@ -47,7 +47,7 @@ def load_bundle_at_ref(ref: str) -> dict[str, Any]:
     )
 
 
-def commit_list(since: str | None, feature_id: str | None) -> list[str]:
+def commit_list(since: str | None, feature_id: str | None, limit: int | None) -> list[str]:
     if feature_id:
         current_bundle = build_bundle(
             load_yaml_at_ref("HEAD", "planning-mds/knowledge-graph/solution-ontology.yaml"),
@@ -64,11 +64,15 @@ def commit_list(since: str | None, feature_id: str | None) -> list[str]:
             args.append(f"{since}..HEAD")
         args.append("--")
         args.extend(paths)
-        return git_lines(*args)
+        commits = git_lines(*args)
+    elif since:
+        commits = git_lines("rev-list", "--reverse", f"{since}..HEAD")
+    else:
+        commits = git_lines("rev-list", "--reverse", "HEAD")
 
-    if since:
-        return git_lines("rev-list", "--reverse", f"{since}..HEAD")
-    return git_lines("rev-list", "--reverse", "HEAD")
+    if limit is not None and limit > 0:
+        return commits[-limit:]
+    return commits
 
 
 def changed_files(commit: str) -> list[str]:
@@ -117,7 +121,7 @@ def precision_recall(predicted: set[str], expected: set[str]) -> tuple[float, fl
     if not predicted and not expected:
         return 1.0, 1.0
     if not predicted:
-        return 0.0, 0.0 if expected else 1.0
+        return 0.0, 0.0
     if not expected:
         return 0.0, 1.0
     intersection = predicted & expected
@@ -296,10 +300,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Offline evaluation for KG retrieval decisions.")
     parser.add_argument("--since", default=None, help="Git ref range start, e.g. HEAD~20.")
     parser.add_argument("--feature", default=None, help="Feature ID to evaluate, e.g. F0016.")
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=200,
+        help="Keep at most the last N commits from the walk (default 200, 0 disables the cap).",
+    )
     parser.add_argument("--json", action="store_true", help="Output JSON instead of the human-readable summary.")
     args = parser.parse_args()
 
-    commits = commit_list(args.since, args.feature)
+    commits = commit_list(args.since, args.feature, args.limit)
     telemetry_events = load_telemetry_events()
 
     commit_reports: list[dict[str, Any]] = []

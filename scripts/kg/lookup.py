@@ -156,6 +156,9 @@ def append_lookup_hints(payload: dict[str, Any], tier: int) -> dict[str, Any]:
 
 
 def confidence_band(payload: dict[str, Any]) -> str:
+    if payload.get("scope") is None and payload.get("reason") == "unmapped":
+        return "low"
+
     ambiguous = False
     low = False
     medium = False

@@ -21,7 +21,9 @@ from typing import Any
 
 from kg_common import (
     REF_FIELDS,
+    edge_ref_id,
     edge_ref_ids,
+    edge_ref_provenance,
     emit_telemetry,
     estimate_tokens,
     expand_declared_pattern,
@@ -31,6 +33,8 @@ from kg_common import (
     related_mapping_entries,
     repo_relative,
 )
+
+LOW_CONFIDENCE_THRESHOLD = 0.5
 
 
 def node_ids_for_file(path: str, bundle: dict[str, Any]) -> set[str]:
@@ -44,6 +48,38 @@ def canonical_refs_from_mapping(node: dict[str, Any]) -> set[str]:
     for field in REF_FIELDS:
         refs.update(edge_ref_ids(node.get(field, [])))
     return refs
+
+
+def classify_mapping_edges(node: dict[str, Any]) -> tuple[str, int]:
+    """Inspect edge provenance on a feature/story node.
+
+    Returns (confidence_band, ambiguous_count) using the same vocabulary as
+    scripts/kg/lookup.py so telemetry stays comparable across tools.
+    """
+    ambiguous_ids: set[str] = set()
+    low = False
+    medium = False
+    for field in REF_FIELDS:
+        for ref in node.get(field, []):
+            prov = edge_ref_provenance(ref)
+            if prov is None:
+                continue
+            provenance = prov.get("provenance")
+            confidence = prov.get("confidence")
+            if provenance == "ambiguous":
+                ambiguous_ids.add(edge_ref_id(ref))
+            elif provenance == "inferred":
+                if isinstance(confidence, (int, float)) and confidence < LOW_CONFIDENCE_THRESHOLD:
+                    low = True
+                else:
+                    medium = True
+    if ambiguous_ids:
+        return "ambiguous", len(ambiguous_ids)
+    if low:
+        return "low", 0
+    if medium:
+        return "medium", 0
+    return "high", 0
 
 
 def one_hop_neighbors(node_id: str, bundle: dict[str, Any]) -> set[str]:
@@ -237,6 +273,9 @@ def main() -> int:
 
     bundle = load_bundle()
 
+    confidence_band = "high"
+    ambiguous_count = 0
+
     if args.file_path:
         starting_ids = node_ids_for_file(args.file_path, bundle)
         if not starting_ids:
@@ -255,6 +294,7 @@ def main() -> int:
             starting_ids = canonical_refs_from_mapping(node)
             if not starting_ids:
                 starting_ids = {normalized}
+            confidence_band, ambiguous_count = classify_mapping_edges(node)
             query = {
                 "feature_or_story": normalized,
                 "affected_canonical_nodes": sorted(starting_ids),
@@ -283,9 +323,9 @@ def main() -> int:
             "policy_rule_count": report["summary"]["policy_rule_count"],
             "resolved_file_count": report["summary"]["resolved_file_count"],
             "empty_scope": not report["direct_nodes"],
-            "ambiguous_count": 0,
+            "ambiguous_count": ambiguous_count,
             "hint_emitted": False,
-            "confidence_band": "high",
+            "confidence_band": confidence_band,
             "tokens_estimated": estimate_tokens(report if not args.compact else report["summary"]),
         },
     )

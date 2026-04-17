@@ -1,6 +1,6 @@
 version: 0
 summary:
-  canonical_nodes: 272
+  canonical_nodes: 286
   features_mapped: 21
   stories_mapped: 90
   features_excluded: 12
@@ -1343,6 +1343,104 @@ freshness:
       source_paths:
       - planning-mds/security/authorization-matrix.md
       - planning-mds/security/policies/policy.csv
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:contact-update:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:submission-read:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:submission-create:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:submission-update:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:submission-transition:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:submission-assign:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:dashboard-kpi-read:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:dashboard-pipeline-read:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:broker-create:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:broker-update:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:broker-delete:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:broker-reactivate:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:contact-create:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+      source_count: 2
+      last_modified: '2026-04-15'
+      source_hash: a57199dc76f4bbd7
+    policy_rule:contact-delete:
+      source_paths:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
       source_count: 2
       last_modified: '2026-04-15'
       source_hash: a57199dc76f4bbd7

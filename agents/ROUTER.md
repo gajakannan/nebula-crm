@@ -144,10 +144,11 @@ Before searching code or assessing impact, use the knowledge-graph CLI tools
 |------|---------|
 | Before searching code | `python3 scripts/kg/hint.py <path>` |
 | Before editing shared entities/workflows | `python3 scripts/kg/blast.py <node-or-file>` |
-| When starting feature work | `python3 scripts/kg/lookup.py <feature-id>` |
+| When starting feature work | `python3 scripts/kg/lookup.py <feature-id>` (use `--tier`, `--fields`, and `--allow-missing` as needed) |
 | After ontology changes | `python3 scripts/kg/validate.py --check-drift` |
-| Starting a long session | `python3 scripts/kg/workstate.py --state-file <path> init --role <role> --scope <id>` |
-| After a key decision | `python3 scripts/kg/workstate.py --state-file <path> decision "<summary>"` |
+| Starting a long session | `python3 scripts/kg/workstate.py --state-file <path> init --role <role> --scope <id> --run-id <uuid>` |
+| After a key decision | `python3 scripts/kg/workstate.py --state-file <path> decision "<summary>" --topic <slug>` |
+| When retrieval is insufficient | `python3 scripts/kg/workstate.py --state-file <path> escalate "<reason>" --nodes <id> ... --opened-raw <path> ...` |
 | After compaction | `python3 scripts/kg/workstate.py --state-file <path> dump --compact` |
 | Hub/impact analysis | `python3 scripts/kg/pagerank.py --top 20` |
 | Undeclared structural edges | `python3 scripts/kg/cochange.py --top 20 --coverage-gaps` |

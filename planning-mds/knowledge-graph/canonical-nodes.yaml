@@ -1731,6 +1731,234 @@ policy_rules:
       - entity:broker
       - capability:authorization-enforcement
     notes: Appends AccountRelationshipHistory + ActivityTimelineEvent. Used for BrokerOfRecord, PrimaryProducer, Territory changes.
+  - id: policy_rule:contact-update
+    label: contact:update
+    resource: contact
+    action: update
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:relationship-manager
+      - role:admin
+    related_nodes:
+      - entity:contact
+      - capability:broker-contact-management
+      - capability:authorization-enforcement
+  - id: policy_rule:submission-read
+    label: submission:read
+    resource: submission
+    action: read
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+    related_nodes:
+      - entity:submission
+      - workflow:submission
+      - capability:authorization-enforcement
+  - id: policy_rule:submission-create
+    label: submission:create
+    resource: submission
+    action: create
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:submission
+      - workflow:submission
+      - capability:authorization-enforcement
+  - id: policy_rule:submission-update
+    label: submission:update
+    resource: submission
+    action: update
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:submission
+      - workflow:submission
+      - capability:authorization-enforcement
+  - id: policy_rule:submission-transition
+    label: submission:transition
+    resource: submission
+    action: transition
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:submission
+      - entity:workflow-transition
+      - workflow:submission
+      - capability:authorization-enforcement
+    notes: Casbin gates the broad transition action; per-state from→to pairs are enforced at the application layer per ADR-011.
+  - id: policy_rule:submission-assign
+    label: submission:assign
+    resource: submission
+    action: assign
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:submission
+      - entity:user-profile
+      - capability:authorization-enforcement
+    notes: DistributionUser self-assign and DistributionManager/Admin region- or cross-scope assignment are both gated here; query-layer filters the assignable pool.
+  - id: policy_rule:dashboard-kpi-read
+    label: dashboard_kpi:read
+    resource: dashboard_kpi
+    action: read
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+    related_nodes:
+      - capability:dashboard-kpis
+      - capability:authorization-enforcement
+    notes: Scope (assigned, region, program, broker relationships, unscoped) is enforced at the query layer per role; Casbin grants the broad read permission only.
+  - id: policy_rule:dashboard-pipeline-read
+    label: dashboard_pipeline:read
+    resource: dashboard_pipeline
+    action: read
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+    related_nodes:
+      - capability:dashboard-pipeline-visualization
+      - capability:authorization-enforcement
+    notes: Non-terminal status filter and per-role scope are enforced at the query layer; Casbin grants the broad read permission only.
+  - id: policy_rule:broker-create
+    label: broker:create
+    resource: broker
+    action: create
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:relationship-manager
+      - role:admin
+    related_nodes:
+      - entity:broker
+      - capability:broker-relationship-management
+      - capability:authorization-enforcement
+  - id: policy_rule:broker-update
+    label: broker:update
+    resource: broker
+    action: update
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:relationship-manager
+      - role:admin
+    related_nodes:
+      - entity:broker
+      - capability:broker-relationship-management
+      - capability:authorization-enforcement
+  - id: policy_rule:broker-delete
+    label: broker:delete
+    resource: broker
+    action: delete
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:broker
+      - capability:broker-relationship-management
+      - capability:authorization-enforcement
+    notes: RelationshipManager delete is explicitly DENY (authorization-matrix.md §2.1 OQ-4 resolution); structural record changes require DistributionUser/Manager or Admin.
+  - id: policy_rule:broker-reactivate
+    label: broker:reactivate
+    resource: broker
+    action: reactivate
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:broker
+      - capability:broker-relationship-management
+      - capability:authorization-enforcement
+    notes: Reverse of broker:delete (F0002-S0008). Manager authority required; DistributionUser and RelationshipManager excluded because structural record change requires manager authority.
+  - id: policy_rule:contact-create
+    label: contact:create
+    resource: contact
+    action: create
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:relationship-manager
+      - role:admin
+    related_nodes:
+      - entity:contact
+      - capability:broker-contact-management
+      - capability:authorization-enforcement
+  - id: policy_rule:contact-delete
+    label: contact:delete
+    resource: contact
+    action: delete
+    source_docs:
+      - planning-mds/security/policies/policy.csv
+      - planning-mds/security/authorization-matrix.md
+    allowed_roles:
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:contact
+      - capability:broker-contact-management
+      - capability:authorization-enforcement
+    notes: DistributionUser and RelationshipManager delete are explicitly DENY (authorization-matrix.md §2.2 OQ-5 resolution); destructive contact removal requires manager authority.
 
 evidence:
   - id: evidence:workflow-state-machine-tests

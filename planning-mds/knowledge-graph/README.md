@@ -96,7 +96,7 @@ annotations in its output when present.
   alignment). Add `--memory-dir <path>` to also scan an external agent memory
   directory for stale repo-path references (agent-agnostic — works with any
   tool that stores `.md` memory files).
-- `python3 scripts/kg/lookup.py F0007-S0003` returns the merged ontology scope
+- `python3 scripts/kg/lookup.py F0007-S0003` returns the first-pass ontology scope
   for a mapped feature or story.
 - `python3 scripts/kg/lookup.py --file engine/src/Nebula.Domain/Entities/Submission.cs`
   performs reverse lookup from a code file back to ontology nodes and related

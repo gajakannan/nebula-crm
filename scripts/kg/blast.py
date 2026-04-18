@@ -16,11 +16,16 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 from typing import Any
 
 from kg_common import (
     REF_FIELDS,
+    edge_ref_id,
     edge_ref_ids,
+    edge_ref_provenance,
+    emit_telemetry,
+    estimate_tokens,
     expand_declared_pattern,
     load_bundle,
     match_bindings_for_path,
@@ -28,6 +33,8 @@ from kg_common import (
     related_mapping_entries,
     repo_relative,
 )
+
+LOW_CONFIDENCE_THRESHOLD = 0.5
 
 
 def node_ids_for_file(path: str, bundle: dict[str, Any]) -> set[str]:
@@ -41,6 +48,38 @@ def canonical_refs_from_mapping(node: dict[str, Any]) -> set[str]:
     for field in REF_FIELDS:
         refs.update(edge_ref_ids(node.get(field, [])))
     return refs
+
+
+def classify_mapping_edges(node: dict[str, Any]) -> tuple[str, int]:
+    """Inspect edge provenance on a feature/story node.
+
+    Returns (confidence_band, ambiguous_count) using the same vocabulary as
+    scripts/kg/lookup.py so telemetry stays comparable across tools.
+    """
+    ambiguous_ids: set[str] = set()
+    low = False
+    medium = False
+    for field in REF_FIELDS:
+        for ref in node.get(field, []):
+            prov = edge_ref_provenance(ref)
+            if prov is None:
+                continue
+            provenance = prov.get("provenance")
+            confidence = prov.get("confidence")
+            if provenance == "ambiguous":
+                ambiguous_ids.add(edge_ref_id(ref))
+            elif provenance == "inferred":
+                if isinstance(confidence, (int, float)) and confidence < LOW_CONFIDENCE_THRESHOLD:
+                    low = True
+                else:
+                    medium = True
+    if ambiguous_ids:
+        return "ambiguous", len(ambiguous_ids)
+    if low:
+        return "low", 0
+    if medium:
+        return "medium", 0
+    return "high", 0
 
 
 def one_hop_neighbors(node_id: str, bundle: dict[str, Any]) -> set[str]:
@@ -218,6 +257,13 @@ def main() -> int:
         action="store_true",
         help="Output summary only, omit resolved file lists.",
     )
+    parser.add_argument("--run-id", default=None, help="Correlation ID stamped onto emitted telemetry.")
+    parser.add_argument(
+        "--telemetry-file",
+        type=Path,
+        default=None,
+        help="Append one JSONL telemetry event for this invocation.",
+    )
     args = parser.parse_args()
 
     if not args.target and not args.file_path:
@@ -226,6 +272,9 @@ def main() -> int:
         parser.error("Use either a node ID or --file, not both.")
 
     bundle = load_bundle()
+
+    confidence_band = "high"
+    ambiguous_count = 0
 
     if args.file_path:
         starting_ids = node_ids_for_file(args.file_path, bundle)
@@ -245,6 +294,7 @@ def main() -> int:
             starting_ids = canonical_refs_from_mapping(node)
             if not starting_ids:
                 starting_ids = {normalized}
+            confidence_band, ambiguous_count = classify_mapping_edges(node)
             query = {
                 "feature_or_story": normalized,
                 "affected_canonical_nodes": sorted(starting_ids),
@@ -260,6 +310,25 @@ def main() -> int:
     else:
         json.dump(report, sys.stdout, indent=2)
     sys.stdout.write("\n")
+
+    emit_telemetry(
+        args.telemetry_file,
+        args.run_id,
+        "blast",
+        {
+            "query": query,
+            "nodes_returned": report["direct_nodes"],
+            "nodes_count": len(report["direct_nodes"]),
+            "neighbor_nodes": report["neighbor_nodes"],
+            "policy_rule_count": report["summary"]["policy_rule_count"],
+            "resolved_file_count": report["summary"]["resolved_file_count"],
+            "empty_scope": not report["direct_nodes"],
+            "ambiguous_count": ambiguous_count,
+            "hint_emitted": False,
+            "confidence_band": confidence_band,
+            "tokens_estimated": estimate_tokens(report if not args.compact else report["summary"]),
+        },
+    )
     return 0
 
 

@@ -32,6 +32,104 @@ Feature Complete
 
 ---
 
+## Retrieval Contract
+
+Retuned by `python3 scripts/kg/eval.py`; do not hand-edit without running eval.
+
+```yaml
+tier_defaults:
+  feature:
+    clean:           { start_tier: 1, max_auto_tier: 2 }
+    drift-reconcile: { start_tier: 3, max_auto_tier: 4 }
+```
+
+- `python3 scripts/kg/lookup.py <feature-id>` is a first-pass scope resolver and retrieval aid, not an authoritative source of truth.
+- Raw artifacts win on conflict: `feature-assembly-plan.md`, stories, ADRs, API contracts, schemas, and policy artifacts outrank KG output.
+- Navigate instead of eager-loading: open linked raw artifacts only when the current gate, review, or drift repair needs them.
+
+## Context Files
+
+Load in this order when the work is feature-scoped:
+
+1. `agents/ROUTER.md`
+2. `agents/agent-map.yaml`
+3. `agents/docs/AGENT-USE.md`
+4. `agents/actions/feature.md`
+5. `planning-mds/features/F{NNNN}-{slug}/feature-assembly-plan.md`
+6. `planning-mds/knowledge-graph/solution-ontology.yaml`
+7. `planning-mds/knowledge-graph/canonical-nodes.yaml`
+8. `planning-mds/knowledge-graph/feature-mappings.yaml`
+9. `planning-mds/knowledge-graph/code-index.yaml`
+10. `planning-mds/knowledge-graph/coverage-report.yaml`
+11. `planning-mds/features/F{NNNN}-{slug}/**`
+
+## On-Demand Paths
+
+- `planning-mds/api/nebula-api.yaml`
+- `planning-mds/security/authorization-matrix.md`
+- `planning-mds/security/policies/policy.csv`
+- `planning-mds/knowledge-graph/*.yaml` beyond what `lookup.py` already returned
+- `agents/<role>/references/**` only after a matching `agents/ROUTER.md` row
+
+## Primary Spec
+
+- `planning-mds/features/F{NNNN}-{slug}/feature-assembly-plan.md` is the canonical execution spec for feature implementation
+- When the assembly plan conflicts with raw story text, follow the feature assembly plan and log the reconciliation
+
+## Ownership Contract
+
+- `product-manager` owns feature closeout, trackers, `STATUS.md` final state, archive moves, and `feature-mappings.yaml` path/status updates
+- `architect` owns `feature-assembly-plan.md`, ADRs, canonical shared semantics, API contracts, schemas, and authorization artifacts
+- Implementation roles edit their runtime layers and shared feature evidence surfaces only
+- Shared-semantics changes route back to `architect`; other roles flag drift instead of redefining it
+
+## Forbidden
+
+- Hand-enumerating schemas, ADRs, or contract files when `lookup.py` output is available
+- Treating lookup/KG mappings as authoritative over raw artifacts
+- Editing code without prior `hint.py <path>`
+- Editing shared semantics without prior `blast.py <node-id>`
+- Continuing after a runtime-blocked failure without re-running runtime preflight
+- Skipping any gate from `G0` through `G4.7`
+- Declaring done without the explicit Product Manager role switch at `G4.6`
+- Widening scope outside the current feature
+- Climbing past `max_auto_tier` without recording `workstate.py escalate`
+
+## Gate Contract
+
+- `G0 ARCHITECT ASSEMBLY PLAN VALIDATION` — Step 0 and Step 0.5
+- `G1 RUNTIME PREFLIGHT` — Runtime Preflight & Failure Triage
+- `G2 SELF-REVIEW` — Step 2 Agent Validation
+- `G3 CODE + SECURITY REVIEW` — Step 3 Parallel Reviews
+- `G4 APPROVAL` — Step 4 Feature Review
+- `G4.5 SIGNOFF` — Step 4.5 Required reviewer evidence verification
+- `G4.6 PM CLOSEOUT` — Step 4.6 Product Manager closeout and archive reconciliation
+- `G4.7 TRACKER SYNC` — Step 4.7 Final tracker validation
+
+## Stop Conditions
+
+- Runtime preflight fails and cannot be restored
+- A critical code or security finding remains after one review cycle
+- Required signoff is missing reviewer, date, or evidence
+- A non-architect attempts to edit architect-owned canonical semantics
+- Scope drifts outside the declared feature boundary
+- `validate.py` or `validate.py --check-drift` fails and cannot be repaired within scope
+- `INSUFFICIENT_CONTEXT`: `lookup.py` returns empty scope for a declared in-scope node, or only ambiguous / low-confidence (`inferred`, `confidence < 0.5`) matches on a node about to be edited, or the workflow needs to climb past `max_auto_tier`; halt the current gate, invoke `workstate.py escalate <reason> --nodes ... --opened-raw ...`, open the raw artifacts, and do not proceed with weak matches
+
+## Exit Validation
+
+Run in this order:
+
+1. Applicable backend / frontend / AI / QE runtime commands for changed surfaces, with evidence paths recorded outside `agents/**`
+2. `python3 agents/product-manager/scripts/validate-trackers.py`
+3. `python3 agents/product-manager/scripts/generate-story-index.py planning-mds/features/` when stories changed
+4. `python3 scripts/kg/validate.py --write-coverage-report` when KG changed
+5. `python3 scripts/kg/validate.py`
+6. `python3 scripts/kg/validate.py --check-drift`
+7. `python3 scripts/kg/validate_templates.py`
+
+---
+
 ## Runtime Execution Boundary
 
 - The builder runtime orchestrates feature flow and gates; keep it stack-agnostic.

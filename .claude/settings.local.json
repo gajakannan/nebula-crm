@@ -76,7 +76,11 @@
       "Bash(du -sh /mnt/c/Users/gajap/sandbox/nebula-crm/agents/*)",
       "Bash(gh api:*)",
       "Bash(jobs)",
-      "Bash(npx --prefix experience vitest run --config experience/vitest.config.ts src/pages/tests/RenewalsPage.integration.test.tsx src/pages/tests/RenewalDetailPage.integration.test.tsx src/pages/tests/DashboardPage.integration.test.tsx)"
+      "Bash(npx --prefix experience vitest run --config experience/vitest.config.ts src/pages/tests/RenewalsPage.integration.test.tsx src/pages/tests/RenewalDetailPage.integration.test.tsx src/pages/tests/DashboardPage.integration.test.tsx)",
+      "Bash(mkdir -p /tmp/f0016-untracked)",
+      "Bash(mv engine/src/Nebula.Application/DTOs/AccountMergeImpactProjection.cs engine/src/Nebula.Application/DTOs/AccountMergePreviewDto.cs engine/src/Nebula.Application/Interfaces/IIdempotencyStore.cs engine/src/Nebula.Domain/Entities/IdempotencyRecord.cs engine/src/Nebula.Infrastructure/Persistence/Configurations/IdempotencyRecordConfiguration.cs engine/src/Nebula.Infrastructure/Persistence/Migrations/20260415120000_F0016_MergeHardening.cs engine/src/Nebula.Infrastructure/Repositories/IdempotencyStore.cs /tmp/f0016-untracked/)",
+      "WebFetch(domain:www.reddit.com)",
+      "WebFetch(domain:virtualcontext.substack.com)"
     ]
   }
 }

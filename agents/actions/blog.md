@@ -2,385 +2,266 @@
 
 ## User Intent
 
-Write development logs, technical articles, and blog posts about project progress, decisions, lessons learned, and interesting technical challenges.
+Write development logs, technical articles, blog posts, and channel amplification content about project progress, decisions, lessons learned, and interesting technical challenges. This action is conversational — the agent asks questions, makes recommendations, and reaches alignment with the user before writing anything.
 
 ## Agent Flow
 
 ```
 Blogger
   ↓
-[SELF-REVIEW GATE: Validate content quality and accuracy]
+[DISCOVERY: Conversational — ask, recommend, align]
   ↓
-[EDITORIAL GATE: User reviews post]
+[EDITORIAL BRIEF: User approves before drafting]
+  ↓
+[DRAFT: Write primary post]
+  ↓
+[SELF-REVIEW GATE: Accuracy and quality]
+  ↓
+[EDITORIAL GATE: User reviews and approves]
+  ↓
+[AMPLIFICATION: Optional Phase 2 — channel derivatives]
   ↓
 Blog Complete
 ```
 
-**Flow Type:** Single agent with editorial gate
+**Flow Type:** Single agent, discovery-first, with two editorial gates
 
 ---
 
 ## Runtime Execution Boundary
 
-- The blog action runs entirely in the builder runtime. No application runtime containers are required.
-- Code examples in blog posts should be verified against the actual codebase for accuracy, but the Blogger does not execute code.
+- Runs entirely in the builder runtime. No application containers required.
+- Code examples must be verified against the actual codebase — the Blogger reads code but does not execute it.
+
+---
+
+## Required Reads Before Starting
+
+Load these before the discovery conversation begins:
+
+1. `agents/blogger/SKILL.md` — agent capabilities, two-phase model, quality gates
+2. `agents/blogger/references/publication-profile.md` — voice, domain, audience, channel config
+3. `../nebula-blog/SERIES-PLAN.md` — full series roadmap, published posts, planned posts
+4. `agents/blogger/references/blogging-best-practices.md` — craft reference
 
 ---
 
 ## Execution Steps
 
-### Step 1: Topic and Audience Planning
+### Step 1: Discovery
 
-**Execution Instructions:**
+This is the most important step. Do not skip it. Do not produce an editorial brief until this conversation is complete.
 
-1. **Activate Blogger agent** by reading `agents/blogger/SKILL.md`
+**Purpose**: Understand what story the user wants to tell, surface the angle, find the hook, confirm series placement, and align on audience before a single word of the post is written.
 
-2. **Read context based on topic:**
-   - `planning-mds/BLUEPRINT.md` (project context)
-   - `planning-mds/architecture/decisions/` (ADRs for decision posts)
-   - `planning-mds/features/F{NNNN}-{slug}/` (feature context: stories, STATUS.md)
-   - `planning-mds/architecture/SOLUTION-PATTERNS.md` (for pattern-focused posts)
-   - Relevant code changes (git log, implementation files)
-   - Review outputs (code review, security review reports)
-   - Test results and coverage data
+**How to run discovery:**
 
-3. **Determine post type from user input:**
-   - `devlog` — development progress update
-   - `tutorial` — step-by-step how-to guide
-   - `case-study` — deep dive into a problem and solution
-   - `retrospective` — lessons learned reflection
-   - `deep-dive` — detailed technical exploration
-   - `decision` — explaining an architectural decision (often based on an ADR)
+Ask questions conversationally — not as a numbered list, not all at once. Start with the most open question and follow the thread. Make recommendations based on what the user shares. Push back if something doesn't feel right. The goal is to arrive at a story worth telling, not just a topic to cover.
 
-4. **Produce editorial brief:**
-   ```markdown
-   # Editorial Brief
+**Core questions to work through** (weave these into conversation, don't recite them):
 
-   Topic: [topic from user]
-   Type: [post type]
-   Target Audience: [developers / general tech / management / team]
-   Estimated Length: [word count]
-   Key Points: [3-5 bullet points]
-   Code Examples Needed: [count and description]
-   Diagrams Needed: [count and description]
-   ```
+- What's happening — what did you build, decide, learn, or observe that's worth writing about?
+- What's the one thing you want the reader to walk away with?
+- Is there a moment of surprise, a mistake, a decision that didn't go as expected, or a constraint that shaped everything? That's usually the real story.
+- Does this fit an existing series in `../nebula-blog/SERIES-PLAN.md`? Where does it sit in that arc?
+- What post type fits best — devlog, deep dive, tutorial, case study, retrospective? (Make a recommendation if the user isn't sure.)
+- Do you have an opening line or hook in mind? If not, suggest two or three options based on the hook patterns in `publication-profile.md`.
+- What source material exists — specific commits, ADRs, feature artifacts, benchmarks, test results?
+- After publishing: which amplification channels — LinkedIn, Reddit, dev.to, Bluesky, X?
 
-**Completion Criteria for Step 1:**
-- [ ] Editorial brief produced
-- [ ] Target audience identified
-- [ ] Source material gathered
+**How to make recommendations:**
+
+Don't just receive answers — offer interpretations and push them back to the user.
+
+Examples:
+- "Based on what you've described, this sounds like it belongs in the Agent Framework series as Post 4. Does that feel right?"
+- "The mistake you mentioned about the abstraction — that feels like the real hook, not the feature itself. What do you think?"
+- "You've framed this as a devlog but there's a decision in here that might be worth a Choices We Made post instead. Want to explore that?"
+- "I'd suggest opening with the question you asked yourself before you started — 'What if we...' — it pulls the reader into the thinking before the answer."
+
+**When discovery is complete:**
+
+Summarise what you've heard back to the user in two to three sentences. Confirm the angle, the series placement, and the hook. Ask: "Does that capture it, or is there something we're missing?"
+
+Only proceed to Step 2 when the user confirms.
 
 ---
 
-### Step 2: Content Creation
+### Step 2: Editorial Brief
 
-**Execution Instructions:**
+Produce the editorial brief based on the discovery conversation. Present it to the user for approval before writing.
 
-1. **Write blog post following the editorial brief:**
+```markdown
+## Editorial Brief
 
-   **Structure (all post types):**
-   - **Title:** Clear, engaging, specific (not clickbait)
-   - **Introduction:** Hook + what the reader will learn (2-3 sentences)
-   - **Body:** Main content organized with headings
-   - **Code Examples:** Tested against actual codebase, syntax-highlighted
-   - **Visuals:** Diagrams or screenshots where they add clarity
-   - **Conclusion:** Key takeaways (2-3 bullet points)
-   - **Metadata:** Tags, categories, estimated reading time
+**Topic**: [what the post is about]
+**The story**: [one sentence — the real angle, not just the topic]
+**Hook**: [opening line or pattern]
+**Post type**: [devlog / deep dive / tutorial / case study / retrospective]
+**Series**: [series name and post number, or standalone]
+**Target audience**: [specific — not just "developers"]
+**Estimated length**: [word count range]
+**Source material**: [commits, ADRs, features, benchmarks to draw from]
+**Key points** (3–5):
+  -
+  -
+  -
+**Amplification channels**: [which channels for Phase 2]
+**Output file**: ../nebula-blog/posts/YYYY-MM-DD-slug.md
+```
 
-   **Post Type Guidelines:**
+Ask: "Does this brief capture what you want to write? Any changes before I start drafting?"
 
-   | Type | Length | Structure | Key Element |
-   |------|--------|-----------|-------------|
-   | DevLog | 800-1,200 words | What → Why → How → Challenges → Results | Progress narrative |
-   | Tutorial | 1,500-2,500 words | Prerequisites → Steps → Explanation → Examples | Copy-pasteable steps |
-   | Case Study | 1,500-2,000 words | Problem → Investigation → Solution → Results → Lessons | Before/after comparison |
-   | Retrospective | 1,000-1,500 words | Context → What went well → Challenges → Lessons → Changes | Honest reflection |
-   | Deep Dive | 1,500-2,500 words | Context → Concept → Implementation → Trade-offs → Conclusion | Technical depth |
-   | Decision | 1,000-1,500 words | Context → Options → Decision → Rationale → Consequences | Decision rationale |
-
-2. **Verify code examples:**
-   - All code snippets match actual project code
-   - Examples are complete enough to understand (not isolated fragments)
-   - No secrets, credentials, or internal URLs in examples
-   - Syntax highlighting specified for each code block
-
-3. **Save blog post:**
-   - File: `blog/{year}/{month}-{slug}.md` (or user-specified location)
-
-**Completion Criteria for Step 2:**
-- [ ] Blog post written to target length
-- [ ] All sections complete
-- [ ] Code examples verified against codebase
+Do not proceed until the user explicitly approves the brief.
 
 ---
 
-### Step 3: SELF-REVIEW GATE (Content Quality)
+### Step 3: Draft
 
-**Execution Instructions:**
+Write the primary post following the approved brief and the craft guidance in `blogging-best-practices.md`.
 
-Blogger validates post quality:
+Apply the voice, formatting, and domain conventions from `publication-profile.md`:
+- First-person builder's voice
+- Hook pattern as agreed in the brief
+- Emoji anchors on section headers (sparingly)
+- Insurance domain grounding — name the insurance application explicitly
+- Series continuity — open with a recap if this is part of a series; close with a specific preview of what's next
 
-**Technical Accuracy:**
-- [ ] Code examples match actual codebase
-- [ ] Architecture descriptions match SOLUTION-PATTERNS.md
-- [ ] Metrics and data are from actual project (not invented)
-- [ ] No secrets, credentials, or internal URLs
-- [ ] Technical assertions are accurate and verifiable
+Reference source material directly — repository-relative paths, real code snippets, actual decision records. No invented metrics.
 
-**Content Quality:**
-- [ ] Title is clear, specific, and engaging
-- [ ] Introduction hooks the reader and states the value proposition
-- [ ] Content is well-structured with clear headings
-- [ ] Each section advances the narrative
-- [ ] Conclusion summarizes key takeaways
-- [ ] No filler content or unnecessary repetition
+**Save to**: `../nebula-blog/posts/YYYY-MM-DD-slug.md`
+
+---
+
+### Step 4: Self-Review Gate
+
+Before presenting to the user, validate:
+
+**Technical accuracy:**
+- [ ] All assertions trace to source material (commits, ADRs, tests, metrics)
+- [ ] Code snippets match actual codebase
+- [ ] Architecture descriptions are consistent with planning artifacts
+- [ ] No secrets, credentials, internal hostnames, or customer data
+
+**Voice and craft:**
+- [ ] Opening hook matches the agreed pattern — not generic background
+- [ ] First-person, builder's voice throughout
+- [ ] Insurance domain application named explicitly
+- [ ] Tone stays in the right register: experienced practitioner, not novice, not authority
+- [ ] Series context established (recap + forward preview)
 
 **Readability:**
-- [ ] Appropriate for target audience (not too basic or advanced)
-- [ ] Jargon explained when first used
-- [ ] Paragraphs are focused (one idea per paragraph)
-- [ ] Code examples have surrounding explanation
-- [ ] Post length matches target range for post type
+- [ ] Sections are scannable with clear headings
+- [ ] Code blocks are excerpted and annotated — not raw dumps
+- [ ] Conclusion has a concrete takeaway, not a vague close
+- [ ] Post length is within the target range for the post type
 
-**If any check fails:**
-- Fix content quality issues
-- Re-run self-review
-- Repeat until passing
-
-**Gate Criteria:**
-- [ ] All technical accuracy checks pass
-- [ ] All content quality checks pass
-- [ ] All readability checks pass
+If any check fails, fix and re-run before presenting to the user.
 
 ---
 
-### Step 4: EDITORIAL GATE (User Review)
+### Step 5: Editorial Gate
 
-**Execution Instructions:**
-
-1. **Present blog post summary to user:**
-   ```
-   ═══════════════════════════════════════════════════════════
-   Blog Post Ready for Review
-   ═══════════════════════════════════════════════════════════
-
-   Title: [post title]
-   Type: [post type]
-   Length: [word count] words (~[reading time] min read)
-   Audience: [target audience]
-
-   Sections:
-     - [Section 1 heading]
-     - [Section 2 heading]
-     - [Section 3 heading]
-     - ...
-
-   Code Examples: [count]
-   Diagrams: [count]
-
-   File: [file path]
-
-   ═══════════════════════════════════════════════════════════
-   Please review the post at the file path above.
-   ═══════════════════════════════════════════════════════════
-   ```
-
-2. **Present review options:**
-   ```
-   Blog Post Review:
-   - "approve" — Post is ready to publish
-   - "request changes" — Specify what needs to change
-   - "reject" — Major issues, needs rewrite
-   ```
-
-3. **Handle user response:**
-   - **If "approve":**
-     - Proceed to Step 5 (Blog Complete)
-
-   - **If "request changes":**
-     - Ask: "What changes are needed?"
-     - Capture feedback
-     - Apply changes to post
-     - Return to Step 3 (re-run self-review)
-
-   - **If "reject":**
-     - Ask: "What are the major issues?"
-     - Capture feedback
-     - Return to Step 2 (rewrite with feedback)
-
-**Gate Criteria:**
-- [ ] User has reviewed blog post
-- [ ] User has made explicit decision
-- [ ] Any requested changes have been applied
-
----
-
-### Step 5: Blog Complete
-
-**Execution Instructions:**
-
-Present completion summary:
+Present the post to the user for review.
 
 ```
 ═══════════════════════════════════════════════════════════
-Blog Action Complete! ✓
+Primary Post Ready for Review
 ═══════════════════════════════════════════════════════════
 
-Post: [title]
+Title: [title]
+Series: [series name — post N of M] or [Standalone]
 Type: [post type]
-Length: [word count] words
-File: [file path]
+Length: [word count] words (~[reading time] min read)
+File: ../nebula-blog/posts/[filename]
 
-Quality:
-  ✓ Technical accuracy verified
-  ✓ Content quality checked
-  ✓ Code examples verified against codebase
-  ✓ Readability validated
-
-User Decision: APPROVED
+Sections:
+  - [heading]
+  - [heading]
+  - [heading]
 
 ═══════════════════════════════════════════════════════════
-Next Steps:
-═══════════════════════════════════════════════════════════
-
-1. Publish to target platform
-2. Share on social media / team channels
-3. Engage with comments and feedback
-
-Publishing Destinations:
-  - Internal: Team wiki, Confluence, Notion
-  - Public: Company blog, dev.to, Medium, Hashnode
-  - Social: LinkedIn, Twitter/X (thread format)
-  - Repo: blog/ directory (version controlled)
-
-Blog post ready to publish! ✓
+Options: approve / request changes / reject
 ═══════════════════════════════════════════════════════════
 ```
+
+- **approve** → proceed to Step 6
+- **request changes** → apply feedback, re-run self-review, return here
+- **reject** → capture what was wrong, return to Step 3
+
+---
+
+### Step 6: Amplification (Phase 2 — Optional)
+
+Only run if amplification channels were confirmed in the editorial brief.
+
+**Do not start Phase 2 until the primary post is approved.**
+
+For each confirmed channel, produce a derivative following the channel specs in `publication-profile.md`.
+
+Remind the user of the key rule for each channel:
+- LinkedIn: link goes in the first comment, not the post body
+- X/Twitter: Substack link goes in a reply to the final tweet
+- Bluesky: link can go directly in the final post
+- Reddit: lead with value, not "I wrote a post"
+- dev.to: set canonical URL to the Substack post
+
+Save derivatives to: `../nebula-blog/amplification/YYYY-MM-DD-slug-[channel].md`
+
+Present all derivatives together for review before finalising.
+
+---
+
+### Step 7: Complete
+
+```
+═══════════════════════════════════════════════════════════
+Blog Action Complete
+═══════════════════════════════════════════════════════════
+
+Primary post: ../nebula-blog/posts/[filename]
+Series: [series and post number]
+Length: [word count] words
+
+Phase 2 derivatives:
+  - ../nebula-blog/amplification/[filename]-linkedin.md
+  - ../nebula-blog/amplification/[filename]-reddit.md
+  - [etc.]
+
+Next: Update ../nebula-blog/SERIES-PLAN.md — mark this post as In Progress or Published.
+═══════════════════════════════════════════════════════════
+```
+
+Remind the user to update `../nebula-blog/SERIES-PLAN.md` with the post status and Substack URL once published.
 
 ---
 
 ## Validation Criteria
 
-**Overall Blog Action Success:**
-- [ ] Editorial brief produced
-- [ ] Blog post written to target length and type
-- [ ] Self-review gate passed (accuracy, quality, readability)
-- [ ] User reviewed and approved post
-- [ ] Code examples verified against actual codebase
-- [ ] No secrets or credentials in content
-- [ ] Post saved to specified location
+- [ ] Discovery conversation completed and user confirmed the angle
+- [ ] Editorial brief approved before drafting began
+- [ ] Primary post written to brief and approved by user
+- [ ] Self-review gate passed
+- [ ] Voice, domain grounding, and series continuity applied
+- [ ] No sensitive data in published content
+- [ ] Phase 2 derivatives produced and reviewed (if requested)
+- [ ] `../nebula-blog/SERIES-PLAN.md` update flagged
 
 ---
 
-## Prerequisites
+## Anti-Patterns to Avoid
 
-Before running blog action:
-- [ ] Something worth writing about (feature completed, decision made, problem solved, milestone reached)
-- [ ] Context available (code, architecture docs, ADRs, review reports)
-- [ ] Optional: Target audience identified by user
-
----
-
-## Example Usage
-
-### Scenario 1: Feature DevLog
-```
-User: "Write a devlog about building the customer management feature"
-
-Agent Runtime: [Reads blog.md]
-Agent Runtime: "I'll create a devlog about customer management..."
-
-[Step 1: Planning]
-  - Topic: Customer management feature
-  - Type: devlog
-  - Audience: developers and stakeholders
-  - Key points: clean architecture, ABAC authorization, vertical slicing
-
-[Step 2: Content creation]
-  - Title: "Building Customer Management: Clean Architecture in Practice"
-  - 1,100 words
-  - 5 code examples (entity, endpoint, authorization policy, test, component)
-  - 1 architecture diagram
-
-[Step 3: Self-review — all checks pass]
-
-[Step 4: Editorial gate]
-Agent Runtime: "Blog post ready for review.
-  Title: 'Building Customer Management: Clean Architecture in Practice'
-  Length: 1,100 words (~5 min read)
-  File: blog/2026/03-customer-management-feature.md
-
-  Options: approve / request changes / reject"
-
-User: "request changes — add a section about the challenges
-  we faced with authorization policy syntax"
-
-Agent Runtime: "Adding challenges section..."
-[Updates post, re-runs self-review]
-
-Agent Runtime: "Updated to 1,350 words. Review again?"
-
-User: "approve"
-
-Agent Runtime: "Blog post complete! Ready to publish."
-```
-
-### Scenario 2: Architecture Decision Post
-```
-User: "Write about our decision to switch from Keycloak to authentik"
-
-[Step 1: Planning]
-  - Reads ADR-006
-  - Type: decision
-  - Audience: technical professionals
-
-[Step 2: Content creation]
-  - Title: "Why We Migrated from Keycloak to authentik"
-  - 1,300 words
-  - Covers: evaluation criteria, migration challenges,
-    blueprint gotchas, results
-
-[Steps 3-4: Review and approval]
-
-Agent Runtime: "Decision post complete! Saved to
-  blog/2026/03-keycloak-to-authentik-migration.md"
-```
-
-### Scenario 3: Technical Deep Dive
-```
-User: "Write a deep dive on our ABAC authorization implementation"
-
-[Step 1: Planning]
-  - Type: deep-dive
-  - Audience: .NET developers interested in authorization
-
-[Step 2: Content creation]
-  - Title: "ABAC with Casbin: Fine-Grained Authorization in .NET"
-  - 2,100 words, 8 code examples, 2 diagrams
-
-[Steps 3-4: Review and approval]
-
-User: "approve"
-
-Agent Runtime: "Deep dive complete!"
-```
+- Jumping to drafting before discovery is complete
+- Producing an editorial brief the user didn't see or approve
+- Writing a post that could belong to any blog — no insurance grounding, no personal voice
+- Amplification content that copies from the primary instead of translating for the channel
+- Marking a post complete without reminding the user to update `../nebula-blog/SERIES-PLAN.md`
 
 ---
 
-## Related Actions
+## Related Files
 
-- **After:** Any action — blog about progress or learnings
-- **With:** [document action](./document.md) — docs for reference, blogs for narrative
-- **Continuous:** Blog throughout the project lifecycle
-
----
-
-## Notes
-
-- Blog regularly (after each feature or milestone) for maximum value
-- Don't wait for perfection — publish and iterate
-- Use blogs to document decisions and reasoning (complements ADRs)
-- Blogs are excellent onboarding material for new team members
-- Be honest about challenges and failures (they are valuable)
-- Technical blogs can become documentation later
-- Keep a blog backlog of interesting topics as you work
+- `agents/blogger/SKILL.md`
+- `agents/blogger/references/publication-profile.md`
+- `agents/blogger/references/blogging-best-practices.md`
+- `../nebula-blog/SERIES-PLAN.md`

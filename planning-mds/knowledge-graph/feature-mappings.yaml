@@ -14,9 +14,6 @@ coverage:
     - id: feature:F0017
       path: planning-mds/features/F0017-broker-mga-hierarchy-and-producer-ownership
       reason: Planned feature folder exists but ontology mapping backfill has not started.
-    - id: feature:F0018
-      path: planning-mds/features/F0018-policy-lifecycle-and-policy-360
-      reason: Planned feature folder exists but ontology mapping backfill has not started.
     - id: feature:F0021
       path: planning-mds/features/F0021-communication-hub-and-activity-capture
       reason: Planned feature folder exists but ontology mapping backfill has not started.
@@ -430,6 +427,70 @@ features:
       - policy_rule:account-contact-manage
       - policy_rule:account-relationship-change
       - policy_rule:timeline-event-read
+  - id: feature:F0018
+    path: planning-mds/features/F0018-policy-lifecycle-and-policy-360
+    status: in-refinement
+    affects:
+      - entity:policy
+      - entity:policy-version
+      - entity:policy-endorsement
+      - entity:policy-coverage-line
+      - entity:carrier-ref
+      - entity:activity-timeline-event
+      - entity:workflow-transition
+      - entity:workflow-sla-threshold
+      - entity:account
+      - entity:renewal
+      - entity:submission
+      - workflow:policy
+      - policy_rule:policy-read
+      - policy_rule:policy-create
+      - policy_rule:policy-update
+      - policy_rule:policy-issue
+      - policy_rule:policy-endorse
+      - policy_rule:policy-cancel
+      - policy_rule:policy-reinstate
+      - policy_rule:policy-coverage-manage
+      - policy_rule:policy-import
+    governed_by:
+      - adr:008
+      - adr:009
+      - adr:010
+      - adr:011
+      - adr:012
+      - adr:014-workflow-sla
+      - adr:017
+      - adr:018
+    uses_schema:
+      - schema:policy
+      - schema:policy-list-item
+      - schema:policy-summary
+      - schema:policy-create-request
+      - schema:policy-update-request
+      - schema:policy-issue-request
+      - schema:policy-endorsement-request
+      - schema:policy-cancel-request
+      - schema:policy-reinstate-request
+      - schema:policy-coverage-line
+      - schema:policy-version
+      - schema:policy-endorsement
+      - schema:carrier-ref
+      - schema:policy-account-summary
+      - schema:policy-from-bind-request
+      - schema:policy-import-request
+      - schema:line-of-business
+      - schema:activity-event-payloads
+      - schema:timeline-event
+    uses_api_contract:
+      - api:nebula-rest
+    depends_on:
+      - feature:F0016
+      - feature:F0007
+      - feature:F0002
+      - feature:F0009
+      - {id: feature:F0020, provenance: inferred, confidence: 0.8, note: "Documents rail integrates with F0020 when live"}
+      - {id: feature:F0019, provenance: inferred, confidence: 0.6, note: "F0019 future consumer of POST /api/policies/from-bind hook"}
+      - {id: feature:F0028, provenance: inferred, confidence: 0.4, note: "Future replacement for lightweight CarrierRef seed"}
   - id: feature:F0019
     path: planning-mds/features/F0019-submission-quoting-proposal-and-approval
     status: planned

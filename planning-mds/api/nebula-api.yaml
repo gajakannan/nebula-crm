@@ -27,6 +27,8 @@ tags:
     description: Submission workflow operations
   - name: Renewals
     description: Renewal workflow operations
+  - name: Policies
+    description: Policy lifecycle, versioning, endorsements, cancellation, reinstatement (F0018)
   - name: Dashboard
     description: Dashboard widget data endpoints (F0001)
   - name: Tasks
@@ -803,14 +805,17 @@ paths:
       - $ref: "#/components/parameters/AccountId"
     get:
       operationId: listAccountPolicies
-      summary: Policies rail for Account 360 (Policy stub today; F0018 later)
-      tags: [Accounts]
+      summary: Policies rail for Account 360 (F0018)
+      description: Paginated policy list scoped to an account; ABAC-scoped per policy. Mirrors the policy list endpoint filters.
+      tags: [Policies, Accounts]
       parameters:
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/PolicyStatusFilter"
+        - $ref: "#/components/parameters/PolicyLobFilter"
       responses:
         "200":
-          description: Paginated policy list (ABAC-scoped). Stub payload until F0018.
+          description: Paginated policy list (ABAC-scoped).
           content:
             application/json:
               schema:
@@ -819,11 +824,31 @@ paths:
                 properties:
                   data:
                     type: array
-                    items: { type: object, additionalProperties: true }
+                    items:
+                      $ref: "#/components/schemas/PolicyListItem"
                   page: { type: integer }
                   pageSize: { type: integer }
                   totalCount: { type: integer }
                   totalPages: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /accounts/{accountId}/policies/summary:
+    parameters:
+      - $ref: "#/components/parameters/AccountId"
+    get:
+      operationId: getAccountPolicySummary
+      summary: Account-scoped policy summary (counts + next-expiring + total premium)
+      description: F0018-S0011. Query-time composition; ABAC-scoped per policy.
+      tags: [Policies, Accounts]
+      responses:
+        "200":
+          description: Account policy summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyAccountSummary"
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -1519,6 +1544,469 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
+
+  # ──────────────────────────────────────────────────────────────
+  # Policy endpoints (F0018)
+  # ──────────────────────────────────────────────────────────────
+  /policies:
+    get:
+      operationId: listPolicies
+      summary: List policies with search and filtering
+      description: F0018-S0001. Paginated, ABAC-scoped. Fallback-aware account columns per ADR-017.
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/PolicySearchQuery"
+        - $ref: "#/components/parameters/PolicyStatusFilter"
+        - $ref: "#/components/parameters/PolicyLobFilter"
+        - $ref: "#/components/parameters/PolicyCarrierFilter"
+        - $ref: "#/components/parameters/PolicyBrokerFilter"
+        - $ref: "#/components/parameters/PolicyExpiringBeforeFilter"
+        - $ref: "#/components/parameters/PolicySortBy"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated policy list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page, pageSize, totalCount, totalPages]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PolicyListItem"
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  totalPages: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      operationId: createPolicy
+      summary: Create a policy in Pending state
+      description: F0018-S0002. Manual create returns Pending. Import-lite uses the dedicated `/policies/import` endpoint.
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyCreateRequest"
+      responses:
+        "201":
+          description: Policy created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /policies/from-bind:
+    post:
+      operationId: createPolicyFromBind
+      summary: F0019 bind-hook — create a Pending policy from a bound submission/quote handoff
+      description: F0018-S0002. Contract specified in MVP; when implemented it creates a Pending policy and preserves explicit Pending → Issued issuance. Server may return 501 until F0019 is built.
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyFromBindRequest"
+      responses:
+        "201":
+          description: Policy created (Pending)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "501":
+          description: Not implemented yet (F0019 not yet built). Contract is stable; clients may retry once F0019 ships.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+
+  /policies/import:
+    post:
+      operationId: importPolicies
+      summary: Import-lite CSV ingest for historical policies
+      description: F0018-S0002. Per-row validation; rows that fail return a detail block. All successes land in Issued.
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyImportRequest"
+      responses:
+        "200":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accepted, rejected]
+                properties:
+                  accepted:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Policy"
+                  rejected:
+                    type: array
+                    items:
+                      type: object
+                      required: [index, code, message]
+                      properties:
+                        index: { type: integer }
+                        code: { type: string }
+                        message: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /policies/{policyId}:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+    get:
+      operationId: getPolicyById
+      summary: Get policy by id
+      tags: [Policies]
+      responses:
+        "200":
+          description: Policy detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      operationId: updatePolicy
+      summary: Update policy profile fields
+      description: F0018-S0003. Material-term edits on Issued/Cancelled/Expired policies return 409 code=must_use_endorse.
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyUpdateRequest"
+      responses:
+        "200":
+          description: Updated policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+
+  /policies/{policyId}/summary:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+    get:
+      operationId: getPolicySummary
+      summary: Policy 360 summary (composed payload with rail preview counts)
+      description: F0018-S0004.
+      tags: [Policies]
+      responses:
+        "200":
+          description: Policy summary payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicySummary"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /policies/{policyId}/issue:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+    post:
+      operationId: issuePolicy
+      summary: Transition a Pending policy to Issued
+      description: Captures the initial PolicyVersion snapshot (VersionReason=IssuedInitial). See ADR-018.
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyIssueRequest"
+      responses:
+        "200":
+          description: Policy issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+
+  /policies/{policyId}/endorse:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+    post:
+      operationId: endorsePolicy
+      summary: Apply an endorsement (F0018-S0006)
+      description: Produces a new PolicyVersion + PolicyEndorsement + re-materialized PolicyCoverageLine[] atomically.
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyEndorsementRequest"
+      responses:
+        "201":
+          description: Endorsement applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyEndorsement"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+
+  /policies/{policyId}/cancel:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+    post:
+      operationId: cancelPolicy
+      summary: Cancel an Issued policy (F0018-S0007)
+      description: Computes ReinstatementDeadline from LOB-configured window.
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyCancelRequest"
+      responses:
+        "200":
+          description: Policy cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+
+  /policies/{policyId}/reinstate:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+    post:
+      operationId: reinstatePolicy
+      summary: Reinstate a Cancelled policy within the LOB window (F0018-S0008)
+      description: Produces a new PolicyVersion (VersionReason=Reinstatement).
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/IfMatch"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyReinstateRequest"
+      responses:
+        "200":
+          description: Policy reinstated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Invalid transition or reinstatement window expired
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "412": { $ref: "#/components/responses/PreconditionFailed" }
+
+  /policies/{policyId}/versions:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+    get:
+      operationId: listPolicyVersions
+      summary: List PolicyVersion rows for a policy (F0018-S0005)
+      description: Descending by VersionNumber. Immutable snapshots.
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated version list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page, pageSize, totalCount, totalPages]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PolicyVersion"
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  totalPages: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /policies/{policyId}/versions/{versionId}:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+      - $ref: "#/components/parameters/PolicyVersionId"
+    get:
+      operationId: getPolicyVersionById
+      summary: Get a specific PolicyVersion snapshot
+      tags: [Policies]
+      responses:
+        "200":
+          description: Version detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyVersion"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /policies/{policyId}/endorsements:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+    get:
+      operationId: listPolicyEndorsements
+      summary: List endorsements on a policy (F0018-S0006)
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated endorsement list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page, pageSize, totalCount, totalPages]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PolicyEndorsement"
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  totalPages: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /policies/{policyId}/coverages:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+    get:
+      operationId: listPolicyCoverages
+      summary: Current-version coverage lines (F0018-S0004 Coverages rail)
+      description: Returns rows where IsCurrent=true. Historical coverage sets are accessible via the corresponding PolicyVersion.
+      tags: [Policies]
+      responses:
+        "200":
+          description: Coverage list for the current version
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PolicyCoverageLine"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /policies/{policyId}/timeline:
+    parameters:
+      - $ref: "#/components/parameters/PolicyId"
+    get:
+      operationId: listPolicyTimeline
+      summary: Policy activity timeline (F0018-S0010)
+      description: Append-only; paginated newest-first.
+      tags: [Policies]
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated timeline events
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, page, pageSize, totalCount, totalPages]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TimelineEvent"
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  totalPages: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   # ──────────────────────────────────────────────────────────────
   # Dashboard endpoints (NEW — F0001)
@@ -2391,6 +2879,101 @@ components:
       schema:
         type: string
         format: uuid
+    PolicyId:
+      name: policyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PolicyVersionId:
+      name: versionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PolicySearchQuery:
+      name: q
+      in: query
+      required: false
+      description: Case-insensitive search across policyNumber and account display name. Leading/trailing spaces trimmed.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 100
+    PolicyStatusFilter:
+      name: status
+      in: query
+      required: false
+      description: Optional policy status filter.
+      schema:
+        type: string
+        enum: [Pending, Issued, Cancelled, Expired]
+    PolicyLobFilter:
+      name: lineOfBusiness
+      in: query
+      required: false
+      description: Optional LOB filter.
+      schema:
+        type: string
+        enum:
+          - Property
+          - GeneralLiability
+          - CommercialAuto
+          - WorkersCompensation
+          - ProfessionalLiability
+          - Marine
+          - Umbrella
+          - Surety
+          - Cyber
+          - DirectorsOfficers
+    PolicyCarrierFilter:
+      name: carrierId
+      in: query
+      required: false
+      schema:
+        type: string
+        format: uuid
+    PolicyBrokerFilter:
+      name: brokerOfRecordId
+      in: query
+      required: false
+      schema:
+        type: string
+        format: uuid
+    PolicyExpiringBeforeFilter:
+      name: expiringBefore
+      in: query
+      required: false
+      description: Return policies with expirationDate on or before this date.
+      schema:
+        type: string
+        format: date
+    PolicySortBy:
+      name: sort
+      in: query
+      required: false
+      description: Sort order.
+      schema:
+        type: string
+        enum:
+          - expirationDate:asc
+          - expirationDate:desc
+          - effectiveDate:asc
+          - effectiveDate:desc
+          - policyNumber:asc
+          - policyNumber:desc
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: >
+        Client-supplied idempotency token. Retried writes with the same key return the prior response
+        (deduplicated by key + route + payload hash). See ADR-018.
+      schema:
+        type: string
+        maxLength: 64
     IfMatch:
       name: If-Match
       in: header
@@ -4537,3 +5120,482 @@ components:
         occurredAt:
           type: string
           format: date-time
+
+    # ── Policy Schemas (F0018) ──────────────────────────────────
+    Policy:
+      type: object
+      description: Policy aggregate parent row. Immutable term / coverage history lives in PolicyVersion + PolicyCoverageLine. See ADR-018.
+      required:
+        - id
+        - accountId
+        - brokerOfRecordId
+        - policyNumber
+        - lineOfBusiness
+        - carrierId
+        - status
+        - effectiveDate
+        - expirationDate
+        - totalPremium
+        - premiumCurrency
+        - currentVersionId
+        - versionCount
+        - rowVersion
+        - createdAt
+        - updatedAt
+      properties:
+        id: { type: string, format: uuid }
+        accountId: { type: string, format: uuid }
+        brokerOfRecordId: { type: string, format: uuid }
+        policyNumber:
+          type: string
+          maxLength: 40
+          description: NEB-{LOB-prefix}-{yyyy}-{6-digit-sequence}. Server-assigned at create; immutable.
+        lineOfBusiness:
+          type: string
+          enum: [Property, GeneralLiability, CommercialAuto, WorkersCompensation, ProfessionalLiability, Marine, Umbrella, Surety, Cyber, DirectorsOfficers]
+        carrierId: { type: string, format: uuid }
+        carrierName:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [Pending, Issued, Cancelled, Expired]
+        effectiveDate: { type: string, format: date }
+        expirationDate: { type: string, format: date }
+        boundAt: { type: string, format: date-time, nullable: true }
+        issuedAt: { type: string, format: date-time, nullable: true }
+        cancelledAt: { type: string, format: date-time, nullable: true }
+        cancellationEffectiveDate: { type: string, format: date, nullable: true }
+        cancellationReasonCode:
+          type: string
+          nullable: true
+          enum: [NonPayment, InsuredRequest, UnderwritingDecision, MaterialMisrepresentation, CoverageNoLongerNeeded, CarrierWithdrawal, Other]
+        cancellationReasonDetail:
+          type: string
+          nullable: true
+          maxLength: 500
+        reinstatementDeadline: { type: string, format: date, nullable: true }
+        expiredAt: { type: string, format: date-time, nullable: true }
+        predecessorPolicyId: { type: string, format: uuid, nullable: true }
+        successorPolicyId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Computed at read time from F0007 Renewal.BoundPolicyId. Never persisted.
+        currentVersionId: { type: string, format: uuid }
+        currentVersionNumber: { type: integer, minimum: 1 }
+        versionCount: { type: integer, minimum: 1 }
+        totalPremium: { type: number, minimum: 0 }
+        premiumCurrency:
+          type: string
+          enum: [USD]
+        producerUserId: { type: string, format: uuid, nullable: true }
+        producerDisplayName:
+          type: string
+          nullable: true
+        importSource:
+          type: string
+          nullable: true
+          enum: [manual, csv-import, f0019-bind-hook]
+        externalPolicyReference:
+          type: string
+          nullable: true
+          maxLength: 100
+        accountDisplayNameAtLink:
+          type: string
+          nullable: true
+          description: Denormalized per ADR-017 fallback contract.
+        accountStatusAtRead:
+          type: string
+          nullable: true
+          enum: [Active, Inactive, Merged, Deleted]
+        accountSurvivorId: { type: string, format: uuid, nullable: true }
+        availableTransitions:
+          type: array
+          items: { type: string }
+        rowVersion: { type: string }
+        createdAt: { type: string, format: date-time }
+        createdByUserId: { type: string, format: uuid, nullable: true }
+        updatedAt: { type: string, format: date-time }
+        updatedByUserId: { type: string, format: uuid, nullable: true }
+
+    PolicyListItem:
+      type: object
+      description: Compact policy row for list views. Fallback-aware account columns per ADR-017.
+      required: [id, policyNumber, accountId, lineOfBusiness, status, effectiveDate, expirationDate, rowVersion]
+      properties:
+        id: { type: string, format: uuid }
+        policyNumber: { type: string, maxLength: 40 }
+        accountId: { type: string, format: uuid }
+        accountDisplayName: { type: string, nullable: true }
+        accountStatus:
+          type: string
+          nullable: true
+          enum: [Active, Inactive, Merged, Deleted]
+        accountSurvivorId: { type: string, format: uuid, nullable: true }
+        brokerOfRecordId: { type: string, format: uuid }
+        brokerName: { type: string, nullable: true }
+        carrierId: { type: string, format: uuid, nullable: true }
+        carrierName: { type: string, nullable: true }
+        lineOfBusiness:
+          type: string
+          enum: [Property, GeneralLiability, CommercialAuto, WorkersCompensation, ProfessionalLiability, Marine, Umbrella, Surety, Cyber, DirectorsOfficers]
+        status:
+          type: string
+          enum: [Pending, Issued, Cancelled, Expired]
+        effectiveDate: { type: string, format: date }
+        expirationDate: { type: string, format: date }
+        totalPremium: { type: number, nullable: true, minimum: 0 }
+        premiumCurrency:
+          type: string
+          nullable: true
+          enum: [USD]
+        producerUserId: { type: string, format: uuid, nullable: true }
+        producerDisplayName: { type: string, nullable: true }
+        versionCount: { type: integer, nullable: true, minimum: 1 }
+        endorsementCount: { type: integer, nullable: true, minimum: 0 }
+        hasOpenRenewal: { type: boolean, nullable: true }
+        reinstatementDeadline: { type: string, format: date, nullable: true }
+        rowVersion: { type: string }
+
+    PolicySummary:
+      type: object
+      description: Policy 360 summary payload with rail preview counts.
+      required:
+        - id
+        - policyNumber
+        - accountId
+        - lineOfBusiness
+        - status
+        - effectiveDate
+        - expirationDate
+        - totalPremium
+        - premiumCurrency
+        - currentVersionId
+        - currentVersionNumber
+        - versionCount
+        - endorsementCount
+        - rowVersion
+      properties:
+        id: { type: string, format: uuid }
+        policyNumber: { type: string, maxLength: 40 }
+        accountId: { type: string, format: uuid }
+        accountDisplayName: { type: string, nullable: true }
+        accountStatus:
+          type: string
+          nullable: true
+          enum: [Active, Inactive, Merged, Deleted]
+        accountSurvivorId: { type: string, format: uuid, nullable: true }
+        brokerOfRecordId: { type: string, format: uuid }
+        brokerName: { type: string, nullable: true }
+        carrierId: { type: string, format: uuid, nullable: true }
+        carrierName: { type: string, nullable: true }
+        lineOfBusiness:
+          type: string
+          enum: [Property, GeneralLiability, CommercialAuto, WorkersCompensation, ProfessionalLiability, Marine, Umbrella, Surety, Cyber, DirectorsOfficers]
+        status:
+          type: string
+          enum: [Pending, Issued, Cancelled, Expired]
+        effectiveDate: { type: string, format: date }
+        expirationDate: { type: string, format: date }
+        boundAt: { type: string, format: date-time, nullable: true }
+        cancelledAt: { type: string, format: date-time, nullable: true }
+        cancellationEffectiveDate: { type: string, format: date, nullable: true }
+        cancellationReasonCode: { type: string, nullable: true }
+        reinstatementDeadline: { type: string, format: date, nullable: true }
+        expiredAt: { type: string, format: date-time, nullable: true }
+        predecessorPolicyId: { type: string, format: uuid, nullable: true }
+        predecessorPolicyNumber: { type: string, nullable: true }
+        successorPolicyId: { type: string, format: uuid, nullable: true }
+        successorPolicyNumber: { type: string, nullable: true }
+        totalPremium: { type: number, minimum: 0 }
+        premiumCurrency:
+          type: string
+          enum: [USD]
+        currentVersionId: { type: string, format: uuid }
+        currentVersionNumber: { type: integer, minimum: 1 }
+        versionCount: { type: integer, minimum: 1 }
+        endorsementCount: { type: integer, minimum: 0 }
+        coverageLineCount: { type: integer, nullable: true, minimum: 0 }
+        openRenewalCount: { type: integer, nullable: true, minimum: 0 }
+        producerUserId: { type: string, format: uuid, nullable: true }
+        producerDisplayName: { type: string, nullable: true }
+        importSource:
+          type: string
+          nullable: true
+          enum: [manual, csv-import, f0019-bind-hook]
+        externalPolicyReference: { type: string, nullable: true }
+        availableTransitions:
+          type: array
+          items: { type: string }
+        rowVersion: { type: string }
+        createdAt: { type: string, format: date-time, nullable: true }
+        createdByUserId: { type: string, format: uuid, nullable: true }
+        updatedAt: { type: string, format: date-time, nullable: true }
+        updatedByUserId: { type: string, format: uuid, nullable: true }
+
+    PolicyCoverageInput:
+      type: object
+      required: [coverageCode, limit, premium]
+      properties:
+        coverageCode: { type: string, maxLength: 40 }
+        coverageName: { type: string, nullable: true, maxLength: 200 }
+        limit: { type: number, minimum: 0 }
+        deductible: { type: number, nullable: true, minimum: 0 }
+        premium: { type: number, minimum: 0 }
+        exposureBasis: { type: string, nullable: true, maxLength: 40 }
+        exposureQuantity: { type: number, nullable: true, minimum: 0 }
+
+    PolicyCreateRequest:
+      type: object
+      required: [accountId, brokerOfRecordId, lineOfBusiness, carrierId, effectiveDate, expirationDate]
+      properties:
+        accountId: { type: string, format: uuid }
+        brokerOfRecordId: { type: string, format: uuid }
+        lineOfBusiness:
+          type: string
+          enum: [Property, GeneralLiability, CommercialAuto, WorkersCompensation, ProfessionalLiability, Marine, Umbrella, Surety, Cyber, DirectorsOfficers]
+        carrierId: { type: string, format: uuid }
+        effectiveDate: { type: string, format: date }
+        expirationDate: { type: string, format: date }
+        predecessorPolicyId: { type: string, format: uuid, nullable: true }
+        producerUserId: { type: string, format: uuid, nullable: true }
+        totalPremium: { type: number, nullable: true, minimum: 0 }
+        premiumCurrency:
+          type: string
+          nullable: true
+          enum: [USD]
+        importMode:
+          type: string
+          nullable: true
+          enum: [manual, csv-import]
+        externalPolicyReference: { type: string, nullable: true, maxLength: 100 }
+        coverages:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/PolicyCoverageInput"
+
+    PolicyUpdateRequest:
+      type: object
+      description: Material-term edits on Issued/Cancelled/Expired policies return 409 code=must_use_endorse.
+      minProperties: 1
+      properties:
+        producerUserId: { type: string, format: uuid, nullable: true }
+        brokerOfRecordId: { type: string, format: uuid, nullable: true }
+        carrierId: { type: string, format: uuid, nullable: true }
+        effectiveDate: { type: string, format: date, nullable: true }
+        expirationDate: { type: string, format: date, nullable: true }
+        totalPremium: { type: number, nullable: true, minimum: 0 }
+        externalPolicyReference: { type: string, nullable: true, maxLength: 100 }
+
+    PolicyIssueRequest:
+      type: object
+      properties:
+        issueNotes: { type: string, nullable: true, maxLength: 500 }
+
+    PolicyEndorsementRequest:
+      type: object
+      required: [endorsementReasonCode, effectiveDate, coverages]
+      properties:
+        endorsementReasonCode:
+          type: string
+          enum: [CoverageIncrease, CoverageDecrease, CoverageAdded, CoverageRemoved, PremiumAdjustment, NamedInsuredChange, AddressChange, DeductibleChange, OtherAdministrative]
+        endorsementReasonDetail: { type: string, nullable: true, maxLength: 1000 }
+        effectiveDate: { type: string, format: date }
+        premiumDelta: { type: number, nullable: true }
+        coverages:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PolicyCoverageInput"
+
+    PolicyCancelRequest:
+      type: object
+      required: [cancellationReasonCode, cancellationEffectiveDate]
+      properties:
+        cancellationReasonCode:
+          type: string
+          enum: [NonPayment, InsuredRequest, UnderwritingDecision, MaterialMisrepresentation, CoverageNoLongerNeeded, CarrierWithdrawal, Other]
+        cancellationReasonDetail:
+          type: string
+          nullable: true
+          maxLength: 500
+          description: Required when cancellationReasonCode='Other'.
+        cancellationEffectiveDate: { type: string, format: date }
+
+    PolicyReinstateRequest:
+      type: object
+      required: [reinstatementReason]
+      properties:
+        reinstatementReason:
+          type: string
+          enum: [InsuredPaidOutstandingPremium, CancellationInError, AgreementReached, Other]
+        reinstatementDetail:
+          type: string
+          nullable: true
+          maxLength: 500
+
+    PolicyCoverageLine:
+      type: object
+      required: [id, policyId, policyVersionId, coverageCode, limit, premium, isCurrent, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        policyId: { type: string, format: uuid }
+        policyVersionId: { type: string, format: uuid }
+        versionNumber: { type: integer, nullable: true, minimum: 1 }
+        coverageCode: { type: string, maxLength: 40 }
+        coverageName: { type: string, nullable: true, maxLength: 200 }
+        limit: { type: number, minimum: 0 }
+        deductible: { type: number, nullable: true, minimum: 0 }
+        premium: { type: number, minimum: 0 }
+        premiumCurrency:
+          type: string
+          nullable: true
+          enum: [USD]
+        exposureBasis: { type: string, nullable: true, maxLength: 40 }
+        exposureQuantity: { type: number, nullable: true, minimum: 0 }
+        isCurrent: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    PolicyVersion:
+      type: object
+      required: [id, policyId, versionNumber, versionReason, effectiveDate, expirationDate, totalPremium, premiumCurrency, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        policyId: { type: string, format: uuid }
+        versionNumber: { type: integer, minimum: 1 }
+        versionReason:
+          type: string
+          enum: [IssuedInitial, Endorsement, Reinstatement]
+        endorsementId: { type: string, format: uuid, nullable: true }
+        effectiveDate: { type: string, format: date }
+        expirationDate: { type: string, format: date }
+        totalPremium: { type: number, minimum: 0 }
+        premiumCurrency:
+          type: string
+          enum: [USD]
+        profileSnapshot:
+          type: object
+          additionalProperties: true
+        coverageSnapshot:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        premiumSnapshot:
+          type: object
+          additionalProperties: true
+        createdAt: { type: string, format: date-time }
+        createdByUserId: { type: string, format: uuid, nullable: true }
+
+    PolicyEndorsement:
+      type: object
+      required: [id, policyId, endorsementNumber, policyVersionId, endorsementReasonCode, effectiveDate, premiumDelta, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        policyId: { type: string, format: uuid }
+        endorsementNumber: { type: integer, minimum: 1 }
+        policyVersionId: { type: string, format: uuid }
+        versionNumber: { type: integer, nullable: true, minimum: 1 }
+        endorsementReasonCode:
+          type: string
+          enum: [CoverageIncrease, CoverageDecrease, CoverageAdded, CoverageRemoved, PremiumAdjustment, NamedInsuredChange, AddressChange, DeductibleChange, OtherAdministrative]
+        endorsementReasonDetail: { type: string, nullable: true, maxLength: 1000 }
+        effectiveDate: { type: string, format: date }
+        premiumDelta: { type: number }
+        premiumCurrency:
+          type: string
+          nullable: true
+          enum: [USD]
+        createdAt: { type: string, format: date-time }
+        createdByUserId: { type: string, format: uuid, nullable: true }
+
+    CarrierRef:
+      type: object
+      required: [id, code, name, isActive, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        code: { type: string, maxLength: 40 }
+        name: { type: string, maxLength: 200 }
+        naicCode: { type: string, nullable: true, maxLength: 10 }
+        amBestRating: { type: string, nullable: true, maxLength: 10 }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time, nullable: true }
+
+    PolicyAccountSummary:
+      type: object
+      required:
+        - accountId
+        - activePolicyCount
+        - expiredPolicyCount
+        - cancelledPolicyCount
+        - pendingPolicyCount
+        - totalCurrentPremium
+        - premiumCurrency
+        - computedAt
+      properties:
+        accountId: { type: string, format: uuid }
+        activePolicyCount: { type: integer, minimum: 0 }
+        expiredPolicyCount: { type: integer, minimum: 0 }
+        cancelledPolicyCount: { type: integer, minimum: 0 }
+        pendingPolicyCount: { type: integer, minimum: 0 }
+        nextExpiringDate: { type: string, format: date, nullable: true }
+        nextExpiringPolicyId: { type: string, format: uuid, nullable: true }
+        nextExpiringPolicyNumber: { type: string, nullable: true }
+        totalCurrentPremium: { type: number, minimum: 0 }
+        premiumCurrency:
+          type: string
+          enum: [USD, MIXED]
+        computedAt: { type: string, format: date-time }
+
+    PolicyFromBindRequest:
+      type: object
+      required:
+        - submissionId
+        - quoteId
+        - accountId
+        - brokerOfRecordId
+        - lineOfBusiness
+        - carrierId
+        - effectiveDate
+        - expirationDate
+        - totalPremium
+        - premiumCurrency
+        - coverages
+      properties:
+        submissionId: { type: string, format: uuid }
+        quoteId: { type: string, format: uuid }
+        accountId: { type: string, format: uuid }
+        brokerOfRecordId: { type: string, format: uuid }
+        lineOfBusiness:
+          type: string
+          enum: [Property, GeneralLiability, CommercialAuto, WorkersCompensation, ProfessionalLiability, Marine, Umbrella, Surety, Cyber, DirectorsOfficers]
+        carrierId: { type: string, format: uuid }
+        effectiveDate: { type: string, format: date }
+        expirationDate: { type: string, format: date }
+        totalPremium: { type: number, minimum: 0 }
+        premiumCurrency:
+          type: string
+          enum: [USD]
+        producerUserId: { type: string, format: uuid, nullable: true }
+        predecessorPolicyId: { type: string, format: uuid, nullable: true }
+        externalPolicyReference: { type: string, nullable: true, maxLength: 100 }
+        coverages:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PolicyCoverageInput"
+
+    PolicyImportRequest:
+      type: object
+      required: [rows]
+      properties:
+        importBatchReference: { type: string, nullable: true, maxLength: 100 }
+        rows:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: "#/components/schemas/PolicyCreateRequest"

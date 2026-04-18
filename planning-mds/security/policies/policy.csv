@@ -244,6 +244,46 @@ p, Admin,               account, relationship:change, true
 p, BrokerUser,          account, read,           true
 
 # ─────────────────────────────────────────────────────────────────────────────
+# §2.4b Policy — Read / Create / Update / Issue / Endorse / Cancel / Reinstate / Coverage:Manage / Import
+# Source: ADR-018, F0018 PRD and stories, authorization-matrix.md §2.4b.
+# Query-layer scope: policies the caller can read via account + broker ABAC scope.
+# State-aware restrictions are enforced in the application layer:
+#   create on /policies and /policies/from-bind lands in Pending; import-lite uses policy:import and may land in Issued.
+#   update is Pending-only for DistributionUser/DistributionManager, Pending + non-material Issued for Underwriter, and state-allowed fields for Admin.
+#   coverage:manage is Pending-state CRUD for DistributionUser/DistributionManager/Underwriter/Admin; Issued-state changes go through policy:endorse.
+# ─────────────────────────────────────────────────────────────────────────────
+
+p, DistributionUser,    policy, read,              true
+p, DistributionUser,    policy, create,            true
+p, DistributionUser,    policy, update,            true
+p, DistributionUser,    policy, coverage:manage,   true
+p, DistributionManager, policy, read,              true
+p, DistributionManager, policy, create,            true
+p, DistributionManager, policy, update,            true
+p, DistributionManager, policy, cancel,            true
+p, DistributionManager, policy, coverage:manage,   true
+p, DistributionManager, policy, import,            true
+p, Underwriter,         policy, read,              true
+p, Underwriter,         policy, create,            true
+p, Underwriter,         policy, update,            true
+p, Underwriter,         policy, issue,             true
+p, Underwriter,         policy, endorse,           true
+p, Underwriter,         policy, cancel,            true
+p, Underwriter,         policy, reinstate,         true
+p, Underwriter,         policy, coverage:manage,   true
+p, RelationshipManager, policy, read,              true
+p, ProgramManager,      policy, read,              true
+p, Admin,               policy, read,              true
+p, Admin,               policy, create,            true
+p, Admin,               policy, update,            true
+p, Admin,               policy, issue,             true
+p, Admin,               policy, endorse,           true
+p, Admin,               policy, cancel,            true
+p, Admin,               policy, reinstate,         true
+p, Admin,               policy, coverage:manage,   true
+p, Admin,               policy, import,            true
+
+# ─────────────────────────────────────────────────────────────────────────────
 # §2.5 Dashboard — KPI Cards
 # Read-only. No mutations from this view (F0001-S0001 AC Checklist).
 # Scope enforced at query layer per role:

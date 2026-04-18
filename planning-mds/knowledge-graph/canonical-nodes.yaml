@@ -59,6 +59,47 @@ entities:
     source_docs:
       - planning-mds/architecture/data-model.md
       - planning-mds/domain/glossary.md
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+    rationale:
+      - adr: adr:018
+        section: "Decision §1"
+        summary: "Policy aggregate is a mutable parent row (lifecycle state + denormalized context) plus immutable PolicyVersion snapshots and materialized PolicyCoverageLine rows; endorsements and reinstatements produce new versions rather than mutating history."
+  - id: entity:policy-version
+    label: PolicyVersion
+    source_docs:
+      - planning-mds/architecture/data-model.md
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+    rationale:
+      - adr: adr:018
+        section: "Decision §1"
+        summary: "Immutable term snapshot captured at issue, endorsement, or reinstatement. VersionNumber is monotonic per PolicyId and the source of truth for historical policy terms."
+  - id: entity:policy-endorsement
+    label: PolicyEndorsement
+    source_docs:
+      - planning-mds/architecture/data-model.md
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+    rationale:
+      - adr: adr:018
+        section: "Decision §1"
+        summary: "Endorsement record on an Issued policy; ties 1:1 to the PolicyVersion it produced and carries reason code, effective date, and premium delta."
+  - id: entity:policy-coverage-line
+    label: PolicyCoverageLine
+    source_docs:
+      - planning-mds/architecture/data-model.md
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+    rationale:
+      - adr: adr:018
+        section: "Decision §1"
+        summary: "Materialized coverage line attached to a specific PolicyVersion. Re-materialized on every endorsement/reinstatement so that queries for current coverages do not require walking snapshot blobs."
+  - id: entity:carrier-ref
+    label: CarrierRef
+    source_docs:
+      - planning-mds/architecture/data-model.md
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+    rationale:
+      - adr: adr:018
+        section: "Decision §1"
+        summary: "Carrier reference-data seed used by the Policy aggregate in MVP; a full Carrier lifecycle is a follow-up feature."
   - id: entity:renewal
     label: Renewal
     source_docs:
@@ -215,6 +256,37 @@ workflows:
         label: Merged
       - id: state:account:deleted
         label: Deleted
+  - id: workflow:policy
+    label: Policy lifecycle
+    source_docs:
+      - planning-mds/features/F0018-policy-lifecycle-and-policy-360/README.md
+      - planning-mds/features/F0018-policy-lifecycle-and-policy-360/PRD.md
+      - planning-mds/architecture/decisions/ADR-011-crm-workflow-state-machines-and-transition-history.md
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+      - planning-mds/api/nebula-api.yaml
+    rationale:
+      - adr: adr:011
+        section: "Decision"
+        summary: "Policy lifecycle adopts the standardized state-machine + append-only transition history pattern used by Submission, Renewal, and Account workflows."
+      - adr: adr:018
+        section: "Decision §2"
+        summary: "Four canonical states (Pending/Issued/Cancelled/Expired). Cancelled→Issued is the sole non-monotonic transition and is window-gated by LOB."
+    states:
+      - id: state:policy:pending
+        label: Pending
+        transitions_to:
+          - state:policy:issued
+      - id: state:policy:issued
+        label: Issued
+        transitions_to:
+          - state:policy:cancelled
+          - state:policy:expired
+      - id: state:policy:cancelled
+        label: Cancelled
+        transitions_to:
+          - state:policy:issued
+      - id: state:policy:expired
+        label: Expired
 
 capabilities:
   - id: capability:dashboard-home
@@ -1959,6 +2031,150 @@ policy_rules:
       - capability:broker-contact-management
       - capability:authorization-enforcement
     notes: DistributionUser and RelationshipManager delete are explicitly DENY (authorization-matrix.md §2.2 OQ-5 resolution); destructive contact removal requires manager authority.
+  - id: policy_rule:policy-read
+    label: policy:read
+    resource: policy
+    action: read
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+      - planning-mds/features/F0018-policy-lifecycle-and-policy-360/PRD.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:relationship-manager
+      - role:program-manager
+      - role:admin
+    related_nodes:
+      - entity:policy
+      - workflow:policy
+      - capability:authorization-enforcement
+  - id: policy_rule:policy-create
+    label: policy:create
+    resource: policy
+    action: create
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+      - planning-mds/features/F0018-policy-lifecycle-and-policy-360/F0018-S0002-create-policy.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:policy
+      - workflow:policy
+      - capability:authorization-enforcement
+    notes: Gates manual create and the future F0019 bind-hook path; both land in Pending. Import-lite uses policy:import.
+  - id: policy_rule:policy-update
+    label: policy:update
+    resource: policy
+    action: update
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+      - planning-mds/features/F0018-policy-lifecycle-and-policy-360/F0018-S0003-policy-detail-and-profile-edit.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:policy
+      - workflow:policy
+      - capability:authorization-enforcement
+    notes: State-aware. DistributionUser and DistributionManager edit Pending only; Underwriter edits Pending plus non-material Issued fields; Admin edits state-allowed fields.
+  - id: policy_rule:policy-issue
+    label: policy:issue
+    resource: policy
+    action: issue
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+    allowed_roles:
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:policy
+      - entity:policy-version
+      - workflow:policy
+      - capability:authorization-enforcement
+  - id: policy_rule:policy-endorse
+    label: policy:endorse
+    resource: policy
+    action: endorse
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+      - planning-mds/features/F0018-policy-lifecycle-and-policy-360/F0018-S0006-policy-endorsements.md
+    allowed_roles:
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:policy
+      - entity:policy-version
+      - entity:policy-endorsement
+      - workflow:policy
+      - capability:authorization-enforcement
+  - id: policy_rule:policy-cancel
+    label: policy:cancel
+    resource: policy
+    action: cancel
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+      - planning-mds/features/F0018-policy-lifecycle-and-policy-360/F0018-S0007-policy-cancellation.md
+    allowed_roles:
+      - role:distribution-manager
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:policy
+      - workflow:policy
+      - capability:authorization-enforcement
+  - id: policy_rule:policy-reinstate
+    label: policy:reinstate
+    resource: policy
+    action: reinstate
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+      - planning-mds/features/F0018-policy-lifecycle-and-policy-360/F0018-S0008-policy-reinstatement.md
+    allowed_roles:
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:policy
+      - entity:policy-version
+      - workflow:policy
+      - entity:workflow-sla-threshold
+      - capability:authorization-enforcement
+  - id: policy_rule:policy-coverage-manage
+    label: policy:coverage:manage
+    resource: policy
+    action: coverage:manage
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+      - planning-mds/features/F0018-policy-lifecycle-and-policy-360/F0018-S0003-policy-detail-and-profile-edit.md
+    allowed_roles:
+      - role:distribution-user
+      - role:distribution-manager
+      - role:underwriter
+      - role:admin
+    related_nodes:
+      - entity:policy
+      - entity:policy-coverage-line
+      - capability:authorization-enforcement
+    notes: Gates Pending-state coverage CRUD for DistributionUser, DistributionManager, Underwriter, and Admin. Issued-state coverage changes go through policy:endorse.
+  - id: policy_rule:policy-import
+    label: policy:import
+    resource: policy
+    action: import
+    source_docs:
+      - planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
+      - planning-mds/features/F0018-policy-lifecycle-and-policy-360/F0018-S0002-create-policy.md
+    allowed_roles:
+      - role:distribution-manager
+      - role:admin
+    related_nodes:
+      - entity:policy
+      - capability:authorization-enforcement
+    notes: Gates the import-lite CSV ingest path; DistributionManager and Admin only in MVP.
 
 evidence:
   - id: evidence:workflow-state-machine-tests
@@ -2053,6 +2269,9 @@ adrs:
   - id: adr:017
     label: Account Merge Tombstone and Fallback Contract
     path: planning-mds/architecture/decisions/ADR-017-account-merge-tombstone-and-fallback-contract.md
+  - id: adr:018
+    label: Policy Aggregate Versioning and Reinstatement Window
+    path: planning-mds/architecture/decisions/ADR-018-policy-aggregate-versioning-and-reinstatement-window.md
   - id: adr:auth-token-storage
     label: Auth Token Storage
     path: planning-mds/architecture/decisions/ADR-Auth-Token-Storage.md
@@ -2231,3 +2450,51 @@ schemas:
   - id: schema:account-relationship-request
     path: planning-mds/schemas/account-relationship-request.schema.json
     related_nodes: [entity:account, entity:broker]
+  - id: schema:policy
+    path: planning-mds/schemas/policy.schema.json
+    related_nodes: [entity:policy, workflow:policy]
+  - id: schema:policy-list-item
+    path: planning-mds/schemas/policy-list-item.schema.json
+    related_nodes: [entity:policy, workflow:policy]
+  - id: schema:policy-summary
+    path: planning-mds/schemas/policy-summary.schema.json
+    related_nodes: [entity:policy, workflow:policy]
+  - id: schema:policy-create-request
+    path: planning-mds/schemas/policy-create-request.schema.json
+    related_nodes: [entity:policy, workflow:policy]
+  - id: schema:policy-update-request
+    path: planning-mds/schemas/policy-update-request.schema.json
+    related_nodes: [entity:policy, workflow:policy]
+  - id: schema:policy-issue-request
+    path: planning-mds/schemas/policy-issue-request.schema.json
+    related_nodes: [entity:policy, entity:policy-version, workflow:policy]
+  - id: schema:policy-endorsement-request
+    path: planning-mds/schemas/policy-endorsement-request.schema.json
+    related_nodes: [entity:policy, entity:policy-endorsement, entity:policy-version]
+  - id: schema:policy-cancel-request
+    path: planning-mds/schemas/policy-cancel-request.schema.json
+    related_nodes: [entity:policy, workflow:policy, entity:workflow-sla-threshold]
+  - id: schema:policy-reinstate-request
+    path: planning-mds/schemas/policy-reinstate-request.schema.json
+    related_nodes: [entity:policy, workflow:policy, entity:workflow-sla-threshold]
+  - id: schema:policy-coverage-line
+    path: planning-mds/schemas/policy-coverage-line.schema.json
+    related_nodes: [entity:policy, entity:policy-version, entity:policy-coverage-line]
+  - id: schema:policy-version
+    path: planning-mds/schemas/policy-version.schema.json
+    related_nodes: [entity:policy, entity:policy-version]
+  - id: schema:policy-endorsement
+    path: planning-mds/schemas/policy-endorsement.schema.json
+    related_nodes: [entity:policy, entity:policy-endorsement, entity:policy-version]
+  - id: schema:carrier-ref
+    path: planning-mds/schemas/carrier-ref.schema.json
+    related_nodes: [entity:carrier-ref, entity:policy]
+  - id: schema:policy-account-summary
+    path: planning-mds/schemas/policy-account-summary.schema.json
+    related_nodes: [entity:policy, entity:account]
+  - id: schema:policy-from-bind-request
+    path: planning-mds/schemas/policy-from-bind-request.schema.json
+    related_nodes: [entity:policy, entity:submission]
+  - id: schema:policy-import-request
+    path: planning-mds/schemas/policy-import-request.schema.json
+    related_nodes: [entity:policy]

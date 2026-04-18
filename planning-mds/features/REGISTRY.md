@@ -11,6 +11,7 @@
 
 | Feature ID | Name | Status | Phase | Folder |
 |------------|------|--------|-------|--------|
+| F0018 | Policy Lifecycle & Policy 360 | In Refinement | CRM Release MVP | `F0018-policy-lifecycle-and-policy-360/` |
 
 ## Abandoned Features
 
@@ -25,7 +26,6 @@
 |------------|------|--------|-------|--------|
 | F0008 | Broker Insights | Planned | MVP | `F0008-broker-insights/` |
 | F0017 | Broker/MGA Hierarchy, Producer Ownership & Territory Management | Planned | CRM Release MVP+ | `F0017-broker-mga-hierarchy-and-producer-ownership/` |
-| F0018 | Policy Lifecycle & Policy 360 | Planned | CRM Release MVP | `F0018-policy-lifecycle-and-policy-360/` |
 | F0019 | Submission Quoting, Proposal & Approval Workflow | Planned | CRM Release MVP | `F0019-submission-quoting-proposal-and-approval/` |
 | F0020 | Document Management & ACORD Intake | Planned | CRM Release MVP | `F0020-document-management-and-acord-intake/` |
 | F0021 | Communication Hub & Activity Capture | Planned | CRM Release MVP | `F0021-communication-hub-and-activity-capture/` |

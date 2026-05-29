@@ -1,11 +1,9 @@
 # This repo content is replaced by two other repos. 
 
-A dedicated one for 
+- Agents (https://github.com/gajakannan/nebula-agents) and 
+- CRM (https://github.com/gajakannan/nebula-insurance-crm)
 
-Agents (https://github.com/gajakannan/nebula-agents) and 
-CRM (https://github.com/gajakannan/nebula-insurance-crm)
-
-
+---
 
 # Agent-Driven Builder Framework + Insurance CRM Reference
 
